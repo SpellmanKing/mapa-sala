@@ -1,0 +1,299 @@
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+:root {
+    --primary-color: #005a9c;
+    --secondary-color: #ff6a1e;
+    --light-gray: #f0f2f5;
+    --medium-gray: #dfe3e8;
+    --dark-gray: #333;
+    --border-color: #ccc;
+    --font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    --shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+body {
+    font-family: var(--font-family);
+    background-color: var(--light-gray);
+    color: var(--dark-gray);
+    padding: 20px;
+    line-height: 1.6;
+}
+
+/* --- 2. LAYOUT GERAL --- */
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 15px;
+}
+
+/* --- 3. COMPONENTES REUTILIZÁVEIS --- */
+/* Botões */
+.btn {
+    padding: 12px 20px;
+    border: none;
+    border-radius: 6px;
+    font-size: 1em;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background-color 0.3s, transform 0.1s;
+    text-align: center;
+}
+
+.btn:hover {
+    transform: translateY(-2px);
+}
+
+.btn-primary {
+    background-color: var(--secondary-color);
+    color: white;
+}
+
+.btn-primary:hover {
+    background-color: #e65c00;
+}
+
+.btn-secondary {
+    background-color: #6c757d;
+    color: white;
+}
+
+.btn-secondary:hover {
+    background-color: #5a6268;
+}
+
+.btn-icon {
+    background: none;
+    padding: 8px 12px;
+    color: var(--primary-color);
+    font-size: 1.5em;
+    font-weight: bold;
+}
+
+/* Formulários */
+.form-group {
+    margin-bottom: 15px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: 600;
+}
+
+.form-control {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    box-sizing: border-box;
+}
+
+/* --- 4. SEÇÕES DA PÁGINA --- */
+.page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 25px;
+}
+
+.page-header h1 {
+    color: var(--primary-color);
+    margin: 0;
+    font-size: 2em;
+}
+
+/* Barra de ferramentas com navegação e filtros */
+.toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: white;
+    padding: 15px 20px;
+    border-radius: 8px;
+    box-shadow: var(--shadow);
+    margin-bottom: 20px;
+}
+
+.toolbar .navigation {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.toolbar .month-title {
+    margin: 0;
+    font-size: 1.5em;
+    color: var(--primary-color);
+}
+
+.toolbar .filters {
+    display: flex;
+    gap: 10px;
+}
+
+.toolbar .filter-select {
+    padding: 8px;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+}
+
+/* Seção do Agendamento */
+.schedule-section {
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: var(--shadow);
+    overflow-x: auto;
+}
+
+.schedule-container {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    min-width: 900px;
+}
+
+.timeline-header, .schedule-grid {
+    display: grid;
+    grid-template-columns: repeat(31, 100px); /* Ajusta para o número de dias no mês */
+    grid-auto-flow: column;
+}
+
+.timeline-header {
+    background-color: var(--primary-color);
+    color: white;
+    font-weight: bold;
+    text-align: center;
+    padding: 10px 0;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+
+.sala-header-cell {
+    padding: 10px 0;
+    border-right: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.day-header {
+    padding: 10px 0;
+    border-right: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.sala-row {
+    display: contents;
+}
+
+.sala-cell {
+    background-color: var(--primary-color);
+    color: white;
+    font-weight: bold;
+    padding: 15px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.day-cell {
+    border: 1px solid var(--medium-gray);
+    height: 100px; /* Ajusta a altura da célula */
+    position: relative;
+    padding: 5px;
+    transition: background-color 0.2s;
+}
+
+.day-cell:hover {
+    background-color: #f7f7f7;
+}
+
+/* Bloco de agendamento */
+.agendamento-block {
+    background-color: var(--secondary-color);
+    color: white;
+    border-radius: 4px;
+    padding: 8px;
+    font-size: 0.8em;
+    line-height: 1.2;
+    cursor: pointer;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    position: absolute; /* Posição absoluta dentro da célula */
+    top: 5px;
+    left: 5px;
+    right: 5px;
+    height: calc(100% - 10px);
+}
+
+/* --- 5. MODAL --- */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 20;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.4);
+    overflow: auto;
+    padding-top: 50px;
+}
+
+.modal-content {
+    background-color: #fefefe;
+    margin: auto;
+    padding: 20px;
+    border: 1px solid #888;
+    width: 90%;
+    max-width: 500px;
+    border-radius: 10px;
+    box-shadow: var(--shadow);
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 10px;
+    margin-bottom: 20px;
+}
+
+.modal-header h2 {
+    margin: 0;
+    color: var(--primary-color);
+}
+
+.close-btn {
+    color: #aaa;
+    font-size: 28px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.close-btn:hover {
+    color: black;
+}
+
+.modal-body form label {
+    display: block;
+    margin-top: 15px;
+    font-weight: 600;
+}
+
+.modal-body form input, 
+.modal-body form select {
+    width: 100%;
+    padding: 10px;
+    margin-top: 5px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-sizing: border-box;
+}
+
+.modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 25px;
+}
