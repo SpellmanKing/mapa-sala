@@ -1,3 +1,4 @@
+/* --- 1. RESET BÁSICO E VARIÁVEIS CSS --- */
 * {
     box-sizing: border-box;
     margin: 0;
@@ -5,33 +6,32 @@
 }
 
 :root {
-    --primary-color: #005a9c;
-    --secondary-color: #ff6a1e;
-    --light-gray: #f0f2f5;
-    --medium-gray: #dfe3e8;
-    --dark-gray: #333;
+    --primary-color: #005a9c; /* Azul escuro, para cabeçalhos e fundos */
+    --secondary-color: #ff6a1e; /* Laranja vibrante, para botões e destaques */
+    --light-gray: #f0f2f5; /* Cinza claro, para o fundo principal da página */
+    --medium-gray: #dfe3e8; /* Cinza médio, para bordas e linhas de grade */
+    --dark-gray: #333; /* Cinza escuro, para textos */
+    --white: #fff; /* Branco, para fundos de containers */
     --border-color: #ccc;
     --font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    --shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    --shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
 }
 
 body {
     font-family: var(--font-family);
     background-color: var(--light-gray);
     color: var(--dark-gray);
-    padding: 20px;
+    padding: 30px;
     line-height: 1.6;
 }
 
 /* --- 2. LAYOUT GERAL --- */
-.container {
-    max-width: 1200px;
+.main-content {
+    max-width: 1400px;
     margin: 0 auto;
-    padding: 0 15px;
 }
 
 /* --- 3. COMPONENTES REUTILIZÁVEIS --- */
-/* Botões */
 .btn {
     padding: 12px 20px;
     border: none;
@@ -45,11 +45,12 @@ body {
 
 .btn:hover {
     transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
 .btn-primary {
     background-color: var(--secondary-color);
-    color: white;
+    color: var(--white);
 }
 
 .btn-primary:hover {
@@ -58,7 +59,7 @@ body {
 
 .btn-secondary {
     background-color: #6c757d;
-    color: white;
+    color: var(--white);
 }
 
 .btn-secondary:hover {
@@ -69,27 +70,15 @@ body {
     background: none;
     padding: 8px 12px;
     color: var(--primary-color);
-    font-size: 1.5em;
+    font-size: 1.8em;
     font-weight: bold;
 }
 
-/* Formulários */
-.form-group {
-    margin-bottom: 15px;
-}
-
-.form-group label {
-    display: block;
-    margin-bottom: 5px;
-    font-weight: 600;
-}
-
-.form-control {
-    width: 100%;
+.filter-select {
     padding: 10px;
     border: 1px solid var(--border-color);
     border-radius: 4px;
-    box-sizing: border-box;
+    font-size: 0.9em;
 }
 
 /* --- 4. SEÇÕES DA PÁGINA --- */
@@ -97,132 +86,160 @@ body {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 25px;
+    margin-bottom: 30px;
 }
 
 .page-header h1 {
     color: var(--primary-color);
     margin: 0;
-    font-size: 2em;
+    font-size: 2.5em;
+    font-weight: 300;
 }
 
-/* Barra de ferramentas com navegação e filtros */
 .toolbar {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    background-color: white;
-    padding: 15px 20px;
+    background-color: var(--white);
+    padding: 15px 25px;
     border-radius: 8px;
     box-shadow: var(--shadow);
-    margin-bottom: 20px;
+    margin-bottom: 25px;
 }
 
 .toolbar .navigation {
     display: flex;
     align-items: center;
-    gap: 15px;
+    gap: 20px;
 }
 
 .toolbar .month-title {
     margin: 0;
-    font-size: 1.5em;
+    font-size: 1.8em;
     color: var(--primary-color);
+    font-weight: 600;
 }
 
 .toolbar .filters {
     display: flex;
-    gap: 10px;
+    gap: 15px;
 }
 
-.toolbar .filter-select {
-    padding: 8px;
-    border: 1px solid var(--border-color);
-    border-radius: 4px;
-}
-
-/* Seção do Agendamento */
-.schedule-section {
-    background-color: white;
-    border-radius: 8px;
-    box-shadow: var(--shadow);
-    overflow-x: auto;
-}
+/* --- ESTILOS DO PAINEL DE AGENDAMENTO (VERSÃO 2.1) --- */
 
 .schedule-container {
-    display: grid;
-    grid-template-columns: auto 1fr;
-    min-width: 900px;
+    background-color: var(--white);
+    border-radius: 8px;
+    box-shadow: var(--shadow);
+    overflow-x: auto; /* Permite rolagem horizontal */
 }
 
-.timeline-header, .schedule-grid {
+/* O .schedule-grid será o nosso "Quadro Branco Digital".
+  Usamos display: grid para controlar todo o layout.
+  A variável --grid-columns será definida dinamicamente pelo JavaScript
+  para criar a quantidade certa de colunas para cada mês.
+*/
+.schedule-grid {
     display: grid;
-    grid-template-columns: repeat(31, 100px); /* Ajusta para o número de dias no mês */
-    grid-auto-flow: column;
+    grid-template-columns: 100px repeat(var(--grid-columns, 31), minmax(100px, 1fr)); /* Coluna de salas + colunas de dias */
 }
 
-.timeline-header {
-    background-color: var(--primary-color);
-    color: white;
-    font-weight: bold;
+/* Estilo para todos os cabeçalhos e células, para manter a consistência.
+*/
+.grid-header, .sala-col, .schedule-cell {
+    padding: 15px 10px;
+    border-bottom: 1px solid var(--medium-gray);
+    border-right: 1px solid var(--medium-gray);
     text-align: center;
-    padding: 10px 0;
-    position: sticky;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Estilo específico para os cabeçalhos (Dias do Mês e "Salas").
+*/
+.grid-header {
+    background-color: var(--primary-color);
+    color: var(--white);
+    font-weight: bold;
+    position: sticky; /* Efeito "grudento" no topo */
     top: 0;
     z-index: 10;
 }
 
-.sala-header-cell {
-    padding: 10px 0;
-    border-right: 1px solid rgba(255, 255, 255, 0.2);
+/* Estilo específico para a coluna com os nomes das salas.
+*/
+.sala-col {
+    background-color: #f8f9fa;
+    font-weight: 600;
+    position: sticky; /* Efeito "grudento" na lateral */
+    left: 0;
+    z-index: 5;
+    justify-content: flex-start; /* Alinha o nome da sala à esquerda */
 }
 
-.day-header {
-    padding: 10px 0;
-    border-right: 1px solid rgba(255, 255, 255, 0.2);
-}
-
-.sala-row {
-    display: contents;
-}
-
-.sala-cell {
-    background-color: var(--primary-color);
-    color: white;
-    font-weight: bold;
-    padding: 15px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
-}
-
-.day-cell {
-    border: 1px solid var(--medium-gray);
-    height: 100px; /* Ajusta a altura da célula */
-    position: relative;
-    padding: 5px;
+/* Estilo para as células do calendário onde os agendamentos aparecem.
+*/
+.schedule-cell {
+    height: 90px;
+    padding: 4px; /* Menor preenchimento para dar espaço ao agendamento */
     transition: background-color 0.2s;
+    overflow: hidden;
 }
 
-.day-cell:hover {
+.schedule-cell:hover {
     background-color: #f7f7f7;
 }
 
-/* Bloco de agendamento */
-.agendamento-block {
-    background-color: var(--secondary-color);
-    color: white;
-    border-radius: 4px;
+/* Bloco de agendamento - Corrigido para parecer um cartão */
+.agendamento {
+    background-color: #A9D0F5;
+    color: var(--dark-gray);
+    border-radius: 6px;
     padding: 8px;
-    font-size: 0.8em;
+    font-size: 0.85em;
     line-height: 1.2;
     cursor: pointer;
     overflow: hidden;
-    text-overflow: ellipsis;
+    width: 100%;
+    height: 100%;
+    position: relative;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    text-align: left; /* Alinha o texto do cartão à esquerda */
+}
+.agendamento strong {
+    font-size: 1em;
+    display: block; /* Garante que o nome do curso ocupe uma linha */
     white-space: nowrap;
-    position: absolute; /* Posição absoluta dentro da célula */
-    top: 5px;
-    left: 5px;
-    right: 5px;
-    height: calc(100% - 10px);
+    overflow: hidden;
+    text-overflow: ellipsis; /* Adiciona "..." se o nome for muito longo */
+}
+
+.agendamento:hover {
+    opacity: 0.9;
+}
+
+
+/* Bloco de agendamento - Corrigido para parecer um cartão */
+.agendamento {
+    background-color: #A9D0F5;
+    color: var(--dark-gray);
+    border-radius: 6px;
+    padding: 8px;
+    font-size: 0.85em;
+    line-height: 1.2;
+    cursor: pointer;
+    overflow: hidden;
+    height: 100%;
+    position: relative;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+.agendamento strong {
+    font-size: 1em;
+}
+
+.agendamento:hover {
+    opacity: 0.9;
 }
 
 /* --- 5. MODAL --- */
@@ -234,45 +251,55 @@ body {
     top: 0;
     width: 100%;
     height: 100%;
-    background-color: rgba(0, 0, 0, 0.4);
+    background-color: rgba(0, 0, 0, 0.5);
     overflow: auto;
     padding-top: 50px;
 }
 
 .modal-content {
-    background-color: #fefefe;
+    background-color: var(--white);
     margin: auto;
-    padding: 20px;
-    border: 1px solid #888;
+    padding: 30px;
+    border: none;
     width: 90%;
     max-width: 500px;
-    border-radius: 10px;
-    box-shadow: var(--shadow);
+    border-radius: 12px;
+    box-shadow: 0 8px 25px rgba(0,0,0,0.2);
 }
 
 .modal-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    border-bottom: 1px solid var(--border-color);
-    padding-bottom: 10px;
-    margin-bottom: 20px;
+    border-bottom: 1px solid var(--medium-gray);
+    padding-bottom: 15px;
+    margin-bottom: 25px;
 }
 
 .modal-header h2 {
     margin: 0;
     color: var(--primary-color);
+    font-size: 1.8em;
 }
 
 .close-btn {
     color: #aaa;
-    font-size: 28px;
+    font-size: 32px;
     font-weight: bold;
     cursor: pointer;
+    transition: color 0.2s;
 }
 
 .close-btn:hover {
-    color: black;
+    color: var(--dark-gray);
+}
+
+.modal-body p {
+    margin-bottom: 10px;
+    font-size: 1em;
+}
+.modal-body p strong {
+    color: var(--primary-color);
 }
 
 .modal-body form label {
@@ -281,19 +308,20 @@ body {
     font-weight: 600;
 }
 
-.modal-body form input, 
+.modal-body form input,
 .modal-body form select {
     width: 100%;
-    padding: 10px;
+    padding: 12px;
     margin-top: 5px;
-    border: 1px solid #ccc;
-    border-radius: 4px;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
     box-sizing: border-box;
+    font-size: 1em;
 }
 
 .modal-actions {
     display: flex;
     justify-content: flex-end;
     gap: 10px;
-    margin-top: 25px;
+    margin-top: 30px;
 }

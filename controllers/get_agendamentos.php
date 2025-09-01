@@ -4,8 +4,6 @@
 require '../models/conexao.php';
 require '../models/entidades/agendamento.php';
 
-header('Content-Type: application/json');
-
 try {
     // Obtém a instância da conexão via a classe Conexao
     $pdo = Conexao::getInstancia();

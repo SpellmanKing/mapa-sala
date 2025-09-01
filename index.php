@@ -35,23 +35,20 @@
         </div>
     </nav>
     <div class="schedule-container">
-        <div class="schedule-header">
-            <div class="sala-col-header">Salas</div>
-            <div class="timeline-header"></div>
-        </div>
         <div class="schedule-grid"></div>
     </div>
     </main>
 
-    <div id="agendamento-modal" class="modal">
+<div id="agendamento-modal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
                 <h2>Agendar Nova Turma</h2>
                 <span class="close-btn">&times;</span>
             </div>
             <div class="modal-body">
+                <p id="agendamento-info" style="font-weight: bold; color: #005a9c;"></p>
+                
                 <form id="agendamento-form">
-                    <input type="hidden" id="agendamento-data">
                     <input type="hidden" id="agendamento-sala-id">
 
                     <label for="curso-select">Curso:</label>
@@ -72,7 +69,7 @@
                     </select>
                     
                     <label for="instrutor-select">Instrutor:</label>
-                    <input type="text" id="instrutor-select" list="instrutores-list">
+                    <input type="text" id="instrutor-select" list="instrutores-list" placeholder="Digite ou selecione um instrutor">
                     <datalist id="instrutores-list"></datalist>
 
                     <div class="modal-actions">

@@ -1,5 +1,5 @@
 <?php
-// api/Entidades/Curso.php
+// models/entidades/curso.php
 
 class Curso {
     
@@ -20,6 +20,22 @@ class Curso {
             return $cursos;
         } catch (PDOException $e) {
             throw new Exception("Erro ao buscar cursos: " . $e->getMessage());
+        }
+    }
+
+    /**
+     * Busca um único curso pelo seu ID.
+     * @param int $id O ID do curso.
+     * @return array|false Um array representando o curso ou false se não encontrado.
+     */
+    public function buscarPorId($id) {
+        try {
+            $stmt = $this->pdo->prepare("SELECT carga_horaria, necessidade_sala FROM cursos WHERE id_cursos = ?");
+            $stmt->execute([$id]);
+            $curso = $stmt->fetch(PDO::FETCH_ASSOC);
+            return $curso;
+        } catch (PDOException $e) {
+            throw new Exception("Erro ao buscar curso por ID: " . $e->getMessage());
         }
     }
 }

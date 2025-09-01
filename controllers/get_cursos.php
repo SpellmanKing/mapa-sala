@@ -4,8 +4,6 @@
 require '../models/conexao.php';
 require '../models/entidades/curso.php';
 
-header('Content-Type: application/json');
-
 try {
     // 1. Obtém a instância da conexão via a classe Conexao (padrão Singleton)
     $pdo = Conexao::getInstancia();

@@ -35,29 +35,28 @@ function calcularCronograma(int $cargaHorariaTotal, string $dataInicio, string $
         '2025-01-01', '2025-02-24', '2025-02-25', '2025-02-26', '2025-04-18', '2025-04-21', 
         '2025-05-01', '2025-06-19', '2025-09-07', '2025-10-12', '2025-10-28', '2025-11-02',
         '2025-11-15', '2025-11-20', '2025-11-30', '2025-12-25',
+        // Recessos
         '2025-03-03', '2025-03-04', '2025-03-05', '2025-03-06', '2025-03-07',
-        '2025-07-07', '2025-07-08', '2025-07-09', '2025-07-10', '2025-07-11'
+        '2025-07-07', '2025-07-08', '2025-07-09', '2025-07-10', '2025-07-11',
+        '2025-12-24', '2025-12-26', '2025-12-27', '2025-12-28', '2025-12-29', '2025-12-30', '2025-12-31'
     ];
 
-    // Loop para encontrar os dias de aula
     while ($cargaHorariaRestante > 0) {
-        $diaDaSemana = (int)$currentDate->format('N'); // 1 = Segunda, 7 = Domingo
-        $dataFormatada = $currentDate->format('Y-m-d');
-
-        // Verifica se o dia é útil (segunda a sexta) e não é feriado/recesso
-        if ($diaDaSemana >= 1 && $diaDaSemana <= 5 && !in_array($dataFormatada, $feriadosRecessos)) {
-            $diasLetivos[] = $dataFormatada;
+        $diaDaSemana = $currentDate->format('N'); // 1 (segunda) a 7 (domingo)
+        $dataAtualFormatada = $currentDate->format('Y-m-d');
+        
+        // Verifica se é um dia de semana (segunda a sexta) e não é feriado/recesso
+        if ($diaDaSemana >= 1 && $diaDaSemana <= 5 && !in_array($dataAtualFormatada, $feriadosRecessos)) {
+            $diasLetivos[] = $dataAtualFormatada;
             $cargaHorariaRestante -= $horasPorDia;
         }
-        
+
         // Avança para o próximo dia
         $currentDate->modify('+1 day');
     }
 
-    $dataTermino = end($diasLetivos);
-    
     return [
-        'dataTermino' => $dataTermino,
-        'diasLetivos' => $diasLetivos
+        'diasLetivos' => $diasLetivos,
+        'dataTermino' => $currentDate->format('Y-m-d')
     ];
 }

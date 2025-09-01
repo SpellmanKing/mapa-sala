@@ -3,8 +3,6 @@
 
 require '../models/conexao.php';
 
-header('Content-Type: application/json');
-
 try {
     $pdo = Conexao::getInstancia();
     $stmt = $pdo->query("SELECT id_instrutores, nome_instrutor FROM instrutores ORDER BY nome_instrutor ASC");
