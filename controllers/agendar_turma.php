@@ -18,6 +18,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 $data = json_decode(file_get_contents('php://input'), true);
 
 // 1. Validação de Dados: Verifica se os dados essenciais estão presentes
+// Agora o 'salaId' pode ser uma string com múltiplos IDs
 if (empty($data['cursoId']) || empty($data['dataInicio']) || empty($data['totalAlunos']) || empty($data['salaId']) || empty($data['turno'])) {
     http_response_code(400); 
     echo json_encode(['error' => 'Dados incompletos. Por favor, preencha todos os campos obrigatórios.']);
@@ -31,30 +32,29 @@ try {
     $curso = new Curso($pdo);
     $dadosCurso = $curso->buscarPorId($data['cursoId']);
 
-    if (!$dadosCurso || empty($dadosCurso['carga_horaria']) || $dadosCurso['carga_horaria'] <= 0) {
+    if (!$dadosCurso || empty($dadosCurso['carga_horaria'])) {
         http_response_code(404);
-        echo json_encode(['error' => 'Curso não encontrado ou carga horária inválida.']);
+        echo json_encode(['error' => 'Carga horária do curso não encontrada.']);
         exit;
     }
 
     $cargaHoraria = $dadosCurso['carga_horaria'];
 
-    // 3. Busca o ID do instrutor a partir do nome (se fornecido)
+    // 3. Obtém o ID do instrutor
     $instrutorId = null;
     if (!empty($data['instrutorNome'])) {
         $instrutor = new Instrutor($pdo);
         $instrutorId = $instrutor->buscarIdPorNome($data['instrutorNome']);
-        // Se o instrutor não for encontrado, o ID continuará sendo null.
-        // Isso permite agendar a turma sem instrutor no início.
     }
 
     // 4. Calcula o cronograma
-    // O erro pode ter ocorrido aqui se a carga horária não for um número.
-    // Agora, verificamos se a carga horária é válida antes.
     $cronograma = calcularCronograma($cargaHoraria, $data['dataInicio'], $data['turno']);
     $diasLetivos = $cronograma['diasLetivos'];
     $dataTermino = $cronograma['dataTermino'];
     
+    // NOVO: Transforma a string de IDs de sala em um array
+    $salasIds = array_map('intval', explode(',', $data['salaId']));
+
     // 5. Organiza os dados da turma para o Agendador
     $dadosTurma = [
         'cursoId' => $data['cursoId'],
@@ -62,19 +62,18 @@ try {
         'dataTermino' => $dataTermino,
         'totalAlunos' => $data['totalAlunos'],
         'instrutorId' => $instrutorId, 
-        'turno' => $data['turno'],
-        'salaId' => $data['salaId']
+        'turno' => $data['turno']
     ];
 
     // 6. Cria a instância do Agendador e agenda a turma
     $agendador = new Agendador($pdo);
-    $novaTurmaId = $agendador->agendarNovaTurma($dadosTurma, $diasLetivos);
+    // Passa o array de salas para o método
+    $novaTurmaId = $agendador->agendarNovaTurma($dadosTurma, $diasLetivos, $salasIds);
     
-    http_response_code(201); // 201 Created é mais apropriado para uma nova criação
-    echo json_encode(['message' => 'Turma agendada com sucesso!', 'turmaId' => $novaTurmaId]);
+    http_response_code(201); // Created
+    echo json_encode(['success' => true, 'message' => 'Turma agendada com sucesso!', 'turmaId' => $novaTurmaId]);
 
 } catch (Exception $e) {
-    // 7. Tratamento de Exceções
     http_response_code(500); 
-    echo json_encode(['error' => 'Erro ao agendar turma: ' . $e->getMessage()]);
+    echo json_encode(['error' => 'Ocorreu um erro ao agendar a turma: ' . $e->getMessage()]);
 }

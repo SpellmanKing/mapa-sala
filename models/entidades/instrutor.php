@@ -1,5 +1,5 @@
 <?php
-// models/entidades/instrutor.php
+
 
 class Instrutor {
     private $pdo;

@@ -1,5 +1,4 @@
 <?php
-// api/Entidades/Sala.php
 
 class Sala {
     

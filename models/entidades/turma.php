@@ -1,5 +1,4 @@
 <?php
-// api/Entidades/Turma.php (Corrigido)
 
 class Turma {
     private $pdo;
@@ -15,6 +14,7 @@ class Turma {
      * @param int|null $novoInstrutorId O ID do novo instrutor (opcional).
      * @return bool Retorna true se a operação for bem-sucedida.
      */
+    
     public function atualizarStatus($turmaId, $novoStatus, $novoInstrutorId = null) {
         try {
             $this->pdo->beginTransaction();

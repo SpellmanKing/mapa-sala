@@ -1,5 +1,4 @@
 <?php
-// api/calcular_cronograma.php
 // Este arquivo contém uma função utilitária para calcular o cronograma de um curso.
 
 /**
@@ -9,6 +8,7 @@
  * @param string $turno O turno do curso ('manha', 'tarde', 'noite', 'integral').
  * @return array Um array contendo 'diasLetivos' e 'dataTermino'.
  */
+
 function calcularCronograma(int $cargaHorariaTotal, string $dataInicio, string $turno): array {
     
     // Regra de negócio: Carga horária por dia

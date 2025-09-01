@@ -26,9 +26,17 @@ body {
 }
 
 /* --- 2. LAYOUT GERAL --- */
+.main-content-wrapper {
+    flex-grow: 1; /* Ocupa o restante do espaço */
+    display: flex;
+    flex-direction: column;
+    padding: 30px; /* Mantém o padding original */
+}
+
 .main-content {
-    max-width: 1400px;
-    margin: 0 auto;
+    /* Mantenha o estilo atual do main-content, mas remova o padding se estiver duplicado */
+    max-width: none;
+    margin: 0;
 }
 
 /* --- 3. COMPONENTES REUTILIZÁVEIS --- */
@@ -124,6 +132,55 @@ body {
     display: flex;
     gap: 15px;
 }
+
+
+/* --- 5. MENU LATERAL --- */
+.page-container {
+    display: flex;
+    min-height: 100vh;
+}
+
+.sidebar {
+    width: 250px;
+    background-color: var(--primary-color);
+    color: var(--white);
+    padding: 20px;
+    box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+    transition: width 0.3s ease;
+    flex-shrink: 0; /* Impede que a barra lateral encolha */
+}
+
+.sidebar-nav ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.sidebar-nav li {
+    margin-bottom: 10px;
+}
+
+.nav-item {
+    display: flex;
+    align-items: center;
+    padding: 12px 15px;
+    color: var(--white);
+    text-decoration: none;
+    border-radius: 8px;
+    transition: background-color 0.3s ease;
+}
+
+.nav-item:hover,
+.nav-item.active {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+.nav-item span {
+    margin-left: 15px;
+    font-size: 1em;
+}
+
+/* Os ícones de classe "icon-..." não existem, mas podem ser substituídos por SVGs, fontes de ícones (como Font Awesome) ou imagens */
 
 /* --- ESTILOS DO PAINEL DE AGENDAMENTO (VERSÃO 2.1) --- */
 

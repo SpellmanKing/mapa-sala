@@ -1,5 +1,4 @@
 <?php
-// models/entidades/curso.php
 
 class Curso {
     

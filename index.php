@@ -7,13 +7,44 @@
     <link rel="stylesheet" href="./public/css/style.css">
 </head>
 <body>
+    <div class="page-container">
+    <aside class="sidebar">
+        <nav class="sidebar-nav">
+            <ul>
+                <li>
+                    <a href="#" class="nav-item active">
+                        <i class="icon-dashboard"></i>
+                        <span>Painel Visual</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="#" class="nav-item">
+                        <i class="icon-smart-allocation"></i>
+                        <span>Alocação Inteligente</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="#" class="nav-item">
+                        <i class="icon-reports"></i>
+                        <span>Relatórios e Exportações</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="#" class="nav-item">
+                        <i class="icon-integrations"></i>
+                        <span>Possibilidades de Integração Futuras</span>
+                    </a>
+                </li>
+            </ul>
+        </nav>
+    </aside>
+    <div class="main-content-wrapper">
     <header class="page-header">
         <h1>Painel de Gestão de Salas e Turmas</h1>
         <div class="header-actions">
             <button id="add-turma-btn" class="btn btn-primary">+ Agendar Nova Turma</button>
         </div>
     </header>
-
     <main class="main-content">
     <nav class="toolbar">
         <div class="navigation">
@@ -38,8 +69,9 @@
         <div class="schedule-grid"></div>
     </div>
     </main>
-
-<div id="agendamento-modal" class="modal">
+</div>
+</div>
+    <div id="agendamento-modal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
                 <h2>Agendar Nova Turma</h2>
@@ -49,6 +81,10 @@
                 <p id="agendamento-info" style="font-weight: bold; color: #005a9c;"></p>
                 
                 <form id="agendamento-form">
+                    <div class="modal-actions">
+                        <button type="button" id="alocacao-automatica-btn" class="btn btn-secondary">Alocação Automática</button>
+                        <button type="submit" class="btn btn-primary" id="agendar-btn">Agendar</button>
+                    </div>
                     <input type="hidden" id="agendamento-sala-id">
 
                     <label for="curso-select">Curso:</label>
@@ -75,6 +111,7 @@
                     <div class="modal-actions">
                         <button type="submit" class="btn btn-primary">Agendar</button>
                     </div>
+                    
                 </form>
             </div>
         </div>

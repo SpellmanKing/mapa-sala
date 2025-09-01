@@ -18,6 +18,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const agendamentoForm = document.getElementById('agendamento-form');
     const detalhesForm = document.getElementById('detalhes-form');
     const cancelarTurmaBtn = document.getElementById('cancelar-turma-btn');
+    const agendarBtn = document.getElementById('agendar-btn');
+    const alocacaoAutomaticaBtn = document.getElementById('alocacao-automatica-btn');
 
     // Campos do formulário de agendamento
     const cursoSelect = document.getElementById('curso-select');
@@ -27,6 +29,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const turnoSelect = document.getElementById('turno-select-agendamento');
     const instrutorSelect = document.getElementById('instrutor-select');
     const instrutoresList = document.getElementById('instrutores-list');
+    
 
     // Campos do formulário de detalhes
     const detalhesTurmaId = document.getElementById('detalhes-turma-id');
@@ -50,7 +53,7 @@ document.addEventListener('DOMContentLoaded', () => {
         renderizarGrid();
     }
 
-// Função de renderização da grade (Versão 2.1)
+    // Função de renderização da grade (Versão 2.1)
     function renderizarGrid() {
         const ano = dataAtual.getFullYear();
         const mes = dataAtual.getMonth();
@@ -222,7 +225,6 @@ document.addEventListener('DOMContentLoaded', () => {
     async function gerenciarTurma(turmaId, dados) {
         try {
             // O backend espera o nome do instrutor para fazer a busca do ID.
-            // A lógica de busca de ID foi removida do frontend para simplificar.
             const dadosApi = {
                 turmaId: turmaId,
                 status: dados.status,
@@ -259,16 +261,16 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function abrirModalAgendamento(salaId, salaNome, data) {
-        agendamentoForm.reset(); // Limpa o formulário de agendamentos anteriores
+        agendamentoForm.reset(); 
 
         // Linhas importantes: Preenchem os dados da célula clicada no formulário
         agendamentoSalaIdInput.value = salaId;
-        dataInicioInput.value = data; // A correção principal está aqui!
+        dataInicioInput.value = data;
 
         // Exibe uma mensagem útil para o usuário no modal
         const infoEl = document.getElementById('agendamento-info');
         if(infoEl) {
-             infoEl.textContent = `Agendando para a sala "${salaNome}" no dia ${formatarData(data)}.`;
+            infoEl.textContent = `Agendando para a sala "${salaNome}" no dia ${formatarData(data)}.`;
         }
 
         abrirModal(agendamentoModal);
@@ -326,7 +328,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const cursoSelect = document.getElementById('curso-select');
         const dataInicioInput = document.getElementById('data-inicio');
         const totalAlunosInput = document.getElementById('total-alunos');
-        const turnoSelect = document.getElementById('turno-select');
+        const turnoSelect = document.getElementById('turno-select-agendamento');
         
         // NOVO: Captura o ID da sala, que é armazenado em um input hidden
         const agendamentoSalaIdInput = document.getElementById('agendamento-sala-id');
@@ -359,6 +361,79 @@ document.addEventListener('DOMContentLoaded', () => {
             status: detalhesStatusSelect.value
         };
         await gerenciarTurma(detalhesTurmaId.value, dadosDetalhes);
+    });
+
+    agendamentoForm.addEventListener('submit', async (event) => {
+        // 1. Previne o comportamento padrão
+        event.preventDefault();
+
+        // 2. Coleta os dados do formulário
+        const dadosAgendamento = {
+            cursoId: parseInt(cursoSelect.value),
+            instrutorNome: instrutorSelect.value,
+            dataInicio: dataInicioInput.value,
+            totalAlunos: parseInt(totalAlunosInput.value),
+            salaId: parseInt(agendamentoSalaIdInput.value),
+            turno: turnoSelect.value
+        };
+
+        // 3. Validação final para garantir que o agendamento manual tem uma sala
+        if (!dadosAgendamento.salaId) {
+            alert("Por favor, selecione uma sala para agendamento manual ou use a opção de Alocação Automática.");
+            return; // Impede o envio se não houver sala
+        }
+
+        // 4. Envia os dados para o backend (Lógica existente)
+        await agendarNovaTurma(dadosAgendamento);
+    });
+
+    // A função de envio para o botão de alocação automática
+    alocacaoAutomaticaBtn.addEventListener('click', async (event) => {
+        event.preventDefault();
+        const dadosAgendamento = {
+            cursoId: parseInt(cursoSelect.value),
+            dataInicio: dataInicioInput.value,
+            totalAlunos: parseInt(totalAlunosInput.value),
+            turno: turnoSelect.value,
+        };
+
+        try {
+            const response = await fetch('./controllers/alocar_turma_automatica.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(dadosAgendamento)
+            });
+
+            const resultado = await response.json();
+
+            if (response.ok) {
+                if (resultado.salaId) {
+                    // Caso 1: Sala única encontrada
+                    const salaIdEncontrada = resultado.salaId;
+                    agendamentoSalaIdInput.value = salaIdEncontrada;
+                    alert(`Sala única encontrada: ${resultado.nome_sala}. Clique em Agendar para continuar.`);
+
+                } else if (resultado.salas) {
+                    // Caso 2: Combinação de salas (Divisão) encontrada
+                    const salas = resultado.salas;
+                    const salaIds = salas.map(s => s.id_salas);
+                    const nomesSalas = salas.map(s => s.nome_sala).join(' e ');
+                    
+                    // Exibe as salas encontradas e prepara o formulário para agendamento
+                    agendamentoSalaIdInput.value = salaIds.join(','); // Usa vírgula para separar IDs
+                    alert(`Combinação de salas encontrada: ${nomesSalas}. Clique em Agendar para continuar.`);
+                } else {
+                    alert('Ocorreu um erro desconhecido na alocação.');
+                }
+                
+            } else {
+                // Exibe o erro retornado pelo servidor
+                alert(`Erro na alocação automática: ${resultado.error}`);
+            }
+        } catch (error) {
+            console.error('Erro ao fazer a requisição de alocação automática:', error);
+            alert('Ocorreu um erro ao tentar alocar a turma automaticamente.');
+        }
     });
 
     cancelarTurmaBtn.addEventListener('click', async () => {
