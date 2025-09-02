@@ -108,10 +108,10 @@
 
                     <label>Turno:</label>
                     <div class="checkbox-group" id="turnos-checkboxes">
-                        <label><input type="checkbox" name="turno" value="Manhã" class="turno-checkbox"> Manhã</label>
-                        <label><input type="checkbox" name="turno" value="Tarde" class="turno-checkbox"> Tarde</label>
-                        <label><input type="checkbox" name="turno" value="Noite" class="turno-checkbox"> Noite</label>
-                        <label><input type="checkbox" name="turno" value="Integral" id="integral-checkbox"> Integral</label>
+                        <label><input type="radio" name="turno" value="Manhã" class="turno-radio"> Manhã</label>
+                        <label><input type="radio" name="turno" value="Tarde" class="turno-radio"> Tarde</label>
+                        <label><input type="radio" name="turno" value="Noite" class="turno-radio"> Noite</label>
+                        <label><input type="radio" name="turno" value="Integral" class="turno-radio"> Integral</label>
                     </div>
                     
                     <label for="agendamento-sala-display">Sala(s) Alocada(s):</label>

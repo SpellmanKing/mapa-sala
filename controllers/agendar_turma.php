@@ -34,12 +34,12 @@ try {
     $dadosCurso = $curso->buscarPorId($data['cursoId']);
     if (!$dadosCurso || empty($dadosCurso['carga_horaria'])) {
         http_response_code(404);
-        echo json_encode(['error' => 'Curso não encontrado ou carga horária não especificada.']);
+        echo json_encode(['error' => 'Curso não encontrado ou carga horária não definida.']);
         exit;
     }
     $cargaHoraria = $dadosCurso['carga_horaria'];
 
-    // 3. Verifica a disponibilidade da sala para CADA dia letivo
+    // NOVO: Garante que $data['salaId'] é sempre um array.
     $salasIds = is_array($data['salaId']) ? $data['salaId'] : [$data['salaId']];
     $agendamento = new Agendamento($pdo);
     
