@@ -17,7 +17,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 
 $data = json_decode(file_get_contents('php://input'), true);
 
-if (empty($data['cursoId']) || empty($data['dataInicio']) || empty($data['totalAlunos']) || empty($data['turno'])) {
+if (empty($data['cursoId']) || empty($data['dataInicio']) || empty($data['totalAlunos']) || empty($data['turno']) || empty($data['diasSemana'])) {
     http_response_code(400);
     echo json_encode(['error' => 'Dados incompletos. Por favor, preencha todos os campos obrigatórios.']);
     exit;
@@ -33,107 +33,130 @@ try {
     $dataInicio = $data['dataInicio'];
     $totalAlunos = $data['totalAlunos'];
     $turno = $data['turno'];
+    $diasSemanaSelecionados = $data['diasSemana'];
 
-    // 1. Busca a carga horária e tipo de sala do curso
     $dadosCurso = $curso->buscarPorId($cursoId);
     if (!$dadosCurso) {
         http_response_code(404);
         echo json_encode(['error' => 'Curso não encontrado.']);
         exit;
     }
-    
     $cargaHoraria = $dadosCurso['carga_horaria'];
+    $tipoCurso = $dadosCurso['tipo_curso']; // Supondo que você tenha um campo 'tipo_curso' para identificar TEM
     $tipoSalaNecessaria = $dadosCurso['necessidade_sala'];
 
-    // 2. Calcula o cronograma do curso
-    $cronograma = calcularCronograma($cargaHoraria, $dataInicio, $turno);
+    // Calcula o cronograma do curso
+    $cronograma = calcularCronograma($cargaHoraria, $dataInicio, $turno, $diasSemanaSelecionados);
     $diasLetivos = $cronograma['diasLetivos'];
     
-    // 3. Busca todas as salas e todos os agendamentos existentes
+    // Busca todas as salas e todos os agendamentos existentes
     $todasSalas = $sala->buscarTodas();
     $todosAgendamentos = $agendamento->buscarTodos();
 
-    // 4. Encontra salas disponíveis (livres para todo o período)
-    $salasDisponiveis = [];
-
+    // Filtra as salas compatíveis com o tipo de curso e que estão disponíveis para todos os dias
+    $salasCandidatas = [];
     foreach ($todasSalas as $s) {
-        $salaOcupada = false;
-        foreach ($diasLetivos as $dia) {
-            foreach ($todosAgendamentos as $ag) {
-                if ($ag['id_salas'] == $s['id_salas'] && $ag['data_aula'] === $dia && $ag['turno'] === $turno) {
-                    $salaOcupada = true;
-                    break 2;
+        if ($s['tipo_sala'] === $tipoSalaNecessaria && $s['capacidade_maxima'] >= $totalAlunos) {
+            $isAvailable = true;
+            foreach ($diasLetivos as $dia) {
+                if (!$agendamento->verificarDisponibilidade($s['id_salas'], $dia, $turno)) {
+                    $isAvailable = false;
+                    break;
                 }
             }
-        }
-        
-        if (!$salaOcupada) {
-            $salasDisponiveis[] = $s;
-        }
-    }
-
-    // --- LÓGICA AVANÇADA DE ALOCAÇÃO ---
-
-    // 5. Tenta encontrar uma Única Sala com "Melhor Encaixe"
-    $melhorEncaixe = null;
-    $menorDiferenca = PHP_INT_MAX;
-
-    foreach ($salasDisponiveis as $s) {
-        if ($s['capacidade_maxima'] >= $totalAlunos && $s['tipo_sala'] === $tipoSalaNecessaria) {
-            $diferenca = $s['capacidade_maxima'] - $totalAlunos;
-            if ($diferenca < $menorDiferenca) {
-                $menorDiferenca = $diferenca;
-                $melhorEncaixe = $s;
+            if ($isAvailable) {
+                // Adiciona a sala candidata, incluindo o número de agendamentos existentes
+                $s['ocupacao_existente'] = array_reduce($todosAgendamentos, function($count, $item) use ($s) {
+                    return $count + ($item['id_salas'] == $s['id_salas'] ? 1 : 0);
+                }, 0);
+                $salasCandidatas[] = $s;
             }
         }
     }
 
-    if ($melhorEncaixe) {
+    // Função de comparação para a hierarquia de regras
+    usort($salasCandidatas, function($a, $b) use ($totalAlunos, $tipoCurso) {
+        // 1. Prioridade Máxima para Cursos TEM
+        // Supondo que você adicione uma flag 'is_tem' ao curso para identificação
+        if ($tipoCurso === 'TEM') {
+            // Se for um curso TEM, simplesmente use as regras abaixo
+        } else {
+            // Se não for TEM, talvez haja uma lógica de desempate diferente, mas
+            // para este exemplo, seguimos as regras padrão.
+        }
+
+        // 2. Otimização de Capacidade ("Melhor Encaixe")
+        $diffA = abs($a['capacidade_maxima'] - $totalAlunos);
+        $diffB = abs($b['capacidade_maxima'] - $totalAlunos);
+        if ($diffA !== $diffB) {
+            return $diffA <=> $diffB;
+        }
+
+        // 3. Ocupação Máxima da Sala
+        if ($a['ocupacao_existente'] !== $b['ocupacao_existente']) {
+            return $b['ocupacao_existente'] <=> $a['ocupacao_existente']; // Ordem decrescente
+        }
+        
+        // 4. Critério de Desempate Final (Ordem Alfabética)
+        return $a['nome_sala'] <=> $b['nome_sala'];
+    });
+
+    // Se uma sala única foi encontrada e classificada
+    if (!empty($salasCandidatas)) {
+        $melhorSala = $salasCandidatas[0];
         echo json_encode([
             'success' => true,
-            'salaId' => $melhorEncaixe['id_salas'],
-            'nome_sala' => $melhorEncaixe['nome_sala'],
-            'message' => 'Sala encontrada com sucesso via Melhor Encaixe!'
+            'salas' => [$melhorSala],
+            'message' => 'Alocação automática bem-sucedida! A turma foi agendada na ' . $melhorSala['nome_sala'] . '.'
         ]);
         exit;
     }
 
-    // 6. Se não houver sala única, tenta encontrar "Divisão entre Salas"
+    // Se não encontrou sala única, busca por combinação de salas (lógica de fallback)
+    $salasDisponiveis_Divisao = [];
+    foreach ($todasSalas as $s) {
+        $estaLivre = true;
+        foreach ($diasLetivos as $dia) {
+            if (!$agendamento->verificarDisponibilidade($s['id_salas'], $dia, $turno)) {
+                $estaLivre = false;
+                break;
+            }
+        }
+        if($estaLivre) {
+            $salasDisponiveis_Divisao[] = $s;
+        }
+    }
+
     $combinacaoEncontrada = null;
+    for ($i = 0; $i < count($salasDisponiveis_Divisao); $i++) {
+        for ($j = $i + 1; $j < count($salasDisponiveis_Divisao); $j++) {
+            $sala1 = $salasDisponiveis_Divisao[$i];
+            $sala2 = $salasDisponiveis_Divisao[$j];
 
-    // Remove salas que não são compatíveis com o tipo de curso
-    $salasCompatíveis = array_filter($salasDisponiveis, function($s) use ($tipoSalaNecessaria) {
-        return $s['tipo_sala'] === $tipoSalaNecessaria;
-    });
-
-    // Tenta encontrar uma combinação de duas salas
-    for ($i = 0; $i < count($salasCompatíveis); $i++) {
-        for ($j = $i + 1; $j < count($salasCompatíveis); $j++) {
-            $sala1 = $salasCompatíveis[$i];
-            $sala2 = $salasCompatíveis[$j];
-
-            $capacidadeCombinada = $sala1['capacidade_maxima'] + $sala2['capacidade_maxima'];
-            
-            if ($capacidadeCombinada >= $totalAlunos) {
-                $combinacaoEncontrada = [$sala1, $sala2];
-                break 2; // Encontrou a primeira combinação e sai dos loops
+            if ($sala1['tipo_sala'] === $tipoSalaNecessaria && $sala2['tipo_sala'] === $tipoSalaNecessaria) {
+                $capacidadeCombinada = $sala1['capacidade_maxima'] + $sala2['capacidade_maxima'];
+                
+                if ($capacidadeCombinada >= $totalAlunos) {
+                    $combinacaoEncontrada = [$sala1, $sala2];
+                    break 2;
+                }
             }
         }
     }
 
     if ($combinacaoEncontrada) {
-        // Retorna as duas salas. O front-end precisará lidar com isso
         echo json_encode([
             'success' => true,
             'salas' => $combinacaoEncontrada,
-            'message' => 'Combinação de salas encontrada com sucesso!'
+            'message' => 'Nenhuma sala única encontrada. Foi sugerida uma combinação de salas.'
         ]);
-    } else {
-        http_response_code(404);
-        echo json_encode(['error' => 'Nenhuma sala disponível ou combinação encontrada para os critérios informados.']);
+        exit;
     }
+
+    http_response_code(404);
+    echo json_encode(['error' => 'Nenhuma sala ou combinação de salas encontrada com a capacidade necessária para os dias e turno selecionados.']);
 
 } catch (Exception $e) {
     http_response_code(500);
-    echo json_encode(['error' => 'Ocorreu um erro interno: ' . $e->getMessage()]);
+    echo json_encode(['error' => $e->getMessage()]);
 }

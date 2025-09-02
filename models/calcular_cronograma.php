@@ -6,20 +6,21 @@
  * @param int $cargaHorariaTotal A carga horária total do curso em horas.
  * @param string $dataInicio A data de início do curso no formato 'YYYY-MM-DD'.
  * @param string $turno O turno do curso ('manha', 'tarde', 'noite', 'integral').
+ * @param array $diasSemanaSelecionados Array com os dias da semana letivos (0=Dom, 1=Seg, ... 6=Sáb).
  * @return array Um array contendo 'diasLetivos' e 'dataTermino'.
  */
 
-function calcularCronograma(int $cargaHorariaTotal, string $dataInicio, string $turno): array {
+function calcularCronograma(int $cargaHorariaTotal, string $dataInicio, string $turno, array $diasSemanaSelecionados): array {
     
     // Regra de negócio: Carga horária por dia
     $horasPorDia = 0;
     switch ($turno) {
-        case 'manha':
-        case 'tarde':
-        case 'noite':
+        case 'Manhã':
+        case 'Tarde':
+        case 'Noite':
             $horasPorDia = 4;
             break;
-        case 'integral':
+        case 'Integral':
             $horasPorDia = 8;
             break;
         default:
@@ -32,27 +33,28 @@ function calcularCronograma(int $cargaHorariaTotal, string $dataInicio, string $
 
     // Datas não letivas (Feriados e Recessos)
     $feriadosRecessos = [
-        '2025-01-01', '2025-02-24', '2025-02-25', '2025-02-26', '2025-04-18', '2025-04-21', 
+        '2025-01-01', '2025-02-24', '2025-02-25', '2025-02-26', '2025-04-18', '2025-04-21',
         '2025-05-01', '2025-06-19', '2025-09-07', '2025-10-12', '2025-10-28', '2025-11-02',
         '2025-11-15', '2025-11-20', '2025-11-30', '2025-12-25',
         // Recessos
         '2025-03-03', '2025-03-04', '2025-03-05', '2025-03-06', '2025-03-07',
         '2025-07-07', '2025-07-08', '2025-07-09', '2025-07-10', '2025-07-11',
-        '2025-12-24', '2025-12-26', '2025-12-27', '2025-12-28', '2025-12-29', '2025-12-30', '2025-12-31'
     ];
 
     while ($cargaHorariaRestante > 0) {
-        $diaDaSemana = $currentDate->format('N'); // 1 (segunda) a 7 (domingo)
-        $dataAtualFormatada = $currentDate->format('Y-m-d');
-        
-        // Verifica se é um dia de semana (segunda a sexta) e não é feriado/recesso
-        if ($diaDaSemana >= 1 && $diaDaSemana <= 5 && !in_array($dataAtualFormatada, $feriadosRecessos)) {
-            $diasLetivos[] = $dataAtualFormatada;
+        $diaDaSemana = (int)$currentDate->format('w');
+        $isFeriadoOuRecesso = in_array($currentDate->format('Y-m-d'), $feriadosRecessos);
+
+        // Verifica se o dia atual é um dia letivo selecionado e não é feriado
+        if (in_array($diaDaSemana, $diasSemanaSelecionados) && !$isFeriadoOuRecesso) {
+            $diasLetivos[] = $currentDate->format('Y-m-d');
             $cargaHorariaRestante -= $horasPorDia;
         }
 
         // Avança para o próximo dia
-        $currentDate->modify('+1 day');
+        if ($cargaHorariaRestante > 0) {
+            $currentDate->modify('+1 day');
+        }
     }
 
     return [
