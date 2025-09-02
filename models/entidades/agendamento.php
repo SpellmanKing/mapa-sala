@@ -50,18 +50,12 @@ class Agendamento {
         try {
             // Se o turno for 'Integral', ele ocupa todos os outros turnos.
             if ($turno === 'Integral') {
-                $sql = "SELECT 1 FROM agendamentos a
-                        JOIN turmas t ON a.id_turmas = t.id_turmas
-                        WHERE a.id_salas = ? AND a.data_aula = ?
-                        LIMIT 1";
+                $sql = "SELECT 1 FROM agendamentos WHERE id_salas = ? AND data_aula = ? LIMIT 1";
                 $stmt = $this->pdo->prepare($sql);
                 $stmt->execute([$salaId, $data]);
             } else {
                 // Para os demais turnos, verifica se a sala já está ocupada por 'Integral' ou pelo mesmo turno.
-                $sql = "SELECT 1 FROM agendamentos a
-                        JOIN turmas t ON a.id_turmas = t.id_turmas
-                        WHERE a.id_salas = ? AND a.data_aula = ? AND (t.turno = ? OR t.turno = 'Integral')
-                        LIMIT 1";
+                $sql = "SELECT 1 FROM agendamentos WHERE id_salas = ? AND data_aula = ? AND (turno = ? OR turno = 'Integral') LIMIT 1";
                 $stmt = $this->pdo->prepare($sql);
                 $stmt->execute([$salaId, $data, $turno]);
             }

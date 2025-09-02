@@ -18,7 +18,7 @@ class Agendador {
         try {
             $this->pdo->beginTransaction();
 
-            // 1. Insere a nova turma na tabela `turmas` (o mesmo código)
+            // 1. Insere a nova turma na tabela `turmas`
             $sql_turma = "INSERT INTO turmas 
                           (id_cursos, data_inicio, data_termino, total_alunos, status, id_instrutores, turno) 
                           VALUES (?, ?, ?, ?, 'Planejada', ?, ?)";
@@ -35,17 +35,19 @@ class Agendador {
             $novaTurmaId = $this->pdo->lastInsertId();
 
             // 2. Insere cada agendamento na tabela `agendamentos`
-            $sql_agendamento = "INSERT INTO agendamentos (id_turmas, id_salas, data_aula) VALUES (?, ?, ?)";
+            // NOVO: Adiciona a coluna 'turno' na instrução SQL e no execute
+            $sql_agendamento = "INSERT INTO agendamentos (id_turmas, id_salas, data_aula, turno) VALUES (?, ?, ?, ?)";
             $stmt_agendamento = $this->pdo->prepare($sql_agendamento);
             
-            // NOVO: Loop aninhado para cada sala
+            // Loop aninhado para cada sala
             foreach ($salasIds as $salaId) {
                 // E para cada dia letivo da turma
                 foreach ($diasLetivos as $data_aula) {
                     $stmt_agendamento->execute([
                         $novaTurmaId, 
-                        $salaId, // Agora o agendamento usa o ID da sala atual no loop
-                        $data_aula
+                        $salaId, 
+                        $data_aula,
+                        $dadosTurma['turno'] // Passa o turno para a tabela de agendamentos
                     ]);
                 }
             }

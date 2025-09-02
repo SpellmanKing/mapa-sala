@@ -43,6 +43,9 @@
                 <h1>Painel de Gestão de Salas e Turmas</h1>
                 <div class="header-actions">
                     <button id="add-turma-btn" class="btn btn-primary">+Agendar Nova Turma</button>
+                    <button id="alocacao-automatica-btn" class="btn btn-primary">
+                        <i class="icon-smart-allocation"></i> Alocação Automática
+                    </button>
                 </div>
             </header>
             <main class="main-content">
@@ -122,9 +125,58 @@
 
                     <div class="modal-actions">
                         <button type="submit" class="btn btn-primary" id="agendar-btn">Agendar Turma</button>
-                        <button type="button" class="btn btn-secondary" id="alocar-automatico-btn">Alocação Automática</button>
                     </div>
                 </form>
+            </div>
+        </div>
+    </div>
+
+    <div id="alocacaoModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Alocação Inteligente</h2>
+                <span class="close-btn">&times;</span>
+            </div>
+            <div class="modal-body">
+                <form id="alocacao-form">
+                    <label for="alocacao-curso">Curso:</label>
+                    <select id="alocacao-curso" required></select>
+                    
+                    <label for="alocacao-alunos">Nº de Alunos:</label>
+                    <input type="number" id="alocacao-alunos" required>
+                    
+                    <label for="alocacao-turno">Turno:</label>
+                    <select id="alocacao-turno" required>
+                        <option value="Manhã">Manhã</option>
+                        <option value="Tarde">Tarde</option>
+                        <option value="Noite">Noite</option>
+                        <option value="Integral">Integral</option>
+                    </select>
+                    
+                    <label>Dias da Semana:</label>
+                    <div class="checkbox-group">
+                        <label><input type="checkbox" name="diasSemana" value="1"> Segunda</label>
+                        <label><input type="checkbox" name="diasSemana" value="2"> Terça</label>
+                        <label><input type="checkbox" name="diasSemana" value="3"> Quarta</label>
+                        <label><input type="checkbox" name="diasSemana" value="4"> Quinta</label>
+                        <label><input type="checkbox" name="diasSemana" value="5"> Sexta</label>
+                        <label><input type="checkbox" name="diasSemana" value="6"> Sábado</label>
+                    </div>
+                    
+                    <div class="modal-actions">
+                        <button type="submit" class="btn btn-primary">Buscar Alocação</button>
+                    </div>
+                </form>
+
+                <div id="sugestao-alocacao" style="display:none; margin-top: 20px;">
+                    <h4>Sugestão de Alocação:</h4>
+                    <p id="sugestao-mensagem"></p>
+                    <ul id="salas-sugeridas-lista"></ul>
+                    <div class="modal-actions">
+                        <button id="confirmar-alocacao-btn" class="btn btn-success">Confirmar</button>
+                        <button id="cancelar-sugestao-btn" class="btn btn-secondary">Cancelar</button>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
