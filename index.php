@@ -48,6 +48,7 @@
                 <header class="page-header">
                     <h1>Painel Visual de Salas</h1>
                     <button id="add-turma-btn" class="primary-btn"><i class="fas fa-plus"></i> Agendar Turma</button>
+                        <button type="submit" class="primary-btn" id="alocacao-automatica-btn">Alocação Automática</button>
                 </header>
                 <main class="main-content">
                     <div class="calendar-header">

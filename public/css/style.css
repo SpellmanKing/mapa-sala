@@ -310,7 +310,8 @@ body {
 
 /* Estilos para dias não letivos */
 .weekend, .holiday {
-    background-color: var(--red-light);
+    background-color: var(--medium-gray);
+    color: var(--dark-gray);
 }
 
 /* --- 5. MODAL E FORMULÁRIOS --- */
