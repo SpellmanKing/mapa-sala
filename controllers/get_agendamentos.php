@@ -1,8 +1,9 @@
 <?php
-// api/get_agendamentos.php (Corrigido para usar a classe Agendamento)
 
-require '../models/conexao.php';
-require '../models/entidades/agendamento.php';
+header('Content-Type: application/json');
+
+require __DIR__ . '/../models/conexao.php';
+require __DIR__ . '/../models/entidades/agendamento.php';
 
 try {
     // Obtém a instância da conexão via a classe Conexao

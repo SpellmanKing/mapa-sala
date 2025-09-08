@@ -1,9 +1,10 @@
 <?php
-// api/gerenciar_turma.php (Corrigido para o banco de dados)
 
-require '../models/conexao.php';
-require '../models/entidades/turma.php';
-require '../models/entidades/instrutor.php';
+header('Content-Type: application/json');
+
+require __DIR__ . '/../models/conexao.php';
+require __DIR__ . '/../models/entidades/turma.php';
+require __DIR__ . '/../models/entidades/instrutor.php';
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     http_response_code(405);
@@ -39,6 +40,6 @@ try {
     echo json_encode(['message' => 'Turma atualizada com sucesso!']);
     
 } catch (Exception $e) {
-    http_response_code(500); 
-    echo json_encode(['error' => $e->getMessage()]);
+    http_response_code(500);
+    echo json_encode(['error' => 'Erro ao atualizar a turma: ' . $e->getMessage()]);
 }

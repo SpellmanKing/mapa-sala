@@ -14,6 +14,28 @@ CREATE SCHEMA IF NOT EXISTS `sgst_bd` DEFAULT CHARACTER SET utf8 ;
 USE `sgst_bd` ;
 
 -- -----------------------------------------------------
+-- Table `tipos_sala`
+-- -----------------------------------------------------
+DROP TABLE IF EXISTS `tipos_sala` ;
+CREATE TABLE IF NOT EXISTS `tipos_sala` (
+  `idTipo_sala` INT NOT NULL AUTO_INCREMENT,
+  `nome_tipo` VARCHAR(100) NOT NULL UNIQUE,
+  PRIMARY KEY (`idTipo_sala`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+--
+-- Despejando dados para a tabela `tipos_sala`
+--
+
+INSERT INTO tipos_sala (nome_tipo) VALUES
+('Sala de aula Inovadora'),
+('Laboratório de TI'),
+('Laboratório de Moda'),
+('Laboratório de Imagem Pessoal'),
+('Auditório'),
+('Laboratório Multiuso');
+
+-- -----------------------------------------------------
 -- Table `salas`
 -- -----------------------------------------------------
 DROP TABLE IF EXISTS `salas` ;
@@ -21,34 +43,39 @@ CREATE TABLE IF NOT EXISTS `salas` (
   `id_salas` INT NOT NULL AUTO_INCREMENT,
   `nome_sala` VARCHAR(100) NOT NULL,
   `capacidade_maxima` INT NOT NULL,
-  `tipo_sala` VARCHAR(100),
+  `idTipo_sala` INT,
   `local` VARCHAR(255),
   `recursos_especiais` TEXT,
-  PRIMARY KEY (`id_salas`)
+  PRIMARY KEY (`id_salas`),
+  CONSTRAINT `fk_sala_tipo`
+    FOREIGN KEY (`idTipo_sala`) REFERENCES `tipos_sala` (`idTipo_sala`)
+    ON DELETE SET NULL
+    ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
 
 --
 -- Despejando dados para a tabela `salas`
 --
 
-INSERT INTO salas (nome_sala, capacidade_maxima, tipo_sala, local, recursos_especiais) VALUES
-('Inovadora 1', 30, 'Sala de aula', 'Cep Talal Abu Allan', 'Carteiras universitárias, TV ou projetor, lousa digital ou quadro branco, internet, tomadas, iluminação, climatização, dinâmicas em grupo, decoração moderna, multimídia, ambiente colaborativo'),
-('Inovadora 2', 20, 'Sala de aula', 'Cep Talal Abu Allan', 'Mesas móveis trapézio, TV ou projetor, lousa digital ou quadro branco, internet, tomadas, iluminação, climatização, dinâmicas em grupo, decoração moderna, multimídia, ambiente colaborativo'),
-('Inovadora 3', 35, 'Sala de aula', 'Cep Talal Abu Allan', 'Carteiras universitárias, TV ou projetor, lousa digital ou quadro branco, internet, tomadas, iluminação, climatização, dinâmicas em grupo, decoração moderna, multimídia, ambiente colaborativo'),
-('Inovadora 4', 33, 'Sala de aula', 'Cep Talal Abu Allan', 'Carteiras universitárias, TV ou projetor, lousa digital ou quadro branco, internet, tomadas, iluminação, climatização, dinâmicas em grupo, decoração moderna, multimídia, ambiente colaborativo'),
-('Inovadora 5', 20, 'Sala de aula', 'Cep Talal Abu Allan', 'Mesas móveis trapézio, TV ou projetor, lousa digital ou quadro branco, internet, tomadas, iluminação, climatização, dinâmicas em grupo, decoração moderna, multimídia, ambiente colaborativo'),
-('Inovadora 6', 32, 'Sala de aula', 'Cep Talal Abu Allan', 'Carteiras universitárias, TV ou projetor, lousa digital ou quadro branco, internet, tomadas, iluminação, climatização, dinâmicas em grupo, decoração moderna, multimídia, ambiente colaborativo'),
-('Técnico de Sistemas e Rede 1', 28, 'Laboratório de TI', 'Cep Talal Abu Allan', 'Rack de rede, switches, cabeamento estruturado, roteadores, 30 computadores, servidor local, projetor multimídia/TV interativa, nobreak, ferramentas de rede, software de simulação'),
-('Técnico de Sistemas e Rede 2', 28, 'Laboratório de TI', 'Cep Talal Abu Allan', 'Rack de rede, switches, cabeamento estruturado, roteadores, 30 computadores, servidor local, projetor multimídia/TV interativa, nobreak, ferramentas de rede, software de simulação'),
-('Técnico de Sistemas', 30, 'Laboratório de TI', 'Cep Talal Abu Allan', '30 computadores, servidor local, banco de dados, projetor multimídia/TV interativa, softwares de programação e virtualização, nobreak para servidor'),
-('Produção de Moda', 20, 'Laboratório de Moda', 'Cep Talal Abu Allan', 'Máquinas de costura, overlock, mesa de corte, manequins, ferro, iluminação uniforme, armários, kits de modelagem'),
-('Imagem - Cabelos', 18, 'Laboratório de Imagem Pessoal', 'Cep Talal Abu Allan', 'Cadeiras de cabeleireiro, lavatórios, espelhos grandes, secadores, chapinhas, carrinhos auxiliares, iluminação frontal, tomadas, esterilizadores'),
-('Imagem - Estética e Unhas', 16, 'Laboratório de Imagem Pessoal', 'Cep Talal Abu Allan', 'Macas reclináveis, mesas e poltronas manicure/pedicure, aparelhos de estética, carrinhos auxiliares, lavabos'),
-('Imagem - Maquiagem e Produção', 14, 'Laboratório de Imagem Pessoal', 'Cep Talal Abu Allan', 'Cadeiras de maquiagem, bancadas com espelhos e iluminação de camarim, tomadas, kit de pincéis, suportes, carrinhos auxiliares'),
-('Auditório', 70, 'Auditório', 'Cep Talal Abu Allan', 'Projetor, som, ar-condicionado, 70 cadeiras, iluminação adequada, climatização, espaço para apresentações'),
-('Técnico de Sistemas 1', 30, 'Laboratório de TI', 'Polo Recanto da Emas', 'Computadores, servidor local, banco de dados, projetor multimídia/TV interativa, softwares de programação, virtualização, nobreak'),
-('Técnico de Sistemas 2', 30, 'Laboratório de TI', 'Polo Recanto da Emas', 'Computadores, servidor local, banco de dados, projetor multimídia/TV interativa, softwares de programação, virtualização, nobreak'),
-('Multiuso de Cabelo, Unhas e Moda', 16, 'Laboratório Multiuso', 'Polo Recanto da Emas', 'Provador, overlock, máquina de costura, secador, lockers, TV 85", bancadas, cadeiras, espelhos grandes, lavatórios de cabelo, cirandinhas, iluminação estética, armários, pontos de energia');
+INSERT INTO salas (nome_sala, capacidade_maxima, idTipo_sala, local, recursos_especiais) VALUES
+('Inovadora 1', 30, 1, 'Cep Talal Abu Allan', '1º Andar, carteiras universitárias, TV ou projetor, lousa digital ou quadro branco, acesso à internet, tomadas para notebooks, iluminação adequada, climatização, espaço para dinâmicas, decoração moderna, recursos multimídia, ambiente colaborativo'),
+('Inovadora 2', 20, 1, 'Cep Talal Abu Allan', '2º Andar, mesas móveis formato trapézio, TV ou projetor, lousa digital ou quadro branco, internet, tomadas, climatização, recursos multimídia'),
+('Inovadora 3', 35, 1, 'Cep Talal Abu Allan', '2º Andar, carteiras universitárias, TV ou projetor, lousa digital, internet, climatização, recursos multimídia'),
+('Inovadora 4', 33, 1, 'Cep Talal Abu Allan', '2º Andar, carteiras universitárias, TV ou projetor, lousa digital, internet, climatização'),
+('Inovadora 5', 20, 1, 'Cep Talal Abu Allan', '2º Andar, mesas móveis formato trapézio, TV ou projetor, internet, climatização'),
+('Inovadora 6', 32, 1, 'Cep Talal Abu Allan', '2º Andar, carteiras universitárias, TV ou projetor, internet, climatização'),
+('Técnico de Sistemas e Rede 1', 28, 2, 'Cep Talal Abu Allan', 'rack de rede, switches, cabeamento estruturado, roteadores, 30 computadores, servidor, projetor multimídia, nobreak'),
+('Técnico de Sistemas e Rede 2', 28, 2, 'Cep Talal Abu Allan', 'rack de rede, switches, cabeamento estruturado, roteadores, 30 computadores, servidor, projetor multimídia, nobreak'),
+('Técnico de Sistemas', 30, 2, 'Cep Talal Abu Allan', '30 computadores, servidor local, projetor multimídia, softwares de programação, banco de dados, nobreak'),
+('Produção de Moda', 20, 3, 'Cep Talal Abu Allan', 'máquinas de costura, overlock, mesa de corte, manequins, ferro, iluminação, armários para tecidos, kits de modelagem'),
+('Imagem - Cabelos', 18, 4, 'Cep Talal Abu Allan', 'cadeiras de cabeleireiro, lavatórios, espelhos, secadores, chapinhas, iluminação adequada'),
+('Imagem - Estética e Unhas', 16, 4, 'Cep Talal Abu Allan', 'macas reclináveis, mesas de manicure, esterilizadores, equipamentos de estética, poltronas de pedicure'),
+('Imagem - Maquiagem e Produção', 14, 4, 'Cep Talal Abu Allan', 'cadeiras de maquiagem, bancadas com espelhos, iluminação de camarim, tomadas, kits de pincéis'),
+('Auditório', 70, 5, 'Cep Talal Abu Allan', 'projetor, som, ar-condicionado, 70 cadeiras, iluminação adequada'),
+('Técnico de Sistemas 1', 30, 2, 'Polo Recanto da Emas', 'computadores, servidor local, projetor multimídia, softwares de programação'),
+('Técnico de Sistemas 2', 30, 2, 'Polo Recanto da Emas', 'computadores, servidor local, projetor multimídia, softwares de programação'),
+('Multiuso de Cabelo, Unhas e Moda', 16, 6, 'Polo Recanto da Emas', 'máquinas de costura, secador, TV 85", bancadas, espelhos, cadeiras, lavatórios, iluminação estética');
 
 -- -----------------------------------------------------
 -- Table `cursos`
@@ -56,11 +83,9 @@ INSERT INTO salas (nome_sala, capacidade_maxima, tipo_sala, local, recursos_espe
 DROP TABLE IF EXISTS `cursos` ;
 CREATE TABLE IF NOT EXISTS `cursos` (
   `id_cursos` INT NOT NULL AUTO_INCREMENT,
-  `nome_curso` VARCHAR(255) NOT NULL UNIQUE,
-  `segmento` VARCHAR(100),
-  `carga_horaria` INT,
-  `modalidade` VARCHAR(100),
-  `necessidade_sala` TEXT,
+  `nome_curso` VARCHAR(255) NOT NULL,
+  `carga_horaria` INT NOT NULL,
+  `necessidade_sala` VARCHAR(255),
   PRIMARY KEY (`id_cursos`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
@@ -68,18 +93,21 @@ CREATE TABLE IF NOT EXISTS `cursos` (
 -- Despejando dados para a tabela `cursos`
 --
 
-INSERT INTO cursos (nome_curso, segmento, carga_horaria, modalidade, necessidade_sala) VALUES
-('Florista', 'Artes', 160, 'Qualificação Profissional', 'Sala de aula Inovadora ou Laboratório de TI'),
-('Fotografia comercial com celular', 'Artes', 36, 'Aperfeiçoamento', 'Sala de aula Inovadora ou Laboratório de TI'),
-('Fotografia de propaganda e publicidade', 'Artes', 72, 'Aperfeiçoamento', 'Sala de aula Inovadora ou Laboratório de TI'),
-('Barbeiro', 'Beleza', 172, 'Qualificação Profissional', 'Imagem - Cabelos'),
-('Cabeleireiro', 'Beleza', 400, 'Aperfeiçoamento', 'Imagem - Cabelos'),
-('Manicure e Pedicure', 'Beleza', 160, 'Qualificação Profissional', 'Imagem - Estética e Unhas'),
-('Maquiador', 'Beleza', 160, 'Qualificação Profissional', 'Imagem - Cabelos, Imagem - Estética e Unhas'),
-('Administrador de Banco de Dados', 'Tecnologia e Games', 200, 'Qualificação Profissional', 'Laboratório de TI'),
-('Programador Web', 'Tecnologia e Games', 240, 'Qualificação Profissional', 'Laboratório de TI'),
-('Técnico em Enfermagem', 'Saúde', 1800, 'Habilitação Técnica', 'Sala de aula Inovadora');
-
+INSERT INTO cursos (nome_curso, carga_horaria, necessidade_sala) VALUES
+('Florista', 160, 'Sala de aula Inovadora'),
+('Fotografia comercial com celular', 36, 'Sala de aula Inovadora'),
+('Alongamento de Unhas', 60, 'Imagem - Estética e Unhas'),
+('Barbeiro', 172, 'Imagem - Cabelos'),
+('Cabeleireiro', 400, 'Imagem - Cabelos'),
+('Depilador', 160, 'Imagem - Estética e Unhas'),
+('Manicure e Pedicure', 160, 'Imagem - Estética e Unhas'),
+('Maquiador', 160, 'Imagem - Cabelos'),
+('Administrador de Banco de Dados', 200, 'Laboratório de TI'),
+('Desenvolvedor Back-end', 500, 'Laboratório de TI'),
+('Técnico em Redes de Computadores', 1000, 'Laboratório de TI'),
+('Aperfeiçoamento em Corte e Costura', 60, 'Laboratório de Moda'),
+('Costureiro', 212, 'Laboratório de Moda'),
+('Estilista de Moda', 408, 'Laboratório de Moda');
 
 -- -----------------------------------------------------
 -- Table `instrutores`
@@ -87,9 +115,9 @@ INSERT INTO cursos (nome_curso, segmento, carga_horaria, modalidade, necessidade
 DROP TABLE IF EXISTS `instrutores` ;
 CREATE TABLE IF NOT EXISTS `instrutores` (
   `id_instrutores` INT NOT NULL AUTO_INCREMENT,
-  `matricula` INT UNIQUE,
-  `nome_instrutor` VARCHAR(255) NOT NULL,
-  `segmento` VARCHAR(100),
+  `nome_instrutor` VARCHAR(100) NOT NULL UNIQUE,
+  `segmento_principal` VARCHAR(100),
+  `habilidades_extras` TEXT,
   PRIMARY KEY (`id_instrutores`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
@@ -97,169 +125,27 @@ CREATE TABLE IF NOT EXISTS `instrutores` (
 -- Despejando dados para a tabela `isntrutores`
 --
 
--- -----------------------------------------------------
--- Dados completos para a tabela `instrutores`
--- -----------------------------------------------------
-
-INSERT INTO instrutores (matricula, nome_instrutor, segmento) VALUES
-(5218, 'Luzia Pereira De Andrade', 'Beleza'),
-(4968, 'Stephanie Lopes De Sousa', 'Beleza'),
-(2164, 'Maria Auxiliadora De Almeida Rodrigues', 'Beleza'),
-(5521, 'Maria Edinalda Pinheiro Da Silva', 'Beleza'),
-(5463, 'Caroline Manso Da Costa Silva', 'Beleza'),
-(5328, 'Thiago Augusto Ferreira', 'Beleza'),
-(4964, 'Adriano Da Silva Santos', 'Beleza'),
-(4912, 'Jarlane Carneiro De Lima Pereira', 'Beleza'),
-(4861, 'Camila Marques Pereira', 'Beleza'),
-(4885, 'Mário Carvalho De Sousa Baldez', 'Beleza'),
-(4540, 'Mônica Rodrigues Da Costa Araújo', 'Beleza'),
-(4174, 'João De Deus Meira', 'Beleza'),
-(5755, 'Rubia Martins De Melo', 'Beleza'),
-(6014, 'Thiago De Sousa Costa', 'Beleza'),
-(5991, 'David Da Silva Prado', 'Beleza'),
-(5307, 'Daniele Moraes De Oliveira Ferreira Siqueira', 'Beleza');
-
-INSERT INTO instrutores (matricula, nome_instrutor, segmento) VALUES
-(5563, 'Wesley Lima Da Nóbrega', 'Comunicação'),
-(5953, 'Arthur Gramacho Dos Santos', 'Comunicação'),
-(4522, 'Juliana Mendes De Brito', 'Educacional'),
-(5800, 'Bruna Gomes De Moura Medeiros', 'Educacional'),
-(5758, 'Adailton Rodrigues Duarte', 'Educacional'),
-(5132, 'Michelle Pereira Soares', 'Educacional'),
-(5460, 'Ismael Alves Gomes', 'Gastronomia'),
-(5319, 'Isabela Mayane Diniz Mota', 'Gastronomia'),
-(3244, 'Ana Lúcia Feitosa', 'Gastronomia'),
-(2459, 'Joseny Juvito De Souza', 'Gastronomia'),
-(5968, 'Anna Paula Caribe Schwam', 'Gastronomia'),
-(5980, 'Victor Hugo Alves Xavier', 'Gastronomia'),
-(5778, 'Marcos Antonio Facanha Da Silva Junior', 'Gastronomia'),
-(5973, 'Joyce Santos Brum', 'Gastronomia'),
-(5184, 'Kelly Alves De Oliveira', 'Gestão');
-
-INSERT INTO instrutores (matricula, nome_instrutor, segmento) VALUES
-(5181, 'Luzineide Maria De Araujo', 'Gestão'),
-(5154, 'Elisangela Machado Da Silva Gomes', 'Gestão'),
-(5053, 'Liliane Cavalcante De Oliveira', 'Gestão'),
-(4917, 'Patrícia Barbosa Alves De Almeida', 'Gestão'),
-(4737, 'Elisa Rosa Coimbras', 'Gestão'),
-(4507, 'Lúcio Alexandre Souza Lordes', 'Gestão'),
-(3668, 'Ricardo Da Silva Pierre', 'Gestão'),
-(3768, 'Wender Freitas Reis', 'Gestão'),
-(3196, 'Edson Luiz Cabral Dos Santos', 'Gestão'),
-(5128, 'Jefferson Soares Teixeira Alves', 'Gestão'),
-(5566, 'Jonas Aparecido Dias', 'Gestão'),
-(5369, 'Francisco Edivan Da Silva', 'Gestão'),
-(5316, 'Nara Moura De Sena', 'Gestão'),
-(4923, 'Joelma Aparecida Leite', 'Gestão'),
-(4891, 'Luís Fernando Portela De Faria', 'Gestão');
-
-INSERT INTO instrutores (matricula, nome_instrutor, segmento) VALUES
-(4024, 'Geane Pinto Camargo', 'Gestão'),
-(3772, 'Alessandra Antonia Pereira', 'Gestão'),
-(3855, 'Aline Correa Lopes', 'Gestão'),
-(3467, 'Luanna Alves De Oliveira Farias Belloti', 'Gestão'),
-(3166, 'Analice Barbosa Santos De Oliveira', 'Gestão'),
-(2920, 'Katyara Pinheiro Sousa Cunha', 'Gestão'),
-(2452, 'Lindomar Silva Bastos', 'Gestão'),
-(5860, 'Cleia Dos Santos Rohod', 'Gestão'),
-(5847, 'Alexandre Humberto Bessa Ferreira', 'Gestão'),
-(5767, 'Jose De Assis Custodio', 'Gestão'),
-(5965, 'Franklin George Andrade Batista', 'Gestão'),
-(5932, 'Dionisio Francisco Pereira', 'Gestão'),
-(5744, 'Marileia De Jesus Amorim', 'Gestão'),
-(5760, 'Giorgia Barreto Lima Parriao', 'Gestão'),
-(5766, 'Aldemir Rodrigues Martins', 'Gestão');
-
-INSERT INTO instrutores (matricula, nome_instrutor, segmento) VALUES
-(5782, 'Ana Claudia Lima Soares', 'Gestão'),
-(6000, 'Joarisvaldo Queiroz Martins', 'Gestão'),
-(6037, 'Petrick De Oliveira Tomasini', 'Gestão'),
-(5939, 'Ricardo Pereira Gomes De Araujo', 'Gestão'),
-(5950, 'Miracleia Almeida De Lima Castro', 'Gestão'),
-(5929, 'Bianca Gabriel Fellet', 'Gestão'),
-(6002, 'Juliana Holanda Nogueira Peixoto Cortez', 'Gestão'),
-(5989, 'Jose Pericles Freire Barroncas', 'Gestão'),
-(5861, 'Thalita Barboza Rocha Cardoso', 'Gestão'),
-(5862, 'Ronia Pinheiro Marra De Sousa', 'Gestão'),
-(5895, 'Marcela Nunes Mesquita Ribas Lopes Dos Santos', 'Gestão'),
-(5912, 'Israel Vila Verde Belem', 'Gestão'),
-(5933, 'Flavio Pereira De Sousa', 'Gestão'),
-(5936, 'Kedna Medeiros Dos Santos', 'Gestão'),
-(5787, 'Sandro Tibirica Dos Santos Carneiro', 'Gestão');
-
-INSERT INTO instrutores (matricula, nome_instrutor, segmento) VALUES
-(5791, 'Marcela Rocha Mendonca Ribeiro', 'Gestão'),
-(5288, 'Paulo Cesar Pereira Soares', 'Gestão'),
-(5273, 'Rosivane Machado Cavalcante Monteiro', 'Gestão'),
-(5131, 'Mauricio Pereira Barroso Dos Santos', 'Gestão'),
-(4992, 'Debora Raquel De Macedo Carinhanha', 'Idiomas'),
-(4973, 'Maria Cristina Gomes De Oliveira', 'Moda'),
-(4722, 'Tatiane Silva Dos Santos', 'Moda'),
-(4080, 'Maria De Fátima Reis Lima Silva', 'Moda'),
-(2769, 'Erenita Vieira Tolentino', 'Moda'),
-(5851, 'Ilcimara Belo Barbosa Correia Viana', 'Moda'),
-(5828, 'Bianca Mendes Da Silva', 'Moda'),
-(5799, 'Suely De Fatima Pereira', 'Moda'),
-(5811, 'Keyla Beatriz Pires', 'Moda'),
-(5832, 'Kamilla Oliveira Gontijo De Andrade', 'Moda'),
-(5237, 'Maria Zenaide Peixoto Cavalcante', 'Produção de Alimentos');
-
-INSERT INTO instrutores (matricula, nome_instrutor, segmento) VALUES
-(5196, 'Waldemar Camilo Ferreira', 'Produção de Alimentos'),
-(4978, 'Allison Da Silva Lima', 'Produção de Alimentos'),
-(5024, 'Maria Claudia Nascimento', 'Produção de Alimentos'),
-(6047, 'Daniel Silva Dos Reis', 'Produção de Alimentos'),
-(4961, 'Shirliany Andrade Do Nascimento', 'Saúde'),
-(5684, 'Igor Araujo Cruz', 'Saúde'),
-(5472, 'Álvaro Leal Da Silva', 'Saúde'),
-(5395, 'Mariane Conceição Paixão', 'Saúde'),
-(5023, 'Leida Maria Rodrigues Do Prado', 'Saúde'),
-(4875, 'Erika De Souza Figueiredo', 'Saúde'),
-(4892, 'Marcos Antonio Pereira Da Silva', 'Saúde'),
-(5867, 'Sabrina Oliveira Campos De Franca', 'Saúde'),
-(5702, 'Jose Otavio Da Silva Junior', 'Saúde'),
-(5947, 'Aparecida Araujo De Freitas', 'Saúde'),
-(5918, 'Gleyciany Goncalves Silva Jesus', 'Saúde');
-
-INSERT INTO instrutores (matricula, nome_instrutor, segmento) VALUES
-(5280, 'Pedro Henrique Batista Dos Anjos', 'Saúde'),
-(5146, 'Lilian Girardi Miguel Da Silva', 'Saúde'),
-(5090, 'Erica Paulino Da Costa Moreira', 'Saúde'),
-(5424, 'Charles Dikison Souza Guimarães', 'Segurança'),
-(5428, 'Jose Roberto Moraes De Souza', 'Segurança'),
-(5776, 'Leandro Pereira Castro', 'Segurança'),
-(6015, 'Dalva Maria Vitoria De Araujo Carvalho', 'Segurança'),
-(5944, 'Denilson Rodrigues Santana', 'Segurança'),
-(5170, 'Helton Veras Medeiros', 'Segurança'),
-(5281, 'Ruben Gomes De Bastos Prado', 'Tecnologia da Informação'),
-(5212, 'Alisson Ribeiro Da Silva', 'Tecnologia da Informação'),
-(4623, 'Raniere Rodrigues De Oliveira', 'Tecnologia da Informação'),
-(4146, 'Ana Paula Leite Pereira', 'Tecnologia da Informação'),
-(1997, 'Hernande De Castro Coelho', 'Tecnologia da Informação'),
-(5557, 'Alessandro Alves De Vasconcelos', 'Tecnologia da Informação');
-
-INSERT INTO instrutores (matricula, nome_instrutor, segmento) VALUES
-(5535, 'Sérgio Rodrigues Lima', 'Tecnologia da Informação'),
-(5820, 'Hudson Neves E Silva', 'Tecnologia da Informação'),
-(5746, 'Rafael Do Sacramento Bonfim', 'Tecnologia da Informação'),
-(5854, 'Herminio Jesus Santos Do Carmo', 'Tecnologia da Informação'),
-(5754, 'Joa Victor Ramalho Mendes', 'Tecnologia da Informação'),
-(5866, 'Flippy Maycon Gomes Da Silva', 'Tecnologia da Informação'),
-(5998, 'Adriel Caninde Filgueira Do Amaral', 'Tecnologia da Informação'),
-(5999, 'Douglas Antero Rodrigues Silva', 'Tecnologia da Informação'),
-(6034, 'Lucas Dos Santos Camilo', 'Tecnologia da Informação'),
-(6035, 'Valdiney Marcio De Sousa', 'Tecnologia da Informação'),
-(5952, 'Jose Matheus Alves Do Rosario', 'Tecnologia da Informação'),
-(5870, 'Marcos Alves De Oliveira', 'Tecnologia da Informação'),
-(5976, 'Hudson Andre Vidal Martins', 'Tecnologia da Informação'),
-(5869, 'Kelly Bispo Da Silva', 'Tecnologia da Informação'),
-(5850, 'Leonardo Nemer Afonso', 'Tecnologia da Informação');
-
-INSERT INTO instrutores (matricula, nome_instrutor, segmento) VALUES
-(5302, 'Marcileide Cardoso De Souza', 'Tecnologia da Informação'),
-(5190, 'Romulo Cesar Silvestre Leite', 'Tecnologia da Informação'),
-(5135, 'Ricardo De Souza Serra', 'Tecnologia da Informação');
-
+INSERT INTO instrutores (nome_instrutor, segmento_principal) VALUES
+('Luzia Pereira De Andrade', 'Beleza'),
+('Stephanie Lopes De Sousa', 'Beleza'),
+('Maria Auxiliadora De Almeida Rodrigues', 'Beleza'),
+('Maria Edinalda Pinheiro Da Silva', 'Beleza'),
+('Caroline Manso Da Costa Silva', 'Beleza'),
+('Thiago Augusto Ferreira', 'Beleza'),
+('Adriano Da Silva Santos', 'Beleza'),
+('Jarlane Carneiro De Lima Pereira', 'Beleza'),
+('Camila Marques Pereira', 'Beleza'),
+('Mário Carvalho De Sousa Baldez', 'Beleza'),
+('Mônica Rodrigues Da Costa Araújo', 'Beleza'),
+('João De Deus Meira', 'Beleza'),
+('Rubia Martins De Melo', 'Beleza'),
+('Thiago De Sousa Costa', 'Beleza'),
+('David Da Silva Prado', 'Beleza'),
+('Daniele Moraes De Oliveira Ferreira Siqueira', 'Beleza'),
+('Wesley Lima Da Nóbrega', 'Comunicação'),
+('Arthur Gramacho Dos Santos', 'Comunicação'),
+('Juliana Mendes De Brito', 'Educacional'),
+('Bruna Gomes De Moura Medeiros', 'Educacional');
 
 
 -- -----------------------------------------------------
@@ -275,7 +161,6 @@ CREATE TABLE IF NOT EXISTS `turmas` (
   `data_inicio` DATE NOT NULL,
   `data_termino` DATE,
   `turno` VARCHAR(50),
-  `horario` VARCHAR(50),
   `total_alunos` INT,
   `alunos_pagantes` INT,
   `alunos_bolsistas` INT,
@@ -291,6 +176,17 @@ CREATE TABLE IF NOT EXISTS `turmas` (
     ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
+--
+-- Despejando dados para a tabela `turmas`
+--
+
+INSERT INTO turmas (id_cursos, id_instrutores, codigo_turma, status, data_inicio, data_termino, turno, total_alunos, alunos_pagantes, alunos_bolsistas, observacoes) VALUES
+(1, 1, 'TURMA-2025-001', 'Planejada', '2025-09-15', '2025-11-15', 'Manhã', 20, 15, 5, 'Turma inicial de Florista'),
+(3, 2, 'TURMA-2025-002', 'Planejada', '2025-10-01', '2025-12-01', 'Tarde', 18, 12, 6, 'Curso Alongamento de Unhas'),
+(5, 6, 'TURMA-2025-003', 'Planejada', '2025-09-20', '2026-01-20', 'Noite', 25, 20, 5, 'Turma Cabeleireiro - módulo avançado'),
+(9, 10, 'TURMA-2025-004', 'Planejada', '2025-09-25', '2026-02-25', 'Manhã', 30, 25, 5, 'Administrador de Banco de Dados'),
+(13, 12, 'TURMA-2025-005', 'Planejada', '2025-10-05', '2026-02-05', 'Tarde', 15, 10, 5, 'Curso Costureiro'),
+(11, 14, 'TURMA-2025-006', 'Planejada', '2025-10-10', '2026-03-10', 'Noite', 28, 22, 6, 'Curso Técnico em Redes');
 
 -- -----------------------------------------------------
 -- Table `agendamentos`
@@ -301,6 +197,7 @@ CREATE TABLE IF NOT EXISTS `agendamentos` (
   `id_turmas` INT NOT NULL,
   `id_salas` INT NOT NULL,
   `data_aula` DATE NOT NULL,
+  `turno` VARCHAR(50) NOT NULL,
   PRIMARY KEY (`id_agendamentos`),
   CONSTRAINT `fk_agendamento_turma`
     FOREIGN KEY (`id_turmas`) REFERENCES `turmas` (`id_turmas`)
@@ -312,7 +209,23 @@ CREATE TABLE IF NOT EXISTS `agendamentos` (
     ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
+--
+-- Despejando dados para a tabela `agendamentos`
+--
 
+INSERT INTO agendamentos (id_turmas, id_salas, data_aula, turno) VALUES
+(1, 1, '2025-09-15', 'Manhã'),
+(1, 1, '2025-09-22', 'Manhã'),
+(2, 12, '2025-10-01', 'Tarde'),
+(2, 12, '2025-10-08', 'Tarde'),
+(3, 11, '2025-09-20', 'Noite'),
+(3, 11, '2025-09-27', 'Noite'),
+(4, 7, '2025-09-25', 'Manhã'),
+(4, 7, '2025-10-02', 'Manhã'),
+(5, 10, '2025-10-05', 'Tarde'),
+(5, 10, '2025-10-12', 'Tarde'),
+(6, 8, '2025-10-10', 'Noite'),
+(6, 8, '2025-10-17', 'Noite');
 
 SET SQL_MODE=@OLD_SQL_MODE;
 SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS;

@@ -1,13 +1,14 @@
 <?php
 // controllers/alocar_turma.php
-require '../models/conexao.php';
-require '../models/entidades/sala.php';
-require '../models/entidades/curso.php';
-require '../models/entidades/agendamento.php';
-require '../models/entidades/alocador_inteligente.php';
-require '../models/calcular_cronograma.php';
-
 header('Content-Type: application/json');
+
+require __DIR__ . '/../models/conexao.php';
+require __DIR__ . '/../models/entidades/sala.php';
+require __DIR__ . '/../models/entidades/curso.php';
+require __DIR__ . '/../models/entidades/agendamento.php';
+require __DIR__ . '/../models/entidades/alocador_inteligente.php';
+require __DIR__ . '/../models/calcular_cronograma.php';
+
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     http_response_code(405);
@@ -35,32 +36,22 @@ try {
     $diasSemanaSelecionados = $data['diasSemana'];
 
     $dadosCurso = $curso->buscarPorId($cursoId);
-    if (!$dadosCurso) {
-        http_response_code(404);
-        echo json_encode(['error' => 'Curso não encontrado.']);
+    if (!$dadosCurso || empty($dadosCurso['carga_horaria']) || empty($dadosCurso['necessidade_sala'])) {
+        http_response_code(400);
+        echo json_encode(['error' => 'Curso não encontrado, carga horária ou necessidade de sala não definida.']);
         exit;
     }
     
-    $cargaHorariaTotal = $dadosCurso['carga_horaria'];
+    $cargaHoraria = $dadosCurso['carga_horaria'];
     $tipoSalaNecessaria = $dadosCurso['necessidade_sala'];
 
-    // 1. Encontra a primeira data de início disponível
-    $dataInicio = (new DateTime())->format('Y-m-d');
-    $diasLetivos = [];
-    $dataTermino = '';
+    // 1. Calcula o cronograma
+    $cronograma = calcularCronograma($cargaHoraria, $data['dataInicio'], $turno, $diasSemanaSelecionados);
+    $diasLetivos = $cronograma['diasLetivos'];
+    $dataInicio = $data['dataInicio'];
+    $dataTermino = $cronograma['dataTermino'];
 
-    while (empty($diasLetivos)) {
-        try {
-            $cronograma = calcularCronograma($cargaHorariaTotal, $dataInicio, $turno, $diasSemanaSelecionados);
-            $diasLetivos = $cronograma['diasLetivos'];
-            $dataTermino = $cronograma['dataTermino'];
-        } catch (Exception $e) {
-            // Se o cálculo do cronograma falhar, avança a data de início
-            $dataInicio = (new DateTime($dataInicio))->modify('+1 day')->format('Y-m-d');
-        }
-    }
-
-    // 2. Busca todas as salas e filtra as disponíveis para a alocação
+    // 2. Filtra as salas disponíveis para a alocação
     $todasSalas = $sala->buscarTodas();
     $salasDisponiveis = [];
 
@@ -94,7 +85,7 @@ try {
     }
 
     http_response_code(404);
-    echo json_encode(['error' => 'Nenhuma sala disponível encontrada para os critérios selecionados.']);
+    echo json_encode(['success' => false, 'error' => 'Não foi possível encontrar uma sala disponível que atenda aos critérios para este curso e período.']);
 
 } catch (Exception $e) {
     http_response_code(500);

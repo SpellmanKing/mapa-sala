@@ -1,16 +1,25 @@
 <?php
-// api/get_instrutores.php
 
-require '../models/conexao.php';
+header('Content-Type: application/json');
+
+// Inclui o arquivo do modelo de instrutor
+require __DIR__ . '/../models/conexao.php';
+require __DIR__ . '/../models/entidades/instrutor.php';
 
 try {
+    // 1. Obtém a instância da conexão
     $pdo = Conexao::getInstancia();
-    $stmt = $pdo->query("SELECT id_instrutores, nome_instrutor FROM instrutores ORDER BY nome_instrutor ASC");
-    $instrutores = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
+    // 2. Cria uma instância da classe Instrutor
+    $instrutor = new Instrutor($pdo);
+
+    // 3. Chama o método do modelo para buscar os instrutores
+    $instrutores = $instrutor->buscarTodos();
+
+    // 4. Retorna a resposta em JSON
     echo json_encode($instrutores);
 
-} catch (PDOException $e) {
+} catch (Exception $e) {
     http_response_code(500); 
     echo json_encode(['error' => 'Erro ao buscar instrutores: ' . $e->getMessage()]);
 }

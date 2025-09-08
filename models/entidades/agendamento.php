@@ -39,30 +39,24 @@ class Agendamento {
         }
     }
 
-    /**
-     * Verifica se uma sala está disponível em uma data e turno específicos.
-     * @param int $salaId O ID da sala.
-     * @param string $data A data no formato 'YYYY-MM-DD'.
-     * @param string $turno O turno ('Manhã', 'Tarde', 'Noite', 'Integral').
-     * @return bool Retorna true se a sala estiver disponível, false caso contrário.
-     */
     public function verificarDisponibilidade(int $salaId, string $data, string $turno): bool {
         try {
-            // Se o turno for 'Integral', ele ocupa todos os outros turnos.
+            // Verifica se a sala já está ocupada no mesmo dia e turno.
+            // Para turnos que não são 'Integral', verifica se há conflito com o mesmo turno ou com um agendamento 'Integral'.
+            // Para o turno 'Integral', verifica se já existe qualquer agendamento naquele dia.
             if ($turno === 'Integral') {
                 $sql = "SELECT 1 FROM agendamentos WHERE id_salas = ? AND data_aula = ? LIMIT 1";
                 $stmt = $this->pdo->prepare($sql);
                 $stmt->execute([$salaId, $data]);
             } else {
-                // Para os demais turnos, verifica se a sala já está ocupada por 'Integral' ou pelo mesmo turno.
                 $sql = "SELECT 1 FROM agendamentos WHERE id_salas = ? AND data_aula = ? AND (turno = ? OR turno = 'Integral') LIMIT 1";
                 $stmt = $this->pdo->prepare($sql);
                 $stmt->execute([$salaId, $data, $turno]);
             }
-            
-            $agendamentoExistente = $stmt->fetch(PDO::FETCH_ASSOC);
-            return $agendamentoExistente === false;
+
+            return $stmt->fetch(PDO::FETCH_ASSOC) === false;
         } catch (PDOException $e) {
+            // Lançar a exceção para ser tratada no controlador principal
             throw new Exception("Erro ao verificar disponibilidade: " . $e->getMessage());
         }
     }

@@ -1,8 +1,9 @@
 <?php
-// api/get_cursos.php (Corrigido para usar a classe Curso)
 
-require '../models/conexao.php';
-require '../models/entidades/curso.php';
+header('Content-Type: application/json');
+
+require __DIR__ . '/../models/conexao.php';
+require __DIR__ . '/../models/entidades/curso.php';
 
 try {
     // 1. Obtém a instância da conexão via a classe Conexao (padrão Singleton)

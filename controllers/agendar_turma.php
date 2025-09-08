@@ -1,15 +1,15 @@
 <?php
 // controllers/agendar_turma.php
-
-// Garanta que todos os arquivos de classe são carregados
-require '../models/conexao.php';
-require '../models/entidades/agendador.php';
-require '../models/entidades/instrutor.php';
-require '../models/entidades/curso.php';
-require '../models/entidades/agendamento.php';
-require '../models/calcular_cronograma.php';
-
 header('Content-Type: application/json');
+
+// Garante que todos os arquivos de classe são carregados
+require __DIR__ . '/../models/conexao.php';
+require __DIR__ . '/../models/entidades/agendador.php';
+require __DIR__ . '/../models/entidades/instrutor.php';
+require __DIR__ . '/../models/entidades/curso.php';
+require __DIR__ . '/../models/entidades/agendamento.php';
+require __DIR__ . '/../models/calcular_cronograma.php';
+require __DIR__ . '/get_feriados.php';
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     http_response_code(405);
@@ -31,24 +31,25 @@ try {
 
     // 2. Busca a carga horária do curso
     $curso = new Curso($pdo);
-    $dadosCurso = $curso->buscarPorId($data['cursoId']);
-    if (!$dadosCurso || empty($dadosCurso['carga_horaria'])) {
+    $detalhesCurso = $curso->buscarPorId($data['cursoId']);
+    if (!$detalhesCurso) {
         http_response_code(404);
-        echo json_encode(['error' => 'Curso não encontrado ou carga horária não definida.']);
+        echo json_encode(['error' => 'Curso não encontrado.']);
         exit;
     }
-    $cargaHoraria = $dadosCurso['carga_horaria'];
+    
+    // 3. Calcula o cronograma da turma
+    $feriados = json_decode(file_get_contents('get_feriados.php'), true);
+    $diasSemanaInteiros = array_map('intval', $data['diasSemana']);
+    $cronograma = calcularCronograma($detalhesCurso['carga_horaria'], $data['dataInicio'], $data['turno'], $diasSemanaInteiros, $feriados);
+    
+    // Converte a lista de salas para um array de inteiros
+    $salasIds = array_map('intval', $data['salaId']);
 
-    // NOVO: Garante que $data['salaId'] é sempre um array.
-    $salasIds = is_array($data['salaId']) ? $data['salaId'] : [$data['salaId']];
+    // Verifica a disponibilidade das salas para todos os dias letivos
     $agendamento = new Agendamento($pdo);
-    
-    // Calcula o cronograma ANTES de verificar a disponibilidade
-    $cronograma = calcularCronograma($cargaHoraria, $data['dataInicio'], $data['turno'], $data['diasSemana']);
-    $diasLetivos = $cronograma['diasLetivos'];
-    
-    foreach ($diasLetivos as $dia) {
-        foreach ($salasIds as $salaId) {
+    foreach ($salasIds as $salaId) {
+        foreach ($cronograma['diasLetivos'] as $dia) {
             $isAvailable = $agendamento->verificarDisponibilidade($salaId, $dia, $data['turno']);
             if (!$isAvailable) {
                 http_response_code(409); // Conflito
@@ -79,15 +80,12 @@ try {
 
     // 6. Cria a instância do Agendador e agenda a turma
     $agendador = new Agendador($pdo);
-    $novaTurmaId = $agendador->agendarNovaTurma($dadosTurma, $diasLetivos, $salasIds);
+    $novaTurmaId = $agendador->agendarNovaTurma($dadosTurma, $cronograma['diasLetivos'], $salasIds);
 
-    echo json_encode([
-        'success' => true,
-        'message' => 'Turma agendada com sucesso!',
-        'turmaId' => $novaTurmaId
-    ]);
+    http_response_code(200);
+    echo json_encode(['message' => 'Turma agendada com sucesso!', 'turmaId' => $novaTurmaId]);
 
 } catch (Exception $e) {
-    http_response_code(500);
-    echo json_encode(['error' => $e->getMessage()]);
+    http_response_code(500); 
+    echo json_encode(['error' => 'Erro interno do servidor: ' . $e->getMessage()]);
 }

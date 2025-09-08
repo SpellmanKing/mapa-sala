@@ -1,8 +1,10 @@
 <?php
-// api/get_salas.php (Corrigido para usar a classe Sala)
+// controllers/get_sala.php
+header('Content-Type: application/json');
 
-require '../models/conexao.php';
-require '../models/entidades/sala.php';
+// Garante que o arquivo da classe seja incluído apenas uma vez
+require __DIR__ . '/../models/conexao.php';
+require __DIR__ . '/../models/entidades/sala.php';
 
 try {
     // 1. Obtém a instância da conexão
@@ -17,7 +19,12 @@ try {
     // 4. Retorna a resposta em JSON
     echo json_encode($salas);
 
-} catch (Exception $e) {
+} catch (PDOException $e) {
+    // Se houver um erro de banco de dados, retorne uma mensagem de erro JSON
     http_response_code(500); 
-    echo json_encode(['error' => $e->getMessage()]);
+    echo json_encode(['error' => 'Erro de banco de dados: ' . $e->getMessage()]);
+} catch (Exception $e) {
+    // Para outros tipos de erro, retorne uma mensagem genérica
+    http_response_code(500); 
+    echo json_encode(['error' => 'Erro interno do servidor: ' . $e->getMessage()]);
 }
