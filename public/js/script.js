@@ -46,7 +46,7 @@ document.addEventListener('DOMContentLoaded', () => {
      * Faz requisições ao back-end e retorna os dados.
      * @param {string} url O endpoint da API.
      * @returns {Promise<any>} Dados da resposta.
-    */
+     */
     async function fetchData(url) {
         try {
             const response = await fetch(url);
@@ -433,7 +433,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 instrutorNome,
                 dataInicio,
                 totalAlunos,
-                salaId: [salaId],
+                salaId: [salaId], // Envia como array
                 turno,
                 diasSemana
             };

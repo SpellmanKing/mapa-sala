@@ -47,8 +47,12 @@
             <section id="painel-visual" class="content-section active">
                 <header class="page-header">
                     <h1>Painel Visual de Salas</h1>
-                    <button id="add-turma-btn" class="primary-btn"><i class="fas fa-plus"></i> Agendar Turma</button>
-                        <button type="submit" class="primary-btn" id="alocacao-automatica-btn">Alocação Automática</button>
+                    <div class="header-actions">
+                        <button id="add-turma-btn" class="primary-btn"><i class="fas fa-plus"></i> Agendar Turma</button>
+                        <button id="alocacao-automatica-btn" class="btn btn-primary">
+                            <i class="icon-smart-allocation"></i> Alocação Automática
+                        </button>
+                    </div>
                 </header>
                 <main class="main-content">
                     <div class="calendar-header">
@@ -56,31 +60,39 @@
                         <h2 id="current-month-year"></h2>
                         <button id="next-month-btn" class="nav-btn"><i class="fas fa-chevron-right"></i></button>
                     </div>
+                    <div class="filters">
+                        <select id="turno-filter" class="filter-select">
+                            <option value="todos">Todos os Turnos</option>
+                            <option value="manha">Manhã</option>
+                            <option value="tarde">Tarde</option>
+                            <option value="noite">Noite</option>
+                            <option value="integral">Integral</option>
+                        </select>
+                        <select id="tipo-sala-filter" class="filter-select">
+                            <option value="todos">Todos os Tipos</option>
+                        </select>
+                    </div>
                     <div id="calendar-grid" class="calendar-grid"></div>
                 </main>
             </section>
 
             <section id="calculadora-inteligente" class="content-section">
                 <header class="page-header">
-                    <h1>Calculadora de Planejamento</h1>
+                    <h1>Calculadora Inteligente</h1>
                 </header>
                 <main class="main-content">
-                    <form id="alocacao-form" class="form-container">
+                    <form id="schedule-form" class="form-grid">
                         <div class="form-group">
-                            <label for="curso-alocacao">Curso:</label>
-                            <select id="curso-alocacao" required></select>
+                            <label for="course-select">Curso:</label>
+                            <select id="course-select" required></select>
                         </div>
                         <div class="form-group">
-                            <label for="total-alunos-alocacao">Número de Alunos:</label>
-                            <input type="number" id="total-alunos-alocacao" required min="1">
+                            <label for="start-date-input">Data de Início:</label>
+                            <input type="date" id="start-date-input" required>
                         </div>
                         <div class="form-group">
-                            <label for="data-inicio-alocacao">Data de Início:</label>
-                            <input type="date" id="data-inicio-alocacao" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="turno-alocacao">Turno:</label>
-                            <select id="turno-alocacao" required>
+                            <label for="turno-select">Turno:</label>
+                            <select id="turno-select" required>
                                 <option value="" disabled selected>Selecione um turno</option>
                                 <option value="Manhã">Manhã</option>
                                 <option value="Tarde">Tarde</option>
@@ -89,24 +101,29 @@
                             </select>
                         </div>
                         <div class="form-group">
-                            <label>Dias da Semana:</label>
-                            <div id="dias-semana-alocacao" class="dias-semana-checkbox">
-                                <label><input type="checkbox" value="2"> Seg</label>
-                                <label><input type="checkbox" value="3"> Ter</label>
-                                <label><input type="checkbox" value="4"> Qua</label>
-                                <label><input type="checkbox" value="5"> Qui</label>
-                                <label><input type="checkbox" value="6"> Sex</label>
-                                <label><input type="checkbox" value="7"> Sáb</label>
-                                <label><input type="checkbox" value="1"> Dom</label>
+                            <label>Dias da Semana Letivos:</label>
+                            <div id="dias-semana-container" class="checkbox-group">
+                                <label><input type="checkbox" name="dias-semana" value="1" checked>Segunda</label>
+                                <label><input type="checkbox" name="dias-semana" value="2" checked>Terça</label>
+                                <label><input type="checkbox" name="dias-semana" value="3" checked>Quarta</label>
+                                <label><input type="checkbox" name="dias-semana" value="4" checked>Quinta</label>
+                                <label><input type="checkbox" name="dias-semana" value="5" checked>Sexta</label>
+                                <label><input type="checkbox" name="dias-semana" value="6">Sábado</label>
+                                <label><input type="checkbox" name="dias-semana" value="0">Domingo</label>
                             </div>
                         </div>
-                        <button type="submit" class="primary-btn" id="alocacao-automatica-btn">Alocação Automática</button>
+                        <button type="submit" class="btn btn-primary full-width">Calcular Cronograma</button>
                     </form>
-                    <div id="results-content" class="results-content">
-                        <h3>Resultado da Sugestão:</h3>
-                        <div id="sugestao-alocacao"></div>
-                        <p id="course-details"></p>
-                        <p id="end-date"></p>
+                    <div id="results" class="results-container hidden">
+                        <div class="results-header">
+                            <h3>Cronograma Sugerido</h3>
+                            <button id="export-pdf-btn" class="btn btn-secondary"><i class="icon-download"></i> Exportar para PDF</button>
+                        </div>
+                        <div id="results-content">
+                            <p id="course-details"></p>
+                            <p id="end-date"></p>
+                            <div id="calendar-visual"></div>
+                        </div>
                     </div>
                 </main>
             </section>
@@ -220,6 +237,57 @@
             </form>
         </div>
     </div>
+
+    <section id="alocacaoModal" class="modal">
+        <header class="page-header">
+            <h1>Alocação inteligente</h1>
+        </header>
+        <main class="main-content">
+            <form id="alocacao-form" class="form-container">
+                <div class="form-group">
+                    <label for="curso-alocacao">Curso:</label>
+                    <select id="curso-alocacao" required></select>
+                </div>
+                <div class="form-group">
+                    <label for="total-alunos-alocacao">Número de Alunos:</label>
+                    <input type="number" id="total-alunos-alocacao" required min="1">
+                </div>
+                <div class="form-group">
+                    <label for="data-inicio-alocacao">Data de Início:</label>
+                    <input type="date" id="data-inicio-alocacao" required>
+                </div>
+                <div class="form-group">
+                    <label for="turno-alocacao">Turno:</label>
+                    <select id="turno-alocacao" required>
+                        <option value="" disabled selected>Selecione um turno</option>
+                        <option value="Manhã">Manhã</option>
+                        <option value="Tarde">Tarde</option>
+                        <option value="Noite">Noite</option>
+                        <option value="Integral">Integral</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Dias da Semana:</label>
+                    <div id="dias-semana-alocacao" class="dias-semana-checkbox">
+                        <label><input type="checkbox" value="2"> Seg</label>
+                        <label><input type="checkbox" value="3"> Ter</label>
+                        <label><input type="checkbox" value="4"> Qua</label>
+                        <label><input type="checkbox" value="5"> Qui</label>
+                        <label><input type="checkbox" value="6"> Sex</label>
+                        <label><input type="checkbox" value="7"> Sáb</label>
+                        <label><input type="checkbox" value="1"> Dom</label>
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary">Buscar Alocação</button>
+            </form>
+            <div id="results-content" class="results-content">
+                <h3>Resultado da Sugestão:</h3>
+                <div id="sugestao-alocacao"></div>
+                <p id="course-details"></p>
+                <p id="end-date"></p>
+            </div>
+        </main>
+    </section>
 
     <div id="alocacao-modal" class="modal">
         <div class="modal-content">
