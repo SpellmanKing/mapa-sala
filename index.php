@@ -48,13 +48,25 @@
                 <header class="page-header">
                     <h1>Painel Visual de Salas</h1>
                     <button id="add-turma-btn" class="primary-btn"><i class="fas fa-plus"></i> Agendar Turma</button>
-                        <button type="submit" class="primary-btn" id="alocacao-automatica-btn">Alocação Automática</button>
+                    <button type="submit" class="primary-btn" id="alocacao-automatica-btn">Alocação Automática</button>
                 </header>
                 <main class="main-content">
                     <div class="calendar-header">
                         <button id="prev-month-btn" class="nav-btn"><i class="fas fa-chevron-left"></i></button>
                         <h2 id="current-month-year"></h2>
                         <button id="next-month-btn" class="nav-btn"><i class="fas fa-chevron-right"></i></button>
+                        <div class="filters">
+                            <select id="turno-filter" class="filter-select">
+                                <option value="todos">Todos os Turnos</option>
+                                <option value="manha">Manhã</option>
+                                <option value="tarde">Tarde</option>
+                                <option value="noite">Noite</option>
+                                <option value="integral">Integral</option>
+                            </select>
+                            <select id="tipo-sala-filter" class="filter-select">
+                                <option value="todos">Todos os Tipos</option>
+                            </select>
+                        </div>
                     </div>
                     <div id="calendar-grid" class="calendar-grid"></div>
                 </main>
@@ -168,13 +180,13 @@
                 <div class="form-group">
                     <label>Dias da Semana:</label>
                     <div id="dias-semana-agendamento" class="dias-semana-checkbox">
-                        <label><input type="checkbox" value="2"> Seg</label>
-                        <label><input type="checkbox" value="3"> Ter</label>
-                        <label><input type="checkbox" value="4"> Qua</label>
-                        <label><input type="checkbox" value="5"> Qui</label>
-                        <label><input type="checkbox" value="6"> Sex</label>
-                        <label><input type="checkbox" value="7"> Sáb</label>
-                        <label><input type="checkbox" value="1"> Dom</label>
+                        <label><input type="checkbox" name="dias-semana" value="2"> Seg</label>
+                        <label><input type="checkbox" name="dias-semana" value="3"> Ter</label>
+                        <label><input type="checkbox" name="dias-semana" value="4"> Qua</label>
+                        <label><input type="checkbox" name="dias-semana" value="5"> Qui</label>
+                        <label><input type="checkbox" name="dias-semana" value="6"> Sex</label>
+                        <label><input type="checkbox" name="dias-semana" value="7"> Sáb</label>
+                        <label><input type="checkbox" name="dias-semana" value="1"> Dom</label>
                     </div>
                 </div>
                 <button type="submit" class="primary-btn">Agendar</button>

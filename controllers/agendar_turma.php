@@ -39,7 +39,7 @@ try {
     }
     
     // 3. Calcula o cronograma da turma
-    $feriados = json_decode(file_get_contents('get_feriados.php'), true);
+    $feriados = getFeriados();
     $diasSemanaInteiros = array_map('intval', $data['diasSemana']);
     $cronograma = calcularCronograma($detalhesCurso['carga_horaria'], $data['dataInicio'], $data['turno'], $diasSemanaInteiros, $feriados);
     
@@ -84,8 +84,10 @@ try {
 
     http_response_code(200);
     echo json_encode(['message' => 'Turma agendada com sucesso!', 'turmaId' => $novaTurmaId]);
+    exit; // Adicionado para garantir que nada mais seja impresso
 
 } catch (Exception $e) {
     http_response_code(500); 
     echo json_encode(['error' => 'Erro interno do servidor: ' . $e->getMessage()]);
+    exit; // Adicionado para garantir que nada mais seja impresso
 }

@@ -1,5 +1,4 @@
 <?php
-// models/calcular_cronograma.php
 
 /**
  * Calcula o cronograma de aulas de um curso.

@@ -42,7 +42,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- 3. FUNÇÕES DE UTILIDADE GERAL ---
     
-    /**
+    /** 
      * Faz requisições ao back-end e retorna os dados.
      * @param {string} url O endpoint da API.
      * @returns {Promise<any>} Dados da resposta.
