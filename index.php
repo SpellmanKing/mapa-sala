@@ -10,9 +10,6 @@
 <body>
     <div class="page-container">
         <aside class="sidebar">
-            <header class="logo">
-                <img src="" alt="Logo SGST">
-            </header>
             <nav class="sidebar-nav">
                 <ul>
                     <li>

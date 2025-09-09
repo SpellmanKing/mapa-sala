@@ -28,7 +28,7 @@ class Agendador {
                 $dadosTurma['dataInicio'],
                 $dadosTurma['dataTermino'],
                 $dadosTurma['totalAlunos'],
-                $dadosTurma['instrutorId'], 
+                $dadosTurma['instrutorId'],
                 $dadosTurma['turno']
             ]);
 
