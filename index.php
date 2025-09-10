@@ -44,17 +44,8 @@
             <section id="painel-visual" class="content-section active">
                 <header class="page-header">
                     <h1>Painel Visual de Salas</h1>
-<<<<<<< HEAD
                     <button id="add-turma-btn" class="primary-btn"><i class="fas fa-plus"></i> Agendar Turma</button>
                     <button type="submit" class="primary-btn" id="alocacao-automatica-btn">Alocação Automática</button>
-=======
-                    <div class="header-actions">
-                        <button id="add-turma-btn" class="primary-btn"><i class="fas fa-plus"></i> Agendar Turma</button>
-                        <button id="alocacao-automatica-btn" class="btn btn-primary">
-                            <i class="icon-smart-allocation"></i> Alocação Automática
-                        </button>
-                    </div>
->>>>>>> 50b95496ce07df83cad8876389d57bfeaa669320
                 </header>
                 <main class="main-content">
                     <div class="calendar-header">
@@ -73,18 +64,6 @@
                                 <option value="todos">Todos os Tipos</option>
                             </select>
                         </div>
-                    </div>
-                    <div class="filters">
-                        <select id="turno-filter" class="filter-select">
-                            <option value="todos">Todos os Turnos</option>
-                            <option value="manha">Manhã</option>
-                            <option value="tarde">Tarde</option>
-                            <option value="noite">Noite</option>
-                            <option value="integral">Integral</option>
-                        </select>
-                        <select id="tipo-sala-filter" class="filter-select">
-                            <option value="todos">Todos os Tipos</option>
-                        </select>
                     </div>
                     <div id="calendar-grid" class="calendar-grid"></div>
                 </main>
@@ -207,6 +186,12 @@
                         <label><input type="checkbox" name="dias-semana" value="7"> Sáb</label>
                         <label><input type="checkbox" name="dias-semana" value="1"> Dom</label>
                     </div>
+                </div>
+                <div class="form-group" id="alocacao-automatica-container">
+                    <button type="button" class="btn btn-secondary" id="alocacao-automatica-btn">Alocação Automática</button>
+                    <label for="agendamento-salas-display">Sala(s) Alocada(s):</label>
+                    <input type="text" id="agendamento-salas-display" placeholder="Clique em Alocação Automática" disabled>
+                    <input type="hidden" id="agendamento-salas-id-input" name="salaId">
                 </div>
                 <button type="submit" class="primary-btn">Agendar</button>
             </form>

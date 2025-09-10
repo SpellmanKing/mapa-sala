@@ -439,3 +439,35 @@ body {
         flex-grow: 0;
     }
 }
+
+/* Estilo para as células do calendário que podem conter múltiplos agendamentos */
+.multi-turno-cell {
+    display: flex;
+    flex-direction: column;
+    gap: 4px; /* Adiciona um pequeno espaço entre os blocos */
+    padding: 2px; /* Reduz o padding para ter mais espaço interno */
+}
+
+/* Estilo para os blocos de agendamento */
+.appointment-block {
+    color: white; /* Garante que o texto seja legível em fundos escuros */
+    padding: 4px 8px; /* Padding interno */
+    border-radius: 4px; /* Bordas arredondadas */
+    font-size: 0.8em; /* Fonte menor para caber mais informação */
+    cursor: pointer;
+    overflow: hidden; /* Garante que o conteúdo não vaze */
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1); /* Sombra sutil para destacar */
+}
+
+/* Garante que o texto dentro do bloco fique compacto */
+.appointment-block h4 {
+    margin: 0;
+    font-size: 1em;
+}
+
+.appointment-block span {
+    display: block;
+    font-size: 0.9em;
+}

@@ -21,8 +21,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const agendamentoForm = document.getElementById('agendamento-form');
     const alocacaoForm = document.getElementById('alocacao-form');
     const detalhesForm = document.getElementById('detalhes-form');
-    
-    // Elementos da calculadora de planejamento
+    const agendamentoSalasDisplay = document.getElementById('agendamento-salas-display');
+    const agendamentoSalasIdInput = document.getElementById('agendamento-salas-id-input');
     const alocacaoAutomaticaBtn = document.getElementById('alocacao-automatica-btn');
     const confirmarAlocacaoBtn = document.getElementById('confirmar-alocacao-btn');
     const sugestaoAlocacaoDiv = document.getElementById('sugestao-alocacao');
@@ -156,9 +156,6 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // --- 4. FUNÇÕES DE RENDERIZAÇÃO ---
 
-    /**
-     * Renderiza o calendário na grade com as salas e agendamentos.
-     */
     function renderizarCalendario() {
         const grid = document.getElementById('calendar-grid');
         grid.innerHTML = '';
@@ -201,6 +198,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 cell.className = 'grid-cell';
                 if (isWeekend) cell.classList.add('weekend');
                 if (isHoliday) cell.classList.add('holiday');
+                
+                // Adiciona a classe que permite múltiplos agendamentos na mesma célula
+                cell.classList.add('multi-turno-cell');
 
                 // Filtra os agendamentos para esta sala e este dia
                 const agendamentosDoDia = agendamentos.filter(a => {
@@ -213,22 +213,35 @@ document.addEventListener('DOMContentLoaded', () => {
                     block.className = 'appointment-block';
                     block.dataset.turmaId = agendamento.id_turmas;
                     
-                    // Adiciona a classe de status para o estilo do badge
-                    const statusClass = agendamento.status.replace(/\s/g, '-').toLowerCase();
-                    const badge = document.createElement('span');
-                    badge.className = `badge badge-${statusClass}`;
-                    badge.textContent = agendamento.status;
+                    // Aplica a cor de fundo com base no turno
+                    let color;
+                    switch(agendamento.turno) {
+                        case 'Manhã':
+                            color = '#007bff';
+                            break;
+                        case 'Tarde':
+                            color = '#28a745';
+                            break;
+                        case 'Noite':
+                            color = '#6f42c2';
+                            break;
+                        case 'Integral':
+                            color = '#dc3545';
+                            break;
+                        default:
+                            color = '#6c757d';
+                    }
+                    block.style.backgroundColor = color;
                     
                     block.innerHTML = `
                         <h4>${agendamento.nome_curso}</h4>
                         <span>${agendamento.turno}</span>
                         <span>${agendamento.instrutor || 'Não Atribuído'}</span>
                     `;
-                    block.appendChild(badge);
                     
                     // Adiciona o evento de clique para abrir o modal de detalhes
                     block.addEventListener('click', (event) => {
-                        event.stopPropagation(); // Previne que o clique no bloco abra o modal de agendamento manual
+                        event.stopPropagation();
                         abrirModalDetalhes(agendamento.id_turmas);
                     });
 
@@ -240,7 +253,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     cell.addEventListener('click', () => {
                         abrirModal(agendamentoModal);
                         // Pré-seleciona a sala no formulário
-                        document.getElementById('agendamento-salaId').value = sala.id_salas;
+                        document.getElementById('sala-agendamento').value = sala.id_salas;
                     });
                 }
                 
@@ -467,7 +480,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     cursoId: sugestaoAlocacaoData.cursoId,
                     totalAlunos: sugestaoAlocacaoData.totalAlunos,
                     dataInicio: sugestaoAlocacaoData.dataInicio,
-                    salaId: salasIds, // Agora passa os IDs das salas
+                    salaId: salasIds,
                     turno: sugestaoAlocacaoData.turno,
                     diasSemana: sugestaoAlocacaoData.diasSemana
                 };
