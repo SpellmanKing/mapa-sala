@@ -20,8 +20,8 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 $data = json_decode(file_get_contents('php://input'), true);
 
 // 1. Validação de Dados: Verifica se os dados essenciais estão presentes
-if (empty($data['cursoId']) || empty($data['dataInicio']) || empty($data['totalAlunos']) || empty($data['salaId']) || empty($data['turno']) || empty($data['diasSemana'])) {
-    http_response_code(400);
+http_response_code(400);
+if (empty($data['cursoId']) || empty($data['dataInicio']) || empty($data['totalAlunos']) || empty($data['salaId']) || empty($data['turno']) || empty($data['diasSemana']) ) {
     echo json_encode(['error' => 'Dados incompletos. Por favor, preencha todos os campos obrigatórios.']);
     exit;
 }
@@ -45,14 +45,14 @@ try {
     
     // Converte a lista de salas para um array de inteiros
     $salasIds = array_map('intval', $data['salaId']);
-
+    print_r($salaId);
     // Verifica a disponibilidade das salas para todos os dias letivos
     $agendamento = new Agendamento($pdo);
     foreach ($salasIds as $salaId) {
         foreach ($cronograma['diasLetivos'] as $dia) {
             $isAvailable = $agendamento->verificarDisponibilidade($salaId, $dia, $data['turno']);
             if (!$isAvailable) {
-                http_response_code(409); // Conflito
+                http_response_code(409); 
                 echo json_encode(['error' => "A sala com ID $salaId já está ocupada no dia $dia e turno. Por favor, tente a Alocação Automática novamente ou escolha outra sala."]);
                 exit;
             }
