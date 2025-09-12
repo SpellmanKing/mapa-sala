@@ -16,12 +16,13 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     echo json_encode(['error' => 'Método não permitido.']);
     exit;
 }
-
 $data = json_decode(file_get_contents('php://input'), true);
 
+
 // 1. Validação de Dados: Verifica se os dados essenciais estão presentes
-http_response_code(400);
+// Note: O instrutor é opcional, então não verificamos se ele está vazio aqui.
 if (empty($data['cursoId']) || empty($data['dataInicio']) || empty($data['totalAlunos']) || empty($data['salaId']) || empty($data['turno']) || empty($data['diasSemana']) ) {
+    http_response_code(400);
     echo json_encode(['error' => 'Dados incompletos. Por favor, preencha todos os campos obrigatórios.']);
     exit;
 }
@@ -45,7 +46,7 @@ try {
     
     // Converte a lista de salas para um array de inteiros
     $salasIds = array_map('intval', $data['salaId']);
-    print_r($salaId);
+
     // Verifica a disponibilidade das salas para todos os dias letivos
     $agendamento = new Agendamento($pdo);
     foreach ($salasIds as $salaId) {
@@ -61,11 +62,10 @@ try {
     
     $dataTermino = $cronograma['dataTermino'];
 
-    // 4. Busca o ID do instrutor pelo nome
+    // 4. Utiliza o instrutorId enviado pelo front-end
     $instrutorId = null;
-    if (!empty($data['instrutorNome'])) {
-        $instrutor = new Instrutor($pdo);
-        $instrutorId = $instrutor->buscarIdPorNome($data['instrutorNome']);
+    if (!empty($data['instrutorId'])) {
+        $instrutorId = $data['instrutorId'];
     }
 
     // 5. Organiza os dados da turma para o Agendador
@@ -84,10 +84,10 @@ try {
 
     http_response_code(200);
     echo json_encode(['message' => 'Turma agendada com sucesso!', 'turmaId' => $novaTurmaId]);
-    exit; // Adicionado para garantir que nada mais seja impresso
+    exit;
 
 } catch (Exception $e) {
     http_response_code(500); 
     echo json_encode(['error' => 'Erro interno do servidor: ' . $e->getMessage()]);
-    exit; // Adicionado para garantir que nada mais seja impresso
+    exit;
 }

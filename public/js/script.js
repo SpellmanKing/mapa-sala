@@ -256,7 +256,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     cell.addEventListener('click', () => {
                         abrirModal(agendamentoModal);
                         // Pré-seleciona a sala no formulário
-                        document.getElementById('agendamento-salaId').value = sala.id_salas;
+                        document.getElementById('agendamento-salas-id-input').value = sala.id_salas;
                     });
                 }
                 grid.appendChild(cell);
