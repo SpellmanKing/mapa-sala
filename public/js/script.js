@@ -458,7 +458,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     salasAlocadasInfo.innerHTML = `<p style="color: red; font-weight: bold;">Erro na alocação: ${resultado.error}</p>`;
                     alert(`Erro na alocação automática: ${resultado.error}`);
                 }
-                
+
             } catch (error) {
                 console.error('Erro na requisição de alocação automática:', error);
                 agendamentoSalasDisplay.value = '';
@@ -535,6 +535,8 @@ document.addEventListener('DOMContentLoaded', () => {
         filterBolsa: document.getElementById('filter-bolsa'),
         applyFilters: document.getElementById('apply-filters'),
         clearFilters: document.getElementById('clear-filters'),
+
+        
         courseSelect: document.getElementById('course-select'),
         courseDetails: document.getElementById('course-details'),
         displayCh: document.getElementById('display-ch'),
