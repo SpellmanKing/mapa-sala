@@ -155,8 +155,6 @@
                 <div class="form-group">
                     <label for="data-inicio-agendamento">Data de Início:</label>
                     <input type="date" id="data-inicio-agendamento" required>
-                    <label for="data-conclusao-agendamento">Data de Início:</label>
-                    <input type="date" id="data-conclusao-agendamento" required>
                 </div>
                 <div class="form-group">
                     <label for="total-alunos-agendamento">Número de Alunos:</label>

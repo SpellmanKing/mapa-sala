@@ -47,7 +47,6 @@ try {
 
     // 1. Calcula o cronograma
     $feriados = getFeriados();
-    // AQUI ESTÁ A CORREÇÃO: Adicionamos o $feriados como o quinto argumento
     $cronograma = calcularCronograma($cargaHoraria, $data['dataInicio'], $turno, $diasSemanaSelecionados, $feriados);
     $diasLetivos = $cronograma['diasLetivos'];
     $dataInicio = $data['dataInicio'];
