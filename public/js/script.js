@@ -382,44 +382,44 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }
 
-        // Lógica para o formulário da Calculadora Inteligente
-        alocacaoForm.addEventListener('submit', async (event) => {
-            event.preventDefault();
-            const dadosAlocacao = {
-                cursoId: document.getElementById('alocacao-curso').value,
-                totalAlunos: document.getElementById('alocacao-alunos').value,
-                turno: document.getElementById('alocacao-turno').value,
-                diasSemana: Array.from(document.querySelectorAll('#alocacao-form input[name="diasSemana"]:checked')).map(cb => parseInt(cb.value)),
-                dataInicio: new Date().toISOString().split('T')[0]
-            };
+        // // Lógica para o formulário da Calculadora Inteligente
+        // alocacaoForm.addEventListener('submit', async (event) => {
+        //     event.preventDefault();
+        //     const dadosAlocacao = {
+        //         cursoId: document.getElementById('alocacao-curso').value,
+        //         totalAlunos: document.getElementById('alocacao-alunos').value,
+        //         turno: document.getElementById('alocacao-turno').value,
+        //         diasSemana: Array.from(document.querySelectorAll('#alocacao-form input[name="diasSemana"]:checked')).map(cb => parseInt(cb.value)),
+        //         dataInicio: new Date().toISOString().split('T')[0]
+        //     };
             
-            if (!dadosAlocacao.cursoId || !dadosAlocacao.totalAlunos || !dadosAlocacao.turno || dadosAlocacao.diasSemana.length === 0) {
-                 alert('Por favor, preencha todos os campos do formulário para a alocação.');
-                 return;
-            }
+        //     if (!dadosAlocacao.cursoId || !dadosAlocacao.totalAlunos || !dadosAlocacao.turno || dadosAlocacao.diasSemana.length === 0) {
+        //          alert('Por favor, preencha todos os campos do formulário para a alocação.');
+        //          return;
+        //     }
 
-            try {
-                const response = await fetch('./controllers/alocar_turma.php', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(dadosAlocacao)
-                });
-                const resultado = await response.json();
+        //     try {
+        //         const response = await fetch('./controllers/alocar_turma.php', {
+        //             method: 'POST',
+        //             headers: { 'Content-Type': 'application/json' },
+        //             body: JSON.stringify(dadosAlocacao)
+        //         });
+        //         const resultado = await response.json();
                 
-                if (!response.ok) {
-                    alert(`Erro na Alocação Automática: ${resultado.error}`);
-                    sugestaoContainer.style.display = 'none';
-                    return;
-                }
+        //         if (!response.ok) {
+        //             alert(`Erro na Alocação Automática: ${resultado.error}`);
+        //             sugestaoContainer.style.display = 'none';
+        //             return;
+        //         }
                 
-                sugestaoAlocacaoData = resultado;
-                exibirSugestao(sugestaoAlocacaoData);
+        //         sugestaoAlocacaoData = resultado;
+        //         exibirSugestao(sugestaoAlocacaoData);
 
-            } catch (error) {
-                alert('Ocorreu um erro ao tentar a alocação automática.');
-                console.error(error);
-            }
-        });
+        //     } catch (error) {
+        //         alert('Ocorreu um erro ao tentar a alocação automática.');
+        //         console.error(error);
+        //     }
+        // });
 
         // Lógica para o botão "Buscar Salas Automaticamente" no modal de Agendamento Manual
         buscarSalasAutomaticamenteBtn.addEventListener('click', async (event) => {
@@ -458,6 +458,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     salasAlocadasInfo.innerHTML = `<p style="color: red; font-weight: bold;">Erro na alocação: ${resultado.error}</p>`;
                     alert(`Erro na alocação automática: ${resultado.error}`);
                 }
+                
             } catch (error) {
                 console.error('Erro na requisição de alocação automática:', error);
                 agendamentoSalasDisplay.value = '';
@@ -521,6 +522,148 @@ document.addEventListener('DOMContentLoaded', () => {
             if (event.target === agendamentoModal || event.target === detalhesModal || event.target === alocacaoModal) {
                 fecharModais();
             }
+        });
+    }
+
+    const calculadoraDOM = {
+        filterNomeCurso: document.getElementById('filter-nome-curso'),
+        filterSegmento: document.getElementById('filter-segmento'),
+        filterModalidade: document.getElementById('filter-modalidade'),
+        filterChMin: document.getElementById('filter-ch-min'),
+        filterChMax: document.getElementById('filter-ch-max'),
+        filterTem: document.getElementById('filter-tem'),
+        filterBolsa: document.getElementById('filter-bolsa'),
+        applyFilters: document.getElementById('apply-filters'),
+        clearFilters: document.getElementById('clear-filters'),
+        courseSelect: document.getElementById('course-select'),
+        courseDetails: document.getElementById('course-details'),
+        displayCh: document.getElementById('display-ch'),
+        displayValor: document.getElementById('display-valor'),
+        startDate: document.getElementById('start-date'),
+        shiftSelect: document.getElementById('shift-select'),
+        tecnicoTypeOptions: document.getElementById('tecnico-type-options'),
+        isTemCheckbox: document.getElementById('is-tem-checkbox'),
+        regularCourseOptions: document.getElementById('regular-course-options'),
+        remoteOptionsPanel: document.getElementById('remote-options-panel'),
+        remotePercentageSelect: document.getElementById('remote-percentage-select'),
+        remoteDetailsOptions: document.getElementById('remote-details-options'),
+        remoteFrequencySelect: document.getElementById('remote-frequency-select'),
+        remotePeriodSelect: document.getElementById('remote-period-select'),
+        aprendizagemOptions: document.getElementById('aprendizagem-options'),
+        aprendizagemExclusiva: document.getElementById('aprendizagem-exclusiva'),
+        aprendizagemTradicionalOptions: document.getElementById('aprendizagem-tradicional-options'),
+        aprendizagemModeloNovo: document.getElementById('aprendizagem-modelo-novo'),
+        calculateButton: document.getElementById('calculate-button'),
+        resultsSection: document.getElementById('results-section'),
+        resultsContent: document.getElementById('results-content'),
+        exportPdfButton: document.getElementById('export-pdf-button'),
+        calendarVisual: document.getElementById('calendar-visual'),
+    };
+
+    function filterCourses() {
+        const filters = {
+            nome: calculadoraDOM.filterNomeCurso.value.toLowerCase(),
+            segmento: calculadoraDOM.filterSegmento.value,
+            modalidade: calculadoraDOM.filterModalidade.value,
+            chMin: parseInt(calculadoraDOM.filterChMin.value) || 0,
+            chMax: parseInt(calculadoraDOM.filterChMax.value) || Infinity,
+            tem: calculadoraDOM.filterTem.checked,
+            bolsa: calculadoraDOM.filterBolsa.checked
+        };
+        const filtered = dadosCursos.filter(course => {
+            const matchesNome = course.nome_curso.toLowerCase().includes(filters.nome);
+            const matchesSegmento = filters.segmento === "Todos" || filters.segmento === "" || course.segmento === filters.segmento;
+            const matchesModalidade = filters.modalidade === "Todas" || filters.modalidade === "" || course.modalidade === filters.modalidade;
+            const matchesCh = course.carga_horaria >= filters.chMin && course.carga_horaria <= filters.chMax;
+            const matchesTem = !filters.tem || course.tem;
+            const matchesBolsa = !filters.bolsa || course.bolsa;
+            return matchesNome && matchesSegmento && matchesModalidade && matchesCh && matchesTem && matchesBolsa;
+        });
+        populateCourseSelect(filtered);
+    }
+    
+    function populateCourseSelect(courses) {
+        calculadoraDOM.courseSelect.innerHTML = '';
+        const defaultOption = document.createElement('option');
+        defaultOption.value = "";
+        defaultOption.textContent = "Selecione um curso";
+        calculadoraDOM.courseSelect.appendChild(defaultOption);
+        courses.forEach(course => {
+            const option = document.createElement('option');
+            option.value = course.id_cursos;
+            option.textContent = course.nome_curso;
+            option.dataset.ch = course.carga_horaria;
+            option.dataset.valor = course.valor;
+            option.dataset.isTem = course.tem;
+            option.dataset.modalidade = course.modalidade;
+            calculadoraDOM.courseSelect.appendChild(option);
+        });
+    }
+
+    function updateCourseDetails() {
+        const selectedOption = calculadoraDOM.courseSelect.options[calculadoraDOM.courseSelect.selectedIndex];
+        if (selectedOption && selectedOption.value !== "") {
+            calculadoraDOM.courseDetails.classList.remove('hidden');
+            calculadoraDOM.displayCh.textContent = selectedOption.dataset.ch;
+            calculadoraDOM.displayValor.textContent = `R$ ${parseFloat(selectedOption.dataset.valor).toFixed(2).replace('.', ',')}`;
+
+            const isTem = selectedOption.dataset.isTem === 'true';
+            const isRemote = selectedOption.dataset.modalidade === 'Remoto';
+            const isHibrido = selectedOption.dataset.modalidade === 'Híbrido';
+
+            calculadoraDOM.tecnicoTypeOptions.classList.toggle('hidden', !isTem);
+            calculadoraDOM.regularCourseOptions.classList.toggle('hidden', isTem);
+            calculadoraDOM.remoteOptionsPanel.classList.toggle('hidden', !(isRemote || isHibrido));
+            calculadoraDOM.aprendizagemOptions.classList.add('hidden');
+        } else {
+            calculadoraDOM.courseDetails.classList.add('hidden');
+            calculadoraDOM.tecnicoTypeOptions.classList.add('hidden');
+            calculadoraDOM.regularCourseOptions.classList.add('hidden');
+            calculadoraDOM.remoteOptionsPanel.classList.add('hidden');
+            calculadoraDOM.aprendizagemOptions.classList.add('hidden');
+        }
+    }
+
+    function setupCalculatorEvents() {
+        calculadoraDOM.applyFilters.addEventListener('click', filterCourses);
+        calculadoraDOM.clearFilters.addEventListener('click', () => {
+            document.getElementById('calculadora-inteligente-form').reset();
+            filterCourses();
+        });
+        calculadoraDOM.courseSelect.addEventListener('change', updateCourseDetails);
+        calculadoraDOM.remotePercentageSelect.addEventListener('change', () => {
+            if (calculadoraDOM.remotePercentageSelect.value > 0) {
+                calculadoraDOM.remoteDetailsOptions.classList.remove('hidden');
+            } else {
+                calculadoraDOM.remoteDetailsOptions.classList.add('hidden');
+            }
+        });
+        calculadoraDOM.aprendizagemExclusiva.addEventListener('change', () => {
+            calculadoraDOM.aprendizagemTradicionalOptions.classList.toggle('hidden', calculadoraDOM.aprendizagemExclusiva.checked);
+            calculadoraDOM.aprendizagemModeloNovo.classList.toggle('hidden', !calculadoraDOM.aprendizagemExclusiva.checked);
+        });
+    }
+
+    function popularFiltros() {
+        // Extrai os segmentos e modalidades de forma dinâmica
+        const segmentsData = [...new Set(dadosCursos.map(c => c.segmento))];
+        const modalitiesData = [...new Set(dadosCursos.map(c => c.modalidade))];
+        
+        const segmentoSelect = calculadoraDOM.filterSegmento;
+        const modalidadeSelect = calculadoraDOM.filterModalidade;
+
+        segmentsData.forEach(segmento => {
+            const option = document.createElement('option');
+            option.value = segmento;
+            option.textContent = segmento;
+            segmentoSelect.appendChild(option);
+        });
+        
+        modalitiesData.forEach(modalidade => {
+            const option = document.createElement('option');
+            option.value = modalidade;
+            option.textContent = modalidade;
+            modalidadeSelect.appendChild(option);
         });
     }
 
