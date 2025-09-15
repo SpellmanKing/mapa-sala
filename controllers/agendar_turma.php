@@ -20,12 +20,12 @@ $data = json_decode(file_get_contents('php://input'), true);
 
 
 // 1. Validação de Dados: Verifica se os dados essenciais estão presentes
-// Note: O instrutor é opcional, então não verificamos se ele está vazio aqui.
-if (empty($data['cursoId']) || empty($data['dataInicio']) || empty($data['totalAlunos']) || empty($data['salaId']) || empty($data['turno']) || empty($data['diasSemana']) ) {
+if (empty($data['cursoId']) || empty($data['dataInicio']) || empty($data['totalAlunos']) || empty($data['salaId']) || empty($data['turno']) || empty($data['diasSemana'])) {
     http_response_code(400);
     echo json_encode(['error' => 'Dados incompletos. Por favor, preencha todos os campos obrigatórios.']);
     exit;
 }
+
 
 try {
     $pdo = Conexao::getInstancia();

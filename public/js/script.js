@@ -1,52 +1,56 @@
 document.addEventListener('DOMContentLoaded', () => {
-
-    // --- 1. ESTADO DA APLICAÇÃO ---
-    // Variáveis globais para armazenar o estado da aplicação
+    // --- 1. ESTADO DA APLICAÇÃO --
     let dataAtual = new Date();
     let agendamentos = [];
     let dadosSalas = [];
     let dadosCursos = [];
     let dadosInstrutores = [];
     let feriados = [];
-    let sugestaoAlocacaoData = null;
+    let sugestaoAlocacaoData = null; // Armazena os dados da última sugestão de alocação
 
-    // --- 2. SELETORES DE ELEMENTOS DO DOM ---
+    // --- 2. SELETORES DE ELEMENTOS DO DOM --
     const navItems = document.querySelectorAll('.sidebar-nav .nav-item');
     const contentSections = document.querySelectorAll('.content-section');
     const closeBtns = document.querySelectorAll('.close-btn');
 
+    // Modais
     const agendamentoModal = document.getElementById('agendamento-modal');
-    const alocacaoModal = document.getElementById('alocacao-modal');
     const detalhesModal = document.getElementById('detalhes-modal');
+    const alocacaoModal = document.getElementById('alocacao-modal');
 
+    // Formulários
     const agendamentoForm = document.getElementById('agendamento-form');
-    const scheduleForm = document.getElementById('schedule-form');
     const detalhesForm = document.getElementById('detalhes-form');
-    
-    // Elementos da calculadora de planejamento
-    const agendamentoSalasDisplay = document.getElementById('agendamento-salas-display');
-    const agendamentoSalasIdInput = document.getElementById('agendamento-salas-id-input');
-    const alocacaoAutomaticaBtn = document.getElementById('alocacao-automatica-btn');
-    const confirmarAlocacaoBtn = document.getElementById('confirmar-alocacao-btn');
-    const sugestaoAlocacaoDiv = document.getElementById('sugestao-alocacao');
+    const alocacaoForm = document.getElementById('alocacao-form');
 
+    // Botões
     const prevMonthBtn = document.getElementById('prev-month-btn');
     const nextMonthBtn = document.getElementById('next-month-btn');
     const addTurmaBtn = document.getElementById('add-turma-btn');
     const cancelarTurmaBtn = document.getElementById('cancelar-turma-btn');
 
-    // Elementos do modal de detalhes da turma
+    // Elementos do Modal de Agendamento Manual
+    const agendamentoSalasDisplay = document.getElementById('agendamento-salas-display');
+    const agendamentoSalasIdInput = document.getElementById('agendamento-salas-id-input');
+    const buscarSalasAutomaticamenteBtn = document.getElementById('alocacao-manual-btn');
+    const salasAlocadasInfo = document.getElementById('salasAlocadasInfo');
+
+    // Elementos da Calculadora Inteligente e do Modal de Alocação Automática
+    const alocacaoCursoSelect = document.getElementById('alocacao-curso');
+    const sugestaoContainer = document.getElementById('sugestao-alocacao');
+    const sugestaoMensagem = document.getElementById('sugestao-mensagem');
+    const salasSugeridasLista = document.getElementById('salas-sugeridas-lista');
+
+    const confirmarAlocacaoBtn = document.getElementById('confirmar-alocacao-btn');
+    const cancelarAlocacaoBtn = document.getElementById('cancelar-alocacao-btn');
+
+    // Elementos do Modal de Detalhes
     const detalhesTurmaId = document.getElementById('detalhes-turmaId');
     const detalhesStatusSelect = document.getElementById('detalhes-status-select');
     const detalhesInstrutorInput = document.getElementById('detalhes-instrutor-input');
 
-    // --- 3. FUNÇÕES DE UTILIDADE GERAL ---
-    
-    /**
-     * Faz requisições ao back-end e retorna os dados.
-     * @param {string} url O endpoint da API.
-     * @returns {Promise<any>} Dados da resposta.
-     */
+    // --- 3. FUNÇÕES GERAIS E DE UTILIDADE --
+
     async function fetchData(url) {
         try {
             const response = await fetch(url);
@@ -61,10 +65,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    /**
-     * Alterna a exibição das seções de conteúdo.
-     * @param {string} targetId O ID da seção a ser exibida.
-     */
     function navigateTo(targetId) {
         contentSections.forEach(section => {
             section.classList.remove('active');
@@ -83,43 +83,16 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    /** Abre um modal específico. */
     function abrirModal(modal) {
         modal.style.display = 'block';
     }
 
-    /** Fecha todos os modais. */
     function fecharModais() {
         agendamentoModal.style.display = 'none';
-        alocacaoModal.style.display = 'none';
         detalhesModal.style.display = 'none';
+        alocacaoModal.style.display = 'none'; 
     }
 
-    /** Preenche um select (dropdown) com dados. */
-    function preencherDropdowns() {
-        const cursoAgendamentoSelect = document.getElementById('curso-agendamento');
-        if (cursoAgendamentoSelect) {
-            popularSelect(cursoAgendamentoSelect, dadosCursos, 'id_cursos', 'nome_curso');
-        }
-
-        const courseSelect = document.getElementById('course-select'); // Correção do seletor
-        if (courseSelect) {
-            popularSelect(courseSelect, dadosCursos, 'id_cursos', 'nome_curso');
-        }
-
-        const instrutorAgendamentoSelect = document.getElementById('instrutor-agendamento');
-        if (instrutorAgendamentoSelect) {
-            popularSelect(instrutorAgendamentoSelect, dadosInstrutores, 'id_instrutores', 'nome_instrutor');
-        }
-    }
-
-    /**
-     * Preenche um select (dropdown) com dados.
-     * @param {HTMLElement} selectElement O elemento select.
-     * @param {Array} data Array de objetos com 'id' e 'nome'.
-     * @param {string} idKey Nome da chave do ID no objeto.
-     * @param {string} nameKey Nome da chave do nome no objeto.
-     */
     function popularSelect(selectElement, data, idKey, nameKey) {
         selectElement.innerHTML = '<option value="" disabled selected>Selecione...</option>';
         data.forEach(item => {
@@ -130,15 +103,25 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    /**
-     * Busca os dados da turma pelo ID e abre o modal de detalhes.
-     * @param {number} turmaId O ID da turma.
-     */
+    function preencherDropdowns() {
+        const cursoAgendamentoSelect = document.getElementById('curso-agendamento');
+        if (cursoAgendamentoSelect) {
+            popularSelect(cursoAgendamentoSelect, dadosCursos, 'id_cursos', 'nome_curso');
+        }
+        const instrutorAgendamentoSelect = document.getElementById('instrutor-agendamento');
+        if (instrutorAgendamentoSelect) {
+            popularSelect(instrutorAgendamentoSelect, dadosInstrutores, 'id_instrutores', 'nome_instrutor');
+        }
+        const alocacaoCursoSelect = document.getElementById('alocacao-curso');
+        if (alocacaoCursoSelect) {
+            popularSelect(alocacaoCursoSelect, dadosCursos, 'id_cursos', 'nome_curso');
+        }
+    }
+
     function abrirModalDetalhes(turmaId) {
         const turma = agendamentos.find(a => a.id_turmas == turmaId);
         if (!turma) return;
-        
-        // Preenche os campos de exibição
+
         document.getElementById('detalhes-titulo').textContent = `Detalhes da Turma ${turma.nome_curso}`;
         document.getElementById('detalhes-curso').textContent = turma.nome_curso;
         document.getElementById('detalhes-sala').textContent = turma.nome_sala;
@@ -148,11 +131,9 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('detalhes-instrutor').textContent = turma.instrutor || 'Não Atribuído';
         document.getElementById('detalhes-status').textContent = turma.status;
 
-        // Preenche os campos do formulário de edição
         detalhesTurmaId.value = turma.id_turmas;
         detalhesStatusSelect.value = turma.status;
 
-        // Popula o select de instrutores e pré-seleciona o atual
         popularSelect(detalhesInstrutorInput, dadosInstrutores, 'id_instrutores', 'nome_instrutor');
         if (turma.instrutor) {
             const instrutorAtual = dadosInstrutores.find(i => i.nome_instrutor === turma.instrutor);
@@ -163,14 +144,13 @@ document.addEventListener('DOMContentLoaded', () => {
         abrirModal(detalhesModal);
     }
 
-    // --- 4. FUNÇÕES DE RENDERIZAÇÃO ---
+    // --- 4. FUNÇÕES DE RENDERIZAÇÃO --
     function renderizarCalendario() {
         const grid = document.getElementById('calendar-grid');
         grid.innerHTML = '';
         const numDays = new Date(dataAtual.getFullYear(), dataAtual.getMonth() + 1, 0).getDate();
+        grid.style.gridTemplateColumns = `150px repeat(${numDays},1fr)`;
 
-        // Cabeçalhos (Salas e Datas)
-        grid.style.gridTemplateColumns = `150px repeat(${numDays}, 1fr)`;
         const salaHeaderCell = document.createElement('div');
         salaHeaderCell.className = 'grid-cell header-cell room-header';
         salaHeaderCell.textContent = 'Salas';
@@ -188,7 +168,6 @@ document.addEventListener('DOMContentLoaded', () => {
             grid.appendChild(dateCell);
         }
 
-        // Células de agendamento por sala e dia
         dadosSalas.forEach(sala => {
             const roomHeaderCell = document.createElement('div');
             roomHeaderCell.className = 'grid-cell header-cell room-header';
@@ -201,28 +180,24 @@ document.addEventListener('DOMContentLoaded', () => {
                 const cell = document.createElement('div');
                 const isWeekend = date.getDay() === 0 || date.getDay() === 6;
                 const isHoliday = feriados.includes(dayString);
-                
-                cell.className = 'grid-cell';
+                cell.className = 'grid-cell multi-turno-cell'; // Adiciona a classe para suportar múltiplos agendamentos
                 if (isWeekend) cell.classList.add('weekend');
                 if (isHoliday) cell.classList.add('holiday');
-                
-                cell.classList.add('multi-turno-cell');
 
-                // Filtra os agendamentos para esta sala e este dia
                 const agendamentosDoDia = agendamentos.filter(a => {
                     const dataAgendamento = a.data_aula.substring(0, 10);
                     return a.id_salas == sala.id_salas && dataAgendamento === dayString;
                 });
-                
+
                 agendamentosDoDia.forEach(agendamento => {
                     const block = document.createElement('div');
                     block.className = 'appointment-block';
                     block.dataset.turmaId = agendamento.id_turmas;
-                    
+
                     let color;
-                    switch(agendamento.turno) {
+                    switch (agendamento.turno) {
                         case 'Manhã':
-                            color = '#007bff';
+                            color = '#ffdd00';
                             break;
                         case 'Tarde':
                             color = '#28a745';
@@ -231,62 +206,47 @@ document.addEventListener('DOMContentLoaded', () => {
                             color = '#6f42c2';
                             break;
                         case 'Integral':
-                            color = '#dc3545';
+                            color = '#007bff';
                             break;
                         default:
                             color = '#6c757d';
                     }
                     block.style.backgroundColor = color;
-                    block.innerHTML = `
-                        <h4>${agendamento.nome_curso}</h4>
-                        <span>${agendamento.turno}</span>
-                        <span>${agendamento.instrutor || 'Não Atribuído'}</span>
-                    `;
-                    
+                    block.innerHTML = `<h4>${agendamento.nome_curso}</h4><span>${agendamento.turno}</span><span>${agendamento.instrutor || 'Não Atribuído'}</span>`;
                     block.addEventListener('click', (event) => {
                         event.stopPropagation();
                         abrirModalDetalhes(agendamento.id_turmas);
                     });
-                    
                     cell.appendChild(block);
                 });
 
-                // Adiciona o evento de clique na célula vazia para agendar manualmente
                 if (agendamentosDoDia.length === 0) {
                     cell.addEventListener('click', () => {
                         abrirModal(agendamentoModal);
-                        // Pré-seleciona a sala no formulário
                         document.getElementById('agendamento-salas-id-input').value = sala.id_salas;
+                        agendamentoSalasDisplay.value = sala.nome_sala;
+                        salasAlocadasInfo.innerHTML = '';
                     });
                 }
                 grid.appendChild(cell);
             }
         });
-        document.getElementById('current-month-year').textContent = dataAtual.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
+        document.getElementById('current-month-year').textContent = dataAtual.toLocaleDateString('pt-BR', {
+            month: 'long',
+            year: 'numeric'
+        });
     }
 
-    // --- 5. FUNÇÕES DE CARGA DE DADOS E EVENTOS ---
+    // --- 5. FUNÇÕES DE REQUISIÇÃO E LÓGICA DE NEGÓCIO --
 
-    /** Carrega todos os dados iniciais do back-end. */
     async function carregarDadosIniciais() {
         try {
-            // Carregar feriados
             const feriadosData = await fetchData('./controllers/get_feriados.php');
             feriados = feriadosData.feriados;
-            
-            // Carregar agendamentos
             agendamentos = await fetchData('./controllers/get_agendamentos.php');
-
-            // Carregar salas
             dadosSalas = await fetchData('./controllers/get_sala.php');
-
-            // Carregar cursos
             dadosCursos = await fetchData('./controllers/get_cursos.php');
-
-            // Carregar instrutores
             dadosInstrutores = await fetchData('./controllers/get_instrutores.php');
-
-            // Renderiza o calendário e preenche os dropdowns depois que todos os dados forem carregados
             renderizarCalendario();
             preencherDropdowns();
         } catch (error) {
@@ -294,7 +254,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    /** Envia o formulário de agendamento manual. */
     async function agendarTurma(formData) {
         try {
             const response = await fetch('./controllers/agendar_turma.php', {
@@ -318,41 +277,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    /** Envia o formulário de alocação automática. */
-    async function alocarTurma(formData) {
-        try {
-            const response = await fetch('./controllers/alocar_turma.php', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(formData)
-            });
-            const result = await response.json();
-            if (response.ok) {
-                sugestaoAlocacaoData = {
-                    ...formData,
-                    salas: result.salas,
-                    dataTermino: result.dataTermino
-                };
-                // Exibe os resultados
-                const cursoNome = dadosCursos.find(c => c.id_cursos == formData.cursoId)?.nome_curso;
-                const salasNomes = result.salas.map(s => s.nome_sala).join(', ');
-                document.getElementById('alocacao-curso-nome').textContent = cursoNome;
-                document.getElementById('alocacao-data-inicio').textContent = formData.dataInicio;
-                document.getElementById('alocacao-data-termino').textContent = result.dataTermino;
-                document.getElementById('alocacao-salas-sugeridas').textContent = salasNomes;
-                abrirModal(alocacaoModal);
-            } else {
-                alert(`Erro: ${result.error}`);
-            }
-        } catch (error) {
-            console.error('Erro:', error);
-            alert('Erro ao tentar alocação automática.');
-        }
-    }
-
-    /** Envia as alterações da turma para o back-end. */
     async function gerenciarTurma(turmaId, formData) {
         try {
             const response = await fetch('./controllers/gerenciar_turma.php', {
@@ -376,9 +300,22 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    /** Configura todos os event listeners da aplicação. */
+    // Função para exibir a sugestão de alocação
+    function exibirSugestao(sugestao) {
+        const cursoNome = dadosCursos.find(c => c.id_cursos == sugestao.cursoId)?.nome_curso;
+        sugestaoMensagem.textContent = `Encontrada(s) sala(s) disponível(is) para o curso de ${cursoNome}.`;
+        salasSugeridasLista.innerHTML = '';
+        sugestao.salas.forEach(sala => {
+            const li = document.createElement('li');
+            li.textContent = `Sala: ${sala.nome_sala} (Capacidade: ${sala.capacidade_maxima})`;
+            salasSugeridasLista.appendChild(li);
+        });
+        sugestaoContainer.style.display = 'block';
+    }
+
+    // --- 6. CONFIGURAÇÃO DOS EVENTOS --
     function setupEventListeners() {
-        // Navegação da barra lateral
+        // Eventos de navegação
         navItems.forEach(item => {
             item.addEventListener('click', (event) => {
                 event.preventDefault();
@@ -386,24 +323,26 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         });
 
-        // Botões de navegação do calendário
+        // Eventos do calendário
         prevMonthBtn.addEventListener('click', () => {
             dataAtual.setMonth(dataAtual.getMonth() - 1);
             renderizarCalendario();
         });
-        
         nextMonthBtn.addEventListener('click', () => {
             dataAtual.setMonth(dataAtual.getMonth() + 1);
             renderizarCalendario();
         });
 
-        // Botão de agendar turma
+        // Botão "Agendar Turma"
         addTurmaBtn.addEventListener('click', () => {
-            document.getElementById('agendamento-form').reset();
+            agendamentoForm.reset();
+            agendamentoSalasDisplay.value = '';
+            agendamentoSalasIdInput.value = '';
+            salasAlocadasInfo.innerHTML = '';
             abrirModal(agendamentoModal);
         });
 
-        // Envio do formulário de agendamento manual
+        // Evento de envio do formulário de Agendamento Manual
         agendamentoForm.addEventListener('submit', (event) => {
             event.preventDefault();
             const formData = {
@@ -412,42 +351,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 dataInicio: document.getElementById('data-inicio-agendamento').value,
                 totalAlunos: document.getElementById('total-alunos-agendamento').value,
                 turno: document.getElementById('turno-agendamento').value,
-                // Corrigido: garante que salaId seja sempre um array, mesmo com um único item.
-                salaId: [document.getElementById('agendamento-salas-id-input').value], 
-                diasSemana: Array.from(document.querySelectorAll('#dias-semana-agendamento input:checked')).map(cb => cb.value)
+                salaId: agendamentoSalasIdInput.value.split(',').map(s => parseInt(s)),
+                diasSemana: Array.from(document.querySelectorAll('#dias-semana-agendamento input:checked')).map(cb => parseInt(cb.value))
             };
             agendarTurma(formData);
         });
 
-        // Envio do formulário de calculadora de planejamento (Alocação Automática)
-        scheduleForm.addEventListener('submit', (event) => {
-            event.preventDefault();
-            const formData = {
-                cursoId: document.getElementById('course-select').value,
-                dataInicio: document.getElementById('start-date-input').value,
-                turno: document.getElementById('turno-select').value,
-                diasSemana: Array.from(document.querySelectorAll('#dias-semana-container input:checked')).map(cb => cb.value)
-            };
-            alocarTurma(formData);
-        });
-
-        // Confirmação do modal de alocação automática
-        confirmarAlocacaoBtn.addEventListener('click', () => {
-            if (sugestaoAlocacaoData) {
-                const salasIds = sugestaoAlocacaoData.salas.map(s => s.id_salas);
-                const formData = {
-                    cursoId: sugestaoAlocacaoData.cursoId,
-                    totalAlunos: sugestaoAlocacaoData.totalAlunos,
-                    dataInicio: sugestaoAlocacaoData.dataInicio,
-                    salaId: salasIds,
-                    turno: sugestaoAlocacaoData.turno,
-                    diasSemana: sugestaoAlocacaoData.diasSemana
-                };
-                agendarTurma(formData);
-            }
-        });
-        
-        // Envio do formulário de detalhes da turma
+        // Evento de envio do formulário de Detalhes
         detalhesForm.addEventListener('submit', (event) => {
             event.preventDefault();
             const dadosDetalhes = {
@@ -472,6 +382,139 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }
 
+        // Lógica para o formulário da Calculadora Inteligente
+        alocacaoForm.addEventListener('submit', async (event) => {
+            event.preventDefault();
+            const dadosAlocacao = {
+                cursoId: document.getElementById('alocacao-curso').value,
+                totalAlunos: document.getElementById('alocacao-alunos').value,
+                turno: document.getElementById('alocacao-turno').value,
+                diasSemana: Array.from(document.querySelectorAll('#alocacao-form input[name="diasSemana"]:checked')).map(cb => parseInt(cb.value)),
+                dataInicio: new Date().toISOString().split('T')[0]
+            };
+            
+            if (!dadosAlocacao.cursoId || !dadosAlocacao.totalAlunos || !dadosAlocacao.turno || dadosAlocacao.diasSemana.length === 0) {
+                 alert('Por favor, preencha todos os campos do formulário para a alocação.');
+                 return;
+            }
+
+            try {
+                const response = await fetch('./controllers/alocar_turma.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(dadosAlocacao)
+                });
+                const resultado = await response.json();
+                
+                if (!response.ok) {
+                    alert(`Erro na Alocação Automática: ${resultado.error}`);
+                    sugestaoContainer.style.display = 'none';
+                    return;
+                }
+                
+                sugestaoAlocacaoData = resultado;
+                exibirSugestao(sugestaoAlocacaoData);
+
+            } catch (error) {
+                alert('Ocorreu um erro ao tentar a alocação automática.');
+                console.error(error);
+            }
+        });
+
+        // Lógica para o botão "Buscar Salas Automaticamente" no modal de Agendamento Manual
+        buscarSalasAutomaticamenteBtn.addEventListener('click', async (event) => {
+            event.preventDefault();
+            const dadosAgendamento = {
+                cursoId: document.getElementById('curso-agendamento').value,
+                totalAlunos: document.getElementById('total-alunos-agendamento').value,
+                turno: document.getElementById('turno-agendamento').value,
+                diasSemana: Array.from(document.querySelectorAll('#dias-semana-agendamento input:checked')).map(cb => cb.value),
+                dataInicio: document.getElementById('data-inicio-agendamento').value
+            };
+
+            // Validação de dados adicionada
+            if (!dadosAgendamento.cursoId || !dadosAgendamento.dataInicio || !dadosAgendamento.totalAlunos || !dadosAgendamento.turno || dadosAgendamento.diasSemana.length === 0) {
+                alert('Por favor, preencha todos os campos do formulário para fazer a alocação automática.');
+                return;
+            }
+
+            try {
+                const response = await fetch('./controllers/alocar_turma.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(dadosAgendamento)
+                });
+                const resultado = await response.json();
+
+                if (response.ok && resultado.salas) {
+                    const salaIds = resultado.salas.map(s => s.id_salas).join(',');
+                    const salasNomes = resultado.salas.map(s => s.nome_sala).join(', ');
+                    agendamentoSalasDisplay.value = salasNomes;
+                    agendamentoSalasIdInput.value = salaIds;
+                    salasAlocadasInfo.innerHTML = `<p style="color: green; font-weight: bold;">Salas disponíveis encontradas:</p><ul>${resultado.salas.map(s => `<li>${s.nome_sala} (Capacidade: ${s.capacidade_maxima})</li>`).join('')}</ul>`;
+                } else {
+                    agendamentoSalasDisplay.value = 'Nenhuma sala disponível';
+                    agendamentoSalasIdInput.value = '';
+                    salasAlocadasInfo.innerHTML = `<p style="color: red; font-weight: bold;">Erro na alocação: ${resultado.error}</p>`;
+                    alert(`Erro na alocação automática: ${resultado.error}`);
+                }
+            } catch (error) {
+                console.error('Erro na requisição de alocação automática:', error);
+                agendamentoSalasDisplay.value = '';
+                agendamentoSalasIdInput.value = '';
+                salasAlocadasInfo.innerHTML = `<p style="color: red; font-weight: bold;">Erro de comunicação: Não foi possível conectar ao servidor.</p>`;
+                alert('Ocorreu um erro ao tentar alocar a turma automaticamente.');
+            }
+        });
+
+
+        if (confirmarAlocacaoBtn) {
+            confirmarAlocacaoBtn.addEventListener('click', async () => {
+                if (!sugestaoAlocacaoData) {
+                    alert('Não há dados de alocação para confirmar. Por favor, faça uma busca antes.');
+                    return;
+                }
+                
+                const formData = {
+                    cursoId: sugestaoAlocacaoData.cursoId,
+                    dataInicio: sugestaoAlocacaoData.dataInicio,
+                    dataTermino: sugestaoAlocacaoData.dataTermino,
+                    totalAlunos: sugestaoAlocacaoData.totalAlunos,
+                    turno: sugestaoAlocacaoData.turno,
+                    salaId: sugestaoAlocacaoData.salas.map(s => s.id_salas), 
+                    diasSemana: sugestaoAlocacaoData.diasSemana
+                };
+                
+                try {
+                    const response = await fetch('./controllers/agendar_turma.php', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(formData)
+                    });
+                    const resultado = await response.json();
+                    
+                    if (response.ok) {
+                        alert('Turma agendada com sucesso!');
+                        fecharModais();
+                        navigateTo('painel-visual');
+                    } else {
+                        alert(`Erro ao agendar turma: ${resultado.error}`);
+                    }
+                } catch (error) {
+                    console.error('Erro na requisição de agendamento:', error);
+                    alert('Ocorreu um erro ao tentar agendar a turma. Verifique a conexão.');
+                }
+            });
+        }
+        
+        // Lógica para o botão de cancelar alocação automática
+        if (cancelarAlocacaoBtn) {
+            cancelarAlocacaoBtn.addEventListener('click', () => {
+                fecharModais();
+            });
+        }
+
+
         // Eventos para fechar modais
         closeBtns.forEach(btn => btn.addEventListener('click', fecharModais));
         window.addEventListener('click', (event) => {
@@ -481,7 +524,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // --- 6. INICIA A APLICAÇÃO ---
+    // --- 7. INICIA A APLICAÇÃO --
     setupEventListeners();
     carregarDadosIniciais();
     navigateTo('painel-visual');

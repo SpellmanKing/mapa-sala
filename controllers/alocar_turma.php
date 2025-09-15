@@ -8,7 +8,7 @@ require __DIR__ . '/../models/entidades/curso.php';
 require __DIR__ . '/../models/entidades/agendamento.php';
 require __DIR__ . '/../models/entidades/alocador_inteligente.php';
 require __DIR__ . '/../models/calcular_cronograma.php';
-
+require __DIR__ . '/get_feriados.php';
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     http_response_code(405);
@@ -18,7 +18,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 
 $data = json_decode(file_get_contents('php://input'), true);
 
-if (empty($data['cursoId']) || empty($data['totalAlunos']) || empty($data['turno']) || empty($data['diasSemana'])) {
+if (empty($data['cursoId']) || empty($data['totalAlunos']) || empty($data['turno']) || empty($data['diasSemana']) || empty($data['dataInicio'])) {
     http_response_code(400);
     echo json_encode(['error' => 'Dados incompletos. Por favor, preencha todos os campos obrigatórios.']);
     exit;
@@ -46,7 +46,9 @@ try {
     $tipoSalaNecessaria = $dadosCurso['necessidade_sala'];
 
     // 1. Calcula o cronograma
-    $cronograma = calcularCronograma($cargaHoraria, $data['dataInicio'], $turno, $diasSemanaSelecionados);
+    $feriados = getFeriados();
+    // AQUI ESTÁ A CORREÇÃO: Adicionamos o $feriados como o quinto argumento
+    $cronograma = calcularCronograma($cargaHoraria, $data['dataInicio'], $turno, $diasSemanaSelecionados, $feriados);
     $diasLetivos = $cronograma['diasLetivos'];
     $dataInicio = $data['dataInicio'];
     $dataTermino = $cronograma['dataTermino'];

@@ -26,11 +26,10 @@ $novoStatus = $data['status'];
 try {
     $pdo = Conexao::getInstancia();
     
-    // NOVO: Busca o ID do instrutor a partir do nome
+    // O front-end agora envia o ID do instrutor diretamente.
     $novoInstrutorId = null;
-    if (!empty($data['instrutorNome'])) {
-        $instrutor = new Instrutor($pdo);
-        $novoInstrutorId = $instrutor->buscarIdPorNome($data['instrutorNome']);
+    if (!empty($data['instrutorId'])) {
+        $novoInstrutorId = $data['instrutorId'];
     }
 
     $turma = new Turma($pdo);

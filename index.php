@@ -45,8 +45,7 @@
                 <header class="page-header">
                     <h1>Painel Visual de Salas</h1>
                     <button id="add-turma-btn" class="primary-btn"><i class="fas fa-plus"></i> Agendar Turma</button>
-                    <button type="submit" class="primary-btn" id="alocacao-automatica-btn">Alocação Automática</button>
-                </header>
+                    </header>
                 <main class="main-content">
                     <div class="calendar-header">
                         <button id="prev-month-btn" class="nav-btn"><i class="fas fa-chevron-left"></i></button>
@@ -73,52 +72,48 @@
                 <header class="page-header">
                     <h1>Calculadora Inteligente</h1>
                 </header>
-                <main class="main-content">
-                    <form id="schedule-form" class="form-grid">
-                        <div class="form-group">
-                            <label for="course-select">Curso:</label>
-                            <select id="course-select" required></select>
-                        </div>
-                        <div class="form-group">
-                            <label for="start-date-input">Data de Início:</label>
-                            <input type="date" id="start-date-input" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="turno-select">Turno:</label>
-                            <select id="turno-select" required>
-                                <option value="" disabled selected>Selecione um turno</option>
-                                <option value="Manhã">Manhã</option>
-                                <option value="Tarde">Tarde</option>
-                                <option value="Noite">Noite</option>
-                                <option value="Integral">Integral</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label>Dias da Semana Letivos:</label>
-                            <div id="dias-semana-container" class="checkbox-group">
-                                <label><input type="checkbox" name="dias-semana" value="1" checked>Segunda</label>
-                                <label><input type="checkbox" name="dias-semana" value="2" checked>Terça</label>
-                                <label><input type="checkbox" name="dias-semana" value="3" checked>Quarta</label>
-                                <label><input type="checkbox" name="dias-semana" value="4" checked>Quinta</label>
-                                <label><input type="checkbox" name="dias-semana" value="5" checked>Sexta</label>
-                                <label><input type="checkbox" name="dias-semana" value="6">Sábado</label>
-                                <label><input type="checkbox" name="dias-semana" value="0">Domingo</label>
-                            </div>
-                        </div>
-                        <button type="submit" class="btn btn-primary full-width">Calcular Cronograma</button>
-                    </form>
-                    <div id="results" class="results-container hidden">
-                        <div class="results-header">
-                            <h3>Cronograma Sugerido</h3>
-                            <button id="export-pdf-btn" class="btn btn-secondary"><i class="icon-download"></i> Exportar para PDF</button>
-                        </div>
-                        <div id="results-content">
-                            <p id="course-details"></p>
-                            <p id="end-date"></p>
-                            <div id="calendar-visual"></div>
+                <form id="alocacao-form" class="form-container">
+                    <div class="form-group">
+                        <label for="alocacao-curso">Curso:</label>
+                        <select id="alocacao-curso" required></select>
+                    </div>
+                    <div class="form-group">
+                        <label for="alocacao-alunos">Número de Alunos:</label>
+                        <input type="number" id="alocacao-alunos" required min="1">
+                    </div>
+                    <div class="form-group">
+                        <label for="alocacao-turno">Turno:</label>
+                        <select id="alocacao-turno" required>
+                            <option value="" disabled selected>Selecione um turno</option>
+                            <option value="Manhã">Manhã</option>
+                            <option value="Tarde">Tarde</option>
+                            <option value="Noite">Noite</option>
+                            <option value="Integral">Integral</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Dias da Semana:</label>
+                        <div class="dias-semana-checkbox">
+                            <label><input type="checkbox" name="diasSemana" value="2"> Seg</label>
+                            <label><input type="checkbox" name="diasSemana" value="3"> Ter</label>
+                            <label><input type="checkbox" name="diasSemana" value="4"> Qua</label>
+                            <label><input type="checkbox" name="diasSemana" value="5"> Qui</label>
+                            <label><input type="checkbox" name="diasSemana" value="6"> Sex</label>
+                            <label><input type="checkbox" name="diasSemana" value="7"> Sáb</label>
+                            <label><input type="checkbox" name="diasSemana" value="1"> Dom</label>
                         </div>
                     </div>
-                </main>
+                    <button type="submit" class="primary-btn">Buscar Salas Disponíveis</button>
+                </form>
+                <div id="sugestao-alocacao" style="display:none; margin-top: 20px;">
+                    <h4>Sugestão de Alocação:</h4>
+                    <p id="sugestao-mensagem"></p>
+                    <ul id="salas-sugeridas-lista"></ul>
+                    <div class="form-actions">
+                        <button id="confirmar-sugestao-btn" class="primary-btn">Confirmar Alocação</button>
+                        <button id="cancelar-sugestao-btn" class="secondary-btn">Cancelar</button>
+                    </div>
+                </div>
             </section>
 
             <section id="relatorios" class="content-section">
@@ -148,7 +143,7 @@
                 <button class="close-btn">&times;</button>
             </header>
             <form id="agendamento-form">
-                <input type="hidden" id="agendamento-salaId">
+                <input type="hidden" id="agendamento-salas-id-input">
                 <div class="form-group">
                     <label for="curso-agendamento">Curso:</label>
                     <select id="curso-agendamento" required></select>
@@ -160,6 +155,8 @@
                 <div class="form-group">
                     <label for="data-inicio-agendamento">Data de Início:</label>
                     <input type="date" id="data-inicio-agendamento" required>
+                    <label for="data-conclusao-agendamento">Data de Início:</label>
+                    <input type="date" id="data-conclusao-agendamento" required>
                 </div>
                 <div class="form-group">
                     <label for="total-alunos-agendamento">Número de Alunos:</label>
@@ -187,13 +184,16 @@
                         <label><input type="checkbox" name="dias-semana" value="1"> Dom</label>
                     </div>
                 </div>
-                <div class="form-group" id="alocacao-automatica-container">
-                    <button type="button" class="btn btn-secondary" id="alocacao-automatica-btn">Alocação Automática</button>
-                    <label for="agendamento-salas-display">Sala(s) Alocada(s):</label>
-                    <input type="text" id="agendamento-salas-display" placeholder="Clique em Alocação Automática" disabled>
-                    <input type="hidden" id="agendamento-salas-id-input" name="salaId">
+                <div class="form-group">
+                    <label for="agendamento-salas-display">Salas:</label>
+                    <input type="text" id="agendamento-salas-display" readonly placeholder="Clique para buscar salas disponíveis">
+                    <button type="button" class="secondary-btn" id="alocacao-manual-btn" style="margin-top: 10px;">Buscar Salas Automaticamente</button>
+                    <div id="salasAlocadasInfo" style="margin-top: 10px;"></div>
                 </div>
-                <button type="submit" class="primary-btn">Agendar</button>
+                <div class="form-actions">
+                    <button type="submit" class="primary-btn">Agendar</button>
+                    <button type="button" class="secondary-btn" onclick="fecharModais()">Cancelar</button>
+                </div>
             </form>
         </div>
     </div>
@@ -236,7 +236,6 @@
             </form>
         </div>
     </div>
-
     <div id="alocacao-modal" class="modal">
         <div class="modal-content">
             <header class="modal-header">
@@ -245,9 +244,14 @@
             </header>
             <div id="alocacao-confirmacao-conteudo">
                 <p><strong>Curso:</strong> <span id="alocacao-curso-nome"></span></p>
-                <p><strong>Data de Início:</strong> <span id="alocacao-data-inicio"></span></p>
+                <p><strong>Data de Início:</strong> <span id="alocacao-data-inicio" data-value=""></span></p>
                 <p><strong>Data de Término (Estimada):</strong> <span id="alocacao-data-termino"></span></p>
-                <p><strong>Sala(s) Sugerida(s):</strong> <span id="alocacao-salas-sugeridas"></span></p>
+                <p><strong>Salas Sugeridas:</strong> <span id="alocacao-salas-sugeridas"></span></p>
+                <input type="hidden" id="alocacao-curso-id">
+                <input type="hidden" id="alocacao-total-alunos">
+                <input type="hidden" id="alocacao-turno">
+                <input type="hidden" id="alocacao-salas-id">
+                <input type="hidden" id="alocacao-dias-semana">
             </div>
             <div class="form-actions">
                 <button class="primary-btn" id="confirmar-alocacao-btn">Confirmar Agendamento</button>
