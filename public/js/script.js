@@ -49,6 +49,40 @@ document.addEventListener('DOMContentLoaded', () => {
     const detalhesStatusSelect = document.getElementById('detalhes-status-select');
     const detalhesInstrutorInput = document.getElementById('detalhes-instrutor-input');
 
+    // ---  SELETORES DA CALCULADORA ---
+    const calculadoraDOM = {
+        form: document.getElementById('course-form'),
+        courseSelect: document.getElementById('course-select'),
+        courseDetails: document.getElementById('course-details'),
+        displayCH: document.getElementById('display-ch'),
+        displayValor: document.getElementById('display-valor'),
+        startDate: document.getElementById('start-date'),
+        shiftSelect: document.getElementById('shift-select'),
+        isTemCheckbox: document.getElementById('is-tem-checkbox'),
+        tecnicoTypeOptions: document.getElementById('tecnico-type-options'),
+        regularCourseOptions: document.getElementById('regular-course-options'),
+        remoteOptionsPanel: document.getElementById('remote-options-panel'),
+        aprendizagemOptions: document.getElementById('aprendizagem-options'),
+        temOptions: document.getElementById('tem-options'),
+        weekdayChecks: document.querySelectorAll('.weekday-check'),
+        remotePercentageSelect: document.getElementById('remote-percentage-select'),
+        remoteDetailsOptions: document.getElementById('remote-details-options'),
+        aprendizagemExclusiva: document.getElementById('aprendizagem-exclusiva'),
+        aprendizagemTradicionalOptions: document.getElementById('aprendizagem-tradicional-options'),
+        aprendizagemModeloNovo: document.getElementById('aprendizagem-modelo-novo'),
+        temRemoteDay: document.getElementById('tem-remote-day'),
+        temPresentialDaysSelector: document.getElementById('tem-presencial-days-selector'),
+        temWeekdayChecks: document.querySelectorAll('.tem-weekday-check'),
+        // Seção de resultados
+        calculationResults: document.getElementById('calculation-results'),
+        resultCH: document.getElementById('result-ch'),
+        resultEndDate: document.getElementById('result-end-date'),
+        resultTotalDays: document.getElementById('result-total-days'),
+        resultPresentialDays: document.getElementById('result-presential-days'),
+        resultRemoteDays: document.getElementById('result-remote-days'),
+        calendarView: document.getElementById('calendar-view'),
+    };
+
     // --- 3. FUNÇÕES GERAIS E DE UTILIDADE --
 
     async function fetchData(url) {
@@ -249,6 +283,7 @@ document.addEventListener('DOMContentLoaded', () => {
             dadosInstrutores = await fetchData('./controllers/get_instrutores.php');
             renderizarCalendario();
             preencherDropdowns();
+            popularFiltros();
         } catch (error) {
             console.error('Erro ao carregar dados iniciais:', error);
         }
@@ -311,6 +346,60 @@ document.addEventListener('DOMContentLoaded', () => {
             salasSugeridasLista.appendChild(li);
         });
         sugestaoContainer.style.display = 'block';
+    }
+
+
+    // --- LÓGICA DA CALCULADORA INTELIGENTE ---
+    function renderizarCalendarioCalculadora(data) {
+        const {
+            total_dias_aula,
+            data_termino,
+            dias_presenciais,
+            dias_remotos,
+            total_carga_horaria,
+            calendario
+        } = data;
+        
+        calculadoraDOM.resultCH.textContent = total_carga_horaria;
+        calculadoraDOM.resultEndDate.textContent = data_termino;
+        calculadoraDOM.resultTotalDays.textContent = total_dias_aula;
+        calculadoraDOM.resultPresentialDays.textContent = dias_presenciais;
+        calculadoraDOM.resultRemoteDays.textContent = dias_remotos;
+        calculadoraDOM.calculationResults.classList.remove('hidden');
+        
+        const calendarView = calculadoraDOM.calendarView;
+        calendarView.innerHTML = '';
+        
+        // Renderiza o calendário detalhado da calculadora aqui
+        // (A lógica completa de renderização do calendário aqui pode ser complexa e requer a API de cálculo)
+    }
+
+    function popularFiltros() {
+        // Extrai os segmentos e modalidades de forma dinâmica
+        const segmentsData = [...new Set(dadosCursos.map(c => c.segmento))];
+        const modalitiesData = [...new Set(dadosCursos.map(c => c.modalidade))];
+        
+        const segmentoSelect = document.getElementById('filter-segmento');
+        const modalidadeSelect = document.getElementById('filter-modalidade');
+
+        // Garante que os seletores existem antes de tentar populá-los
+        if (segmentoSelect) {
+             segmentsData.forEach(segmento => {
+                const option = document.createElement('option');
+                option.value = segmento;
+                option.textContent = segmento;
+                segmentoSelect.appendChild(option);
+            });
+        }
+       
+        if (modalidadeSelect) {
+             modalitiesData.forEach(modalidade => {
+                const option = document.createElement('option');
+                option.value = modalidade;
+                option.textContent = modalidade;
+                modalidadeSelect.appendChild(option);
+            });
+        }
     }
 
     // --- 6. CONFIGURAÇÃO DOS EVENTOS --
@@ -381,45 +470,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             });
         }
-
-        // // Lógica para o formulário da Calculadora Inteligente
-        // alocacaoForm.addEventListener('submit', async (event) => {
-        //     event.preventDefault();
-        //     const dadosAlocacao = {
-        //         cursoId: document.getElementById('alocacao-curso').value,
-        //         totalAlunos: document.getElementById('alocacao-alunos').value,
-        //         turno: document.getElementById('alocacao-turno').value,
-        //         diasSemana: Array.from(document.querySelectorAll('#alocacao-form input[name="diasSemana"]:checked')).map(cb => parseInt(cb.value)),
-        //         dataInicio: new Date().toISOString().split('T')[0]
-        //     };
-            
-        //     if (!dadosAlocacao.cursoId || !dadosAlocacao.totalAlunos || !dadosAlocacao.turno || dadosAlocacao.diasSemana.length === 0) {
-        //          alert('Por favor, preencha todos os campos do formulário para a alocação.');
-        //          return;
-        //     }
-
-        //     try {
-        //         const response = await fetch('./controllers/alocar_turma.php', {
-        //             method: 'POST',
-        //             headers: { 'Content-Type': 'application/json' },
-        //             body: JSON.stringify(dadosAlocacao)
-        //         });
-        //         const resultado = await response.json();
-                
-        //         if (!response.ok) {
-        //             alert(`Erro na Alocação Automática: ${resultado.error}`);
-        //             sugestaoContainer.style.display = 'none';
-        //             return;
-        //         }
-                
-        //         sugestaoAlocacaoData = resultado;
-        //         exibirSugestao(sugestaoAlocacaoData);
-
-        //     } catch (error) {
-        //         alert('Ocorreu um erro ao tentar a alocação automática.');
-        //         console.error(error);
-        //     }
-        // });
 
         // Lógica para o botão "Buscar Salas Automaticamente" no modal de Agendamento Manual
         buscarSalasAutomaticamenteBtn.addEventListener('click', async (event) => {
@@ -525,149 +575,75 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    const calculadoraDOM = {
-        filterNomeCurso: document.getElementById('filter-nome-curso'),
-        filterSegmento: document.getElementById('filter-segmento'),
-        filterModalidade: document.getElementById('filter-modalidade'),
-        filterChMin: document.getElementById('filter-ch-min'),
-        filterChMax: document.getElementById('filter-ch-max'),
-        filterTem: document.getElementById('filter-tem'),
-        filterBolsa: document.getElementById('filter-bolsa'),
-        applyFilters: document.getElementById('apply-filters'),
-        clearFilters: document.getElementById('clear-filters'),
+    // Lógica para o formulário da Calculadora Inteligente
+    calculadoraDOM.form.addEventListener('submit', async (event) => {
+        event.preventDefault();
 
-        
-        courseSelect: document.getElementById('course-select'),
-        courseDetails: document.getElementById('course-details'),
-        displayCh: document.getElementById('display-ch'),
-        displayValor: document.getElementById('display-valor'),
-        startDate: document.getElementById('start-date'),
-        shiftSelect: document.getElementById('shift-select'),
-        tecnicoTypeOptions: document.getElementById('tecnico-type-options'),
-        isTemCheckbox: document.getElementById('is-tem-checkbox'),
-        regularCourseOptions: document.getElementById('regular-course-options'),
-        remoteOptionsPanel: document.getElementById('remote-options-panel'),
-        remotePercentageSelect: document.getElementById('remote-percentage-select'),
-        remoteDetailsOptions: document.getElementById('remote-details-options'),
-        remoteFrequencySelect: document.getElementById('remote-frequency-select'),
-        remotePeriodSelect: document.getElementById('remote-period-select'),
-        aprendizagemOptions: document.getElementById('aprendizagem-options'),
-        aprendizagemExclusiva: document.getElementById('aprendizagem-exclusiva'),
-        aprendizagemTradicionalOptions: document.getElementById('aprendizagem-tradicional-options'),
-        aprendizagemModeloNovo: document.getElementById('aprendizagem-modelo-novo'),
-        calculateButton: document.getElementById('calculate-button'),
-        resultsSection: document.getElementById('results-section'),
-        resultsContent: document.getElementById('results-content'),
-        exportPdfButton: document.getElementById('export-pdf-button'),
-        calendarVisual: document.getElementById('calendar-visual'),
-    };
-
-    function filterCourses() {
-        const filters = {
-            nome: calculadoraDOM.filterNomeCurso.value.toLowerCase(),
-            segmento: calculadoraDOM.filterSegmento.value,
-            modalidade: calculadoraDOM.filterModalidade.value,
-            chMin: parseInt(calculadoraDOM.filterChMin.value) || 0,
-            chMax: parseInt(calculadoraDOM.filterChMax.value) || Infinity,
-            tem: calculadoraDOM.filterTem.checked,
-            bolsa: calculadoraDOM.filterBolsa.checked
+        const dadosCalculadora = {
+            courseId: calculadoraDOM.courseSelect.value,
+            startDate: calculadoraDOM.startDate.value,
+            shift: calculadoraDOM.shiftSelect.value,
+            isTem: calculadoraDOM.isTemCheckbox.checked,
+            isAprendizagem: calculadoraDOM.aprendizagemExclusiva.checked,
+            remotePercentage: calculadoraDOM.remotePercentageSelect.value,
+            remoteFrequency: calculadoraDOM.remoteFrequencySelect.value,
+            remotePeriod: calculadoraDOM.remotePeriodSelect.value,
+            weekdayChecks: Array.from(calculadoraDOM.weekdayChecks)
+                .filter(cb => cb.checked)
+                .map(cb => parseInt(cb.value)),
         };
-        const filtered = dadosCursos.filter(course => {
-            const matchesNome = course.nome_curso.toLowerCase().includes(filters.nome);
-            const matchesSegmento = filters.segmento === "Todos" || filters.segmento === "" || course.segmento === filters.segmento;
-            const matchesModalidade = filters.modalidade === "Todas" || filters.modalidade === "" || course.modalidade === filters.modalidade;
-            const matchesCh = course.carga_horaria >= filters.chMin && course.carga_horaria <= filters.chMax;
-            const matchesTem = !filters.tem || course.tem;
-            const matchesBolsa = !filters.bolsa || course.bolsa;
-            return matchesNome && matchesSegmento && matchesModalidade && matchesCh && matchesTem && matchesBolsa;
-        });
-        populateCourseSelect(filtered);
-    }
-    
-    function populateCourseSelect(courses) {
-        calculadoraDOM.courseSelect.innerHTML = '';
-        const defaultOption = document.createElement('option');
-        defaultOption.value = "";
-        defaultOption.textContent = "Selecione um curso";
-        calculadoraDOM.courseSelect.appendChild(defaultOption);
-        courses.forEach(course => {
-            const option = document.createElement('option');
-            option.value = course.id_cursos;
-            option.textContent = course.nome_curso;
-            option.dataset.ch = course.carga_horaria;
-            option.dataset.valor = course.valor;
-            option.dataset.isTem = course.tem;
-            option.dataset.modalidade = course.modalidade;
-            calculadoraDOM.courseSelect.appendChild(option);
-        });
-    }
 
-    function updateCourseDetails() {
-        const selectedOption = calculadoraDOM.courseSelect.options[calculadoraDOM.courseSelect.selectedIndex];
-        if (selectedOption && selectedOption.value !== "") {
-            calculadoraDOM.courseDetails.classList.remove('hidden');
-            calculadoraDOM.displayCh.textContent = selectedOption.dataset.ch;
-            calculadoraDOM.displayValor.textContent = `R$ ${parseFloat(selectedOption.dataset.valor).toFixed(2).replace('.', ',')}`;
+        console.log('Dados a serem enviados:', dadosCalculadora);
 
-            const isTem = selectedOption.dataset.isTem === 'true';
-            const isRemote = selectedOption.dataset.modalidade === 'Remoto';
-            const isHibrido = selectedOption.dataset.modalidade === 'Híbrido';
-
-            calculadoraDOM.tecnicoTypeOptions.classList.toggle('hidden', !isTem);
-            calculadoraDOM.regularCourseOptions.classList.toggle('hidden', isTem);
-            calculadoraDOM.remoteOptionsPanel.classList.toggle('hidden', !(isRemote || isHibrido));
-            calculadoraDOM.aprendizagemOptions.classList.add('hidden');
-        } else {
-            calculadoraDOM.courseDetails.classList.add('hidden');
-            calculadoraDOM.tecnicoTypeOptions.classList.add('hidden');
-            calculadoraDOM.regularCourseOptions.classList.add('hidden');
-            calculadoraDOM.remoteOptionsPanel.classList.add('hidden');
-            calculadoraDOM.aprendizagemOptions.classList.add('hidden');
-        }
-    }
-
-    function setupCalculatorEvents() {
-        calculadoraDOM.applyFilters.addEventListener('click', filterCourses);
-        calculadoraDOM.clearFilters.addEventListener('click', () => {
-            document.getElementById('calculadora-inteligente-form').reset();
-            filterCourses();
-        });
-        calculadoraDOM.courseSelect.addEventListener('change', updateCourseDetails);
-        calculadoraDOM.remotePercentageSelect.addEventListener('change', () => {
-            if (calculadoraDOM.remotePercentageSelect.value > 0) {
-                calculadoraDOM.remoteDetailsOptions.classList.remove('hidden');
+        try {
+            const response = await fetch('/controllers/calculadora_inteligente.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ cursoId, dataInicio, turno, diasSemana })
+            });
+            const result = await response.json();
+            if (response.ok) {
+                console.log('Resultado do cálculo:', result);
+                renderizarCalendarioCalculadora(result);
             } else {
-                calculadoraDOM.remoteDetailsOptions.classList.add('hidden');
+                alert(`Erro na comunicação com o servidor: ${result.error}`);
+                console.error('Erro na requisição:', result);
             }
-        });
-        calculadoraDOM.aprendizagemExclusiva.addEventListener('change', () => {
-            calculadoraDOM.aprendizagemTradicionalOptions.classList.toggle('hidden', calculadoraDOM.aprendizagemExclusiva.checked);
-            calculadoraDOM.aprendizagemModeloNovo.classList.toggle('hidden', !calculadoraDOM.aprendizagemExclusiva.checked);
-        });
-    }
+        } catch (error) {
+            console.error('Erro ao calcular:', error);
+            alert('Erro ao calcular a duração. Verifique os dados e tente novamente.');
+        }
+    });
 
-    function popularFiltros() {
-        // Extrai os segmentos e modalidades de forma dinâmica
-        const segmentsData = [...new Set(dadosCursos.map(c => c.segmento))];
-        const modalitiesData = [...new Set(dadosCursos.map(c => c.modalidade))];
-        
-        const segmentoSelect = calculadoraDOM.filterSegmento;
-        const modalidadeSelect = calculadoraDOM.filterModalidade;
+    // Eventos para mostrar/esconder painéis de opções
+    calculadoraDOM.courseSelect.addEventListener('change', () => {
+        const selectedCourse = dadosCursos.find(c => c.id_cursos == calculadoraDOM.courseSelect.value);
+        if (selectedCourse) {
+            calculadoraDOM.courseDetails.classList.remove('hidden');
+            calculadoraDOM.displayCH.textContent = selectedCourse.ch_total;
+            calculadoraDOM.displayValor.textContent = selectedCourse.valor_curso;
+            // Lógica para mostrar/esconder as opções com base no tipo de curso
+            calculadoraDOM.regularCourseOptions.classList.toggle('hidden', selectedCourse.tipo_curso === 'TEM' || selectedCourse.tipo_curso === 'Aprendizagem');
+            calculadoraDOM.tecnicoTypeOptions.classList.toggle('hidden', selectedCourse.tipo_curso !== 'Técnico');
+            calculadoraDOM.aprendizagemOptions.classList.toggle('hidden', selectedCourse.tipo_curso !== 'Aprendizagem');
+            calculadoraDOM.temOptions.classList.toggle('hidden', selectedCourse.tipo_curso !== 'TEM');
+        }
+    });
 
-        segmentsData.forEach(segmento => {
-            const option = document.createElement('option');
-            option.value = segmento;
-            option.textContent = segmento;
-            segmentoSelect.appendChild(option);
-        });
-        
-        modalitiesData.forEach(modalidade => {
-            const option = document.createElement('option');
-            option.value = modalidade;
-            option.textContent = modalidade;
-            modalidadeSelect.appendChild(option);
-        });
-    }
+    calculadoraDOM.isTemCheckbox.addEventListener('change', () => {
+        calculadoraDOM.temManualOptions.classList.toggle('hidden', !calculadoraDOM.isTemCheckbox.checked);
+    });
+
+    calculadoraDOM.remotePercentageSelect.addEventListener('change', () => {
+        const hasRemote = calculadoraDOM.remotePercentageSelect.value !== '0';
+        calculadoraDOM.remoteDetailsOptions.classList.toggle('hidden', !hasRemote);
+    });
+    
+    calculadoraDOM.aprendizagemExclusiva.addEventListener('change', () => {
+        calculadoraDOM.aprendizagemTradicionalOptions.classList.toggle('hidden', calculadoraDOM.aprendizagemExclusiva.checked);
+        // Corrigir este seletor, pois 'aprendizagem-modelo-novo' é um checkbox e não um painel
+        // calculadoraDOM.aprendizagemModeloNovo.classList.toggle('hidden', !calculadoraDOM.aprendizagemExclusiva.checked);
+    });
 
     // --- 7. INICIA A APLICAÇÃO --
     setupEventListeners();

@@ -147,105 +147,7 @@
                                     <label><input type="checkbox" id="aprendizagem-modelo-novo"> Aplicar Modelo Novo (15 dias de imersão)?</label>
                                 </div>
                             </div>
-                            
-                            <div id="regular-course-options" class="options-panel hidden">
-                                <h4>Dias da Semana</h4>
-                                <div class="checkbox-group">
-                                    <label><input type="checkbox" class="weekday-check" value="1" checked> Seg</label>
-                                    <label><input type="checkbox" class="weekday-check" value="2" checked> Ter</label>
-                                    <label><input type="checkbox" class="weekday-check" value="3" checked> Qua</label>
-                                    <label><input type="checkbox" class="weekday-check" value="4" checked> Qui</label>
-                                    <label><input type="checkbox" class="weekday-check" value="5" checked> Sex</label>
-                                </div>
-                            </div>
-
-                            <div id="remote-options-panel" class="options-panel hidden" style="background-color: var(--info-bg);">
-                                <h4>Aulas Remotas (Opcional)</h4>
-                                <label for="remote-percentage-select">Percentual de aulas remotas</label>
-                                <select id="remote-percentage-select">
-                                    <option value="0">Nenhum (100% Presencial)</option>
-                                    <option value="5">5%</option>
-                                    <option value="10">10%</option>
-                                    <option value="15">15%</option>
-                                    <option value="20">20%</option>
-                                </select>
-                                <div id="remote-details-options" class="hidden">
-                                    <label for="remote-frequency-select">Frequência das aulas remotas</label>
-                                    <select id="remote-frequency-select">
-                                        <option value="1">1 vez por semana</option>
-                                        <option value="2">2 vezes por semana</option>
-                                    </select>
-                                    <label for="remote-period-select">Período de ocorrência</label>
-                                    <select id="remote-period-select">
-                                        <option value="inicio">Início do curso</option>
-                                        <option value="meio">Meio do curso</option>
-                                        <option value="fim">Fim do curso</option>
-                                    </select>
-                                </div>
-                            </div>
-                            
-                            <div id="aprendizagem-options" class="options-panel hidden" style="background-color: var(--warning-bg);">
-                                <h4>Opções para Aprendizagem</h4>
-                                <div class="checkbox-group">
-                                    <label><input type="checkbox" id="aprendizagem-exclusiva"> Curso exclusivo (aulas somente no Senac?)</label>
-                                </div>
-                                <div id="aprendizagem-tradicional-options" class="hidden">
-                                    <label for="aprendizagem-dia-senac">Dia da aula presencial no Senac</label>
-                                    <select id="aprendizagem-dia-senac">
-                                        <option value="1">Segunda-feira</option><option value="2">Terça-feira</option><option value="3">Quarta-feira</option><option value="4">Quinta-feira</option><option value="5">Sexta-feira</option>
-                                    </select>
-                                    <div class="checkbox-group" style="margin-top: 15px;">
-                                        <label><input type="checkbox" id="aprendizagem-modelo-novo"> Aplicar Modelo Novo (15 dias de imersão)?</label>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div id="tem-options" class="options-panel hidden" style="background-color: var(--info-bg);">
-                                <h4>Opções para Cursos TEM</h4>
-                                <div id="tem-manual-options">
-                                    <div id="tem-800h-options" class="hidden">
-                                        <label for="tem-semester-option-800h">Qual semestre terá 3 dias presenciais?</label>
-                                        <select id="tem-semester-option-800h">
-                                        <option value="0">Padrão (2 dias/semana)</option>
-                                        <option value="1">1º Semestre</option><option value="2">2º Semestre</option><option value="3">3º Semestre</option><option value="4">4º Semestre</option>
-                                        </select>
-                                    </div>
-                                    <div id="tem-1200h-options" class="hidden">
-                                        <label for="tem-semester-option-1200h">Qual semestre terá 5 dias presenciais?</label>
-                                        <select id="tem-semester-option-1200h">
-                                        <option value="0">Padrão (4 dias/semana)</option>
-                                        <option value="1">1º Semestre</option><option value="2">2º Semestre</option><option value="3">3º Semestre</option><option value="4">4º Semestre</option>
-                                        </select>
-                                    </div>
-                                    <label for="tem-remote-day">Informe o dia da aula remota</label>
-                                    <select id="tem-remote-day">
-                                    <option value="1">Segunda-feira</option><option value="2">Terça-feira</option><option value="3">Quarta-feira</option><option value="4">Quinta-feira</option><option value="5">Sexta-feira</option>
-                                    </select>
-                                    <div id="tem-presencial-days-selector">
-                                        <label>Selecione os dias presenciais:</label>
-                                        <div class="checkbox-group">
-                                            <label><input type="checkbox" class="tem-weekday-check" value="1"> Seg</label>
-                                            <label><input type="checkbox" class="tem-weekday-check" value="2"> Ter</label>
-                                            <label><input type="checkbox" class="tem-weekday-check" value="3"> Qua</label>
-                                            <label><input type="checkbox" class="tem-weekday-check" value="4"> Qui</label>
-                                            <label><input type="checkbox" class="tem-weekday-check" value="5"> Sex</label>
-                                        </div>
-                                    </div>
-                                </div>
-                                <button type="button" id="tem-auto-button" class="secondary-button">Otimizar Grade (Automático)</button>
-                            </div>
-                            
-                            <button type="button" id="calculate-button">Calcular Duração</button>
-                        </form>
-                    </section>
-                    <section id="results-container" class="hidden">
-                        <div class="result-box" id="results-content">
-                        <h2>Resultados do Cálculo</h2>
-                        <div id="metrics-panel"></div>
-                        <div id="results-summary"></div>
-                        <div id="calendar-visual" class="calendar-grid"></div>
                         </div>
-<<<<<<< HEAD
 
                         <div id="tem-options" class="options-panel hidden" style="background-color: var(--info-bg);">
                             <h4>Opções para Cursos TEM</h4>
@@ -266,7 +168,7 @@
                                 </div>
                                 <label for="tem-remote-day">Informe o dia da aula remota</label>
                                 <select id="tem-remote-day">
-                                <option value="1">Segunda-feira</option><option value="2">Terça-feira</option><option value="3">Quarta-feira</option><option value="4">Quinta-feira</option><option value="5">Sexta-feira</option>
+                                    <option value="1">Segunda-feira</option><option value="2">Terça-feira</option><option value="3">Quarta-feira</option><option value="4">Quinta-feira</option><option value="5">Sexta-feira</option>
                                 </select>
                                 <div id="tem-presencial-days-selector">
                                     <label>Selecione os dias presenciais:</label>
@@ -279,73 +181,56 @@
                                     </div>
                                 </div>
                             </div>
-                            <button type="button" id="tem-auto-button" class="secondary-button">Otimizar Grade (Automático)</button>
                         </div>
                         
-                        <button type="button" id="calculate-button">Calcular Duração</button>
+                        <button type="submit" class="primary-btn">Calcular Duração do Curso</button>
                     </form>
-                    <section id="results-container" class="hidden">
-                        <div class="result-box" id="results-content">
-                        <h2>Resultados do Cálculo</h2>
-                        <div id="metrics-panel"></div>
-                        <div id="results-summary"></div>
-                        <div id="calendar-visual" class="calendar-grid"></div>
-                        </div>
-=======
->>>>>>> refs/remotes/origin/main
-                        <button id="export-pdf-button" class="hidden">Exportar Resultados para PDF</button>
-                    </section>
+                    <div id="calculation-results" class="hidden" style="padding-top: 20px;">
+                        <h3>Resultados da Simulação</h3>
+                        <p><strong>Carga Horária Total:</strong> <span id="result-ch"></span> horas</p>
+                        <p><strong>Data de Término Estimada:</strong> <span id="result-end-date"></span></p>
+                        <p><strong>Total de Dias de Aula:</strong> <span id="result-total-days"></span></p>
+                        <p><strong>Dias Presenciais:</strong> <span id="result-presential-days"></span></p>
+                        <p><strong>Dias Remotos:</strong> <span id="result-remote-days"></span></p>
+                        <div id="calendar-view" class="panel-calculator"></div>
+                    </div>
                 </main>
             </section>
 
             <section id="relatorios" class="content-section">
-                <header class="page-header">
-                    <h1>Relatórios e Exportações</h1>
-                </header>
-                <main class="main-content">
-                    <p>Conteúdo para Relatórios e Exportações...</p>
-                </main>
-            </section>
+                </section>
             
             <section id="integracoes" class="content-section">
-                <header class="page-header">
-                    <h1>Integração Futuras</h1>
-                </header>
-                <main class="main-content">
-                    <p>Conteúdo para Integração Futuras...</p>
-                </main>
-            </section>
+                </section>
         </div>
     </div>
 
     <div id="agendamento-modal" class="modal">
         <div class="modal-content">
             <header class="modal-header">
-                <h2>Agendar Nova Turma</h2>
+                <h2>Agendar Turma Manualmente</h2>
                 <button class="close-btn">&times;</button>
             </header>
             <form id="agendamento-form">
-                <input type="hidden" id="agendamento-salas-id-input">
                 <div class="form-group">
-                    <label for="curso-agendamento">Curso:</label>
+                    <label for="curso-agendamento">Curso</label>
                     <select id="curso-agendamento" required></select>
                 </div>
                 <div class="form-group">
-                    <label for="instrutor-agendamento">Instrutor(a):</label>
+                    <label for="instrutor-agendamento">Instrutor</label>
                     <select id="instrutor-agendamento" required></select>
                 </div>
                 <div class="form-group">
-                    <label for="data-inicio-agendamento">Data de Início:</label>
+                    <label for="data-inicio-agendamento">Data de Início</label>
                     <input type="date" id="data-inicio-agendamento" required>
                 </div>
                 <div class="form-group">
-                    <label for="total-alunos-agendamento">Número de Alunos:</label>
-                    <input type="number" id="total-alunos-agendamento" required min="1">
+                    <label for="total-alunos-agendamento">Número de Alunos</label>
+                    <input type="number" id="total-alunos-agendamento" required>
                 </div>
                 <div class="form-group">
-                    <label for="turno-agendamento">Turno:</label>
+                    <label for="turno-agendamento">Turno</label>
                     <select id="turno-agendamento" required>
-                        <option value="" disabled selected>Selecione um turno</option>
                         <option value="Manhã">Manhã</option>
                         <option value="Tarde">Tarde</option>
                         <option value="Noite">Noite</option>
@@ -353,26 +238,25 @@
                     </select>
                 </div>
                 <div class="form-group">
-                    <label>Dias da Semana:</label>
-                    <div id="dias-semana-agendamento" class="dias-semana-checkbox">
-                        <label><input type="checkbox" name="dias-semana" value="2"> Seg</label>
-                        <label><input type="checkbox" name="dias-semana" value="3"> Ter</label>
-                        <label><input type="checkbox" name="dias-semana" value="4"> Qua</label>
-                        <label><input type="checkbox" name="dias-semana" value="5"> Qui</label>
-                        <label><input type="checkbox" name="dias-semana" value="6"> Sex</label>
-                        <label><input type="checkbox" name="dias-semana" value="7"> Sáb</label>
-                        <label><input type="checkbox" name="dias-semana" value="1"> Dom</label>
-                    </div>
+                    <label for="agendamento-salas-display">Sala(s)</label>
+                    <input type="text" id="agendamento-salas-display" readonly>
+                    <input type="hidden" id="agendamento-salas-id-input">
                 </div>
+                <div id="salasAlocadasInfo" class="alocacao-info"></div>
                 <div class="form-group">
-                    <label for="agendamento-salas-display">Salas:</label>
-                    <input type="text" id="agendamento-salas-display" readonly placeholder="Clique para buscar salas disponíveis">
-                    <button type="button" class="secondary-btn" id="alocacao-manual-btn" style="margin-top: 10px;">Buscar Salas Automaticamente</button>
-                    <div id="salasAlocadasInfo" style="margin-top: 10px;"></div>
+                    <label>Dias da Semana</label>
+                    <div id="dias-semana-agendamento" class="dias-semana-checkbox">
+                        <input type="checkbox" id="segunda" name="diasSemana" value="1"><label for="segunda">Seg</label>
+                        <input type="checkbox" id="terca" name="diasSemana" value="2"><label for="terca">Ter</label>
+                        <input type="checkbox" id="quarta" name="diasSemana" value="3"><label for="quarta">Qua</label>
+                        <input type="checkbox" id="quinta" name="diasSemana" value="4"><label for="quinta">Qui</label>
+                        <input type="checkbox" id="sexta" name="diasSemana" value="5"><label for="sexta">Sex</label>
+                    </div>
                 </div>
                 <div class="form-actions">
                     <button type="submit" class="primary-btn">Agendar</button>
-                    <button type="button" class="secondary-btn" onclick="fecharModais()">Cancelar</button>
+                    <button type="button" class="secondary-btn close-btn">Cancelar</button>
+                    <button type="button" class="primary-btn" id="alocacao-manual-btn">Buscar Salas Automaticamente</button>
                 </div>
             </form>
         </div>
@@ -384,7 +268,7 @@
                 <h2 id="detalhes-titulo">Detalhes da Turma</h2>
                 <button class="close-btn">&times;</button>
             </header>
-            <div id="detalhes-conteudo">
+            <form id="detalhes-form" class="form-detalhes">
                 <p><strong>Curso:</strong> <span id="detalhes-curso"></span></p>
                 <p><strong>Sala:</strong> <span id="detalhes-sala"></span></p>
                 <p><strong>Datas:</strong> <span id="detalhes-datas"></span></p>
@@ -392,12 +276,11 @@
                 <p><strong>Alunos:</strong> <span id="detalhes-alunos"></span></p>
                 <p><strong>Instrutor:</strong> <span id="detalhes-instrutor"></span></p>
                 <p><strong>Status:</strong> <span id="detalhes-status"></span></p>
-            </div>
-            <form id="detalhes-form" class="form-detalhes">
                 <input type="hidden" id="detalhes-turmaId">
+
                 <div class="form-group">
-                    <label for="detalhes-status-select">Alterar Status:</label>
-                    <select id="detalhes-status-select" required>
+                    <label for="detalhes-status-select">Alterar Status</label>
+                    <select id="detalhes-status-select">
                         <option value="Planejada">Planejada</option>
                         <option value="Confirmada">Confirmada</option>
                         <option value="Em Andamento">Em Andamento</option>
@@ -406,9 +289,10 @@
                     </select>
                 </div>
                 <div class="form-group">
-                    <label for="detalhes-instrutor-input">Alterar Instrutor:</label>
-                    <select id="detalhes-instrutor-input" required></select>
+                    <label for="detalhes-instrutor-input">Atribuir Instrutor</label>
+                    <select id="detalhes-instrutor-input"></select>
                 </div>
+
                 <div class="form-actions">
                     <button type="submit" class="primary-btn">Salvar Alterações</button>
                     <button type="button" class="danger-btn" id="cancelar-turma-btn">Cancelar Turma</button>
@@ -416,6 +300,7 @@
             </form>
         </div>
     </div>
+    
     <div id="alocacao-modal" class="modal">
         <div class="modal-content">
             <header class="modal-header">
