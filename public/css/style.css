@@ -483,7 +483,7 @@ body {
 
 
 /* Painel da Calculadora */
-.main-grid {
+.calculator-grid {
    display: grid;
    grid-template-columns: 320px 1fr;
    gap: 15%;
@@ -789,7 +789,7 @@ body {
    font-weight: normal;
  }
 
-.panel-calculator .options-panel {
+.panel-calculator div.options-panel {
    background-color: #fafafa;
    padding: 15px;
    border: 1px solid #eee;

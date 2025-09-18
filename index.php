@@ -73,127 +73,157 @@
                     <h1>Calculadora Inteligente</h1>
                 </header>
                 <main class="main-content">
-                    <form id="course-form" onsubmit="return false;">
-                        <label for="course-select">Seleção de Curso (filtrada)</label>
-                        <select id="course-select"><option value="">Use os filtros para carregar</option></select>
-                        <div id="course-details" class="hidden" style="padding: 10px 0;">
-                            <p style="margin: 5px 0;"><strong>Carga Horária:</strong> 
-                            <span id="display-ch"></span> horas</p>
-                            <p style="margin: 5px 0;"><strong>Valor:</strong> 
-                            <span id="display-valor"></span></p>
-                        </div>
-                        <label for="start-date">Data de Início</label>
-                        <input type="date" id="start-date">
-                        <label for="shift-select">Turno</label>
-                        <select id="shift-select">
-                            <option value="manha">Manhã (4h/dia)</option>
-                            <option value="tarde">Tarde (4h/dia)</option>
-                            <option value="noite">Noite (3h/dia)</option>
-                        </select>
+                    <section class="calculator-grid">
+                        <aside class="panel-calculator">
+                            <h3>Filtros</h3>
+                            <div class="filter-options">
+                            <label for="filter-nome-curso">Nome do Curso</label>
+                            <input type="text" id="filter-nome-curso" placeholder="Digite para buscar...">
+                            <label for="filter-segmento">Segmento</label>
+                            <select id="filter-segmento"><option value="">Todos</option></select>
+                            <label for="filter-modalidade">Modalidade</label>
+                            <select id="filter-modalidade"><option value="">Todas</option></select>
+                            <label for="filter-ch-min">Carga Horária Mínima</label>
+                            <input type="number" id="filter-ch-min" placeholder="ex: 40">
+                            <label for="filter-ch-max">Carga Horária Máxima</label>
+                            <input type="number" id="filter-ch-max" placeholder="ex: 1800">
+                            <div class="checkbox-group" style="margin-top: 20px;">
+                                <label><input type="checkbox" id="filter-tem"> Apenas Cursos TEM</label>
+                                <label><input type="checkbox" id="filter-bolsa"> Compatível com Bolsa</label>
+                            </div>
+                            <div class="button-group">
+                                <button type="button" id="apply-filters">Aplicar Filtros</button>
+                                <button type="button" id="clear-filters" class="secondary-button">Limpar</button>
+                            </div>
+                            </div>
+                        </aside>
 
-                        <div id="tecnico-type-options" class="options-panel hidden">
-                            <div class="checkbox-group">
-                                <label><input type="checkbox" id="is-tem-checkbox"> É um curso do Ensino Médio (TEM)?</label>
-                            </div>
-                        </div>
-                        
-                        <div id="regular-course-options" class="options-panel hidden">
-                            <h4>Dias da Semana</h4>
-                            <div class="checkbox-group">
-                                <label><input type="checkbox" class="weekday-check" value="1" checked> Seg</label>
-                                <label><input type="checkbox" class="weekday-check" value="2" checked> Ter</label>
-                                <label><input type="checkbox" class="weekday-check" value="3" checked> Qua</label>
-                                <label><input type="checkbox" class="weekday-check" value="4" checked> Qui</label>
-                                <label><input type="checkbox" class="weekday-check" value="5" checked> Sex</label>
-                            </div>
-                        </div>
+                        <section class="panel-calculator">
+                            <form id="course-form" onsubmit="return false;">
+                                <label for="course-select">Seleção de Curso (filtrada)</label>
+                                <select id="course-select">
+                                    <option value="">Use os filtros para carregar</option>
+                                </select>
+                                <div id="course-details" class="hidden" style="padding: 10px 0;">
+                                    <p style="margin: 5px 0;"><strong>Carga Horária:</strong> 
+                                    <span id="display-ch"></span> horas</p>
+                                    <p style="margin: 5px 0;"><strong>Valor:</strong> 
+                                    <span id="display-valor"></span></p>
+                                </div>
+                                <label for="start-date">Data de Início</label>
+                                <input type="date" id="start-date">
+                                <label for="shift-select">Turno</label>
+                                <select id="shift-select">
+                                    <option value="manha">Manhã (4h/dia)</option>
+                                    <option value="tarde">Tarde (4h/dia)</option>
+                                    <option value="noite">Noite (3h/dia)</option>
+                                </select>
 
-                        <div id="remote-options-panel" class="options-panel hidden" style="background-color: var(--info-bg);">
-                            <h4>Aulas Remotas (Opcional)</h4>
-                            <label for="remote-percentage-select">Percentual de aulas remotas</label>
-                            <select id="remote-percentage-select">
-                                <option value="0">Nenhum (100% Presencial)</option>
-                                <option value="5">5%</option>
-                                <option value="10">10%</option>
-                                <option value="15">15%</option>
-                                <option value="20">20%</option>
-                            </select>
-                            <div id="remote-details-options" class="hidden">
-                                <label for="remote-frequency-select">Frequência das aulas remotas</label>
-                                <select id="remote-frequency-select">
-                                    <option value="1">1 vez por semana</option>
-                                    <option value="2">2 vezes por semana</option>
-                                </select>
-                                <label for="remote-period-select">Período de ocorrência</label>
-                                <select id="remote-period-select">
-                                    <option value="inicio">Início do curso</option>
-                                    <option value="meio">Meio do curso</option>
-                                    <option value="fim">Fim do curso</option>
-                                </select>
-                            </div>
-                        </div>
-                        
-                        <div id="aprendizagem-options" class="options-panel hidden" style="background-color: var(--warning-bg);">
-                            <h4>Opções para Aprendizagem</h4>
-                            <div class="checkbox-group">
-                                <label><input type="checkbox" id="aprendizagem-exclusiva"> Curso exclusivo (aulas somente no Senac?)</label>
-                            </div>
-                            <div id="aprendizagem-tradicional-options" class="hidden">
-                                <label for="aprendizagem-dia-senac">Dia da aula presencial no Senac</label>
-                                <select id="aprendizagem-dia-senac">
-                                    <option value="1">Segunda-feira</option><option value="2">Terça-feira</option><option value="3">Quarta-feira</option><option value="4">Quinta-feira</option><option value="5">Sexta-feira</option>
-                                </select>
-                                <div class="checkbox-group" style="margin-top: 15px;">
-                                    <label><input type="checkbox" id="aprendizagem-modelo-novo"> Aplicar Modelo Novo (15 dias de imersão)?</label>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div id="tem-options" class="options-panel hidden" style="background-color: var(--info-bg);">
-                            <h4>Opções para Cursos TEM</h4>
-                            <div id="tem-manual-options">
-                                <div id="tem-800h-options" class="hidden">
-                                    <label for="tem-semester-option-800h">Qual semestre terá 3 dias presenciais?</label>
-                                    <select id="tem-semester-option-800h">
-                                    <option value="0">Padrão (2 dias/semana)</option>
-                                    <option value="1">1º Semestre</option><option value="2">2º Semestre</option><option value="3">3º Semestre</option><option value="4">4º Semestre</option>
-                                    </select>
-                                </div>
-                                <div id="tem-1200h-options" class="hidden">
-                                    <label for="tem-semester-option-1200h">Qual semestre terá 5 dias presenciais?</label>
-                                    <select id="tem-semester-option-1200h">
-                                    <option value="0">Padrão (4 dias/semana)</option>
-                                    <option value="1">1º Semestre</option><option value="2">2º Semestre</option><option value="3">3º Semestre</option><option value="4">4º Semestre</option>
-                                    </select>
-                                </div>
-                                <label for="tem-remote-day">Informe o dia da aula remota</label>
-                                <select id="tem-remote-day">
-                                    <option value="1">Segunda-feira</option><option value="2">Terça-feira</option><option value="3">Quarta-feira</option><option value="4">Quinta-feira</option><option value="5">Sexta-feira</option>
-                                </select>
-                                <div id="tem-presencial-days-selector">
-                                    <label>Selecione os dias presenciais:</label>
+                                <div id="tecnico-type-options" class="options-panel hidden">
                                     <div class="checkbox-group">
-                                        <label><input type="checkbox" class="tem-weekday-check" value="1"> Seg</label>
-                                        <label><input type="checkbox" class="tem-weekday-check" value="2"> Ter</label>
-                                        <label><input type="checkbox" class="tem-weekday-check" value="3"> Qua</label>
-                                        <label><input type="checkbox" class="tem-weekday-check" value="4"> Qui</label>
-                                        <label><input type="checkbox" class="tem-weekday-check" value="5"> Sex</label>
+                                        <label><input type="checkbox" id="is-tem-checkbox"> É um curso do Ensino Médio (TEM)?</label>
                                     </div>
                                 </div>
-                            </div>
+                                
+                                <div id="regular-course-options" class="options-panel hidden">
+                                    <h4>Dias da Semana</h4>
+                                    <div class="checkbox-group">
+                                        <label><input type="checkbox" class="weekday-check" value="1" checked> Seg</label>
+                                        <label><input type="checkbox" class="weekday-check" value="2" checked> Ter</label>
+                                        <label><input type="checkbox" class="weekday-check" value="3" checked> Qua</label>
+                                        <label><input type="checkbox" class="weekday-check" value="4" checked> Qui</label>
+                                        <label><input type="checkbox" class="weekday-check" value="5" checked> Sex</label>
+                                    </div>
+                                </div>
+
+                                <div id="remote-options-panel" class="options-panel hidden" style="background-color: var(--info-bg);">
+                                    <h4>Aulas Remotas (Opcional)</h4>
+                                    <label for="remote-percentage-select">Percentual de aulas remotas</label>
+                                    <select id="remote-percentage-select">
+                                        <option value="0">Nenhum (100% Presencial)</option>
+                                        <option value="5">5%</option>
+                                        <option value="10">10%</option>
+                                        <option value="15">15%</option>
+                                        <option value="20">20%</option>
+                                    </select>
+                                    <div id="remote-details-options" class="hidden">
+                                        <label for="remote-frequency-select">Frequência das aulas remotas</label>
+                                        <select id="remote-frequency-select">
+                                            <option value="1">1 vez por semana</option>
+                                            <option value="2">2 vezes por semana</option>
+                                        </select>
+                                        <label for="remote-period-select">Período de ocorrência</label>
+                                        <select id="remote-period-select">
+                                            <option value="inicio">Início do curso</option>
+                                            <option value="meio">Meio do curso</option>
+                                            <option value="fim">Fim do curso</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                
+                                <div id="aprendizagem-options" class="options-panel hidden" style="background-color: var(--warning-bg);">
+                                    <h4>Opções para Aprendizagem</h4>
+                                    <div class="checkbox-group">
+                                        <label><input type="checkbox" id="aprendizagem-exclusiva"> Curso exclusivo (aulas somente no Senac?)</label>
+                                    </div>
+                                    <div id="aprendizagem-tradicional-options" class="hidden">
+                                        <label for="aprendizagem-dia-senac">Dia da aula presencial no Senac</label>
+                                        <select id="aprendizagem-dia-senac">
+                                            <option value="1">Segunda-feira</option><option value="2">Terça-feira</option><option value="3">Quarta-feira</option><option value="4">Quinta-feira</option><option value="5">Sexta-feira</option>
+                                        </select>
+                                        <div class="checkbox-group" style="margin-top: 15px;">
+                                            <label><input type="checkbox" id="aprendizagem-modelo-novo"> Aplicar Modelo Novo (15 dias de imersão)?</label>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div id="tem-options" class="options-panel hidden" style="background-color: var(--info-bg);">
+                                    <h4>Opções para Cursos TEM</h4>
+                                    <div id="tem-manual-options">
+                                        <div id="tem-800h-options" class="hidden">
+                                            <label for="tem-semester-option-800h">Qual semestre terá 3 dias presenciais?</label>
+                                            <select id="tem-semester-option-800h">
+                                            <option value="0">Padrão (2 dias/semana)</option>
+                                            <option value="1">1º Semestre</option><option value="2">2º Semestre</option><option value="3">3º Semestre</option><option value="4">4º Semestre</option>
+                                            </select>
+                                        </div>
+                                        <div id="tem-1200h-options" class="hidden">
+                                            <label for="tem-semester-option-1200h">Qual semestre terá 5 dias presenciais?</label>
+                                            <select id="tem-semester-option-1200h">
+                                            <option value="0">Padrão (4 dias/semana)</option>
+                                            <option value="1">1º Semestre</option><option value="2">2º Semestre</option><option value="3">3º Semestre</option><option value="4">4º Semestre</option>
+                                            </select>
+                                        </div>
+                                        <label for="tem-remote-day">Informe o dia da aula remota</label>
+                                        <select id="tem-remote-day">
+                                            <option value="1">Segunda-feira</option><option value="2">Terça-feira</option><option value="3">Quarta-feira</option><option value="4">Quinta-feira</option><option value="5">Sexta-feira</option>
+                                        </select>
+                                        <div id="tem-presencial-days-selector">
+                                            <label>Selecione os dias presenciais:</label>
+                                            <div class="checkbox-group">
+                                                <label><input type="checkbox" class="tem-weekday-check" value="1"> Seg</label>
+                                                <label><input type="checkbox" class="tem-weekday-check" value="2"> Ter</label>
+                                                <label><input type="checkbox" class="tem-weekday-check" value="3"> Qua</label>
+                                                <label><input type="checkbox" class="tem-weekday-check" value="4"> Qui</label>
+                                                <label><input type="checkbox" class="tem-weekday-check" value="5"> Sex</label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <button type="submit" class="primary-btn">Calcular Duração do Curso</button>
+                            </form>
+                        </section>
+                        <div id="calculation-results" class="hidden" style="padding-top: 20px;">
+                            <h3>Resultados da Simulação</h3>
+                            <p><strong>Carga Horária Total:</strong> <span id="result-ch"></span> horas</p>
+                            <p><strong>Data de Término Estimada:</strong> <span id="result-end-date"></span></p>
+                            <p><strong>Total de Dias de Aula:</strong> <span id="result-total-days"></span></p>
+                            <p><strong>Dias Presenciais:</strong> <span id="result-presential-days"></span></p>
+                            <p><strong>Dias Remotos:</strong> <span id="result-remote-days"></span></p>
+                            <div id="calendar-view" class="panel-calculator"></div>
                         </div>
-                        
-                        <button type="submit" class="primary-btn">Calcular Duração do Curso</button>
-                    </form>
-                    <div id="calculation-results" class="hidden" style="padding-top: 20px;">
-                        <h3>Resultados da Simulação</h3>
-                        <p><strong>Carga Horária Total:</strong> <span id="result-ch"></span> horas</p>
-                        <p><strong>Data de Término Estimada:</strong> <span id="result-end-date"></span></p>
-                        <p><strong>Total de Dias de Aula:</strong> <span id="result-total-days"></span></p>
-                        <p><strong>Dias Presenciais:</strong> <span id="result-presential-days"></span></p>
-                        <p><strong>Dias Remotos:</strong> <span id="result-remote-days"></span></p>
-                        <div id="calendar-view" class="panel-calculator"></div>
-                    </div>
+                    </section>
                 </main>
             </section>
 
