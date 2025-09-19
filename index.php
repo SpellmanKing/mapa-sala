@@ -77,24 +77,24 @@
                         <aside class="panel-calculator">
                             <h3>Filtros</h3>
                             <div class="filter-options">
-                            <label for="filter-nome-curso">Nome do Curso</label>
-                            <input type="text" id="filter-nome-curso" placeholder="Digite para buscar...">
-                            <label for="filter-segmento">Segmento</label>
-                            <select id="filter-segmento"><option value="">Todos</option></select>
-                            <label for="filter-modalidade">Modalidade</label>
-                            <select id="filter-modalidade"><option value="">Todas</option></select>
-                            <label for="filter-ch-min">Carga Horária Mínima</label>
-                            <input type="number" id="filter-ch-min" placeholder="ex: 40">
-                            <label for="filter-ch-max">Carga Horária Máxima</label>
-                            <input type="number" id="filter-ch-max" placeholder="ex: 1800">
-                            <div class="checkbox-group" style="margin-top: 20px;">
-                                <label><input type="checkbox" id="filter-tem"> Apenas Cursos TEM</label>
-                                <label><input type="checkbox" id="filter-bolsa"> Compatível com Bolsa</label>
-                            </div>
-                            <div class="button-group">
-                                <button type="button" id="apply-filters">Aplicar Filtros</button>
-                                <button type="button" id="clear-filters" class="secondary-button">Limpar</button>
-                            </div>
+                                <label for="filter-nome-curso">Nome do Curso</label>
+                                <input type="text" id="filter-nome-curso" placeholder="Digite para buscar...">
+                                <label for="filter-segmento">Segmento</label>
+                                <select id="filter-segmento"><option value="">Todos</option></select>
+                                <label for="filter-modalidade">Modalidade</label>
+                                <select id="filter-modalidade"><option value="">Todas</option></select>
+                                <label for="filter-ch-min">Carga Horária Mínima</label>
+                                <input type="number" id="filter-ch-min" placeholder="ex: 40">
+                                <label for="filter-ch-max">Carga Horária Máxima</label>
+                                <input type="number" id="filter-ch-max" placeholder="ex: 1800">
+                                <div class="checkbox-group" style="margin-top: 20px;">
+                                    <label><input type="checkbox" id="filter-tem"> Apenas Cursos TEM</label>
+                                    <label><input type="checkbox" id="filter-bolsa"> Compatível com Bolsa</label>
+                                </div>
+                                <div class="button-group">
+                                    <button type="button" id="apply-filters">Aplicar Filtros</button>
+                                    <button type="button" id="clear-filters" class="secondary-button">Limpar</button>
+                                </div>
                             </div>
                         </aside>
 
@@ -238,7 +238,7 @@
     <div id="agendamento-modal" class="modal">
         <div class="modal-content">
             <header class="modal-header">
-                <h2>Agendar Turma Manualmente</h2>
+                <h2>Agendar Turma</h2>
                 <button class="close-btn">&times;</button>
             </header>
             <form id="agendamento-form">
@@ -268,12 +268,6 @@
                     </select>
                 </div>
                 <div class="form-group">
-                    <label for="agendamento-salas-display">Sala(s)</label>
-                    <input type="text" id="agendamento-salas-display" readonly>
-                    <input type="hidden" id="agendamento-salas-id-input">
-                </div>
-                <div id="salasAlocadasInfo" class="alocacao-info"></div>
-                <div class="form-group">
                     <label>Dias da Semana</label>
                     <div id="dias-semana-agendamento" class="dias-semana-checkbox">
                         <input type="checkbox" id="segunda" name="diasSemana" value="1"><label for="segunda">Seg</label>
@@ -283,10 +277,17 @@
                         <input type="checkbox" id="sexta" name="diasSemana" value="5"><label for="sexta">Sex</label>
                     </div>
                 </div>
+                <div class="form-group">
+                    <label for="agendamento-salas-display">Sala(s)</label>
+                    <input type="text" id="agendamento-salas-display" readonly placeholder="Clique para buscar salas disponíveis">
+                    <input type="hidden" id="agendamento-salas-id-input">
+                    <button type="button" class="primary-btn" id="alocacao-manual-btn">Buscar Salas Automaticamente</button>
+                </div>
+                <div id="salasAlocadasInfo" class="alocacao-info"></div>
+                
                 <div class="form-actions">
                     <button type="submit" class="primary-btn">Agendar</button>
-                    <button type="button" class="secondary-btn close-btn">Cancelar</button>
-                    <button type="button" class="primary-btn" id="alocacao-manual-btn">Buscar Salas Automaticamente</button>
+                    <button type="button" id="cancelar-alocacao-btn" class="secondary-btn">Cancelar</button>
                 </div>
             </form>
         </div>

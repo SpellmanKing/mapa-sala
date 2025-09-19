@@ -21,7 +21,6 @@ document.addEventListener('DOMContentLoaded', () => {
     // Formulários
     const agendamentoForm = document.getElementById('agendamento-form');
     const detalhesForm = document.getElementById('detalhes-form');
-    const alocacaoForm = document.getElementById('alocacao-form');
 
     // Botões
     const prevMonthBtn = document.getElementById('prev-month-btn');
@@ -335,19 +334,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // Função para exibir a sugestão de alocação
-    function exibirSugestao(sugestao) {
-        const cursoNome = dadosCursos.find(c => c.id_cursos == sugestao.cursoId)?.nome_curso;
-        sugestaoMensagem.textContent = `Encontrada(s) sala(s) disponível(is) para o curso de ${cursoNome}.`;
-        salasSugeridasLista.innerHTML = '';
-        sugestao.salas.forEach(sala => {
-            const li = document.createElement('li');
-            li.textContent = `Sala: ${sala.nome_sala} (Capacidade: ${sala.capacidade_maxima})`;
-            salasSugeridasLista.appendChild(li);
-        });
-        sugestaoContainer.style.display = 'block';
-    }
-
 
     // --- LÓGICA DA CALCULADORA INTELIGENTE ---
     function renderizarCalendarioCalculadora(data) {
@@ -471,6 +457,23 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }
 
+        // Função para carregar os cursos no select do modal de alocação
+        async function popularAlocacaoCursos() {
+            try {
+                const response = await fetch('./controllers/get_cursos.php');
+                dadosCursos = await response.json();
+                alocacaoCursoSelect.innerHTML = ''; // Limpa o select
+                dadosCursos.forEach(curso => {
+                    const option = document.createElement('option');
+                    option.value = curso.id_cursos;
+                    option.textContent = curso.nome_curso;
+                    alocacaoCursoSelect.appendChild(option);
+                });
+            } catch (error) {
+                console.error("Erro ao buscar cursos:", error);
+            }
+        }  
+
         // Lógica para o botão "Buscar Salas Automaticamente" no modal de Agendamento Manual
         buscarSalasAutomaticamenteBtn.addEventListener('click', async (event) => {
             event.preventDefault();
@@ -494,6 +497,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(dadosAgendamento)
                 });
+
                 const resultado = await response.json();
 
                 if (response.ok && resultado.salas) {
@@ -502,6 +506,10 @@ document.addEventListener('DOMContentLoaded', () => {
                     agendamentoSalasDisplay.value = salasNomes;
                     agendamentoSalasIdInput.value = salaIds;
                     salasAlocadasInfo.innerHTML = `<p style="color: green; font-weight: bold;">Salas disponíveis encontradas:</p><ul>${resultado.salas.map(s => `<li>${s.nome_sala} (Capacidade: ${s.capacidade_maxima})</li>`).join('')}</ul>`;
+                    
+                    await popularAlocacaoCursos();
+                    alocacaoModal.style.display = 'block';
+
                 } else {
                     agendamentoSalasDisplay.value = 'Nenhuma sala disponível';
                     agendamentoSalasIdInput.value = '';
@@ -525,7 +533,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     alert('Não há dados de alocação para confirmar. Por favor, faça uma busca antes.');
                     return;
                 }
-                
                 const formData = {
                     cursoId: sugestaoAlocacaoData.cursoId,
                     dataInicio: sugestaoAlocacaoData.dataInicio,
@@ -565,7 +572,6 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }
 
-
         // Eventos para fechar modais
         closeBtns.forEach(btn => btn.addEventListener('click', fecharModais));
         window.addEventListener('click', (event) => {
@@ -578,7 +584,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Lógica para o formulário da Calculadora Inteligente
     calculadoraDOM.form.addEventListener('submit', async (event) => {
         event.preventDefault();
-
+        const diasSemanaSelecionados = Array.from(document.querySelectorAll('#dias-semana-tradicional input[type="checkbox"]:checked')).map(cb => parseInt(cb.value));
         const dadosCalculadora = {
             courseId: calculadoraDOM.courseSelect.value,
             startDate: calculadoraDOM.startDate.value,
@@ -586,8 +592,8 @@ document.addEventListener('DOMContentLoaded', () => {
             isTem: calculadoraDOM.isTemCheckbox.checked,
             isAprendizagem: calculadoraDOM.aprendizagemExclusiva.checked,
             remotePercentage: calculadoraDOM.remotePercentageSelect.value,
-            remoteFrequency: calculadoraDOM.remoteFrequencySelect.value,
             remotePeriod: calculadoraDOM.remotePeriodSelect.value,
+            diasSemana: diasSemanaSelecionados,
             weekdayChecks: Array.from(calculadoraDOM.weekdayChecks)
                 .filter(cb => cb.checked)
                 .map(cb => parseInt(cb.value)),
@@ -599,7 +605,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const response = await fetch('/controllers/calculadora_inteligente.php', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ cursoId, dataInicio, turno, diasSemana })
+                body: JSON.stringify(dadosCalculadora)
             });
             const result = await response.json();
             if (response.ok) {
@@ -634,16 +640,22 @@ document.addEventListener('DOMContentLoaded', () => {
         calculadoraDOM.temManualOptions.classList.toggle('hidden', !calculadoraDOM.isTemCheckbox.checked);
     });
 
+if (calculadoraDOM.remotePercentageSelect) {
     calculadoraDOM.remotePercentageSelect.addEventListener('change', () => {
         const hasRemote = calculadoraDOM.remotePercentageSelect.value !== '0';
-        calculadoraDOM.remoteDetailsOptions.classList.toggle('hidden', !hasRemote);
+        if (calculadoraDOM.remoteDetailsOptions) {
+            calculadoraDOM.remoteDetailsOptions.classList.toggle('hidden', !hasRemote);
+        }
     });
+}
     
+if (calculadoraDOM.aprendizagemExclusiva) {
     calculadoraDOM.aprendizagemExclusiva.addEventListener('change', () => {
-        calculadoraDOM.aprendizagemTradicionalOptions.classList.toggle('hidden', calculadoraDOM.aprendizagemExclusiva.checked);
-        // Corrigir este seletor, pois 'aprendizagem-modelo-novo' é um checkbox e não um painel
-        // calculadoraDOM.aprendizagemModeloNovo.classList.toggle('hidden', !calculadoraDOM.aprendizagemExclusiva.checked);
+        if (calculadoraDOM.aprendizagemTradicionalOptions) {
+            calculadoraDOM.aprendizagemTradicionalOptions.classList.toggle('hidden', calculadoraDOM.aprendizagemExclusiva.checked);
+        }
     });
+}
 
     // --- 7. INICIA A APLICAÇÃO --
     setupEventListeners();

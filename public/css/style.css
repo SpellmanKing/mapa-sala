@@ -508,7 +508,7 @@ body {
 }
 
 .panel-calculator select, input{
-   width: 50%;
+   width: 100%;
    padding: 12px;
    margin-top: 8px;
    border: 1px solid #ccc;
