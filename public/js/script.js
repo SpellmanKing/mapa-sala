@@ -272,6 +272,88 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- 5. FUNÇÕES DE REQUISIÇÃO E LÓGICA DE NEGÓCIO --
 
+    
+    // Função para buscar e renderizar os cursos no select
+    async function carregarCursos() {
+        try {
+            const response = await fetch('./controllers/get_cursos.php');
+            
+            // Lança um erro se a resposta não for bem-sucedida
+            if (!response.ok) {
+                throw new Error('Erro ao carregar cursos: ' + response.statusText);
+            }
+
+            const cursos = await response.json();
+            
+            // Armazena os dados dos cursos em uma variável global (se necessário)
+            dadosCursos = cursos; 
+
+            // Limpa o select antes de adicionar as novas opções
+            calculadoraDOM.courseSelect.innerHTML = '<option value="">Selecione um curso...</option>';
+
+            // Popula o select com os dados recebidos
+            cursos.forEach(curso => {
+                const option = document.createElement('option');
+                option.value = curso.id_cursos;
+                option.textContent = curso.nome_curso;
+                calculadoraDOM.courseSelect.appendChild(option);
+            });
+            console.log('Cursos carregados com sucesso.');
+
+        } catch (error) {
+            console.error('Erro ao buscar cursos:', error);
+            alert('Não foi possível carregar os cursos. Por favor, verifique a conexão com o banco de dados.');
+        }
+    }
+
+// Função para buscar e renderizar as salas
+    async function carregarSalas() {
+        try {
+            const response = await fetch('./controllers/get_sala.php');
+            if (!response.ok) {
+                throw new Error('Erro ao carregar salas: ' + response.statusText);
+            }
+            const salas = await response.json();
+            dadosSalas = salas;
+            console.log('Salas carregadas com sucesso.');
+        } catch (error) {
+            console.error('Erro ao buscar salas:', error);
+            alert('Não foi possível carregar as salas. Verifique a conexão com o banco de dados.');
+        }
+    }
+
+    // Função para buscar e renderizar os instrutores
+    async function carregarInstrutores() {
+        try {
+            const response = await fetch('./controllers/get_instrutores.php');
+            if (!response.ok) {
+                throw new Error('Erro ao carregar instrutores: ' + response.statusText);
+            }
+            const instrutores = await response.json();
+            dadosInstrutores = instrutores;
+            console.log('Instrutores carregados com sucesso.');
+        } catch (error) {
+            console.error('Erro ao buscar instrutores:', error);
+            alert('Não foi possível carregar os instrutores. Verifique a conexão com o banco de dados.');
+        }
+    }
+
+    // Função para buscar e renderizar os agendamentos
+    async function carregarAgendamentos() {
+        try {
+            const response = await fetch('./controllers/get_agendamentos.php');
+            if (!response.ok) {
+                throw new Error('Erro ao carregar agendamentos: ' + response.statusText);
+            }
+            const agendamentosCarregados = await response.json();
+            agendamentos = agendamentosCarregados;
+            console.log('Agendamentos carregados com sucesso.');
+        } catch (error) {
+            console.error('Erro ao buscar agendamentos:', error);
+            alert('Não foi possível carregar os agendamentos. Verifique a conexão com o banco de dados.');
+        }
+    }
+
     async function carregarDadosIniciais() {
         try {
             const feriadosData = await fetchData('./controllers/get_feriados.php');
@@ -283,6 +365,12 @@ document.addEventListener('DOMContentLoaded', () => {
             renderizarCalendario();
             preencherDropdowns();
             popularFiltros();
+            await Promise.all([
+                carregarCursos(),
+                carregarSalas(),
+                carregarInstrutores(),
+                carregarAgendamentos()
+            ]);
         } catch (error) {
             console.error('Erro ao carregar dados iniciais:', error);
         }
@@ -584,29 +672,44 @@ document.addEventListener('DOMContentLoaded', () => {
     // Lógica para o formulário da Calculadora Inteligente
     calculadoraDOM.form.addEventListener('submit', async (event) => {
         event.preventDefault();
-        const diasSemanaSelecionados = Array.from(document.querySelectorAll('#dias-semana-tradicional input[type="checkbox"]:checked')).map(cb => parseInt(cb.value));
+
+        const diasSemanaSelecionados = Array.from(document.querySelectorAll('#dias-semana-tradicional input[type="checkbox"]:checked'));
+        const diasSemanaString = diasSemanaSelecionados.map(cb => parseInt(cb.value)).join(',');
+
+        // 2. Valida se a string não está vazia.
+        // O erro 400 ocorre porque a string está vazia (não há dias selecionados).
+        if (diasSemanaString === '') {
+            alert('Por favor, selecione pelo menos um dia da semana para o cálculo.');
+            return; // Impede que o restante do código seja executado
+        }
+
         const dadosCalculadora = {
-            courseId: calculadoraDOM.courseSelect.value,
-            startDate: calculadoraDOM.startDate.value,
-            shift: calculadoraDOM.shiftSelect.value,
+            // Nomes de variáveis ajustados para corresponder ao PHP
+            cursoId: calculadoraDOM.courseSelect.value,
+            dataInicio: calculadoraDOM.startDate.value,
+            turno: calculadoraDOM.shiftSelect.value,
+            diasSemana: diasSemanaString, // Passa a string de dias da semana
+            
+            // Mantém os demais campos
             isTem: calculadoraDOM.isTemCheckbox.checked,
             isAprendizagem: calculadoraDOM.aprendizagemExclusiva.checked,
             remotePercentage: calculadoraDOM.remotePercentageSelect.value,
-            remotePeriod: calculadoraDOM.remotePeriodSelect.value,
-            diasSemana: diasSemanaSelecionados,
-            weekdayChecks: Array.from(calculadoraDOM.weekdayChecks)
-                .filter(cb => cb.checked)
-                .map(cb => parseInt(cb.value)),
+            remotePeriod: calculadoraDOM.remotePeriodSelect ? calculadoraDOM.remotePeriodSelect.value : null,
+            weekdayChecks: Array.from(calculadoraDOM.weekdayChecks).filter(cb => cb.checked).map(cb => parseInt(cb.value)),
         };
 
         console.log('Dados a serem enviados:', dadosCalculadora);
 
         try {
-            const response = await fetch('/controllers/calculadora_inteligente.php', {
+            const response = await fetch('./controllers/calculadora_inteligente.php', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: {
+                    'Content-Type': 'application/json'
+                },
                 body: JSON.stringify(dadosCalculadora)
+
             });
+
             const result = await response.json();
             if (response.ok) {
                 console.log('Resultado do cálculo:', result);
@@ -615,6 +718,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 alert(`Erro na comunicação com o servidor: ${result.error}`);
                 console.error('Erro na requisição:', result);
             }
+            
         } catch (error) {
             console.error('Erro ao calcular:', error);
             alert('Erro ao calcular a duração. Verifique os dados e tente novamente.');
@@ -640,22 +744,22 @@ document.addEventListener('DOMContentLoaded', () => {
         calculadoraDOM.temManualOptions.classList.toggle('hidden', !calculadoraDOM.isTemCheckbox.checked);
     });
 
-if (calculadoraDOM.remotePercentageSelect) {
-    calculadoraDOM.remotePercentageSelect.addEventListener('change', () => {
-        const hasRemote = calculadoraDOM.remotePercentageSelect.value !== '0';
-        if (calculadoraDOM.remoteDetailsOptions) {
-            calculadoraDOM.remoteDetailsOptions.classList.toggle('hidden', !hasRemote);
-        }
-    });
-}
-    
-if (calculadoraDOM.aprendizagemExclusiva) {
-    calculadoraDOM.aprendizagemExclusiva.addEventListener('change', () => {
-        if (calculadoraDOM.aprendizagemTradicionalOptions) {
-            calculadoraDOM.aprendizagemTradicionalOptions.classList.toggle('hidden', calculadoraDOM.aprendizagemExclusiva.checked);
-        }
-    });
-}
+    if (calculadoraDOM.remotePercentageSelect) {
+        calculadoraDOM.remotePercentageSelect.addEventListener('change', () => {
+            const hasRemote = calculadoraDOM.remotePercentageSelect.value !== '0';
+            if (calculadoraDOM.remoteDetailsOptions) {
+                calculadoraDOM.remoteDetailsOptions.classList.toggle('hidden', !hasRemote);
+            }
+        });
+    }
+        
+    if (calculadoraDOM.aprendizagemExclusiva) {
+        calculadoraDOM.aprendizagemExclusiva.addEventListener('change', () => {
+            if (calculadoraDOM.aprendizagemTradicionalOptions) {
+                calculadoraDOM.aprendizagemTradicionalOptions.classList.toggle('hidden', calculadoraDOM.aprendizagemExclusiva.checked);
+            }
+        });
+    }
 
     // --- 7. INICIA A APLICAÇÃO --
     setupEventListeners();

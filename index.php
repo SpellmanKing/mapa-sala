@@ -79,14 +79,23 @@
                             <div class="filter-options">
                                 <label for="filter-nome-curso">Nome do Curso</label>
                                 <input type="text" id="filter-nome-curso" placeholder="Digite para buscar...">
+
                                 <label for="filter-segmento">Segmento</label>
-                                <select id="filter-segmento"><option value="">Todos</option></select>
+                                <select id="filter-segmento">
+                                    <option value="">Todos</option>
+                                </select>
+
                                 <label for="filter-modalidade">Modalidade</label>
-                                <select id="filter-modalidade"><option value="">Todas</option></select>
+                                <select id="filter-modalidade">
+                                    <option value="">Todas</option>
+                                </select>
+
                                 <label for="filter-ch-min">Carga Horária Mínima</label>
                                 <input type="number" id="filter-ch-min" placeholder="ex: 40">
+
                                 <label for="filter-ch-max">Carga Horária Máxima</label>
                                 <input type="number" id="filter-ch-max" placeholder="ex: 1800">
+
                                 <div class="checkbox-group" style="margin-top: 20px;">
                                     <label><input type="checkbox" id="filter-tem"> Apenas Cursos TEM</label>
                                     <label><input type="checkbox" id="filter-bolsa"> Compatível com Bolsa</label>
@@ -121,7 +130,9 @@
 
                                 <div id="tecnico-type-options" class="options-panel hidden">
                                     <div class="checkbox-group">
-                                        <label><input type="checkbox" id="is-tem-checkbox"> É um curso do Ensino Médio (TEM)?</label>
+                                        <label>
+                                            <input type="checkbox" id="is-tem-checkbox"> É um curso do Ensino Médio (TEM)?
+                                        </label>
                                     </div>
                                 </div>
                                 

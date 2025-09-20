@@ -34,21 +34,24 @@ try {
         exit;
     }
     $cargaHorariaTotal = $cursoInfo['carga_horaria'];
+
+    // CORREÇÃO: Converte a string de dias da semana para um array de inteiros
+    $diasSemanaFormatados = array_map('intval', explode(',', $data['diasSemana']));
     
     // Obtém a lista de feriados
     $feriados = getFeriados();
 
     // Chama a função do Model para calcular o cronograma
-    $cronograma = calcularCronograma($cargaHorariaTotal, $data['dataInicio'], $data['turno'], $data['diasSemana'], $feriados);
+    $cronograma = calcularCronograma($cargaHorariaTotal, $data['dataInicio'], $data['turno'], $diasSemanaFormatados, $feriados);
 
     // Retorna o resultado
     echo json_encode([
-        'success' => true,
-        'cronograma' => $cronograma,
-        'message' => 'Cronograma calculado com sucesso.'
+        'dataInicio' => $data['dataInicio'],
+        'dataTermino' => $cronograma['dataTermino'],
+        'diasLetivos' => $cronograma['diasLetivos']
     ]);
-
+    
 } catch (Exception $e) {
-    http_response_code(500);
+    http_response_code(500); 
     echo json_encode(['error' => 'Erro interno do servidor: ' . $e->getMessage()]);
 }
