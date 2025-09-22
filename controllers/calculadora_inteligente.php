@@ -1,57 +1,73 @@
 <?php
+// controllers/calculadora_inteligente.php
 header('Content-Type: application/json');
 
-require __DIR__ . '/../models/calcular_cronograma.php';
-require __DIR__ . '/../models/entidades/curso.php';
+// Garante que todos os arquivos de classe são carregados
+require __DIR__ . '/../models/Conexao.php';
+require __DIR__ . '/../models/entidades/Instrutor.php';
+require __DIR__ . '/../models/entidades/Curso.php';
+require __DIR__ . '/../models/entidades/Agendamento.php';
+require __DIR__ . '/calcular_cronograma.php';
 require __DIR__ . '/get_feriados.php';
-require __DIR__ . '/../models/conexao.php';
 
-// Validação de método de requisição
-if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-    http_response_code(405);
-    echo json_encode(['error' => 'Método não permitido.']);
-    exit;
+
+$query = "SELECT * FROM cursos WHERE 1=1";
+$params = [];
+$types = '';
+
+if (isset($_GET['segmento']) && !empty($_GET['segmento'])) {
+    $query .= " AND segmento = ?";
+    $params[] = $_GET['segmento'];
+    $types .= 's';
 }
 
-$data = json_decode(file_get_contents('php://input'), true);
-
-// Validação dos dados
-if (empty($data['cursoId']) || empty($data['dataInicio']) || empty($data['turno']) || empty($data['diasSemana'])) {
-    http_response_code(400);
-    echo json_encode(['error' => 'Dados incompletos. Por favor, preencha todos os campos obrigatórios.']);
-    exit;
+if (isset($_GET['modalidade']) && !empty($_GET['modalidade'])) {
+    $query .= " AND modalidade = ?";
+    $params[] = $_GET['modalidade'];
+    $types .= 's';
 }
 
-try {
-    $pdo = Conexao::getInstancia();
-    $curso = new Curso($pdo);
-    
-    // Busca a carga horária do curso
-    $cursoInfo = $curso->buscarPorId($data['cursoId']);
-    if (!$cursoInfo) {
-        http_response_code(404);
-        echo json_encode(['error' => 'Curso não encontrado.']);
-        exit;
-    }
-    $cargaHorariaTotal = $cursoInfo['carga_horaria'];
-
-    // CORREÇÃO: Converte a string de dias da semana para um array de inteiros
-    $diasSemanaFormatados = array_map('intval', explode(',', $data['diasSemana']));
-    
-    // Obtém a lista de feriados
-    $feriados = getFeriados();
-
-    // Chama a função do Model para calcular o cronograma
-    $cronograma = calcularCronograma($cargaHorariaTotal, $data['dataInicio'], $data['turno'], $diasSemanaFormatados, $feriados);
-
-    // Retorna o resultado
-    echo json_encode([
-        'dataInicio' => $data['dataInicio'],
-        'dataTermino' => $cronograma['dataTermino'],
-        'diasLetivos' => $cronograma['diasLetivos']
-    ]);
-    
-} catch (Exception $e) {
-    http_response_code(500); 
-    echo json_encode(['error' => 'Erro interno do servidor: ' . $e->getMessage()]);
+if (isset($_GET['nome_curso']) && !empty($_GET['nome_curso'])) {
+    $query .= " AND nome_curso LIKE ?";
+    $params[] = '%' . $_GET['nome_curso'] . '%';
+    $types .= 's';
 }
+
+if (isset($_GET['ch_min']) && !empty($_GET['ch_min'])) {
+    $query .= " AND carga_horaria >= ?";
+    $params[] = $_GET['ch_min'];
+    $types .= 'i';
+}
+
+if (isset($_GET['ch_max']) && !empty($_GET['ch_max'])) {
+    $query .= " AND carga_horaria <= ?";
+    $params[] = $_GET['ch_max'];
+    $types .= 'i';
+}
+
+if (isset($_GET['tem']) && $_GET['tem'] === 'true') {
+    $query .= " AND tem = 1";
+}
+
+if (isset($_GET['bolsa']) && $_GET['bolsa'] === 'true') {
+    $query .= " AND compativel_bolsa = 1";
+}
+
+$stmt = $conn->prepare($query);
+
+if ($types) {
+    $stmt->bind_param($types, ...$params);
+}
+
+$stmt->execute();
+$result = $stmt->get_result();
+
+$courses = [];
+while ($row = $result->fetch_assoc()) {
+    $courses[] = $row;
+}
+
+$stmt->close();
+$conn->close();
+
+echo json_encode($courses);

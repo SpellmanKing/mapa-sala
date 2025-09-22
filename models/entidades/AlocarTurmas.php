@@ -1,6 +1,6 @@
 <?php
 
-class AlocadorInteligente {
+class AlocarTurmas {
 
     public static function encontrarMelhorAlocacao($salasDisponiveis, $dadosTurma) {
         $totalAlunos = $dadosTurma['total_alunos'];
@@ -54,19 +54,49 @@ class AlocadorInteligente {
         return $melhorSala;
     }
 
+    // private static function encontrarCombinacaoHibrida($salas, $totalAlunos, $tipoSala) {
+    //     // Encontra a combinação de duas salas do mesmo tipo que atenda ao total de alunos
+    //     $combinacoes = [];
+    //     for ($i = 0; $i < count($salas); $i++) {
+    //         for ($j = $i + 1; $j < count($salas); $j++) {
+    //             $sala1 = $salas[$i];
+    //             $sala2 = $salas[$j];
+    //             // Verifica se as salas são do tipo necessário e se a capacidade combinada é suficiente
+    //             if ($sala1['tipo_sala'] === $tipoSala && 
+    //                 $sala2['tipo_sala'] === $tipoSala && 
+    //                 ($sala1['capacidade_maxima'] + $sala2['capacidade_maxima'] >= $totalAlunos)) {
+                    
+    //                 // Retorna a primeira combinação encontrada. A lógica pode ser expandida para encontrar a melhor combinação.
+    //                 return [$sala1, $sala2];
+    //             }
+    //         }
+    //     }
+    //     return null;
+    // }
+
     private static function encontrarCombinacaoHibrida($salas, $totalAlunos, $tipoSala) {
+        $melhorCombinacao = null;
+        $menorDiferenca = PHP_INT_MAX;
+
         for ($i = 0; $i < count($salas); $i++) {
             for ($j = $i + 1; $j < count($salas); $j++) {
                 $sala1 = $salas[$i];
                 $sala2 = $salas[$j];
-                if ($sala1['tipo_sala'] === $tipoSala && $sala2['tipo_sala'] === $tipoSala) {
+
+                if ($sala1['tipo_sala'] === $tipoSala && 
+                    $sala2['tipo_sala'] === $tipoSala) {
+
                     $capacidadeCombinada = $sala1['capacidade_maxima'] + $sala2['capacidade_maxima'];
-                    if ($capacidadeCombinada >= $totalAlunos) {
-                        return [$sala1, $sala2];
+                    $diferenca = $capacidadeCombinada - $totalAlunos;
+
+                    // Verificamos se a capacidade combinada é suficiente e se a diferença é a menor encontrada até agora
+                    if ($capacidadeCombinada >= $totalAlunos && $diferenca < $menorDiferenca) {
+                        $menorDiferenca = $diferenca;
+                        $melhorCombinacao = [$sala1, $sala2];
                     }
                 }
             }
         }
-        return null;
+        return $melhorCombinacao;
     }
 }

@@ -25,9 +25,15 @@
                         </a>
                     </li>
                     <li>
-                        <a href="#" class="nav-item" data-target="relatorios">
-                            <i class="fas fa-chart-line"></i>
-                            <span>Relatórios e Exportações</span>
+                        <a href="#" class="nav-item" data-target="gerenciar-instrutores">
+                            <i class="fas fa-user-tie"></i>
+                            <span>Gerenciar Instrutores</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#" class="nav-item" data-target="gerenciar-cursos">
+                            <i class="fas fa-book"></i>
+                            <span>Gerenciar Cursos</span>
                         </a>
                     </li>
                     <li>
@@ -39,7 +45,6 @@
                 </ul>
             </nav>
         </aside>
-
         <div class="main-content-wrapper">
             <section id="painel-visual" class="content-section active">
                 <header class="page-header">
@@ -67,7 +72,6 @@
                     <div id="calendar-grid" class="calendar-grid"></div>
                 </main>
             </section>
-
             <section id="calculadora-inteligente" class="content-section">
                 <header class="page-header">
                     <h1>Calculadora Inteligente</h1>
@@ -79,24 +83,19 @@
                             <div class="filter-options">
                                 <label for="filter-nome-curso">Nome do Curso</label>
                                 <input type="text" id="filter-nome-curso" placeholder="Digite para buscar...">
-
                                 <label for="filter-segmento">Segmento</label>
                                 <select id="filter-segmento">
                                     <option value="">Todos</option>
                                 </select>
-
                                 <label for="filter-modalidade">Modalidade</label>
                                 <select id="filter-modalidade">
                                     <option value="">Todas</option>
                                 </select>
-
                                 <label for="filter-ch-min">Carga Horária Mínima</label>
                                 <input type="number" id="filter-ch-min" placeholder="ex: 40">
-
                                 <label for="filter-ch-max">Carga Horária Máxima</label>
                                 <input type="number" id="filter-ch-max" placeholder="ex: 1800">
-
-                                <div class="checkbox-group" style="margin-top: 20px;">
+                                <div class="checkbox-group" style="margin-top:20px">
                                     <label><input type="checkbox" id="filter-tem"> Apenas Cursos TEM</label>
                                     <label><input type="checkbox" id="filter-bolsa"> Compatível com Bolsa</label>
                                 </div>
@@ -106,18 +105,15 @@
                                 </div>
                             </div>
                         </aside>
-
                         <section class="panel-calculator">
-                            <form id="course-form" onsubmit="return false;">
+                            <form id="course-form" onsubmit="return false">
                                 <label for="course-select">Seleção de Curso (filtrada)</label>
                                 <select id="course-select">
                                     <option value="">Use os filtros para carregar</option>
                                 </select>
-                                <div id="course-details" class="hidden" style="padding: 10px 0;">
-                                    <p style="margin: 5px 0;"><strong>Carga Horária:</strong> 
-                                    <span id="display-ch"></span> horas</p>
-                                    <p style="margin: 5px 0;"><strong>Valor:</strong> 
-                                    <span id="display-valor"></span></p>
+                                <div id="course-details" class="hidden" style="padding:10px 0">
+                                    <p style="margin:5px 0"><strong>Carga Horária:</strong> <span id="display-ch"></span> horas</p>
+                                    <p style="margin:5px 0"><strong>Valor:</strong> <span id="display-valor"></span></p>
                                 </div>
                                 <label for="start-date">Data de Início</label>
                                 <input type="date" id="start-date">
@@ -127,7 +123,6 @@
                                     <option value="tarde">Tarde (4h/dia)</option>
                                     <option value="noite">Noite (3h/dia)</option>
                                 </select>
-
                                 <div id="tecnico-type-options" class="options-panel hidden">
                                     <div class="checkbox-group">
                                         <label>
@@ -135,7 +130,6 @@
                                         </label>
                                     </div>
                                 </div>
-                                
                                 <div id="regular-course-options" class="options-panel hidden">
                                     <h4>Dias da Semana</h4>
                                     <div class="checkbox-group">
@@ -146,8 +140,7 @@
                                         <label><input type="checkbox" class="weekday-check" value="5" checked> Sex</label>
                                     </div>
                                 </div>
-
-                                <div id="remote-options-panel" class="options-panel hidden" style="background-color: var(--info-bg);">
+                                <div id="remote-options-panel" class="options-panel hidden" style="background-color:var(--info-bg)">
                                     <h4>Aulas Remotas (Opcional)</h4>
                                     <label for="remote-percentage-select">Percentual de aulas remotas</label>
                                     <select id="remote-percentage-select">
@@ -171,8 +164,7 @@
                                         </select>
                                     </div>
                                 </div>
-                                
-                                <div id="aprendizagem-options" class="options-panel hidden" style="background-color: var(--warning-bg);">
+                                <div id="aprendizagem-options" class="options-panel hidden" style="background-color:var(--warning-bg)">
                                     <h4>Opções para Aprendizagem</h4>
                                     <div class="checkbox-group">
                                         <label><input type="checkbox" id="aprendizagem-exclusiva"> Curso exclusivo (aulas somente no Senac?)</label>
@@ -182,27 +174,26 @@
                                         <select id="aprendizagem-dia-senac">
                                             <option value="1">Segunda-feira</option><option value="2">Terça-feira</option><option value="3">Quarta-feira</option><option value="4">Quinta-feira</option><option value="5">Sexta-feira</option>
                                         </select>
-                                        <div class="checkbox-group" style="margin-top: 15px;">
+                                        <div class="checkbox-group" style="margin-top:15px">
                                             <label><input type="checkbox" id="aprendizagem-modelo-novo"> Aplicar Modelo Novo (15 dias de imersão)?</label>
                                         </div>
                                     </div>
                                 </div>
-
-                                <div id="tem-options" class="options-panel hidden" style="background-color: var(--info-bg);">
+                                <div id="tem-options" class="options-panel hidden" style="background-color:var(--info-bg)">
                                     <h4>Opções para Cursos TEM</h4>
                                     <div id="tem-manual-options">
                                         <div id="tem-800h-options" class="hidden">
                                             <label for="tem-semester-option-800h">Qual semestre terá 3 dias presenciais?</label>
                                             <select id="tem-semester-option-800h">
-                                            <option value="0">Padrão (2 dias/semana)</option>
-                                            <option value="1">1º Semestre</option><option value="2">2º Semestre</option><option value="3">3º Semestre</option><option value="4">4º Semestre</option>
+                                                <option value="0">Padrão (2 dias/semana)</option>
+                                                <option value="1">1º Semestre</option><option value="2">2º Semestre</option><option value="3">3º Semestre</option><option value="4">4º Semestre</option>
                                             </select>
                                         </div>
                                         <div id="tem-1200h-options" class="hidden">
                                             <label for="tem-semester-option-1200h">Qual semestre terá 5 dias presenciais?</label>
                                             <select id="tem-semester-option-1200h">
-                                            <option value="0">Padrão (4 dias/semana)</option>
-                                            <option value="1">1º Semestre</option><option value="2">2º Semestre</option><option value="3">3º Semestre</option><option value="4">4º Semestre</option>
+                                                <option value="0">Padrão (4 dias/semana)</option>
+                                                <option value="1">1º Semestre</option><option value="2">2º Semestre</option><option value="3">3º Semestre</option><option value="4">4º Semestre</option>
                                             </select>
                                         </div>
                                         <label for="tem-remote-day">Informe o dia da aula remota</label>
@@ -221,11 +212,10 @@
                                         </div>
                                     </div>
                                 </div>
-                                
                                 <button type="submit" class="primary-btn">Calcular Duração do Curso</button>
                             </form>
                         </section>
-                        <div id="calculation-results" class="hidden" style="padding-top: 20px;">
+                        <div id="calculation-results" class="hidden" style="padding-top:20px">
                             <h3>Resultados da Simulação</h3>
                             <p><strong>Carga Horária Total:</strong> <span id="result-ch"></span> horas</p>
                             <p><strong>Data de Término Estimada:</strong> <span id="result-end-date"></span></p>
@@ -237,15 +227,29 @@
                     </section>
                 </main>
             </section>
+            <section id="gerenciar-instrutores" class="content-section">
+                <header class="page-header">
+                    <h1>Gerenciar Instrutores</h1>
+                    <button id="add-instrutor-btn" class="primary-btn"><i class="fas fa-plus"></i> Adicionar Novo Instrutor</button>
+                </header>
+                <main class="main-content">
+                    <div id="instrutores-list" class="data-table"></div>
+                </main>
+            </section>
 
-            <section id="relatorios" class="content-section">
-                </section>
-            
+            <section id="gerenciar-cursos" class="content-section">
+                <header class="page-header">
+                    <h1>Gerenciar Cursos</h1>
+                    <button id="add-curso-btn" class="primary-btn"><i class="fas fa-plus"></i> Adicionar Novo Curso</button>
+                </header>
+                <main class="main-content">
+                    <div id="cursos-list" class="data-table"></div>
+                </main>
+            </section>
             <section id="integracoes" class="content-section">
-                </section>
+            </section>
         </div>
     </div>
-
     <div id="agendamento-modal" class="modal">
         <div class="modal-content">
             <header class="modal-header">
@@ -295,7 +299,6 @@
                     <button type="button" class="primary-btn" id="alocacao-manual-btn">Buscar Salas Automaticamente</button>
                 </div>
                 <div id="salasAlocadasInfo" class="alocacao-info"></div>
-                
                 <div class="form-actions">
                     <button type="submit" class="primary-btn">Agendar</button>
                     <button type="button" id="cancelar-alocacao-btn" class="secondary-btn">Cancelar</button>
@@ -303,7 +306,6 @@
             </form>
         </div>
     </div>
-
     <div id="detalhes-modal" class="modal">
         <div class="modal-content">
             <header class="modal-header">
@@ -319,7 +321,6 @@
                 <p><strong>Instrutor:</strong> <span id="detalhes-instrutor"></span></p>
                 <p><strong>Status:</strong> <span id="detalhes-status"></span></p>
                 <input type="hidden" id="detalhes-turmaId">
-
                 <div class="form-group">
                     <label for="detalhes-status-select">Alterar Status</label>
                     <select id="detalhes-status-select">
@@ -334,7 +335,6 @@
                     <label for="detalhes-instrutor-input">Atribuir Instrutor</label>
                     <select id="detalhes-instrutor-input"></select>
                 </div>
-
                 <div class="form-actions">
                     <button type="submit" class="primary-btn">Salvar Alterações</button>
                     <button type="button" class="danger-btn" id="cancelar-turma-btn">Cancelar Turma</button>
@@ -342,7 +342,6 @@
             </form>
         </div>
     </div>
-    
     <div id="alocacao-modal" class="modal">
         <div class="modal-content">
             <header class="modal-header">
@@ -366,7 +365,53 @@
             </div>
         </div>
     </div>
+    <div id="instrutor-modal" class="modal">
+        <div class="modal-content">
+            <header class="modal-header">
+                <h2 id="instrutor-modal-title">Adicionar Instrutor</h2>
+                <button class="close-btn">&times;</button>
+            </header>
+            <form id="instrutor-form">
+                <input type="hidden" id="instrutor-id">
+                <div class="form-group">
+                    <label for="instrutor-nome">Nome do Instrutor</label>
+                    <input type="text" id="instrutor-nome" required>
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="primary-btn">Salvar</button>
+                    <button type="button" class="secondary-btn">Cancelar</button>
+                </div>
+            </form>
+        </div>
+    </div>
 
+    <div id="curso-modal" class="modal">
+        <div class="modal-content">
+            <header class="modal-header">
+                <h2 id="curso-modal-title">Adicionar Curso</h2>
+                <button class="close-btn">&times;</button>
+            </header>
+            <form id="curso-form">
+                <input type="hidden" id="curso-id">
+                <div class="form-group">
+                    <label for="curso-nome">Nome do Curso</label>
+                    <input type="text" id="curso-nome" required>
+                </div>
+                <div class="form-group">
+                    <label for="curso-carga-horaria">Carga Horária</label>
+                    <input type="number" id="curso-carga-horaria" required>
+                </div>
+                <div class="form-group">
+                    <label for="curso-tipo-sala">Tipo de Sala</label>
+                    <select id="curso-tipo-sala" required></select>
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="primary-btn">Salvar</button>
+                    <button type="button" class="secondary-btn">Cancelar</button>
+                </div>
+            </form>
+        </div>
+    </div>
     <script src="./public/js/script.js"></script>
 </body>
 </html>

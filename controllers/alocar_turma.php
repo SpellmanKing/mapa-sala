@@ -2,12 +2,11 @@
 // controllers/alocar_turma.php
 header('Content-Type: application/json');
 
-require __DIR__ . '/../models/conexao.php';
-require __DIR__ . '/../models/entidades/sala.php';
-require __DIR__ . '/../models/entidades/curso.php';
-require __DIR__ . '/../models/entidades/agendamento.php';
-require __DIR__ . '/../models/entidades/alocador_inteligente.php';
-require __DIR__ . '/../models/calcular_cronograma.php';
+require __DIR__ . '/../models/Conexao.php';
+require __DIR__ . '/../models/entidades/Sala.php';
+require __DIR__ . '/../models/entidades/Curso.php';
+require __DIR__ . '/../models/entidades/Agendamento.php';
+require __DIR__ . '/calcular_cronograma.php';
 require __DIR__ . '/get_feriados.php';
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
@@ -72,7 +71,7 @@ try {
     }
 
     // 3. Usa o alocador inteligente para encontrar a melhor sala
-    $sugestaoSalas = AlocadorInteligente::encontrarMelhorAlocacao($salasDisponiveis, ['total_alunos' => $totalAlunos, 'tipo_sala_necessaria' => $tipoSalaNecessaria]);
+    $sugestaoSalas = AlocarTurmas::encontrarMelhorAlocacao($salasDisponiveis, ['total_alunos' => $totalAlunos, 'tipo_sala_necessaria' => $tipoSalaNecessaria]);
     
     if ($sugestaoSalas) {
         echo json_encode([

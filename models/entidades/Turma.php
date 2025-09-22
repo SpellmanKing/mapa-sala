@@ -19,10 +19,20 @@ class Turma {
         try {
             $this->pdo->beginTransaction();
             
-            // 1. Atualiza o status e, opcionalmente, o instrutor da turma
-            $sql_update = "UPDATE turmas SET status = ?, id_instrutores = ? WHERE id_turmas = ?";
+            // 1. Constrói a query de forma dinâmica para atualizar o instrutor apenas se um novo ID for fornecido
+            $updateFields = ['status = ?'];
+            $params = [$novoStatus];
+
+            if ($novoInstrutorId !== null) {
+                $updateFields[] = 'id_instrutores = ?';
+                $params[] = $novoInstrutorId;
+            }
+
+            $params[] = $turmaId;
+            
+            $sql_update = "UPDATE turmas SET " . implode(', ', $updateFields) . " WHERE id_turmas = ?";
             $stmt_update = $this->pdo->prepare($sql_update);
-            $stmt_update->execute([$novoStatus, $novoInstrutorId, $turmaId]);
+            $stmt_update->execute($params);
 
             // 2. Se o status for 'Cancelada', deleta todos os agendamentos associados
             if ($novoStatus === 'Cancelada') {
@@ -36,7 +46,7 @@ class Turma {
             
         } catch (PDOException $e) {
             $this->pdo->rollBack();
-            throw new Exception("Erro ao gerenciar turma: " . $e->getMessage());
+            throw new Exception("Erro ao atualizar turma: " . $e->getMessage());
         }
     }
 }

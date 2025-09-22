@@ -33,7 +33,8 @@ INSERT INTO tipos_sala (nome_tipo) VALUES
 ('Laboratório de Moda'),
 ('Laboratório de Imagem Pessoal'),
 ('Auditório'),
-('Laboratório Multiuso');
+('Laboratório Multiuso'),
+('Laboratório de Gastronomia');
 
 -- -----------------------------------------------------
 -- Table `salas`
@@ -59,23 +60,24 @@ CREATE TABLE IF NOT EXISTS `salas` (
 --
 
 INSERT INTO salas (nome_sala, capacidade_maxima, idTipo_sala, local, recursos_especiais) VALUES
-('Inovadora 1', 30, 1, 'Cep Talal Abu Allan', '1º Andar, carteiras universitárias, TV ou projetor, lousa digital ou quadro branco, acesso à internet, tomadas para notebooks, iluminação adequada, climatização, espaço para dinâmicas, decoração moderna, recursos multimídia, ambiente colaborativo'),
-('Inovadora 2', 20, 1, 'Cep Talal Abu Allan', '2º Andar, mesas móveis formato trapézio, TV ou projetor, lousa digital ou quadro branco, internet, tomadas, climatização, recursos multimídia'),
-('Inovadora 3', 35, 1, 'Cep Talal Abu Allan', '2º Andar, carteiras universitárias, TV ou projetor, lousa digital, internet, climatização, recursos multimídia'),
-('Inovadora 4', 33, 1, 'Cep Talal Abu Allan', '2º Andar, carteiras universitárias, TV ou projetor, lousa digital, internet, climatização'),
-('Inovadora 5', 20, 1, 'Cep Talal Abu Allan', '2º Andar, mesas móveis formato trapézio, TV ou projetor, internet, climatização'),
-('Inovadora 6', 32, 1, 'Cep Talal Abu Allan', '2º Andar, carteiras universitárias, TV ou projetor, internet, climatização'),
-('Técnico de Sistemas e Rede 1', 28, 2, 'Cep Talal Abu Allan', 'rack de rede, switches, cabeamento estruturado, roteadores, 30 computadores, servidor, projetor multimídia, nobreak'),
-('Técnico de Sistemas e Rede 2', 28, 2, 'Cep Talal Abu Allan', 'rack de rede, switches, cabeamento estruturado, roteadores, 30 computadores, servidor, projetor multimídia, nobreak'),
-('Técnico de Sistemas', 30, 2, 'Cep Talal Abu Allan', '30 computadores, servidor local, projetor multimídia, softwares de programação, banco de dados, nobreak'),
-('Produção de Moda', 20, 3, 'Cep Talal Abu Allan', 'máquinas de costura, overlock, mesa de corte, manequins, ferro, iluminação, armários para tecidos, kits de modelagem'),
-('Imagem - Cabelos', 18, 4, 'Cep Talal Abu Allan', 'cadeiras de cabeleireiro, lavatórios, espelhos, secadores, chapinhas, iluminação adequada'),
-('Imagem - Estética e Unhas', 16, 4, 'Cep Talal Abu Allan', 'macas reclináveis, mesas de manicure, esterilizadores, equipamentos de estética, poltronas de pedicure'),
-('Imagem - Maquiagem e Produção', 14, 4, 'Cep Talal Abu Allan', 'cadeiras de maquiagem, bancadas com espelhos, iluminação de camarim, tomadas, kits de pincéis'),
-('Auditório', 70, 5, 'Cep Talal Abu Allan', 'projetor, som, ar-condicionado, 70 cadeiras, iluminação adequada'),
-('Técnico de Sistemas 1', 30, 2, 'Polo Recanto da Emas', 'computadores, servidor local, projetor multimídia, softwares de programação'),
-('Técnico de Sistemas 2', 30, 2, 'Polo Recanto da Emas', 'computadores, servidor local, projetor multimídia, softwares de programação'),
-('Multiuso de Cabelo, Unhas e Moda', 16, 6, 'Polo Recanto da Emas', 'máquinas de costura, secador, TV 85", bancadas, espelhos, cadeiras, lavatórios, iluminação estética');
+('Inovadora 1', 30, 1, 'Cep Talal Abu Allan', '1º Andar, carteiras universitárias, TV ou projetor, lousa digital ou quadro branco, acesso à internet, tomadas, iluminação adequada, climatização, espaço para dinâmicas, decoração moderna, recursos multimídia, ambiente colaborativo'),
+('Inovadora 2', 20, 1, 'Cep Talal Abu Allan', '2º Andar, mesas móveis trapézio, TV ou projetor, lousa digital ou quadro branco, internet, tomadas, iluminação adequada, climatização, espaço para dinâmicas, decoração moderna, recursos multimídia, ambiente colaborativo'),
+('Inovadora 3', 35, 1, 'Cep Talal Abu Allan', '2º Andar, carteiras universitárias, TV ou projetor, lousa digital ou quadro branco, internet, tomadas, iluminação adequada, climatização, recursos multimídia, ambiente colaborativo'),
+('Inovadora 4', 33, 1, 'Cep Talal Abu Allan', '2º Andar, carteiras universitárias, TV ou projetor, lousa digital ou quadro branco, internet, tomadas, iluminação adequada, climatização, recursos multimídia, ambiente colaborativo'),
+('Inovadora 5', 20, 1, 'Cep Talal Abu Allan', '2º Andar, mesas móveis trapézio, TV ou projetor, internet, tomadas, iluminação adequada, climatização, recursos multimídia, ambiente colaborativo'),
+('Inovadora 6', 32, 1, 'Cep Talal Abu Allan', '2º Andar, carteiras universitárias, TV ou projetor, lousa digital ou quadro branco, internet, tomadas, iluminação adequada, climatização, recursos multimídia, ambiente colaborativo'),
+('Técnico de Sistemas e Rede 1', 28, 2, 'Cep Talal Abu Allan', 'rack de rede com patch panels, switches gerenciáveis, cabeamento estruturado, roteadores, 30 computadores, servidor, projetor multimídia/TV interativa, nobreak, ferramentas de crimpagem, software de simulação'),
+('Técnico de Sistemas e Rede 2', 28, 2, 'Cep Talal Abu Allan', 'rack de rede com patch panels, switches gerenciáveis, cabeamento estruturado, roteadores, 30 computadores, servidor, projetor multimídia/TV interativa, nobreak, ferramentas de crimpagem, software de simulação'),
+('Técnico de Sistemas', 30, 2, 'Cep Talal Abu Allan', '30 computadores, servidor local, projetor multimídia/TV interativa, softwares de programação, banco de dados, virtualização, nobreak'),
+('Produção de Moda', 20, 3, 'Cep Talal Abu Allan', 'máquinas de costura domésticas e industriais, overlock, mesa de corte grande, manequins, ferro, iluminação, armários de tecidos, kits de modelagem'),
+('Imagem - Cabelos', 18, 4, 'Cep Talal Abu Allan', 'cadeiras de cabeleireiro, lavatórios água quente/fria, espelhos, secadores, chapinhas, iluminação frontal, tomadas distribuídas, esterilizadores'),
+('Imagem - Estética e Unhas', 16, 4, 'Cep Talal Abu Allan', 'macas reclináveis, mesas de manicure com iluminação, esterilizadores, aparelhos de estética (alta frequência, vaporizador), poltronas pedicure, lavabos'),
+('Imagem - Maquiagem e Produção', 14, 4, 'Cep Talal Abu Allan', 'cadeiras de maquiagem, bancadas com espelhos grandes, iluminação camarim 5000K, tomadas próximas, kits de pincéis, carrinhos auxiliares'),
+('Auditório', 70, 5, 'Cep Talal Abu Allan', 'projetor, som, 2 ar-condicionados, 70 cadeiras, iluminação adequada, climatização, espaço para apresentações'),
+('Técnico de Sistemas 1', 30, 2, 'Polo Recanto da Emas', 'computadores, servidor local, projetor multimídia/TV interativa, softwares de programação, banco de dados, virtualização, nobreak'),
+('Técnico de Sistemas 2', 30, 2, 'Polo Recanto da Emas', 'computadores, servidor local, projetor multimídia/TV interativa, softwares de programação, banco de dados, virtualização, nobreak'),
+('Multiuso de Cabelo, Unhas e Moda', 16, 6, 'Polo Recanto da Emas', 'provador, overlok, máquina de costura, secador, lockers, TV 85", bancadas, espelhos, cadeiras, lavatórios, iluminação estética, armários baixos, pontos de energia');
+
 
 -- -----------------------------------------------------
 -- Table `cursos`
@@ -83,31 +85,162 @@ INSERT INTO salas (nome_sala, capacidade_maxima, idTipo_sala, local, recursos_es
 DROP TABLE IF EXISTS `cursos` ;
 CREATE TABLE IF NOT EXISTS `cursos` (
   `id_cursos` INT NOT NULL AUTO_INCREMENT,
-  `nome_curso` VARCHAR(255) NOT NULL,
+  `nome_curso` VARCHAR(255) NOT NULL UNIQUE,
+  `segmento` VARCHAR(100) NOT NULL,
+  `modalidade` ENUM('Presencial','EaD','Híbrido') DEFAULT 'Presencial',
   `carga_horaria` INT NOT NULL,
-  `necessidade_sala` VARCHAR(255),
-  PRIMARY KEY (`id_cursos`)
+  `valor` DECIMAL(10,2) DEFAULT 0.00,
+  `curso_tem` TINYINT(1) DEFAULT 0, 
+  `bolsa_compatível` TINYINT(1) DEFAULT 1,
+  `idTipo_sala` INT,
+  PRIMARY KEY (`id_cursos`),
+  CONSTRAINT `fk_curso_tipo`
+    FOREIGN KEY (`idTipo_sala`) REFERENCES `tipos_sala` (`idTipo_sala`)
+    ON DELETE SET NULL
+    ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 --
 -- Despejando dados para a tabela `cursos`
 --
+INSERT INTO cursos (nome_curso, segmento, modalidade, carga_horaria, valor, curso_tem, bolsa_compatível, idTipo_sala) VALUES
+-- Comunicação (Sala de aula Inovadora = 1)
+('Fotografia de propaganda e publicidade', 'Comunicação', 'Presencial', 72, 800.00, 0, 1, 1),
+('Fotografia Jornalística e Documental', 'Comunicação', 'Presencial', 72, 750.00, 0, 1, 1),
+('Fotógrafo', 'Comunicação', 'Presencial', 190, 1500.00, 0, 1, 1),
+('Produção de Vídeo para Internet', 'Comunicação', 'Presencial', 36, 600.00, 0, 1, 1),
+('Técnico em Produção Cultural', 'Comunicação', 'Presencial', 800, 3500.00, 1, 1, 1),
 
-INSERT INTO cursos (nome_curso, carga_horaria, necessidade_sala) VALUES
-('Florista', 160, 'Sala de aula Inovadora'),
-('Fotografia comercial com celular', 36, 'Sala de aula Inovadora'),
-('Alongamento de Unhas', 60, 'Imagem - Estética e Unhas'),
-('Barbeiro', 172, 'Imagem - Cabelos'),
-('Cabeleireiro', 400, 'Imagem - Cabelos'),
-('Depilador', 160, 'Imagem - Estética e Unhas'),
-('Manicure e Pedicure', 160, 'Imagem - Estética e Unhas'),
-('Maquiador', 160, 'Imagem - Cabelos'),
-('Administrador de Banco de Dados', 200, 'Laboratório de TI'),
-('Desenvolvedor Back-end', 500, 'Laboratório de TI'),
-('Técnico em Redes de Computadores', 1000, 'Laboratório de TI'),
-('Aperfeiçoamento em Corte e Costura', 60, 'Laboratório de Moda'),
-('Costureiro', 212, 'Laboratório de Moda'),
-('Estilista de Moda', 408, 'Laboratório de Moda');
+-- Beleza (Laboratório de Imagem Pessoal = 4)
+('Aperfeiçoamento de Corte de Cabelo e Escova', 'Beleza', 'Presencial', 60, 900.00, 0, 1, 4),
+('Beleza de Milhões', 'Beleza', 'Presencial', 100, 1200.00, 0, 1, 4),
+('Colorimetria Avançada Aplicada a Cabeleireiros e Barbeiros', 'Beleza', 'Presencial', 100, 1300.00, 0, 1, 4),
+('Colorimetria Capilar: Noções Básicas', 'Beleza', 'Presencial', 40, 700.00, 0, 1, 4),
+('Construção de Carreira para Profissionais da Beleza', 'Beleza', 'EaD', 36, 500.00, 0, 1, 4),
+('Design de Barba', 'Beleza', 'Presencial', 40, 800.00, 0, 1, 4),
+('Design de Corte Feminino: Técnicas Avançadas', 'Beleza', 'Presencial', 72, 1000.00, 0, 1, 4),
+('Design de Mechas', 'Beleza', 'Presencial', 40, 850.00, 0, 1, 4),
+('Design de Sobrancelhas', 'Beleza', 'Presencial', 60, 700.00, 0, 1, 4),
+('Extensão de Cílios: Fio a Fio', 'Beleza', 'Presencial', 20, 500.00, 0, 1, 4),
+('Extensão de Cílios: Volume Russo', 'Beleza', 'Presencial', 20, 600.00, 0, 1, 4),
+('Lash lifting e Brow lamination', 'Beleza', 'Presencial', 20, 550.00, 0, 1, 4),
+('Maquiagem Profissional Avançada', 'Beleza', 'Presencial', 60, 900.00, 0, 1, 4),
+('Microblading Fio a Fio', 'Beleza', 'Presencial', 60, 1500.00, 0, 1, 4),
+('Micropigmentação', 'Beleza', 'Presencial', 80, 2000.00, 0, 1, 4),
+('Penteados Avançados', 'Beleza', 'Presencial', 40, 700.00, 0, 1, 4),
+('Penteados e Corte de Cabelos Afro', 'Beleza', 'Presencial', 40, 750.00, 0, 1, 4),
+('Práticas de Trabalho do Cabeleireiro', 'Beleza', 'Presencial', 100, 1300.00, 0, 1, 4),
+('Técnicas de Barbeiro', 'Beleza', 'Presencial', 80, 1000.00, 0, 1, 4),
+('Técnicas de Depilação', 'Beleza', 'Presencial', 80, 900.00, 0, 1, 4),
+('Tratamento Capilar', 'Beleza', 'Presencial', 40, 800.00, 0, 1, 4),
+('Unhas Perfeitas: Manicure e Pedicure', 'Beleza', 'Presencial', 100, 1200.00, 0, 1, 4),
+
+-- Comunicação/Vendas (Sala Inovadora = 1)
+('A Arte de se Comunicar e de Vender Mais', 'Comunicação', 'EaD', 30, 400.00, 0, 1, 1),
+('Copywriting: Redação Web para Marketing e Vendas', 'Comunicação', 'EaD', 36, 500.00, 0, 1, 1),
+
+-- Comunicação/Áudio (Laboratório de TI = 2)
+('Operador de áudio', 'Comunicação', 'Presencial', 208, 1800.00, 0, 1, 2),
+('Práticas de DJ', 'Comunicação', 'Presencial', 48, 600.00, 0, 1, 2),
+('Produção de podcast em vídeo', 'Comunicação', 'Presencial', 40, 700.00, 0, 1, 2),
+('Storytelling para Marcas e Produtos', 'Comunicação', 'EaD', 42, 500.00, 0, 1, 1),
+('Técnico em Multimídia', 'Comunicação', 'Presencial', 800, 3800.00, 1, 1, 2),
+
+-- Educação (Sala de aula Inovadora = 1)
+('Assistente de Secretaria Escolar', 'Educação', 'Presencial', 180, 900.00, 0, 1, 1),
+('Inclusão de Pessoas com Deficiência', 'Educação', 'EaD', 36, 400.00, 0, 1, 1),
+('Técnico em Secretaria Escolar', 'Educação', 'Presencial', 800, 3500.00, 1, 1, 1),
+
+-- Eventos (Sala de aula Inovadora = 1)
+('Organizador de Eventos', 'Eventos', 'Presencial', 180, 1000.00, 0, 1, 1),
+('Produção e Coordenação de Projetos de Cenografia', 'Eventos', 'Presencial', 36, 500.00, 0, 1, 1),
+('Projetos de Cenografia para Shows', 'Eventos', 'Presencial', 48, 600.00, 0, 1, 1),
+('Recepcionista de Eventos', 'Eventos', 'Presencial', 160, 800.00, 0, 1, 1),
+('Técnico em Eventos', 'Eventos', 'Presencial', 800, 3600.00, 1, 1, 1),
+
+-- Gastronomia (Laboratório de Gastronomia = 7)
+('Açougueiro', 'Gastronomia', 'Presencial', 160, 1000.00, 0, 1, 7),
+('Auxiliar de Cozinha', 'Gastronomia', 'Presencial', 240, 1200.00, 0, 1, 7),
+('Auxiliar de Garçom (Cumim)', 'Gastronomia', 'Presencial', 160, 800.00, 0, 1, 7),
+('Auxiliar de Padeiro', 'Gastronomia', 'Presencial', 180, 1000.00, 0, 1, 7),
+('Barista', 'Gastronomia', 'Presencial', 160, 1200.00, 0, 1, 7),
+('Bartender', 'Gastronomia', 'Presencial', 200, 1500.00, 0, 1, 7),
+('Cake design - Aperfeiçoamento', 'Gastronomia', 'Presencial', 40, 600.00, 0, 1, 7),
+('Confeiteiro', 'Gastronomia', 'Presencial', 300, 1800.00, 0, 1, 7),
+('Cozinheiro', 'Gastronomia', 'Híbrido', 500, 2500.00, 0, 1, 7),
+('Garçom', 'Gastronomia', 'Presencial', 240, 1000.00, 0, 1, 7),
+('Padeiro', 'Gastronomia', 'Presencial', 260, 1400.00, 0, 1, 7),
+('Pizzaiolo', 'Gastronomia', 'Presencial', 160, 1000.00, 0, 1, 7),
+('Salgadeiro', 'Gastronomia', 'Presencial', 160, 1000.00, 0, 1, 7),
+('Sommelier de Vinho', 'Gastronomia', 'Presencial', 144, 1500.00, 0, 1, 7),
+('Sushiman', 'Gastronomia', 'Presencial', 160, 2000.00, 0, 1, 7),
+('Técnico em Gastronomia', 'Gastronomia', 'Presencial', 800, 4200.00, 1, 0, 7),
+
+-- Gestão (Sala de aula Inovadora = 1)
+('Assistente Administrativo', 'Gestão', 'EaD', 160, 800.00, 0, 1, 1),
+('Assistente de Contabilidade', 'Gestão', 'EaD', 160, 850.00, 0, 1, 1),
+('Assistente de Crédito e Cobrança', 'Gestão', 'EaD', 160, 850.00, 0, 1, 1),
+('Assistente de Logística', 'Gestão', 'EaD', 160, 900.00, 0, 1, 1),
+('Assistente de Marketing e Vendas', 'Gestão', 'EaD', 160, 900.00, 0, 1, 1),
+('Assistente de Pessoal', 'Gestão', 'EaD', 160, 900.00, 0, 1, 1),
+('Assistente de Recursos Humanos', 'Gestão', 'EaD', 160, 900.00, 0, 1, 1),
+('Assistente Financeiro', 'Gestão', 'EaD', 160, 900.00, 0, 1, 1),
+('Recepcionista', 'Gestão', 'Presencial', 160, 800.00, 0, 1, 1),
+('Técnico em Administração', 'Gestão', 'Presencial', 800, 3200.00, 1, 1, 1),
+('Técnico em Contabilidade', 'Gestão', 'Presencial', 800, 3200.00, 1, 1, 1),
+('Técnico em Finanças', 'Gestão', 'Presencial', 800, 3200.00, 1, 1, 1),
+('Técnico em Logística', 'Gestão', 'Presencial', 800, 3200.00, 1, 1, 1),
+('Técnico em Marketing', 'Gestão', 'Presencial', 800, 3200.00, 1, 1, 1),
+('Técnico em Recursos Humanos', 'Gestão', 'Presencial', 800, 3200.00, 1, 1, 1),
+('Técnico em Secretariado', 'Gestão', 'Presencial', 800, 3200.00, 1, 1, 1),
+('Camareiro em Meios de Hospedagem', 'Gestão', 'Presencial', 160, 800.00, 0, 1, 1),
+('Recepcionista em Meios de Hospedagem', 'Gestão', 'Presencial', 160, 800.00, 0, 1, 1),
+
+-- Moda (Laboratório de Moda = 3)
+('Ajustes e Reformas do Vestuário', 'Moda', 'Presencial', 40, 600.00, 0, 1, 3),
+('Análise de Coloração Pessoal', 'Moda', 'Presencial', 40, 700.00, 0, 1, 3),
+('Branding e Marketing de Moda', 'Moda', 'EaD', 60, 800.00, 0, 1, 3),
+('Consultoria de Estilo - Personal Stylist', 'Moda', 'Presencial', 60, 1000.00, 0, 1, 3),
+('Consultoria de Imagem', 'Moda', 'Presencial', 160, 1200.00, 0, 1, 3),
+('Costura Criativa', 'Moda', 'Presencial', 80, 1000.00, 0, 1, 3),
+('Costura Prática e Moda Criativa', 'Moda', 'Presencial', 100, 1200.00, 0, 1, 3),
+('Desenho de Moda Digital', 'Moda', 'Híbrido', 95, 1000.00, 0, 1, 3),
+('Estamparia - Design de Superfície', 'Moda', 'Presencial', 80, 1000.00, 0, 1, 3),
+('Moda Pet', 'Moda', 'Presencial', 40, 600.00, 0, 1, 3),
+('Modelagem de Alfaiataria Feminina', 'Moda', 'Presencial', 100, 1200.00, 0, 1, 3),
+('Modelagem para Corset', 'Moda', 'Presencial', 80, 1100.00, 0, 1, 3),
+('Modelista', 'Moda', 'Presencial', 210, 2000.00, 0, 1, 3),
+('Moulage', 'Moda', 'Presencial', 80, 1100.00, 0, 1, 3),
+('Técnico em Produção de Moda', 'Moda', 'Presencial', 800, 4000.00, 1, 1, 3),
+('Vitrinismo e Visual Merchandising para o Varejo de Moda', 'Moda', 'Presencial', 108, 1200.00, 0, 1, 3),
+
+-- Tecnologia (Laboratório de TI = 2)
+('Administrador de Redes', 'Tecnologia da Informação', 'Presencial', 200, 2000.00, 0, 1, 2),
+('Arquitetura de Sistemas Cloud Computing', 'Tecnologia da Informação', 'EaD', 30, 400.00, 0, 1, 2),
+('Assistente de Tecnologias da Informação', 'Tecnologia da Informação', 'Presencial', 200, 1500.00, 0, 1, 2),
+('AutoCAD - Desenho de Ambientes em 2D', 'Tecnologia da Informação', 'Presencial', 60, 800.00, 0, 1, 2),
+('Cloud computing - Gerenciamento de Serviços em nuvem', 'Tecnologia da Informação', 'EaD', 100, 900.00, 0, 1, 2),
+('Construção de Websites com PHP e MySQL', 'Tecnologia da Informação', 'Presencial', 60, 1000.00, 0, 1, 2),
+('Desenvolvedor Front-End', 'Tecnologia da Informação', 'Presencial', 264, 2500.00, 0, 1, 2),
+('Desenvolvimento de Aplicativos Móveis', 'Tecnologia da Informação', 'Presencial', 100, 1500.00, 0, 1, 2),
+('Editor de Projeto Visual Gráfico', 'Tecnologia da Informação', 'Presencial', 160, 1500.00, 0, 1, 2),
+('Excel Com VBA e Dashboard', 'Tecnologia da Informação', 'EaD', 60, 700.00, 0, 1, 2),
+('Formação - programação Python', 'Tecnologia da Informação', 'Presencial', 156, 1600.00, 0, 1, 2),
+('Front-End: Html, Css, Bootstrap, js e Jquery', 'Tecnologia da Informação', 'Presencial', 100, 1200.00, 0, 1, 2),
+('Implementar protocolos de rede em roteadores e switches', 'Tecnologia da Informação', 'Presencial', 96, 1100.00, 0, 1, 2),
+('Informática Básica', 'Tecnologia da Informação', 'EaD', 20, 200.00, 0, 1, 2),
+('Informática para Melhor Idade', 'Tecnologia da Informação', 'EaD', 100, 400.00, 0, 1, 2),
+('Informática Windows e Office Fundamental', 'Tecnologia da Informação', 'Presencial', 100, 800.00, 0, 1, 2),
+('Inteligência Artificial - Como Fazer a Pergunta Correta', 'Tecnologia da Informação', 'EaD', 20, 300.00, 0, 1, 2),
+('Introdução à Programação com Lógica de Programação', 'Tecnologia da Informação', 'EaD', 60, 600.00, 0, 1, 2),
+('Java - Programação Orientada a Objetos', 'Tecnologia da Informação', 'Presencial', 160, 1500.00, 0, 1, 2),
+('Lógica de Programação e Algoritmos', 'Tecnologia da Informação', 'Presencial', 100, 900.00, 0, 1, 2),
+('Montagem e Manutenção de Computadores', 'Tecnologia da Informação', 'Presencial', 160, 1200.00, 0, 1, 2),
+('Redes de Computadores', 'Tecnologia da Informação', 'Presencial', 200, 1800.00, 0, 1, 2),
+('Segurança da Informação e Proteção de Dados', 'Tecnologia da Informação', 'EaD', 60, 700.00, 0, 1, 2),
+('Técnico em Informática', 'Tecnologia da Informação', 'Presencial', 800, 3500.00, 1, 1, 2),
+('Técnico em Redes de Computadores', 'Tecnologia da Informação', 'Presencial', 800, 3500.00, 1, 1, 2),
+('Web Designer - Criação e Desenvolvimento de Sites', 'Tecnologia da Informação', 'Presencial', 200, 2000.00, 0, 1, 2);
 
 -- -----------------------------------------------------
 -- Table `instrutores`
@@ -122,30 +255,287 @@ CREATE TABLE IF NOT EXISTS `instrutores` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 --
--- Despejando dados para a tabela `isntrutores`
+-- Despejando dados para a tabela `instrutores`
 --
 
 INSERT INTO instrutores (nome_instrutor, segmento_principal) VALUES
-('Luzia Pereira De Andrade', 'Beleza'),
-('Stephanie Lopes De Sousa', 'Beleza'),
-('Maria Auxiliadora De Almeida Rodrigues', 'Beleza'),
-('Maria Edinalda Pinheiro Da Silva', 'Beleza'),
-('Caroline Manso Da Costa Silva', 'Beleza'),
-('Thiago Augusto Ferreira', 'Beleza'),
-('Adriano Da Silva Santos', 'Beleza'),
-('Jarlane Carneiro De Lima Pereira', 'Beleza'),
-('Camila Marques Pereira', 'Beleza'),
-('Mário Carvalho De Sousa Baldez', 'Beleza'),
-('Mônica Rodrigues Da Costa Araújo', 'Beleza'),
-('João De Deus Meira', 'Beleza'),
-('Rubia Martins De Melo', 'Beleza'),
-('Thiago De Sousa Costa', 'Beleza'),
-('David Da Silva Prado', 'Beleza'),
-('Daniele Moraes De Oliveira Ferreira Siqueira', 'Beleza'),
-('Wesley Lima Da Nóbrega', 'Comunicação'),
-('Arthur Gramacho Dos Santos', 'Comunicação'),
-('Juliana Mendes De Brito', 'Educacional'),
-('Bruna Gomes De Moura Medeiros', 'Educacional');
+('Adailton Rodrigues Duarte', 'Educacional'),
+('Michelle Pereira Soares', 'Educacional'),
+('Ismael Alves Gomes', 'Gastronomia'),
+('Isabela Mayane Diniz Mota', 'Gastronomia'),
+('Ana Lúcia Feitosa', 'Gastronomia'),
+('Joseny Juvito De Souza', 'Gastronomia'),
+('Anna Paula Caribe Schwam', 'Gastronomia'),
+('Victor Hugo Alves Xavier', 'Gastronomia'),
+('Marcos Antonio Facanha Da Silva Junior', 'Gastronomia'),
+('Joyce Santos Brum', 'Gastronomia'),
+('Kelly Alves De Oliveira', 'Gestão'),
+('Luzineide Maria De Araujo', 'Gestão'),
+('Elisangela Machado Da Silva Gomes', 'Gestão'),
+('Liliane Cavalcante De Oliveira', 'Gestão'),
+('Patrícia Barbosa Alves De Almeida', 'Gestão'),
+('Elisa Rosa Coimbras', 'Gestão'),
+('Lúcio Alexandre Souza Lordes', 'Gestão'),
+('Ricardo Da Silva Pierre', 'Gestão'),
+('Wender Freitas Reis', 'Gestão'),
+('Edson Luiz Cabral Dos Santos', 'Gestão'),
+('Jefferson Soares Teixeira Alves', 'Gestão'),
+('Jonas Aparecido Dias', 'Gestão'),
+('Francisco Edivan Da Silva', 'Gestão'),
+('Nara Moura De Sena', 'Gestão'),
+('Joelma Aparecida Leite', 'Gestão'),
+('Luís Fernando Portela De Faria', 'Gestão'),
+('Geane Pinto Camargo', 'Gestão'),
+('Alessandra Antonia Pereira', 'Gestão'),
+('Aline Correa Lopes', 'Gestão'),
+('Luanna Alves De Oliveira Farias Belloti', 'Gestão'),
+('Analice Barbosa Santos De Oliveira', 'Gestão'),
+('Katyara Pinheiro Sousa Cunha', 'Gestão'),
+('Lindomar Silva Bastos', 'Gestão'),
+('Cleia Dos Santos Rohod', 'Gestão'),
+('Alexandre Humberto Bessa Ferreira', 'Gestão'),
+('Jose De Assis Custodio', 'Gestão'),
+('Franklin George Andrade Batista', 'Gestão'),
+('Dionisio Francisco Pereira', 'Gestão'),
+('Marileia De Jesus Amorim', 'Gestão'),
+('Giorgia Barreto Lima Parriao', 'Gestão'),
+('Aldemir Rodrigues Martins', 'Gestão'),
+('Ana Claudia Lima Soares', 'Gestão'),
+('Joarisvaldo Queiroz Martins', 'Gestão'),
+('Petrick De Oliveira Tomasini', 'Gestão'),
+('Ricardo Pereira Gomes De Araujo', 'Gestão'),
+('Miracleia Almeida De Lima Castro', 'Gestão'),
+('Bianca Gabriel Fellet', 'Gestão'),
+('Juliana Holanda Nogueira Peixoto Cortez', 'Gestão'),
+('Jose Pericles Freire Barroncas', 'Gestão'),
+('Thalita Barboza Rocha Cardoso', 'Gestão'),
+('Ronia Pinheiro Marra De Sousa', 'Gestão'),
+('Marcela Nunes Mesquita Ribas Lopes Dos Santos', 'Gestão'),
+('Israel Vila Verde Belem', 'Gestão'),
+('Flavio Pereira De Sousa', 'Gestão'),
+('Kedna Medeiros Dos Santos', 'Gestão'),
+('Sandro Tibirica Dos Santos Carneiro', 'Gestão'),
+('Marcela Rocha Mendonca Ribeiro', 'Gestão'),
+('Paulo Cesar Pereira Soares', 'Gestão'),
+('Rosivane Machado Cavalcante Monteiro', 'Gestão'),
+('Mauricio Pereira Barroso Dos Santos', 'Gestão'),
+('Debora Raquel De Macedo Carinhanha', 'Idiomas'),
+('Maria Cristina Gomes De Oliveira', 'Moda'),
+('Tatiane Silva Dos Santos', 'Moda'),
+('Maria De Fátima Reis Lima Silva', 'Moda'),
+('Erenita Vieira Tolentino', 'Moda'),
+('Ilcimara Belo Barbosa Correia Viana', 'Moda'),
+('Bianca Mendes Da Silva', 'Moda'),
+('Suely De Fatima Pereira', 'Moda'),
+('Keyla Beatriz Pires', 'Moda'),
+('Maria Zenaide Peixoto Cavalcante', 'Produção de Alimentos'),
+('Waldemar Camilo Ferreira', 'Produção de Alimentos'),
+('Allison Da Silva Lima', 'Produção de Alimentos'),
+('Maria Claudia Nascimento', 'Produção de Alimentos'),
+('Daniel Silva Dos Reis', 'Produção de Alimentos'),
+('Shirliany Andrade Do Nascimento', 'Saúde'),
+('Igor Araujo Cruz', 'Saúde'),
+('Álvaro Leal Da Silva', 'Saúde'),
+('Mariane Conceição Paixão', 'Saúde'),
+('Leida Maria Rodrigues Do Prado', 'Saúde'),
+('Erika De Souza Figueiredo', 'Saúde'),
+('Marcos Antonio Pereira Da Silva', 'Saúde'),
+('Sabrina Oliveira Campos De Franca', 'Saúde'),
+('Jose Otavio Da Silva Junior', 'Saúde'),
+('Aparecida Araujo De Freitas', 'Saúde'),
+('Gleyciany Goncalves Silva Jesus', 'Saúde'),
+('Pedro Henrique Batista Dos Anjos', 'Saúde'),
+('Lilian Girardi Miguel Da Silva', 'Saúde'),
+('Erica Paulino Da Costa Moreira', 'Saúde'),
+('Charles Dikison Souza Guimarães', 'Segurança'),
+('Jose Roberto Moraes De Souza', 'Segurança'),
+('Leandro Pereira Castro', 'Segurança'),
+('Dalva Maria Vitoria De Araujo Carvalho', 'Segurança'),
+('Denilson Rodrigues Santana', 'Segurança'),
+('Helton Veras Medeiros', 'Segurança'),
+('Ruben Gomes De Bastos Prado', 'Tecnologia da Informação'),
+('Alisson Ribeiro Da Silva', 'Tecnologia da Informação'),
+('Raniere Rodrigues De Oliveira', 'Tecnologia da Informação'),
+('Ana Paula Leite Pereira', 'Tecnologia da Informação'),
+('Hernande De Castro Coelho', 'Tecnologia da Informação'),
+('Alessandro Alves De Vasconcelos', 'Tecnologia da Informação'),
+('Sérgio Rodrigues Lima', 'Tecnologia da Informação'),
+('Hudson Neves E Silva', 'Tecnologia da Informação'),
+('Rafael Do Sacramento Bonfim', 'Tecnologia da Informação'),
+('Herminio Jesus Santos Do Carmo', 'Tecnologia da Informação'),
+('Joa Victor Ramalho Mendes', 'Tecnologia da Informação'),
+('Flippy Maycon Gomes Da Silva', 'Tecnologia da Informação'),
+('Adriel Caninde Filgueira Do Amaral', 'Tecnologia da Informação'),
+('Douglas Antero Rodrigues Silva', 'Tecnologia da Informação'),
+('Lucas Dos Santos Camilo', 'Tecnologia da Informação'),
+('Valdiney Marcio De Sousa', 'Tecnologia da Informação'),
+('Jose Matheus Alves Do Rosario', 'Tecnologia da Informação'),
+('Marcos Alves De Oliveira', 'Tecnologia da Informação'),
+('Hudson Andre Vidal Martins', 'Tecnologia da Informação'),
+('Kelly Bispo Da Silva', 'Tecnologia da Informação'),
+('Leonardo Nemer Afonso', 'Tecnologia da Informação'),
+('Marcileide Cardoso De Souza', 'Tecnologia da Informação'),
+('Romulo Cesar Silvestre Leite', 'Tecnologia da Informação'),
+('Ricardo De Souza Serra', 'Tecnologia da Informação');
+
+-- -----------------------------------------------------
+-- Table `instrutores_cursos`
+-- -----------------------------------------------------
+DROP TABLE IF EXISTS `instrutores_cursos` ;
+CREATE TABLE IF NOT EXISTS `instrutores_cursos` (
+  `id_instrutores_cursos` INT NOT NULL AUTO_INCREMENT,
+  `id_instrutores` INT NOT NULL,
+  `id_cursos` INT NOT NULL,
+  PRIMARY KEY (`id_instrutores_cursos`),
+  CONSTRAINT `fk_instrutor_curso_instrutor`
+    FOREIGN KEY (`id_instrutores`) REFERENCES `instrutores` (`id_instrutores`)
+    ON DELETE CASCADE
+    ON UPDATE CASCADE,
+  CONSTRAINT `fk_instrutor_curso_curso`
+    FOREIGN KEY (`id_cursos`) REFERENCES `cursos` (`id_cursos`)
+    ON DELETE CASCADE
+    ON UPDATE CASCADE,
+  UNIQUE (`id_instrutores`, `id_cursos`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+--
+-- Despejando dados para a tabela `instrutores_cursos`  
+--
+
+-- ==============================
+-- BELEZA
+-- ==============================
+INSERT INTO instrutores_cursos (id_instrutores, id_cursos)
+SELECT i.id_instrutores, c.id_cursos
+FROM instrutores i
+JOIN cursos c ON c.nome_curso IN (
+ 'Alongamento de Unhas','Barbeiro','Cabeleireiro','Depilador','Manicure e Pedicure','Maquiador',
+ 'Aperfeiçoamento de Corte de Cabelo e Escova','Beleza de Milhões','Colorimetria Avançada Aplicada a Cabeleireiros e Barbeiros',
+ 'Colorimetria Capilar: Noções Básicas','Construção de Carreira para Profissionais da Beleza','Design de Barba',
+ 'Design de Corte Feminino: Técnicas Avançadas','Design de Mechas','Design de Sobrancelhas',
+ 'Extensão de Cílios: Fio a Fio','Extensão de Cílios: Volume Russo','Lash lifting e Brow lamination',
+ 'Maquiagem Profissional Avançada','Microblading Fio a Fio','Micropigmentação','Penteados Avançados',
+ 'Penteados e Corte de Cabelos Afro','Práticas de Trabalho do Cabeleireiro','Técnicas de Barbeiro',
+ 'Técnicas de Depilação','Tratamento Capilar','Unhas Perfeitas: Manicure e Pedicure'
+)
+WHERE i.segmento_principal = 'Beleza';
+
+-- ==============================
+-- MODA
+-- ==============================
+INSERT INTO instrutores_cursos (id_instrutores, id_cursos)
+SELECT i.id_instrutores, c.id_cursos
+FROM instrutores i
+JOIN cursos c ON c.nome_curso IN (
+ 'Costureiro','Estilista de Moda','Produção de Moda','Aperfeiçoamento em Corte e Costura',
+ 'Ajustes e Reformas do Vestuário','Análise de Coloração Pessoal','Branding e Marketing de Moda',
+ 'Consultoria de Estilo - Personal Stylist','Consultoria de Imagem','Costura Criativa',
+ 'Costura Prática e Moda Criativa','Desenho de Moda Digital','Estamparia - Design de Superfície',
+ 'Moda Pet','Modelagem de Alfaiataria Feminina','Modelagem para Corset','Modelista','Moulage',
+ 'Técnico em Produção de Moda','Vitrinismo e Visual Merchandising para o Varejo de Moda'
+)
+WHERE i.segmento_principal = 'Moda';
+
+-- ==============================
+-- TECNOLOGIA DA INFORMAÇÃO
+-- ==============================
+INSERT INTO instrutores_cursos (id_instrutores, id_cursos)
+SELECT i.id_instrutores, c.id_cursos
+FROM instrutores i
+JOIN cursos c ON c.nome_curso IN (
+ 'Administrador de Banco de Dados','Administrador de Redes','Assistente de Tecnologias da Informação',
+ 'Desenvolvedor Back-end','Desenvolvedor Front-End','Desenvolvimento de Aplicativos Móveis',
+ 'Editor de Projeto Visual Gráfico','Formação - programação Python','Front-End: Html, Css, Bootstrap, js e Jquery',
+ 'Implementar protocolos de rede em roteadores e switches','Informática Básica','Informática para Melhor Idade',
+ 'Informática Windows e Office Fundamental','Inteligência Artificial - Como Fazer a Pergunta Correta',
+ 'Lógica de Programação','Microsoft Power Bi - Avançado','Microsoft Power Bi - Básico',
+ 'PHP com MySQL','Planejar e implementar segurança em redes','Programador de Sistemas',
+ 'Programador Web','Proteção de dados em redes de computadores','Técnicas Avançadas de Word, Excel e Powerpoint',
+ 'Técnico em Ciências de Dados','Técnico em Computação Gráfica','Técnico em Desenvolvimento de Sistemas',
+ 'Técnico em Informática','Técnico em Informática para Internet','Técnico em Inteligência Artificial',
+ 'Técnico em Programação de Jogos Digitais','Técnico em Redes de Computadores','Técnico em Segurança Cibernética'
+)
+WHERE i.segmento_principal = 'Tecnologia da Informação';
+
+-- ==============================
+-- GASTRONOMIA
+-- ==============================
+INSERT INTO instrutores_cursos (id_instrutores, id_cursos)
+SELECT i.id_instrutores, c.id_cursos
+FROM instrutores i
+JOIN cursos c ON c.nome_curso IN (
+ 'Açougueiro','Auxiliar de Cozinha','Auxiliar de Garçom (Cumim)','Auxiliar de Padeiro',
+ 'Barista','Bartender','Cake design - Aperfeiçoamento','Confeiteiro','Cozinheiro','Garçom',
+ 'Padeiro','Pizzaiolo','Salgadeiro','Sommelier de Vinho','Sushiman','Técnico em Gastronomia'
+)
+WHERE i.segmento_principal = 'Gastronomia';
+
+-- ==============================
+-- GESTÃO
+-- ==============================
+INSERT INTO instrutores_cursos (id_instrutores, id_cursos)
+SELECT i.id_instrutores, c.id_cursos
+FROM instrutores i
+JOIN cursos c ON c.nome_curso IN (
+ 'Assistente Administrativo','Assistente de Contabilidade','Assistente de Crédito e Cobrança',
+ 'Assistente de Logística','Assistente de Marketing e Vendas','Assistente de Pessoal',
+ 'Assistente de Recursos Humanos','Assistente Financeiro','Recepcionista',
+ 'Técnico em Administração','Técnico em Contabilidade','Técnico em Finanças',
+ 'Técnico em Logística','Técnico em Marketing','Técnico em Recursos Humanos','Técnico em Secretariado'
+)
+WHERE i.segmento_principal = 'Gestão';
+
+-- ==============================
+-- EDUCAÇÃO
+-- ==============================
+INSERT INTO instrutores_cursos (id_instrutores, id_cursos)
+SELECT i.id_instrutores, c.id_cursos
+FROM instrutores i
+JOIN cursos c ON c.nome_curso IN (
+ 'Assistente de Secretaria Escolar','Técnico em Secretaria Escolar','Inclusão de Pessoas com Deficiência'
+)
+WHERE i.segmento_principal = 'Educacional';
+
+-- ==============================
+-- COMUNICAÇÃO
+-- ==============================
+INSERT INTO instrutores_cursos (id_instrutores, id_cursos)
+SELECT i.id_instrutores, c.id_cursos
+FROM instrutores i
+JOIN cursos c ON c.nome_curso IN (
+ 'Fotografia comercial com celular','Fotografia de propaganda e publicidade',
+ 'Fotografia Jornalística e Documental','Produção de Vídeo para Internet',
+ 'Operador de áudio','Práticas de DJ','Produção de podcast em vídeo',
+ 'Storytelling para Marcas e Produtos','Técnico em Multimídia'
+)
+WHERE i.segmento_principal = 'Comunicação';
+
+-- ==============================
+-- SEGURANÇA
+-- ==============================
+INSERT INTO instrutores_cursos (id_instrutores, id_cursos)
+SELECT i.id_instrutores, c.id_cursos
+FROM instrutores i
+JOIN cursos c ON c.nome_curso IN (
+ 'Técnico em Segurança do Trabalho','Técnico em Prevenção e Combate a Incêndio',
+ 'NR 10- Segurança em Instalações em eletricidade','NR 20- Segurança e Saúde no Trabalho com Inflamáveis',
+ 'NR 23- Proteção Contra Incêndio','NR 35 – Segurança no Trabalho em Altura','NR 5 – CIPA: Comissão Interna de Prevenção de Acidentes',
+ 'NR 9 – Programa de Prevenção de Riscos Ambientais'
+)
+WHERE i.segmento_principal = 'Segurança';
+
+-- ==============================
+-- SAÚDE
+-- ==============================
+INSERT INTO instrutores_cursos (id_instrutores, id_cursos)
+SELECT i.id_instrutores, c.id_cursos
+FROM instrutores i
+JOIN cursos c ON c.nome_curso IN (
+ 'Atendente de Farmácia','Cuidador de Idoso','Recepcionista em Serviços de Saúde',
+ 'Técnico em Enfermagem','Técnico em Estética','Técnico em Análises Clínicas','Técnico em Farmácia',
+ 'Técnico em Hemoterapia','Técnico em Massoterapia','Técnico em Nutrição E Dietética','Técnico em Podologia'
+)
+WHERE i.segmento_principal = 'Saúde';
 
 
 -- -----------------------------------------------------
