@@ -48,41 +48,43 @@ document.addEventListener('DOMContentLoaded', () => {
     const detalhesInstrutorInput = document.getElementById('detalhes-instrutor-input');
 
     // Elementos da Calculadora Inteligente
-    const calculadoraDOM = {
-        form: document.getElementById('course-form'),
+    const DOM = {
+        filterSegmento: document.getElementById('filter-segmento'),
+        filterModalidade: document.getElementById('filter-modalidade'),
+        filterNomeCurso: document.getElementById('filter-nome-curso'),
+        filterChMin: document.getElementById('filter-ch-min'),
+        filterChMax: document.getElementById('filter-ch-max'),
+        filterTem: document.getElementById('filter-tem'),
+        filterBolsa: document.getElementById('filter-bolsa'),
+        applyFiltersButton: document.getElementById('apply-filters'),
+        clearFiltersButton: document.getElementById('clear-filters'),
         courseSelect: document.getElementById('course-select'),
-        courseDetails: document.getElementById('course-details'),
-        displayCH: document.getElementById('display-ch'),
-        displayValor: document.getElementById('display-valor'),
-        startDate: document.getElementById('start-date'),
+        courseForm: document.getElementById('course-form'),
+        startDateInput: document.getElementById('start-date'),
         shiftSelect: document.getElementById('shift-select'),
-        isTemCheckbox: document.getElementById('is-tem-checkbox'),
-        tecnicoTypeOptions: document.getElementById('tecnico-type-options'),
+        courseDetails: document.getElementById('course-details'),
+        displayCh: document.getElementById('display-ch'),
+        displayValor: document.getElementById('display-valor'),
         regularCourseOptions: document.getElementById('regular-course-options'),
-        remoteOptionsPanel: document.getElementById('remote-options-panel'),
-        aprendizagemOptions: document.getElementById('aprendizagem-options'),
         temOptions: document.getElementById('tem-options'),
-        weekdayChecks: document.querySelectorAll('.weekday-check'),
-        remotePercentageSelect: document.getElementById('remote-percentage-select'),
-        remotePeriodSelect: document.getElementById('remote-period-select'),
-        remoteDetailsOptions: document.getElementById('remote-details-options'),
-        aprendizagemExclusiva: document.getElementById('aprendizagem-exclusiva'),
+        tem800hOptions: document.getElementById('tem-800h-options'),
+        tem1200hOptions: document.getElementById('tem-1200h-options'),
+        aprendizagemOptions: document.getElementById('aprendizagem-options'),
         aprendizagemTradicionalOptions: document.getElementById('aprendizagem-tradicional-options'),
-        aprendizagemModeloNovo: document.getElementById('aprendizagem-modelo-novo'),
-        temRemoteDay: document.getElementById('tem-remote-day'),
-        temPresentialDaysSelector: document.getElementById('tem-presencial-days-selector'),
-        temWeekdayChecks: document.querySelectorAll('.tem-weekday-check'),
-
-        // Seção de resultados
-        calculationResults: document.getElementById('calculation-results'),
-        resultCH: document.getElementById('result-ch'),
-        resultEndDate: document.getElementById('result-end-date'),
-        resultTotalDays: document.getElementById('result-total-days'),
-        resultPresentialDays: document.getElementById('result-presential-days'),
-        resultRemoteDays: document.getElementById('result-remote-days'),
-        calendarView: document.getElementById('calendar-view'),
-        courseSelectFiltro: document.getElementById('course-agendamento'),
-        filterInstrutor: document.getElementById('instrutor-agendamento'),
+        remoteOptionsPanel: document.getElementById('remote-options-panel'),
+        remotePercentageSelect: document.getElementById('remote-percentage-select'),
+        remoteDetailsOptions: document.getElementById('remote-details-options'),
+        remoteDaysSelector: document.getElementById('remote-days-selector'),
+        resultsSection: document.getElementById('results-section'),
+        resultsContent: document.getElementById('results-content'),
+        metricsPanel: document.getElementById('metrics-panel'),
+        totalHoursValue: document.getElementById('total-hours-value'),
+        durationValue: document.getElementById('duration-value'),
+        progressPresencial: document.getElementById('progress-presencial'),
+        progressRemoto: document.getElementById('progress-remoto'),
+        progressEmpresa: document.getElementById('progress-empresa'),
+        calendarVisual: document.getElementById('calendar-visual'),
+        exportPdfButton: document.getElementById('export-pdf-button')
     };
 
     // --- 3. FUNÇÕES GERAIS E DE UTILIDADE --
@@ -740,7 +742,7 @@ document.addEventListener('DOMContentLoaded', () => {
             ]
         };
         
-        const API_URL = './api.php';
+        const API_URL = './controllers/get_feriados.php';
 
         async function fetchData() {
             try {
