@@ -1,5 +1,4 @@
 <?php
-
 // controllers/get_sala.php
 header('Content-Type: application/json');
 
@@ -20,8 +19,6 @@ try {
         exit;
     }
     
-} catch (PDOException $e) {
-    // Se houver um erro de banco de dados, retorne uma mensagem de erro JSON
     http_response_code(500); 
     echo json_encode(['error' => 'Erro de banco de dados: ' . $e->getMessage()]);
 } catch (Exception $e) {

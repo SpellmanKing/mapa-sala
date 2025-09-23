@@ -28,6 +28,8 @@ try {
     $curso = new Curso($pdo);
     $sala = new Sala($pdo);
     $agendamento = new Agendamento($pdo);
+    $sugestaoSalas = new AlocarTurmas($pdo);
+
     
     $cursoId = $data['cursoId'];
     $totalAlunos = $data['totalAlunos'];

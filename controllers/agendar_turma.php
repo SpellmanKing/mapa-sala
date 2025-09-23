@@ -7,8 +7,6 @@ require __DIR__ . '/../models/Conexao.php';
 require __DIR__ . '/../models/entidades/Instrutor.php';
 require __DIR__ . '/../models/entidades/Curso.php';
 require __DIR__ . '/../models/entidades/Agendamento.php';
-require __DIR__ . '/calcular_cronograma.php';
-require __DIR__ . '/get_feriados.php';
 
 try {
     $pdo = Conexao::getInstancia();
@@ -40,11 +38,11 @@ try {
             $turno = $data['turno'];
 
             // Obtém feriados e recessos
-            require __DIR__ . '/get_feriados.php';
+            require __DIR__ . './get_feriados.php';
             $feriadosRecessos = array_merge(getFeriados(), getPontes(), getNaoLetivos());
 
             // Inclui o controlador de cronograma
-            require __DIR__ . '/calcular_cronograma.php';
+            require __DIR__ . './calcular_cronograma.php';
             $cronograma = calcularCronograma($cargaHorariaTotal, $dataInicio, $turno, $diasSemanaSelecionados, $feriadosRecessos);
 
             if (empty($cronograma['diasLetivos'])) {
