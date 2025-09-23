@@ -313,7 +313,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Função para buscar e renderizar os cursos no select
     async function carregarCursos() {
         try {
-            const response = await fetch('./controllers/gerenciar_curso.php');
+            const response = await fetch('./controllers/gerenciar_cursos.php');
             if (!response.ok) {
                 throw new Error('Erro ao carregar cursos: ' + response.statusText);
             }
@@ -321,12 +321,12 @@ document.addEventListener('DOMContentLoaded', () => {
             dadosCursos = cursos;
             
             // Popula o seletor da calculadora
-            calculadoraDOM.courseSelect.innerHTML = '<option value="">Selecione um curso...</option>';
+            DOM.courseSelect.innerHTML = '<option value="">Selecione um curso...</option>';
             cursos.forEach(curso => {
                 const option = document.createElement('option');
                 option.value = curso.id_cursos;
                 option.textContent = curso.nome_curso;
-                calculadoraDOM.courseSelect.appendChild(option);
+                DOM.courseSelect.appendChild(option);
             });
             
             console.log('Cursos carregados com sucesso.');
@@ -742,7 +742,7 @@ document.addEventListener('DOMContentLoaded', () => {
             ]
         };
         
-        const API_URL = './controllers/get_feriados.php';
+        const API_URL = './controllers/calculadora_inteligente.php';
 
         async function fetchData() {
             try {
@@ -1196,7 +1196,7 @@ document.addEventListener('DOMContentLoaded', () => {
         DOM.courseForm.addEventListener('change', calculateSchedule);
         DOM.exportPdfButton.addEventListener('click', handlePdfExport);
         
-        fetchData();
+        filterAndPopulateCourses();
     });
 
     // --- 7. INICIA A APLICAÇÃO --

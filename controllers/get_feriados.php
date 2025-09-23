@@ -1,4 +1,5 @@
 <?php
+
 // controllers/get_feriados.php
 header('Content-Type: application/json');
 

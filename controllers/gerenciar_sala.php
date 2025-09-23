@@ -1,4 +1,5 @@
 <?php
+
 // controllers/get_sala.php
 header('Content-Type: application/json');
 

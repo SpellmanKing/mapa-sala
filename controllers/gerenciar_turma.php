@@ -2,9 +2,9 @@
 
 header('Content-Type: application/json');
 
-require __DIR__ . '/../models/conexao.php';
-require __DIR__ . '/../models/entidades/turma.php';
-require __DIR__ . '/../models/entidades/instrutor.php';
+require __DIR__ . '/../models/Conexao.php';
+require __DIR__ . '/../models/entidades/Turma.php';
+require __DIR__ . '/../models/entidades/Instrutor.php';
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     http_response_code(405);

@@ -1,5 +1,4 @@
 <?php
-
 function calcularCronograma(int $cargaHorariaTotal, string $dataInicio, string $turno, array $diasSemanaSelecionados, array $feriadosRecessos, $porcentagemRemoto = 0): array {
     
     // Regra de negócio: Carga horária por dia

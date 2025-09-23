@@ -33,29 +33,33 @@ try {
                 exit;
             }
 
-            // 2. Busca a carga horária do curso e calcula o cronograma
-            $curso = new Curso($pdo);
-            $dadosCurso = $curso->buscarPorId($data['cursoId']);
-            if (!$dadosCurso) {
-                http_response_code(404);
-                echo json_encode(['error' => 'Curso não encontrado.']);
+            // 2. Calcula o cronograma da turma
+            $cargaHorariaTotal = (int) $agendamento->buscarCargaHorariaCurso($data['cursoId']);
+            $diasSemanaSelecionados = $data['diasSemana'];
+            $dataInicio = $data['dataInicio'];
+            $turno = $data['turno'];
+
+            // Obtém feriados e recessos
+            require __DIR__ . '/get_feriados.php';
+            $feriadosRecessos = array_merge(getFeriados(), getPontes(), getNaoLetivos());
+
+            // Inclui o controlador de cronograma
+            require __DIR__ . '/calcular_cronograma.php';
+            $cronograma = calcularCronograma($cargaHorariaTotal, $dataInicio, $turno, $diasSemanaSelecionados, $feriadosRecessos);
+
+            if (empty($cronograma['diasLetivos'])) {
+                http_response_code(400);
+                echo json_encode(['error' => 'Não foi possível calcular o cronograma com os dados fornecidos.']);
                 exit;
             }
 
-            // A chamada para `getFeriadosCompleto` agora está na função
-            $feriadosPontesRecessos = getFeriadosCompleto();
-            $diasSemana = $data['diasSemana'];
-
-            $cronograma = calcularCronograma($dadosCurso['carga_horaria'], $data['dataInicio'], $data['turno'], $diasSemana, $feriadosPontesRecessos);
-
-            // 3. Valida a disponibilidade das salas
-            $salasIds = (is_array($data['salaId'])) ? $data['salaId'] : [$data['salaId']];
+            // 3. Validação de Disponibilidade das Salas
+            $salasIds = is_array($data['salaId']) ? $data['salaId'] : [$data['salaId']]; // Garante que é um array
             foreach ($salasIds as $salaId) {
                 foreach ($cronograma['diasLetivos'] as $dia) {
-                    $isAvailable = $agendamento->verificarDisponibilidade($salaId, $dia, $data['turno']);
-                    if (!$isAvailable) {
-                        http_response_code(409); 
-                        echo json_encode(['error' => "A sala com ID $salaId já está ocupada no dia $dia e turno. Por favor, tente a Alocação Automática novamente ou escolha outra sala."]);
+                    if (!$agendamento->verificarDisponibilidade($salaId, $dia['date'], $turno)) {
+                        http_response_code(409);
+                        echo json_encode(['error' => 'Conflito de agendamento detectado. A sala ' . $salaId . ' não está disponível no dia ' . $dia['date'] . ' no turno ' . $turno . '. Por favor, tente a Alocação Automática novamente ou escolha outra sala.']);
                         exit;
                     }
                 }
@@ -68,6 +72,7 @@ try {
             if (!empty($data['instrutorId'])) {
                 $instrutorId = $data['instrutorId'];
             }
+
 
             // 5. Organiza os dados da turma para o Agendamento
             $dadosTurma = [
