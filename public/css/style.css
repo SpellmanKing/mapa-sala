@@ -198,8 +198,8 @@ body {
 }
 
 .calendar-header h2 {
-    font-size: 1.5rem;
-    color: var(--dark-gray);
+  font-size: 1.5rem;
+  color: var(--white);
 }
 
 .calendar-grid {
