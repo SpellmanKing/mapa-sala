@@ -1,13 +1,16 @@
 <?php
+ini_set('display_errors', 1);
+error_reporting(E_ALL);
 // controllers/alocar_turma.php
 header('Content-Type: application/json');
 
-require __DIR__ . '/../models/Conexao.php';
-require __DIR__ . '/../models/entidades/Sala.php';
-require __DIR__ . '/../models/entidades/Curso.php';
-require __DIR__ . '/../models/entidades/Agendamento.php';
-require __DIR__ . '/calcular_cronograma.php';
-require __DIR__ . '/get_feriados.php';
+require_once __DIR__ . '/../models/Conexao.php';
+require_once __DIR__ . '/../models/entidades/Sala.php';
+require_once __DIR__ . '/../models/entidades/Curso.php';
+require_once __DIR__ . '/../models/entidades/Agendamento.php';
+require_once __DIR__ . '/../models/entidades/AlocarTurmas.php';
+require_once __DIR__ . '/calcular_cronograma.php'; 
+require_once __DIR__ . '/get_feriados.php'; 
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     http_response_code(405);

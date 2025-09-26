@@ -3,10 +3,11 @@
 header('Content-Type: application/json');
 
 // Garante que todos os arquivos de classe são carregados
-require __DIR__ . '/../models/Conexao.php';
-require __DIR__ . '/../models/entidades/Instrutor.php';
-require __DIR__ . '/../models/entidades/Curso.php';
-require __DIR__ . '/../models/entidades/Agendamento.php';
+require_once __DIR__ . '/../models/Conexao.php';
+require_once __DIR__ . '/../models/entidades/Instrutor.php';
+require_once __DIR__ . '/../models/entidades/Curso.php';
+require_once __DIR__ . '/../models/entidades/Agendamento.php';
+
 
 try {
     $pdo = Conexao::getInstancia();
@@ -20,7 +21,7 @@ try {
             $agendamentos = $agendamento->buscarTodos();
             echo json_encode($agendamentos);
             break;
-
+            
         case 'POST': // Agenda uma nova turma
             $data = json_decode(file_get_contents('php://input'), true);
 

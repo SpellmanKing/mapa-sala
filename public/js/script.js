@@ -48,7 +48,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const detalhesInstrutorInput = document.getElementById('detalhes-instrutor-input');
 
     // Elementos da Calculadora Inteligente
-    const DOM = {
+    const calculadoraDOM = {
         filterSegmento: document.getElementById('filter-segmento'),
         filterModalidade: document.getElementById('filter-modalidade'),
         filterNomeCurso: document.getElementById('filter-nome-curso'),
@@ -148,7 +148,7 @@ document.addEventListener('DOMContentLoaded', () => {
      */
     function popularFiltros(cursos, instrutores) {
         // 1. Popula os filtros de cursos na calculadora inteligente
-        const cursoSelectFiltro = DOM.courseSelectFiltro;
+        const cursoSelectFiltro = calculadoraDOM.courseSelectFiltro;
         if (cursoSelectFiltro) {
             cursoSelectFiltro.innerHTML = '<option value="">Todos</option>';
             cursos.forEach(curso => {
@@ -160,7 +160,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         // 2. Popula os filtros de instrutores
-        const instrutorSelectFiltro = DOM.filterInstrutor;
+        const instrutorSelectFiltro = calculadoraDOM.filterInstrutor;
         if (instrutorSelectFiltro) {
             instrutorSelectFiltro.innerHTML = '<option value="">Todos</option>';
             instrutores.forEach(instrutor => {
@@ -321,12 +321,12 @@ document.addEventListener('DOMContentLoaded', () => {
             dadosCursos = cursos;
             
             // Popula o seletor da calculadora
-            DOM.courseSelect.innerHTML = '<option value="">Selecione um curso...</option>';
+            calculadoraDOM.courseSelect.innerHTML = '<option value="">Selecione um curso...</option>';
             cursos.forEach(curso => {
                 const option = document.createElement('option');
                 option.value = curso.id_cursos;
                 option.textContent = curso.nome_curso;
-                DOM.courseSelect.appendChild(option);
+                calculadoraDOM.courseSelect.appendChild(option);
             });
             
             console.log('Cursos carregados com sucesso.');
@@ -542,7 +542,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // Lógica para o botão "Buscar Salas Automaticamente" no modal de Agendamento 
         buscarSalasAutomaticamenteBtn.addEventListener('click', async (event) => {
             event.preventDefault();
-            const diasSemana = Array.from(document.querySelectorAll('#dias-semana-agendamento input:checked')).map(cb => cb.value); // Não converte para inteiro aqui
+            const diasSemana = Array.from(document.querySelectorAll('#dias-semana-agendamento input:checked')).map(cb => cb.value);
 
             const dadosAgendamento = {
                 cursoId: document.getElementById('curso-agendamento').value,
@@ -665,7 +665,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Lógica para o formulário da Calculadora Inteligente
     document.addEventListener('DOMContentLoaded', () => {
 
-        const DOM = {
+        const calculadoraDOM = {
             filterSegmento: document.getElementById('filter-segmento'),
             filterModalidade: document.getElementById('filter-modalidade'),
             filterNomeCurso: document.getElementById('filter-nome-curso'),
@@ -754,7 +754,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 populateFilters();
             } catch (error) {
                 console.error('Erro ao buscar dados:', error);
-                DOM.courseSelect.innerHTML = '<option value="">Erro ao carregar cursos. Tente novamente.</option>';
+                calculadoraDOM.courseSelect.innerHTML = '<option value="">Erro ao carregar cursos. Tente novamente.</option>';
             }
         }
 
@@ -762,33 +762,33 @@ document.addEventListener('DOMContentLoaded', () => {
             const segmentos = [...new Set(allCourses.map(c => c.segmento))].sort();
             const modalidades = [...new Set(allCourses.map(c => c.modalidade))].sort();
 
-            DOM.filterSegmento.innerHTML = '<option value="">Todos</option>';
+            calculadoraDOM.filterSegmento.innerHTML = '<option value="">Todos</option>';
             segmentos.forEach(s => {
                 const option = document.createElement('option');
                 option.value = s;
                 option.textContent = s;
-                DOM.filterSegmento.appendChild(option);
+                calculadoraDOM.filterSegmento.appendChild(option);
             });
 
-            DOM.filterModalidade.innerHTML = '<option value="">Todos</option>';
+            calculadoraDOM.filterModalidade.innerHTML = '<option value="">Todos</option>';
             modalidades.forEach(m => {
                 const option = document.createElement('option');
                 option.value = m;
                 option.textContent = m;
-                DOM.filterModalidade.appendChild(option);
+                calculadoraDOM.filterModalidade.appendChild(option);
             });
 
             filterAndPopulateCourses();
         }
 
         async function filterAndPopulateCourses() {
-            const segmento = DOM.filterSegmento.value;
-            const modalidade = DOM.filterModalidade.value;
-            const nomeCurso = DOM.filterNomeCurso.value.toLowerCase();
-            const chMin = parseInt(DOM.filterChMin.value) || 0;
-            const chMax = parseInt(DOM.filterChMax.value) || Infinity;
-            const temChecked = DOM.filterTem.checked;
-            const bolsaChecked = DOM.filterBolsa.checked;
+            const segmento = calculadoraDOM.filterSegmento.value;
+            const modalidade = calculadoraDOM.filterModalidade.value;
+            const nomeCurso = calculadoraDOM.filterNomeCurso.value.toLowerCase();
+            const chMin = parseInt(calculadoraDOM.filterChMin.value) || 0;
+            const chMax = parseInt(calculadoraDOM.filterChMax.value) || Infinity;
+            const temChecked = calculadoraDOM.filterTem.checked;
+            const bolsaChecked = calculadoraDOM.filterBolsa.checked;
 
             const queryParams = new URLSearchParams();
             if (segmento) queryParams.append('segmento', segmento);
@@ -803,12 +803,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 const response = await fetch(`${API_URL}?${queryParams.toString()}`);
                 const filteredCourses = await response.json();
 
-                DOM.courseSelect.innerHTML = '<option value="">Selecione um curso</option>';
+                calculadoraDOM.courseSelect.innerHTML = '<option value="">Selecione um curso</option>';
                 if (filteredCourses.length === 0) {
                     const noResultOption = document.createElement('option');
                     noResultOption.textContent = "Nenhum curso encontrado.";
                     noResultOption.disabled = true;
-                    DOM.courseSelect.appendChild(noResultOption);
+                    calculadoraDOM.courseSelect.appendChild(noResultOption);
                 } else {
                     filteredCourses.forEach(course => {
                         const option = document.createElement('option');
@@ -818,33 +818,33 @@ document.addEventListener('DOMContentLoaded', () => {
                         option.setAttribute('data-valor', course.valor);
                         option.setAttribute('data-modalidade', course.modalidade);
                         option.setAttribute('data-tem', course.tem);
-                        DOM.courseSelect.appendChild(option);
+                        calculadoraDOM.courseSelect.appendChild(option);
                     });
                 }
             } catch (error) {
                 console.error('Erro ao filtrar cursos:', error);
-                DOM.courseSelect.innerHTML = '<option value="">Erro ao carregar cursos. Tente novamente.</option>';
+                calculadoraDOM.courseSelect.innerHTML = '<option value="">Erro ao carregar cursos. Tente novamente.</option>';
             }
         }
 
         // A lógica de cálculo e geração do cronograma é mantida, adaptada para os novos elementos
         function calculateSchedule() {
-            const selectedOption = DOM.courseSelect.options[DOM.courseSelect.selectedIndex];
+            const selectedOption = calculadoraDOM.courseSelect.options[calculadoraDOM.courseSelect.selectedIndex];
             if (!selectedOption || !selectedOption.value) {
-                DOM.resultsSection.classList.add('hidden');
+                calculadoraDOM.resultsSection.classList.add('hidden');
                 return;
             }
 
             const courseCH = parseInt(selectedOption.dataset.ch);
             const courseModalidade = selectedOption.dataset.modalidade;
             const isTem = selectedOption.dataset.tem === '1';
-            const startDateString = DOM.startDateInput.value;
-            const shift = DOM.shiftSelect.value;
-            const remotePercentage = parseInt(DOM.remotePercentageSelect.value);
+            const startDateString = calculadoraDOM.startDateInput.value;
+            const shift = calculadoraDOM.shiftSelect.value;
+            const remotePercentage = parseInt(calculadoraDOM.remotePercentageSelect.value);
             const isAprendizagem = courseModalidade.includes('Aprendizagem');
 
             if (!startDateString) {
-                DOM.resultsSection.classList.add('hidden');
+                calculadoraDOM.resultsSection.classList.add('hidden');
                 return;
             }
 
@@ -931,17 +931,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const durationInDays = Math.round((currentDate - startDate) / (1000 * 60 * 60 * 24));
             
-            DOM.totalHoursValue.textContent = (totalPresencialHours + totalRemoteHours + totalEmpresaHours).toFixed(2);
-            DOM.durationValue.textContent = durationInDays;
+            calculadoraDOM.totalHoursValue.textContent = (totalPresencialHours + totalRemoteHours + totalEmpresaHours).toFixed(2);
+            calculadoraDOM.durationValue.textContent = durationInDays;
 
             updateProgressBars(totalPresencialHours, totalRemoteHours, totalEmpresaHours);
             generateCalendar(schedule);
-            DOM.resultsSection.classList.remove('hidden');
-            DOM.metricsPanel.classList.remove('hidden');
-            DOM.progressBarsContainer.classList.remove('hidden');
-            DOM.progressLegend.classList.remove('hidden');
-            DOM.calendarVisual.classList.remove('hidden');
-            DOM.exportPdfButton.classList.remove('hidden');
+            calculadoraDOM.resultsSection.classList.remove('hidden');
+            calculadoraDOM.metricsPanel.classList.remove('hidden');
+            calculadoraDOM.progressBarsContainer.classList.remove('hidden');
+            calculadoraDOM.progressLegend.classList.remove('hidden');
+            calculadoraDOM.calendarVisual.classList.remove('hidden');
+            calculadoraDOM.exportPdfButton.classList.remove('hidden');
             
             console.log("Cronograma final:", schedule);
             console.log("Horas presenciais:", totalPresencialHours);
@@ -999,7 +999,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     classHours = 4;
                 }
             } else { // Cursos regulares
-                const remoteDays = Array.from(DOM.remoteDaysSelector.querySelectorAll('input[type="checkbox"]:checked')).map(cb => cb.dataset.day);
+                const remoteDays = Array.from(calculadoraDOM.remoteDaysSelector.querySelectorAll('input[type="checkbox"]:checked')).map(cb => cb.dataset.day);
                 const dayNames = ['domingo', 'segunda', 'terça', 'quarta', 'quinta', 'sexta', 'sábado'];
                 const currentDayName = dayNames[dayOfWeek];
                 
@@ -1029,13 +1029,13 @@ document.addEventListener('DOMContentLoaded', () => {
             const remotoPct = total > 0 ? (remoto / total) * 100 : 0;
             const empresaPct = total > 0 ? (empresa / total) * 100 : 0;
             
-            DOM.progressPresencial.style.width = `${presencialPct}%`;
-            DOM.progressRemoto.style.width = `${remotoPct}%`;
-            DOM.progressEmpresa.style.width = `${empresaPct}%`;
+            calculadoraDOM.progressPresencial.style.width = `${presencialPct}%`;
+            calculadoraDOM.progressRemoto.style.width = `${remotoPct}%`;
+            calculadoraDOM.progressEmpresa.style.width = `${empresaPct}%`;
         }
 
         function generateCalendar(schedule) {
-            DOM.calendarVisual.innerHTML = '';
+            calculadoraDOM.calendarVisual.innerHTML = '';
             if (schedule.length === 0) return;
 
             const months = {};
@@ -1103,14 +1103,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 footer.textContent = `Horas no mês: ${hoursInMonth}h`;
                 calendarContainer.appendChild(footer);
 
-                DOM.calendarVisual.appendChild(calendarContainer);
+                calculadoraDOM.calendarVisual.appendChild(calendarContainer);
             });
         }
 
         function handlePdfExport() {
             const { jsPDF } = window.jspdf;
-            const content = DOM.resultsContent;
-            DOM.exportPdfButton.classList.add('hidden');
+            const content = calculadoraDOM.resultsContent;
+            calculadoraDOM.exportPdfButton.classList.add('hidden');
             html2canvas(content, { scale: 2, logging: false, useCORS: true }).then(canvas => {
                 const imgData = canvas.toDataURL('image/png');
                 const pdf = new jsPDF('p', 'mm', 'a4');
@@ -1120,20 +1120,20 @@ document.addEventListener('DOMContentLoaded', () => {
                 const effectiveHeight = (canvas.height * effectiveWidth) / canvas.width;
                 pdf.addImage(imgData, 'PNG', margin, margin, effectiveWidth, effectiveHeight);
                 pdf.save("relatorio-cronograma-curso.pdf");
-                DOM.exportPdfButton.classList.remove('hidden');
+                calculadoraDOM.exportPdfButton.classList.remove('hidden');
             }).catch(err => {
                 console.error("PDF Export failed:", err);
-                DOM.exportPdfButton.classList.remove('hidden');
+                calculadoraDOM.exportPdfButton.classList.remove('hidden');
             });
         }
 
         function updateFormOptions() {
-            const selectedOption = DOM.courseSelect.options[DOM.courseSelect.selectedIndex];
+            const selectedOption = calculadoraDOM.courseSelect.options[calculadoraDOM.courseSelect.selectedIndex];
             if (!selectedOption || !selectedOption.value) {
-                DOM.courseDetails.classList.add('hidden');
-                DOM.remoteOptionsPanel.classList.add('hidden');
-                DOM.temOptions.classList.add('hidden');
-                DOM.aprendizagemOptions.classList.add('hidden');
+                calculadoraDOM.courseDetails.classList.add('hidden');
+                calculadoraDOM.remoteOptionsPanel.classList.add('hidden');
+                calculadoraDOM.temOptions.classList.add('hidden');
+                calculadoraDOM.aprendizagemOptions.classList.add('hidden');
                 return;
             }
 
@@ -1142,59 +1142,59 @@ document.addEventListener('DOMContentLoaded', () => {
             const courseModalidade = selectedOption.dataset.modalidade;
             const isTem = selectedOption.dataset.tem === '1';
 
-            DOM.displayCh.textContent = courseCH;
-            DOM.displayValor.textContent = courseValor && courseValor !== 'null' ? courseValor : 'Não informado';
-            DOM.courseDetails.classList.remove('hidden');
+            calculadoraDOM.displayCh.textContent = courseCH;
+            calculadoraDOM.displayValor.textContent = courseValor && courseValor !== 'null' ? courseValor : 'Não informado';
+            calculadoraDOM.courseDetails.classList.remove('hidden');
 
-            DOM.remoteOptionsPanel.classList.add('hidden');
-            DOM.temOptions.classList.add('hidden');
-            DOM.aprendizagemOptions.classList.add('hidden');
+            calculadoraDOM.remoteOptionsPanel.classList.add('hidden');
+            calculadoraDOM.temOptions.classList.add('hidden');
+            calculadoraDOM.aprendizagemOptions.classList.add('hidden');
 
             if (courseModalidade === 'Técnico de Nível Médio' && isTem) {
-                DOM.temOptions.classList.remove('hidden');
+               calculadoraDOM.temOptions.classList.remove('hidden');
                 if (courseCH == 800) {
-                    DOM.tem800hOptions.classList.remove('hidden');
-                    DOM.tem1200hOptions.classList.add('hidden');
+                    calculadoraDOM.tem800hOptions.classList.remove('hidden');
+                    calculadoraDOM.tem1200hOptions.classList.add('hidden');
                 } else if (courseCH == 1200) {
-                    DOM.tem1200hOptions.classList.remove('hidden');
-                    DOM.tem800hOptions.classList.add('hidden');
+                    calculadoraDOM.tem1200hOptions.classList.remove('hidden');
+                    calculadoraDOM.tem800hOptions.classList.add('hidden');
                 }
             } else if (courseModalidade.includes('Aprendizagem')) {
-                DOM.aprendizagemOptions.classList.remove('hidden');
-                DOM.aprendizagemTradicionalOptions.classList.remove('hidden');
+                calculadoraDOM.aprendizagemOptions.classList.remove('hidden');
+                calculadoraDOM.aprendizagemTradicionalOptions.classList.remove('hidden');
             } else {
-                DOM.remoteOptionsPanel.classList.remove('hidden');
+                calculadoraDOM.remoteOptionsPanel.classList.remove('hidden');
             }
         }
 
-        DOM.remotePercentageSelect.addEventListener('change', () => {
-            const percentage = parseInt(DOM.remotePercentageSelect.value);
+        calculadoraDOM.remotePercentageSelect.addEventListener('change', () => {
+            const percentage = parseInt(calculadoraDOM.remotePercentageSelect.value);
             if (percentage > 0) {
-                DOM.remoteDetailsOptions.classList.remove('hidden');
+                calculadoraDOM.remoteDetailsOptions.classList.remove('hidden');
             } else {
-                DOM.remoteDetailsOptions.classList.add('hidden');
+                calculadoraDOM.remoteDetailsOptions.classList.add('hidden');
             }
         });
 
-        DOM.courseSelect.addEventListener('change', () => {
+        calculadoraDOM.courseSelect.addEventListener('change', () => {
             updateFormOptions();
             calculateSchedule();
         });
 
-        DOM.applyFiltersButton.addEventListener('click', filterAndPopulateCourses);
-        DOM.clearFiltersButton.addEventListener('click', () => {
-            DOM.filterSegmento.value = "";
-            DOM.filterModalidade.value = "";
-            DOM.filterNomeCurso.value = "";
-            DOM.filterChMin.value = "";
-            DOM.filterChMax.value = "";
-            DOM.filterTem.checked = false;
-            DOM.filterBolsa.checked = false;
+        calculadoraDOM.applyFiltersButton.addEventListener('click', filterAndPopulateCourses);
+        calculadoraDOM.clearFiltersButton.addEventListener('click', () => {
+            calculadoraDOM.filterSegmento.value = "";
+            calculadoraDOM.filterModalidade.value = "";
+            calculadoraDOM.filterNomeCurso.value = "";
+            calculadoraDOM.filterChMin.value = "";
+            calculadoraDOM.filterChMax.value = "";
+            calculadoraDOM.filterTem.checked = false;
+            calculadoraDOM.filterBolsa.checked = false;
             filterAndPopulateCourses();
         });
 
-        DOM.courseForm.addEventListener('change', calculateSchedule);
-        DOM.exportPdfButton.addEventListener('click', handlePdfExport);
+        calculadoraDOM.courseForm.addEventListener('change', calculateSchedule);
+        calculadoraDOM.exportPdfButton.addEventListener('click', handlePdfExport);
         
         filterAndPopulateCourses();
     });
