@@ -1,8 +1,17 @@
 <?php
-ini_set('display_errors', 1);
-error_reporting(E_ALL);
 
-function calcularCronograma(int $cargaHorariaTotal, string $dataInicio, string $turno, array $diasSemanaSelecionados, array $feriadosRecessos, $porcentagemRemoto = 0): array {
+/**
+ * Calcula o cronograma de aulas, data de término e dias letivos de um curso.
+ *
+ * @param int $cargaHorariaTotal Carga horária total do curso em horas.
+ * @param string $dataInicio Data de início (formato YYYY-MM-DD).
+ * @param string $turno Turno ('Manhã', 'Tarde', 'Noite', 'Integral').
+ * @param array $diasSemanaSelecionados Array com os números dos dias da semana (1=Segunda a 7=Domingo).
+ * @param array $feriadosRecessosParam Array de datas de feriados/recessos (formato YYYY-MM-DD).
+ * @param int $porcentagemRemoto Porcentagem da carga horária que deve ser remota (0 a 100).
+ * @return array Contendo a data de término, dias letivos, e o calendário completo.
+ */
+function calcularCronograma(int $cargaHorariaTotal, string $dataInicio, string $turno, array $diasSemanaSelecionados, array $feriadosRecessosParam = [], $porcentagemRemoto = 0): array {
     
     // Regra de negócio: Carga horária por dia
     $horasPorDia = 0;
@@ -19,25 +28,38 @@ function calcularCronograma(int $cargaHorariaTotal, string $dataInicio, string $
             throw new InvalidArgumentException("Turno inválido.");
     }
 
+    if ($horasPorDia <= 0) {
+        throw new InvalidArgumentException("Não foi possível determinar a carga horária diária.");
+    }
+    
     $cargaHorariaRestante = $cargaHorariaTotal;
-    $calendario = [];
-    $currentDate = new DateTime($dataInicio);
-
+    $diasLetivosNecessarios = ceil($cargaHorariaTotal / $horasPorDia);
+    
+    // Calculo para dias remotos
+    $diasRemotosNecessarios = floor($diasLetivosNecessarios * ($porcentagemRemoto / 100));
+    $diasPresenciaisNecessarios = $diasLetivosNecessarios - $diasRemotosNecessarios;
+    
     $diasPresenciais = 0;
     $diasRemotos = 0;
+    
+    $calendario = [];
+    $totalDiasAula = 0;
+    
+    $currentDate = new DateTime($dataInicio);
+    $dataTermino = null;
 
-    // Apenas para demonstração, o array de dias letivos será populado
-    // com objetos para refletir o que o front-end espera
-    $diasLetivos = [];
-
-    $diasTotaisDeAula = ($cargaHorariaTotal / $horasPorDia);
-    $diasRemotosNecessarios = round($diasTotaisDeAula * ($porcentagemRemoto / 100));
-    $diasPresenciaisNecessarios = $diasTotaisDeAula - $diasRemotosNecessarios;
-
+    // Loop até que a carga horária restante seja totalmente distribuída
     while ($cargaHorariaRestante > 0) {
-        $diaDaSemana = (int)$currentDate->format('N');
+        $dataTermino = $currentDate->format('Y-m-d');
+        
+        // 1. Verifica se a data atual é feriado/recesso
         $diaFormatado = $currentDate->format('Y-m-d');
-        $isFeriadoOuRecesso = in_array($diaFormatado, $feriadosRecessos);
+        $isFeriadoOuRecesso = in_array($diaFormatado, $feriadosRecessosParam);
+        
+        // 2. Verifica o dia da semana (1=Segunda, 7=Domingo)
+        $diaDaSemana = (int)$currentDate->format('N'); 
+        
+        // 3. Define se é um dia de aula potencial
         $isDiaDeAula = in_array($diaDaSemana, $diasSemanaSelecionados) && !$isFeriadoOuRecesso;
 
         $diaData = [
@@ -45,15 +67,21 @@ function calcularCronograma(int $cargaHorariaTotal, string $dataInicio, string $
             'is_weekend' => ($diaDaSemana == 6 || $diaDaSemana == 7),
             'is_holiday' => $isFeriadoOuRecesso,
             'is_class_day' => $isDiaDeAula,
-            'type' => null, // 'presencial', 'remoto', etc. - Adicione sua lógica aqui
-            'description' => '' // Adicione descrições de feriados/recessos aqui
+            'type' => null, // 'presencial' ou 'remoto'
+            'description' => '' // Descrição do dia (Aula, Feriado, Recesso, etc)
         ];
 
+        if ($isFeriadoOuRecesso) {
+            // Se for feriado, buscar descrição do feriado (opcional, mas útil para o calendário)
+            $diaData['description'] = 'Feriado/Recesso';
+        }
+        
         if ($isDiaDeAula) {
             $cargaHorariaRestante -= $horasPorDia;
             $totalDiasAula++;
             
             // Lógica para diferenciar dias presenciais/remotos
+            // Prioriza dias remotos para distribuir uniformemente (ou conforme a regra de negócio)
             if ($diasRemotos < $diasRemotosNecessarios) {
                 $diasRemotos++;
                 $diaData['type'] = 'remoto';
@@ -67,14 +95,16 @@ function calcularCronograma(int $cargaHorariaTotal, string $dataInicio, string $
         
         $calendario[] = $diaData;
 
+        // Avança para o próximo dia
         $currentDate->modify('+1 day');
     }
         
     return [
         'total_carga_horaria' => $cargaHorariaTotal,
-        'data_termino' => $currentDate->modify('-1 day')->format('Y-m-d'),
-        'calendario' => $calendario,
-        'dias_letivos' => $diasLetivos,
-        'total_dias_aula' => $totalDiasAula
+        'data_termino' => $dataTermino,
+        'diasLetivos' => array_filter($calendario, function($dia) {
+            return $dia['is_class_day'];
+        }),
+        'calendarioCompleto' => $calendario
     ];
 }

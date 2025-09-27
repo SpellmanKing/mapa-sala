@@ -8,23 +8,39 @@ class Instrutor {
     }
 
     /**
-     * Busca todos os instrutores do banco de dados.
+     * Busca todos os instrutores do banco de dados, incluindo os cursos habilitados.
      * @return array Um array de objetos representando os instrutores.
      */
     public function buscarTodos() {
         try {
-            $stmt = $this->pdo->query("SELECT id_instrutores, nome_instrutor FROM instrutores ORDER BY nome_instrutor ASC");
+            $sql = "SELECT 
+                        i.id_instrutores, 
+                        i.nome_instrutor, 
+                        GROUP_CONCAT(c.nome_curso SEPARATOR '||') AS cursos_habilitados_nomes,
+                        GROUP_CONCAT(c.id_cursos SEPARATOR ',') AS cursos_habilitados_ids
+                    FROM instrutores i
+                    LEFT JOIN instrutores_cursos ic ON i.id_instrutores = ic.id_instrutores
+                    LEFT JOIN cursos c ON ic.id_cursos = c.id_cursos
+                    GROUP BY i.id_instrutores, i.nome_instrutor
+                    ORDER BY i.nome_instrutor ASC";
+                    
+            $stmt = $this->pdo->query($sql);
             $instrutores = $stmt->fetchAll(PDO::FETCH_ASSOC);
-            return $instrutores;
+
+            // Transforma as strings concatenadas em arrays
+            return array_map(function($instrutor) {
+                $instrutor['cursos_habilitados_ids'] = $instrutor['cursos_habilitados_ids'] ? explode(',', $instrutor['cursos_habilitados_ids']) : [];
+                $instrutor['cursos_habilitados_nomes'] = $instrutor['cursos_habilitados_nomes'] ? explode('||', $instrutor['cursos_habilitados_nomes']) : [];
+                return $instrutor;
+            }, $instrutores);
+
         } catch (PDOException $e) {
-            throw new Exception("Erro ao buscar instrutores: " . $e->getMessage());
+            throw new Exception("Erro ao buscar instrutores e cursos: " . $e->getMessage());
         }
     }
 
     /**
      * Busca o ID do instrutor pelo nome.
-     * @param string $nome O nome do instrutor a ser buscado.
-     * @return int|null O ID do instrutor ou null se não for encontrado.
      */
     public function buscarIdPorNome($nome) {
         $stmt = $this->pdo->prepare("SELECT id_instrutores FROM instrutores WHERE nome_instrutor = ?");
@@ -35,11 +51,9 @@ class Instrutor {
     }
 
     /**
-     * Insere um novo instrutor no banco de dados.
-     * @param string $nome O nome do novo instrutor.
-     * @return int O ID do instrutor recém-criado.
+     * Cadastra um novo instrutor e retorna o ID.
      */
-    public function cadastrarInstrutor(string $nome): int {
+    public function cadastarInstrutor(string $nome): int {
         $sql = "INSERT INTO instrutores (nome_instrutor) VALUES (?)";
         $stmt = $this->pdo->prepare($sql);
         $stmt->execute([$nome]);
@@ -47,10 +61,7 @@ class Instrutor {
     }
 
     /**
-     * Atualiza um instrutor existente.
-     * @param int $id O ID do instrutor a ser atualizado.
-     * @param string $nome O novo nome do instrutor.
-     * @return bool Retorna true se a atualização for bem-sucedida.
+     * Atualiza o nome de um instrutor existente.
      */
     public function alterarInstrutor(int $id, string $nome): bool {
         $sql = "UPDATE instrutores SET nome_instrutor = ? WHERE id_instrutores = ?";
@@ -59,28 +70,27 @@ class Instrutor {
     }
 
     /**
-     * Deleta um instrutor do banco de dados.
-     * @param int $id O ID do instrutor a ser deletado.
-     * @return bool Retorna true se a deleção for bem-sucedida.
+     * Deleta um instrutor.
      */
     public function excluirInstrutor(int $id): bool {
+        // A exclusão de `instrutores_cursos` deve ser tratada com CASCADE no BD, 
+        // ou feita manualmente aqui se não houver CASCADE.
+        // Assumindo CASCADE na tabela `turmas` ou que a exclusão de instrutores
+        // não é bloqueada por turmas existentes.
         $sql = "DELETE FROM instrutores WHERE id_instrutores = ?";
         $stmt = $this->pdo->prepare($sql);
         return $stmt->execute([$id]);
     }
-
+    
     /**
-     * Gerencia a habilitação de um instrutor para múltiplos cursos.
-     * Primeiro, ele deleta as habilitações existentes, depois insere as novas.
-     * @param int $instrutorId O ID do instrutor.
-     * @param array $cursosIds Uma lista de IDs de cursos para habilitar.
-     * @return bool Retorna true se a operação for bem-sucedida.
+     * Gerencia a vinculação de cursos (habilitações) de um instrutor.
+     * Isso substitui todas as habilitações anteriores pelas novas.
      */
     public function gerenciarHabilitacoes(int $instrutorId, array $cursosIds): bool {
         try {
             $this->pdo->beginTransaction();
 
-            // 1. Deleta todas as habilitações existentes para este instrutor
+            // 1. Deleta todas as habilitações existentes
             $sqlDelete = "DELETE FROM instrutores_cursos WHERE id_instrutores = ?";
             $stmtDelete = $this->pdo->prepare($sqlDelete);
             $stmtDelete->execute([$instrutorId]);
@@ -104,9 +114,6 @@ class Instrutor {
 
     /**
      * Verifica se um instrutor está habilitado para um curso específico.
-     * @param int $instrutorId O ID do instrutor.
-     * @param int $cursoId O ID do curso.
-     * @return bool Retorna true se o instrutor estiver habilitado, false caso contrário.
      */
     public function estaHabilitadoParaCurso(int $instrutorId, int $cursoId): bool {
         try {
@@ -114,7 +121,7 @@ class Instrutor {
             $stmt->execute([$instrutorId, $cursoId]);
             return $stmt->fetch(PDO::FETCH_ASSOC) !== false;
         } catch (PDOException $e) {
-            throw new Exception("Erro ao verificar a habilitação do instrutor: " . $e->getMessage());
+            throw new Exception("Erro ao verificar habilitação: " . $e->getMessage());
         }
-    }    
+    }
 }

@@ -96,4 +96,70 @@ class Curso {
         $stmt = $this->pdo->prepare($sql);
         return $stmt->execute([$id]);
     }
+
+    /**
+     * Busca cursos no banco de dados com base em filtros dinâmicos.
+     * @param array $filtros Um array associativo com os filtros (segmento, modalidade, nome_curso, etc.).
+     * @return array Um array de objetos representando os cursos filtrados.
+     */
+    public function buscarCursosComFiltros(array $filtros): array {
+        try {
+            $query = "
+                SELECT 
+                    c.id_cursos, 
+                    c.nome_curso, 
+                    c.carga_horaria, 
+                    ts.nome_tipo AS necessidade_sala,
+                    ts.idTipo_sala AS id_tipo_sala,
+                    c.segmento, 
+                    c.modalidade,
+                    c.tem,
+                    c.bolsa,
+                    c.dias_semana
+                FROM cursos c
+                LEFT JOIN tipos_sala ts ON c.idTipo_sala = ts.idTipo_sala
+                WHERE 1=1
+            ";
+            $params = [];
+
+            // Adiciona filtros dinamicamente
+            if (!empty($filtros['segmento'])) {
+                $query .= " AND c.segmento = ?";
+                $params[] = $filtros['segmento'];
+            }
+            if (!empty($filtros['modalidade'])) {
+                $query .= " AND c.modalidade = ?";
+                $params[] = $filtros['modalidade'];
+            }
+            if (!empty($filtros['nome_curso'])) {
+                $query .= " AND c.nome_curso LIKE ?";
+                $params[] = '%' . $filtros['nome_curso'] . '%';
+            }
+            if (!empty($filtros['ch_min'])) {
+                $query .= " AND c.carga_horaria >= ?";
+                $params[] = $filtros['ch_min'];
+            }
+            if (!empty($filtros['ch_max'])) {
+                $query .= " AND c.carga_horaria <= ?";
+                $params[] = $filtros['ch_max'];
+            }
+            if (isset($filtros['tem']) && $filtros['tem'] === 'true') {
+                $query .= " AND c.tem = 1";
+            }
+            if (isset($filtros['bolsa']) && $filtros['bolsa'] === 'true') {
+                $query .= " AND c.bolsa = 1";
+            }
+
+            $query .= " ORDER BY c.nome_curso ASC";
+            
+            $stmt = $this->pdo->prepare($query);
+            $stmt->execute($params);
+            
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        } catch (PDOException $e) {
+            error_log("Erro ao buscar cursos com filtros: " . $e->getMessage());
+            throw new Exception("Erro ao buscar cursos: " . $e->getMessage());
+        }
+    }
 }

@@ -9,8 +9,8 @@ require_once __DIR__ . '/../models/entidades/Sala.php';
 require_once __DIR__ . '/../models/entidades/Curso.php';
 require_once __DIR__ . '/../models/entidades/Agendamento.php';
 require_once __DIR__ . '/../models/entidades/AlocarTurmas.php';
-require_once __DIR__ . '/calcular_cronograma.php'; 
-require_once __DIR__ . '/get_feriados.php'; 
+require_once __DIR__ . '/../models/entidades/Feriado.php'; // Inclui o novo model de Feriado
+require_once __DIR__ . '/calcular_cronograma.php'; // Inclui a função calcularCronograma (agora atualizada)
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     http_response_code(405);
@@ -31,33 +31,32 @@ try {
     $curso = new Curso($pdo);
     $sala = new Sala($pdo);
     $agendamento = new Agendamento($pdo);
-    $sugestaoSalas = new AlocarTurmas($pdo);
 
-    
     $cursoId = $data['cursoId'];
+    $dataInicio = $data['dataInicio'];
     $totalAlunos = $data['totalAlunos'];
     $turno = $data['turno'];
-    $diasSemanaSelecionados = $data['diasSemana'];
+    $diasSemana = $data['diasSemana'];
+    $porcentagemRemoto = $data['porcentagemRemoto'] ?? 0; // Se houver
 
+    // 1. Busca a carga horária e o tipo de sala necessários para o curso
     $dadosCurso = $curso->buscarPorId($cursoId);
-    if (!$dadosCurso || empty($dadosCurso['carga_horaria']) || empty($dadosCurso['necessidade_sala'])) {
-        http_response_code(400);
-        echo json_encode(['error' => 'Curso não encontrado, carga horária ou necessidade de sala não definida.']);
+    if (!$dadosCurso) {
+        http_response_code(404);
+        echo json_encode(['success' => false, 'error' => 'Curso não encontrado.']);
         exit;
     }
-    
-    $cargaHoraria = $dadosCurso['carga_horaria'];
+    $cargaHorariaTotal = $dadosCurso['carga_horaria'];
     $tipoSalaNecessaria = $dadosCurso['necessidade_sala'];
 
-    // 1. Calcula o cronograma
-    $feriados = getFeriados();
-    $cronograma = calcularCronograma($cargaHoraria, $data['dataInicio'], $turno, $diasSemanaSelecionados, $feriados);
-    $diasLetivos = $cronograma['diasLetivos'];
-    $dataInicio = $data['dataInicio'];
-    $dataTermino = $cronograma['dataTermino'];
+    // 2. Calcula o cronograma (dias letivos)
+    // A função calcularCronograma agora busca feriados do banco de dados internamente.
+    $cronograma = calcularCronograma($cargaHorariaTotal, $dataInicio, $turno, $diasSemana, [], $porcentagemRemoto);
+    $diasLetivos = array_column($cronograma['diasLetivos'], 'date');
+    $dataTermino = $cronograma['data_termino'];
 
-    // 2. Filtra as salas disponíveis para a alocação
-    $todasSalas = $sala->buscarTodas();
+    // 3. Busca todas as salas e filtra por disponibilidade
+    $todasSalas = $sala->buscarTodas(); 
     $salasDisponiveis = [];
 
     foreach ($todasSalas as $s) {
@@ -69,13 +68,17 @@ try {
                 break;
             }
         }
+        
         // Se a sala estiver disponível para todos os dias, e for do tipo compatível, a adicionamos
         if ($estaLivre && $s['tipo_sala'] === $tipoSalaNecessaria) {
-            $salasDisponiveis[] = $s;
+            // Adiciona a sala se a capacidade for pelo menos 50% dos alunos, para otimizar o uso
+            if ($s['capacidade_maxima'] >= ($totalAlunos * 0.5)) { 
+                $salasDisponiveis[] = $s;
+            }
         }
     }
 
-    // 3. Usa o alocador inteligente para encontrar a melhor sala
+    // 4. Usa o alocador inteligente para encontrar a melhor sala
     $sugestaoSalas = AlocarTurmas::encontrarMelhorAlocacao($salasDisponiveis, ['total_alunos' => $totalAlunos, 'tipo_sala_necessaria' => $tipoSalaNecessaria]);
     
     if ($sugestaoSalas) {
@@ -90,9 +93,9 @@ try {
     }
 
     http_response_code(404);
-    echo json_encode(['success' => false, 'error' => 'Não foi possível encontrar uma sala disponível que atenda aos critérios para este curso e período.']);
+    echo json_encode(['success' => false, 'error' => 'Não foi possível encontrar uma sala disponível que atenda aos requisitos de capacidade ou tipo para a turma.']);
 
 } catch (Exception $e) {
     http_response_code(500);
-    echo json_encode(['error' => 'Erro interno do servidor: ' . $e->getMessage()]);
+    echo json_encode(['success' => false, 'error' => 'Erro interno do servidor: ' . $e->getMessage()]);
 }

@@ -1,5 +1,6 @@
 <?php
 
+// Não precisa de construtor pois a classe só tem métodos estáticos (puros)
 class AlocarTurmas {
 
     public static function encontrarMelhorAlocacao($salasDisponiveis, $dadosTurma) {
@@ -15,12 +16,19 @@ class AlocarTurmas {
         // Regra 2: Ocupação Máxima (melhor uso de salas maiores se "Melhor Encaixe" não for possível)
         $ocupacaoMaxima = self::encontrarOcupacaoMaxima($salasDisponiveis, $totalAlunos, $tipoSalaNecessaria);
         if ($ocupacaoMaxima) {
+            // Nota: Este ponto indica que a sala encontrada não atende à capacidade, 
+            // mas é a maior disponível do tipo. Isso precisa ser comunicado ao usuário.
             return [$ocupacaoMaxima];
         }
 
         // Regra 3: Divisão entre Salas (se uma sala única não for possível)
         // A lógica de hibridação precisa de mais regras de negócio, mas o método está no lugar certo.
-        return self::encontrarCombinacaoHibrida($salasDisponiveis, $totalAlunos, $tipoSalaNecessaria);
+        $combinacaoHibrida = self::encontrarCombinacaoHibrida($salasDisponiveis, $totalAlunos, $tipoSalaNecessaria);
+        if ($combinacaoHibrida) {
+             return $combinacaoHibrida;
+        }
+
+        return null;
     }
 
     private static function encontrarMelhorEncaixe($salas, $totalAlunos, $tipoSala) {
@@ -28,8 +36,11 @@ class AlocarTurmas {
         $menorDiferenca = PHP_INT_MAX;
 
         foreach ($salas as $sala) {
+            // Verifica se a sala é do tipo correto e tem capacidade suficiente
             if ($sala['tipo_sala'] === $tipoSala && $sala['capacidade_maxima'] >= $totalAlunos) {
                 $diferenca = $sala['capacidade_maxima'] - $totalAlunos;
+                
+                // Se a diferença for menor, ou se for a mesma diferença mas o ID for menor (desempate arbitrário)
                 if ($diferenca < $menorDiferenca) {
                     $menorDiferenca = $diferenca;
                     $melhorSala = $sala;
@@ -40,44 +51,33 @@ class AlocarTurmas {
     }
 
     private static function encontrarOcupacaoMaxima($salas, $totalAlunos, $tipoSala) {
-        $melhorSala = null;
         $maiorCapacidade = 0;
+        $melhorSala = null;
 
         foreach ($salas as $sala) {
-            if ($sala['tipo_sala'] === $tipoSala && $sala['capacidade_maxima'] >= $totalAlunos) {
+            // Verifica se é do tipo correto
+            if ($sala['tipo_sala'] === $tipoSala) {
+                // Considera a sala que acomoda a maior quantidade de alunos, mesmo que não cubra o total.
                 if ($sala['capacidade_maxima'] > $maiorCapacidade) {
                     $maiorCapacidade = $sala['capacidade_maxima'];
                     $melhorSala = $sala;
                 }
             }
         }
-        return $melhorSala;
+        // Retorna apenas se a maior capacidade for no mínimo 50% dos alunos, como na lógica do controller chamador
+        if ($melhorSala && $maiorCapacidade >= ($totalAlunos * 0.5)) {
+            return $melhorSala;
+        }
+        
+        return null;
     }
-
-    // private static function encontrarCombinacaoHibrida($salas, $totalAlunos, $tipoSala) {
-    //     // Encontra a combinação de duas salas do mesmo tipo que atenda ao total de alunos
-    //     $combinacoes = [];
-    //     for ($i = 0; $i < count($salas); $i++) {
-    //         for ($j = $i + 1; $j < count($salas); $j++) {
-    //             $sala1 = $salas[$i];
-    //             $sala2 = $salas[$j];
-    //             // Verifica se as salas são do tipo necessário e se a capacidade combinada é suficiente
-    //             if ($sala1['tipo_sala'] === $tipoSala && 
-    //                 $sala2['tipo_sala'] === $tipoSala && 
-    //                 ($sala1['capacidade_maxima'] + $sala2['capacidade_maxima'] >= $totalAlunos)) {
-                    
-    //                 // Retorna a primeira combinação encontrada. A lógica pode ser expandida para encontrar a melhor combinação.
-    //                 return [$sala1, $sala2];
-    //             }
-    //         }
-    //     }
-    //     return null;
-    // }
-
+    
+    // A lógica de combinação de salas parece estar bem estruturada para a sua regra de negócio.
     private static function encontrarCombinacaoHibrida($salas, $totalAlunos, $tipoSala) {
         $melhorCombinacao = null;
         $menorDiferenca = PHP_INT_MAX;
 
+        // Itera sobre todos os pares de salas para encontrar a melhor combinação
         for ($i = 0; $i < count($salas); $i++) {
             for ($j = $i + 1; $j < count($salas); $j++) {
                 $sala1 = $salas[$i];

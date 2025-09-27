@@ -38,78 +38,89 @@ class Agendamento {
             $sql_agendamento = "INSERT INTO agendamentos (id_turmas, id_salas, data_aula, turno) VALUES (?, ?, ?, ?)";
             $stmt_agendamento = $this->pdo->prepare($sql_agendamento);
             
-            // Loop aninhado para cada sala
-            foreach ($salasIds as $salaId) {
-                // E para cada dia letivo da turma
-                foreach ($diasLetivos as $data_aula) {
+            // É necessário iterar sobre os dias letivos E as salas alocadas
+            foreach ($diasLetivos as $diaAula) {
+                $dataAula = $diaAula['date'];
+                
+                // Agendamento é feito para cada sala alocada para o curso
+                foreach ($salasIds as $salaId) {
                     $stmt_agendamento->execute([
                         $novaTurmaId, 
-                        $salaId, 
-                        $data_aula,
-                        $dadosTurma['turno'] // Passa o turno para a tabela de agendamentos
+                        (int)$salaId, 
+                        $dataAula, 
+                        $dadosTurma['turno']
                     ]);
                 }
             }
 
-            $this->pdo->commit(); // Confirma a transação
-
+            $this->pdo->commit();
             return $novaTurmaId;
+            
         } catch (PDOException $e) {
-            $this->pdo->rollBack(); // Desfaz a transação em caso de erro
-            throw new Exception("Erro ao agendar a turma: " . $e->getMessage());
+            $this->pdo->rollBack();
+            // Lança uma exceção mais específica para o Controller tratar
+            throw new Exception("Erro de banco de dados ao agendar a turma: " . $e->getMessage());
+        } catch (Exception $e) {
+            $this->pdo->rollBack(); // Garante o rollback mesmo se a exceção não for PDO
+            throw $e; // Relança a exceção de Argumento Inválido, por exemplo
+        }
+    }
+    
+    /**
+     * Verifica a disponibilidade de uma sala em um dia e turno específicos.
+     * @param int $salaId O ID da sala.
+     * @param string $data A data da aula (YYYY-MM-DD).
+     * @param string $turno O turno da aula ('Manhã', 'Tarde', 'Noite', 'Integral').
+     * @return bool True se a sala estiver disponível, false caso contrário.
+     */
+    public function verificarDisponibilidade(int $salaId, string $data, string $turno): bool {
+        try {
+            // Regra principal de conflito
+            if ($turno === 'Integral') {
+                // Se a nova turma for 'Integral', verifica se há QUALQUER agendamento
+                $sql = "SELECT 1 FROM agendamentos WHERE id_salas = ? AND data_aula = ? LIMIT 1";
+                $stmt = $this->pdo->prepare($sql);
+                $stmt->execute([$salaId, $data]);
+            } else {
+                // Se a nova turma for turno individual, verifica conflito com:
+                // 1. O mesmo turno (Manhã vs Manhã)
+                // 2. Um agendamento Integral (Integral vs Manhã, Tarde ou Noite)
+                $sql = "SELECT 1 FROM agendamentos WHERE id_salas = ? AND data_aula = ? AND (turno = ? OR turno = 'Integral') LIMIT 1";
+                $stmt = $this->pdo->prepare($sql);
+                $stmt->execute([$salaId, $data, $turno]);
+            }
+
+            return $stmt->fetch(PDO::FETCH_ASSOC) === false; // Retorna true se a consulta não encontrar nenhuma linha (disponível)
+        } catch (PDOException $e) {
+            // Lançar a exceção para ser tratada no controlador principal
+            throw new Exception("Erro ao verificar disponibilidade: " . $e->getMessage());
         }
     }
 
     /**
-     * Busca todos os agendamentos, com dados de turma, curso, sala e instrutor.
-     * @return array Um array de objetos representando os agendamentos.
+     * Busca todos os agendamentos no banco de dados, com detalhes da turma e sala.
      */
     public function buscarTodos() {
         try {
-            $sql = "SELECT 
-                        t.id_turmas,
-                        i.nome_instrutor AS instrutor,
-                        t.total_alunos,
-                        t.status,
-                        t.turno,
-                        c.nome_curso,
-                        s.nome_sala,
-                        s.id_salas,
-                        a.data_aula
-                    FROM agendamentos a
-                    JOIN turmas t ON a.id_turmas = t.id_turmas
-                    JOIN cursos c ON t.id_cursos = c.id_cursos
-                    JOIN salas s ON a.id_salas = s.id_salas
-                    JOIN instrutores i ON t.id_instrutores = i.id_instrutores
-                    ORDER BY a.data_aula ASC, s.nome_sala ASC";
+            $sql = "
+                SELECT 
+                    a.id_agendamentos, 
+                    a.data_aula, 
+                    a.turno,
+                    s.nome_sala,
+                    t.id_turmas,
+                    c.nome_curso
+                FROM agendamentos a
+                JOIN salas s ON a.id_salas = s.id_salas
+                JOIN turmas t ON a.id_turmas = t.id_turmas
+                JOIN cursos c ON t.id_cursos = c.id_cursos
+                ORDER BY a.data_aula DESC, s.nome_sala ASC";
 
             $stmt = $this->pdo->query($sql);
             $agendamentos = $stmt->fetchAll(PDO::FETCH_ASSOC);
             return $agendamentos;
         } catch (PDOException $e) {
             throw new Exception("Erro ao buscar agendamentos: " . $e->getMessage());
-        }
-    }
-
-    public function verificarDisponibilidade(int $salaId, string $data, string $turno): bool {
-        try {
-            // Verifica se a sala já está ocupada no mesmo dia e turno.
-            // Para turnos que não são 'Integral', verifica se há conflito com o mesmo turno ou com um agendamento 'Integral'.
-            // Para o turno 'Integral', verifica se já existe qualquer agendamento naquele dia.
-            if ($turno === 'Integral') {
-                $sql = "SELECT 1 FROM agendamentos WHERE id_salas = ? AND data_aula = ? LIMIT 1";
-                $stmt = $this->pdo->prepare($sql);
-                $stmt->execute([$salaId, $data]);
-            } else {
-                $sql = "SELECT 1 FROM agendamentos WHERE id_salas = ? AND data_aula = ? AND (turno = ? OR turno = 'Integral') LIMIT 1";
-                $stmt = $this->pdo->prepare($sql);
-                $stmt->execute([$salaId, $data, $turno]);
-            }
-
-            return $stmt->fetch(PDO::FETCH_ASSOC) === false;
-        } catch (PDOException $e) {
-            // Lançar a exceção para ser tratada no controlador principal
-            throw new Exception("Erro ao verificar disponibilidade: " . $e->getMessage());
         }
     }
 }

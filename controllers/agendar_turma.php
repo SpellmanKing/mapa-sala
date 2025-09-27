@@ -7,17 +7,19 @@ require_once __DIR__ . '/../models/Conexao.php';
 require_once __DIR__ . '/../models/entidades/Instrutor.php';
 require_once __DIR__ . '/../models/entidades/Curso.php';
 require_once __DIR__ . '/../models/entidades/Agendamento.php';
-
+require_once __DIR__ . '/../models/entidades/Feriado.php'; // Model de Feriado necessário para buscar as datas
+require_once __DIR__ . '/calcular_cronograma.php'; // Inclui a função calcularCronograma
 
 try {
     $pdo = Conexao::getInstancia();
     $agendamento = new Agendamento($pdo);
+    $feriadoModel = new Feriado($pdo); // Nova instância do model Feriado
     
     // Verifica o método da requisição para decidir a ação
     $method = $_SERVER['REQUEST_METHOD'];
     
     switch ($method) {
-        case 'GET': // Busca todos os agendamentos
+        case 'GET': // Busca todos os agendamentos (lógica existente)
             $agendamentos = $agendamento->buscarTodos();
             echo json_encode($agendamentos);
             break;
@@ -26,64 +28,69 @@ try {
             $data = json_decode(file_get_contents('php://input'), true);
 
             // 1. Validação de Dados: Verifica se os dados essenciais estão presentes
-            if (empty($data['cursoId']) || empty($data['dataInicio']) || empty($data['totalAlunos']) || empty($data['salaId']) || empty($data['turno']) || empty($data['diasSemana'])) {
-                http_response_code(400);
-                echo json_encode(['error' => 'Dados incompletos. Por favor, preencha todos os campos obrigatórios.']);
-                exit;
+            // Validação mais robusta é recomendada no frontend, mas a essencial está aqui
+            if (empty($data['cursoId']) || empty($data['dataInicio']) || empty($data['totalAlunos']) || empty($data['turno']) || empty($data['diasSemana']) || !isset($data['instrutorId'])) {
+                throw new InvalidArgumentException('Dados incompletos para agendamento. Verifique curso, data de início, alunos, turno, dias da semana e instrutor.');
+            }
+            
+            // 2. Busca o curso para obter Carga Horária e Dias da Semana (Regra de Negócio)
+            $cursoModel = new Curso($pdo);
+            $curso = $cursoModel->buscarPorId($data['cursoId']);
+
+            if (!$curso) {
+                throw new InvalidArgumentException('Curso não encontrado.');
             }
 
-            // 2. Calcula o cronograma da turma
-            $cargaHorariaTotal = (int) $agendamento->buscarCargaHorariaCurso($data['cursoId']);
-            $diasSemanaSelecionados = $data['diasSemana'];
-            $dataInicio = $data['dataInicio'];
-            $turno = $data['turno'];
+            // O curso deve ter a carga horária e a necessidade de sala
+            $cargaHorariaTotal = (int) $curso['carga_horaria'];
+            $tipoSalaNecessaria = $curso['necessidade_sala'];
+            
+            // O ideal é que os dias da semana do curso venham do banco ou que o front-end envie um array.
+            // Para simplificar, assumimos que o front-end envia um array de dias da semana (1 a 7).
+            $diasSemana = $data['diasSemana']; 
+            $porcentagemRemoto = $data['porcentagemRemoto'] ?? 0; // Se houver
 
-            // Obtém feriados e recessos
-            require __DIR__ . './get_feriados.php';
-            $feriadosRecessos = array_merge(getFeriados(), getPontes(), getNaoLetivos());
+            // 3. Busca Feriados e Calcula o Cronograma
+            // CHAMA A FUNÇÃO AGORA NO CONTROLLER
+            $feriadosRecessos = $feriadoModel->buscarTodos();
+            $datasFeriados = array_column($feriadosRecessos, 'data_feriado'); // Array simples de datas
 
-            // Inclui o controlador de cronograma
-            require __DIR__ . './calcular_cronograma.php';
-            $cronograma = calcularCronograma($cargaHorariaTotal, $dataInicio, $turno, $diasSemanaSelecionados, $feriadosRecessos);
+            $cronograma = calcularCronograma($cargaHorariaTotal, $data['dataInicio'], $data['turno'], $diasSemana, $datasFeriados, $porcentagemRemoto);
 
-            if (empty($cronograma['diasLetivos'])) {
-                http_response_code(400);
-                echo json_encode(['error' => 'Não foi possível calcular o cronograma com os dados fornecidos.']);
-                exit;
+            $dataTermino = $cronograma['data_termino'];
+
+            // 4. Validação da Disponibilidade de Salas: 
+            // Para agendamento, o front-end deve enviar o ID da(s) sala(s) selecionada(s)
+            // Se for uma alocação simples, deve enviar um array com um ID:
+            if (empty($data['salasIds']) || !is_array($data['salasIds'])) {
+                throw new InvalidArgumentException('IDs das salas para agendamento são obrigatórios e devem ser um array.');
             }
+            $salasIds = $data['salasIds'];
 
-            // 3. Validação de Disponibilidade das Salas
-            $salasIds = is_array($data['salaId']) ? $data['salaId'] : [$data['salaId']]; // Garante que é um array
-            foreach ($salasIds as $salaId) {
-                foreach ($cronograma['diasLetivos'] as $dia) {
-                    if (!$agendamento->verificarDisponibilidade($salaId, $dia['date'], $turno)) {
-                        http_response_code(409);
-                        echo json_encode(['error' => 'Conflito de agendamento detectado. A sala ' . $salaId . ' não está disponível no dia ' . $dia['date'] . ' no turno ' . $turno . '. Por favor, tente a Alocação Automática novamente ou escolha outra sala.']);
-                        exit;
+            // Verificação de conflito de sala para cada dia letivo e sala
+            foreach ($cronograma['diasLetivos'] as $diaAula) {
+                $dataAula = $diaAula['date'];
+                
+                foreach ($salasIds as $salaId) {
+                    if (!$agendamento->verificarDisponibilidade($salaId, $dataAula, $data['turno'])) {
+                         throw new InvalidArgumentException("Conflito de agendamento: A sala ID {$salaId} não está disponível em {$dataAula} no turno de {$data['turno']}.");
                     }
                 }
             }
             
-            $dataTermino = $cronograma['dataTermino'];
-
-            // 4. Utiliza o instrutorId enviado pelo front-end
-            $instrutorId = null;
-            if (!empty($data['instrutorId'])) {
-                $instrutorId = $data['instrutorId'];
-            }
-
-
             // 5. Organiza os dados da turma para o Agendamento
+            $instrutorId = is_numeric($data['instrutorId']) ? (int) $data['instrutorId'] : null;
             $dadosTurma = [
                 'cursoId' => $data['cursoId'],
                 'dataInicio' => $data['dataInicio'],
                 'dataTermino' => $dataTermino,
                 'totalAlunos' => $data['totalAlunos'],
-                'instrutorId' => $instrutorId,
+                'instrutorId' => $instrutorId, 
                 'turno' => $data['turno']
             ];
 
             // 6. Cria a instância do Agendamento e agenda a turma
+            // O model Agendamento.php garante a validação do instrutor e a integridade transacional.
             $agendador = new Agendamento($pdo);
             $novaTurmaId = $agendador->agendarNovaTurma($dadosTurma, $cronograma['diasLetivos'], $salasIds);
 
@@ -96,7 +103,13 @@ try {
             echo json_encode(['error' => 'Método não permitido.']);
             break;
     }
+} catch (InvalidArgumentException $e) {
+    // Captura exceções específicas de validação do Model/Controller
+    http_response_code(400); 
+    echo json_encode(['error' => $e->getMessage()]);
 } catch (Exception $e) {
+    // Captura exceções do Model (e.g., erro ao buscar dados)
     http_response_code(500);
-    echo json_encode(['error' => 'Erro interno do servidor: ' . $e->getMessage()]);
+    error_log("Erro no agendamento: " . $e->getMessage());
+    echo json_encode(['error' => 'Erro interno do servidor ao agendar a turma.']);
 }

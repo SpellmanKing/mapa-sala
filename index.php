@@ -49,7 +49,10 @@
             <section id="painel-visual" class="content-section active">
                 <header class="page-header">
                     <h1>Painel Visual de Salas</h1>
-                    <button id="add-turma-btn" class="primary-btn"><i class="fas fa-plus"></i> Agendar Turma</button>
+                    <div class="header-actions">
+                        <button id="gerenciar-feriados-btn" class="secondary-btn"><i class="fas fa-calendar-times"></i> Gerenciar Feriados</button>
+                        <button id="add-turma-btn" class="primary-btn"><i class="fas fa-plus"></i> Agendar Turma</button>
+                    </div>
                 </header>
                 <main class="main-content">
                     <div class="calendar-header">
@@ -148,22 +151,18 @@
                                 </select>
                                 </div>
                                 
-                                <div class="form-group hidden" id="remote-options-panel">
-                                <div class="toggle-section">
-                                    <label>Horas de estudo remoto</label>
-                                        <select id="remote-percentage-select">
-                                        <option value="0">0%</option>
-                                        <option value="10">10%</option>
-                                        <option value="20">20%</option>
-                                        <option value="30">30%</option>
-                                        <option value="40">40%</option>
-                                        <option value="50">50%</option>
-                                        <option value="60">60%</option>
-                                        <option value="70">70%</option>
-                                        <option value="80">80%</option>
-                                        <option value="90">90%</option>
-                                        <option value="100">100%</option>
-                                    </select>
+<div class="form-group">
+    <label for="remote-percentage-select">Porcentagem Remota</label>
+    <select id="remote-percentage-select" name="remote-percentage">
+        <option value="0">0% (Presencial)</option>
+        <option value="10">10%</option>
+        <option value="20">20%</option>
+        <option value="100">100% (Remoto)</option>
+    </select>
+</div>
+
+<div id="remote-details-options" class="toggle-section hidden">
+    </div>
                                     <div id="remote-details-options" class="hidden">
                                     <label>Dias Remotos</label>
                                     <div class="checkbox-group" id="remote-days-selector">
@@ -269,23 +268,22 @@
             </section>
             <section id="gerenciar-instrutores" class="content-section">
                 <header class="page-header">
-                    <h1>Gerenciar Instrutores</h1>
-                    <button id="add-instrutor-btn" class="primary-btn"><i class="fas fa-plus"></i> Adicionar Novo Instrutor</button>
+                    <h1>Gerenciar Instrutores (e Habilitações)</h1>
+                    <button id="add-instrutor-btn" class="primary-btn"><i class="fas fa-user-plus"></i> Adicionar Instrutor</button>
                 </header>
-                <main class="main-content">
-                    <div id="instrutores-list" class="data-table"></div>
-                </main>
+                <div id="instrutor-list">
+                </div>
             </section>
 
             <section id="gerenciar-cursos" class="content-section">
                 <header class="page-header">
                     <h1>Gerenciar Cursos</h1>
-                    <button id="add-curso-btn" class="primary-btn"><i class="fas fa-plus"></i> Adicionar Novo Curso</button>
+                    <button id="add-curso-btn" class="primary-btn"><i class="fas fa-plus-square"></i> Adicionar Curso</button>
                 </header>
-                <main class="main-content">
-                    <div id="cursos-list" class="data-table"></div>
-                </main>
+                <div id="curso-list">
+                    </div>
             </section>
+
             <section id="integracoes" class="content-section">
             </section>
         </div>
@@ -346,6 +344,54 @@
             </form>
         </div>
     </div>
+
+    <div id="feriado-modal" class="modal">
+        <div class="modal-content large">
+            <header class="modal-header">
+                <h2>Gerenciar Feriados e Recessos</h2>
+                <button class="close-btn" data-modal="feriado-modal">&times;</button>
+            </header>
+            
+            <div class="feriado-manager-container">
+                
+                <div class="feriado-form-section">
+                    <h3><span id="feriado-form-title">Adicionar</span> Data Não Letiva</h3>
+                    <form id="feriado-form">
+                        <input type="hidden" id="feriado-id">
+                        <div class="form-group">
+                            <label for="feriado-data">Data</label>
+                            <input type="date" id="feriado-data" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="feriado-descricao">Descrição (Ex: Carnaval)</label>
+                            <input type="text" id="feriado-descricao" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="feriado-tipo">Tipo</label>
+                            <select id="feriado-tipo" required>
+                                <option value="" disabled selected>Selecione o Tipo</option>
+                                <option value="Feriado">Feriado</option>
+                                <option value="Recesso">Recesso</option>
+                            </select>
+                        </div>
+                        <div class="form-actions">
+                            <button type="submit" class="primary-btn" id="feriado-form-submit-btn">Salvar</button>
+                            <button type="button" class="secondary-btn" id="feriado-form-cancel-btn">Cancelar/Limpar</button>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="feriado-list-section">
+                    <h3>Datas Não Letivas Cadastradas</h3>
+                    <div id="feriado-list-view" class="list-view-simple">
+                        <p class="loading-message">Carregando feriados...</p>
+                        </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
     <div id="detalhes-modal" class="modal">
         <div class="modal-content">
             <header class="modal-header">
@@ -382,6 +428,7 @@
             </form>
         </div>
     </div>
+
     <div id="alocacao-modal" class="modal">
         <div class="modal-content">
             <header class="modal-header">
@@ -405,6 +452,7 @@
             </div>
         </div>
     </div>
+    
     <div id="instrutor-modal" class="modal">
         <div class="modal-content">
             <header class="modal-header">

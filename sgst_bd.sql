@@ -617,6 +617,126 @@ INSERT INTO agendamentos (id_turmas, id_salas, data_aula, turno) VALUES
 (6, 8, '2025-10-10', 'Noite'),
 (6, 8, '2025-10-17', 'Noite');
 
+-- -----------------------------------------------------
+-- Table `feriados_recessos`
+-- -----------------------------------------------------
+DROP TABLE IF EXISTS `feriados_recessos`;
+CREATE TABLE IF NOT EXISTS `feriados_recessos` (
+  `id_feriado` INT NOT NULL AUTO_INCREMENT,
+  `data_feriado` DATE NOT NULL UNIQUE,
+  `descricao` VARCHAR(255) NOT NULL,
+  `tipo` ENUM('feriado', 'recesso') NOT NULL,
+  PRIMARY KEY (`id_feriado`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+
+--
+-- Despejando dados para a tabela `feriados_recessos`
+--
+
+-- === FERIADOS OFICIAIS ===
+INSERT INTO feriados_recessos (data_feriado, descricao, tipo) VALUES
+('2025-01-01', 'Confraternização Universal', 'feriado'),
+('2025-02-25', 'Carnaval', 'feriado'),
+('2025-02-26', 'Quarta-feira de Cinzas', 'feriado'),
+('2025-04-18', 'Sexta-feira Santa', 'feriado'),
+('2025-04-21', 'Tiradentes', 'feriado'),
+('2025-05-01', 'Dia do Trabalho', 'feriado'),
+('2025-06-19', 'Corpus Christi', 'feriado'),
+('2025-09-07', 'Independência do Brasil', 'feriado'),
+('2025-10-12', 'Nossa Senhora Aparecida', 'feriado'),
+('2025-11-02', 'Finados', 'feriado'),
+('2025-11-15', 'Proclamação da República', 'feriado'),
+('2025-12-25', 'Natal', 'feriado'),
+('2026-01-01', 'Confraternização Universal', 'feriado'),
+('2026-02-17', 'Carnaval', 'feriado'),
+('2026-02-18', 'Quarta-feira de Cinzas', 'feriado'),
+('2026-02-19', 'Carnaval – ponto facultativo', 'feriado'),
+('2026-04-03', 'Sexta-feira Santa', 'feriado'),
+('2026-04-21', 'Tiradentes', 'feriado'),
+('2026-05-01', 'Dia do Trabalho', 'feriado'),
+('2026-06-04', 'Corpus Christi', 'feriado'),
+('2026-07-09', 'Revolução Constitucionalista (SP)', 'feriado'),
+('2026-09-07', 'Independência do Brasil', 'feriado'),
+('2026-10-12', 'Nossa Senhora Aparecida', 'feriado'),
+('2026-10-28', 'Dia do Servidor Público', 'feriado'),
+('2026-11-02', 'Finados', 'feriado'),
+('2026-11-15', 'Proclamação da República', 'feriado'),
+('2026-11-20', 'Dia da Consciência Negra', 'feriado'),
+('2026-12-25', 'Natal', 'feriado');
+
+-- === PONTES (RECESSO) ===
+INSERT INTO feriados_recessos (data_feriado, descricao, tipo) VALUES
+('2025-02-28', 'Ponte de Carnaval', 'recesso'),
+('2025-04-19', 'Ponte Páscoa/Tiradentes', 'recesso'),
+('2025-06-20', 'Ponte Corpus Christi', 'recesso'),
+('2025-07-10', 'Recesso Julho', 'recesso'),
+('2025-10-13', 'Ponte Nossa Senhora Aparecida', 'recesso'),
+('2025-10-29', 'Ponte Dia do Servidor', 'recesso'),
+('2025-11-03', 'Ponte Finados', 'recesso'),
+('2025-11-14', 'Ponte Proclamação da República', 'recesso'),
+('2025-11-16', 'Recesso Especial', 'recesso'),
+('2026-02-20', 'Ponte Carnaval', 'recesso'),
+('2026-04-04', 'Ponte Páscoa/Tiradentes', 'recesso'),
+('2026-06-05', 'Ponte Corpus Christi', 'recesso');
+
+-- === DIAS NÃO LETIVOS (RECESSO) ===
+INSERT INTO feriados_recessos (data_feriado, descricao, tipo) VALUES
+('2025-01-02', 'Recesso Escolar', 'recesso'),
+('2025-01-03', 'Recesso Escolar', 'recesso'),
+('2025-01-06', 'Recesso Escolar', 'recesso'),
+('2025-01-07', 'Recesso Escolar', 'recesso'),
+('2025-01-08', 'Recesso Escolar', 'recesso'),
+('2025-01-09', 'Recesso Escolar', 'recesso'),
+('2025-01-10', 'Recesso Escolar', 'recesso'),
+('2025-01-13', 'Recesso Escolar', 'recesso'),
+('2025-01-14', 'Recesso Escolar', 'recesso'),
+('2025-01-15', 'Recesso Escolar', 'recesso'),
+('2025-01-16', 'Recesso Escolar', 'recesso'),
+('2025-01-17', 'Recesso Escolar', 'recesso'),
+('2025-01-20', 'Recesso Escolar', 'recesso'),
+('2025-01-21', 'Recesso Escolar', 'recesso'),
+('2025-01-22', 'Recesso Escolar', 'recesso'),
+('2025-01-23', 'Recesso Escolar', 'recesso'),
+('2025-01-24', 'Recesso Escolar', 'recesso'),
+('2025-01-27', 'Recesso Escolar', 'recesso'),
+('2025-01-28', 'Recesso Escolar', 'recesso'),
+('2025-01-29', 'Recesso Escolar', 'recesso'),
+('2025-01-30', 'Recesso Escolar', 'recesso'),
+('2025-01-31', 'Recesso Escolar', 'recesso'),
+('2026-01-02', 'Recesso Escolar', 'recesso'),
+('2026-01-05', 'Recesso Escolar', 'recesso'),
+('2026-01-06', 'Recesso Escolar', 'recesso'),
+('2026-01-07', 'Recesso Escolar', 'recesso'),
+('2026-01-08', 'Recesso Escolar', 'recesso'),
+('2026-01-09', 'Recesso Escolar', 'recesso'),
+('2026-01-12', 'Recesso Escolar', 'recesso'),
+('2026-01-13', 'Recesso Escolar', 'recesso'),
+('2026-01-14', 'Recesso Escolar', 'recesso'),
+('2026-01-15', 'Recesso Escolar', 'recesso'),
+('2026-01-16', 'Recesso Escolar', 'recesso'),
+('2026-01-19', 'Recesso Escolar', 'recesso'),
+('2026-01-20', 'Recesso Escolar', 'recesso'),
+('2026-01-21', 'Recesso Escolar', 'recesso'),
+('2026-01-22', 'Recesso Escolar', 'recesso'),
+('2026-01-23', 'Recesso Escolar', 'recesso'),
+('2026-01-26', 'Recesso Escolar', 'recesso'),
+('2026-01-27', 'Recesso Escolar', 'recesso'),
+('2026-01-28', 'Recesso Escolar', 'recesso'),
+('2026-01-29', 'Recesso Escolar', 'recesso'),
+('2026-01-30', 'Recesso Escolar', 'recesso'),
+('2026-02-02', 'Recesso Escolar', 'recesso'),
+('2026-02-03', 'Recesso Escolar', 'recesso'),
+('2026-02-04', 'Recesso Escolar', 'recesso'),
+('2026-02-05', 'Recesso Escolar', 'recesso'),
+('2026-02-06', 'Recesso Escolar', 'recesso'),
+('2026-02-09', 'Recesso Escolar', 'recesso'),
+('2026-02-10', 'Recesso Escolar', 'recesso'),
+('2026-02-11', 'Recesso Escolar', 'recesso'),
+('2026-02-12', 'Recesso Escolar', 'recesso'),
+('2026-02-13', 'Recesso Escolar', 'recesso');
+
+
 SET SQL_MODE=@OLD_SQL_MODE;
 SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS;
 SET UNIQUE_CHECKS=@OLD_UNIQUE_CHECKS;
