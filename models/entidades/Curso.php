@@ -113,8 +113,8 @@ class Curso {
                     ts.idTipo_sala AS id_tipo_sala,
                     c.segmento, 
                     c.modalidade,
-                    c.tem,
-                    c.bolsa,
+                    c.curso_tem,
+                    c.bolsa_compativel,
                     c.dias_semana
                 FROM cursos c
                 LEFT JOIN tipos_sala ts ON c.idTipo_sala = ts.idTipo_sala
@@ -143,11 +143,11 @@ class Curso {
                 $query .= " AND c.carga_horaria <= ?";
                 $params[] = $filtros['ch_max'];
             }
-            if (isset($filtros['tem']) && $filtros['tem'] === 'true') {
-                $query .= " AND c.tem = 1";
+            if (isset($filtros['curso_tem']) && $filtros['curso_tem'] === 'true') {
+                $query .= " AND c.curso_tem = 1";
             }
-            if (isset($filtros['bolsa']) && $filtros['bolsa'] === 'true') {
-                $query .= " AND c.bolsa = 1";
+            if (isset($filtros['bolsa_compativel']) && $filtros['bolsa_compativel'] === 'true') {
+                $query .= " AND c.bolsa_compativel = 1";
             }
 
             $query .= " ORDER BY c.nome_curso ASC";

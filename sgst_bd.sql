@@ -91,7 +91,7 @@ CREATE TABLE IF NOT EXISTS `cursos` (
   `carga_horaria` INT NOT NULL,
   `valor` DECIMAL(10,2) DEFAULT 0.00,
   `curso_tem` TINYINT(1) DEFAULT 0, 
-  `bolsa_compatível` TINYINT(1) DEFAULT 1,
+  `bolsa_compativel` TINYINT(1) DEFAULT 1,
   `idTipo_sala` INT,
   PRIMARY KEY (`id_cursos`),
   CONSTRAINT `fk_curso_tipo`
@@ -103,7 +103,7 @@ CREATE TABLE IF NOT EXISTS `cursos` (
 --
 -- Despejando dados para a tabela `cursos`
 --
-INSERT INTO cursos (nome_curso, segmento, modalidade, carga_horaria, valor, curso_tem, bolsa_compatível, idTipo_sala) VALUES
+INSERT INTO cursos (nome_curso, segmento, modalidade, carga_horaria, valor, curso_tem, bolsa_compativel, idTipo_sala) VALUES
 -- Comunicação (Sala de aula Inovadora = 1)
 ('Fotografia de propaganda e publicidade', 'Comunicação', 'Presencial', 72, 800.00, 0, 1, 1),
 ('Fotografia Jornalística e Documental', 'Comunicação', 'Presencial', 72, 750.00, 0, 1, 1),

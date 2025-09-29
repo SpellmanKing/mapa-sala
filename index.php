@@ -50,7 +50,7 @@
                 <header class="page-header">
                     <h1>Painel Visual de Salas</h1>
                     <div class="header-actions">
-                        <button id="gerenciar-feriados-btn" class="secondary-btn"><i class="fas fa-calendar-times"></i> Gerenciar Feriados</button>
+                        <button id="gerenciar-feriados" class="secondary-btn"><i class="fas fa-calendar-times"></i> Gerenciar Feriados</button>
                         <button id="add-turma-btn" class="primary-btn"><i class="fas fa-plus"></i> Agendar Turma</button>
                     </div>
                 </header>
@@ -116,8 +116,8 @@
                                 </div>
                             </div>
                             <div class="action-buttons">
-                                <button id="apply-filters">Aplicar Filtros</button>
-                                <button id="clear-filters">Limpar Filtros</button>
+                                <button id="apply-filters-button">Aplicar Filtros</button>
+                                <button id="clear-filters-button">Limpar Filtros</button>
                             </div>
                         </aside>
 
@@ -125,147 +125,142 @@
                             <h2>Dados do Cronograma</h2>
                             <form id="course-form">
                                 <div class="form-group">
-                                    <label for="course-select">Selecione o Curso:</label>
-                                    <select id="course-select">
+                                    <label for="calculadora-curso-select">Selecione o Curso:</label>
+                                    <select id="calculadora-curso-select">
                                         <option value="">Selecione um curso</option>
                                     </select>
                                 </div>
 
                                 <div id="course-details" class="hidden">
-                                <p><strong>Carga Horária:</strong> <span id="display-ch"></span></p>
-                                <p><strong>Valor:</strong> R$ <span id="display-valor"></span></p>
+                                    <p><strong>Carga Horária:</strong> <span id="display-ch"></span></p>
+                                    <p><strong>Valor:</strong> R$ <span id="display-valor"></span></p>
                                 </div>
-
                                 <div class="form-group">
-                                <label for="start-date">Data de Início:</label>
-                                <input type="date" id="start-date">
+                                    <label for="calculadora-data-inicio">Data de Início:</label>
+                                    <input type="date" id="calculadora-data-inicio">
                                 </div>
-
                                 <div class="form-group">
-                                <label for="shift-select">Turno:</label>
-                                <select id="shift-select">
-                                    <option value="manhã">Manhã (08h - 12h)</option>
-                                    <option value="tarde">Tarde (13h - 17h)</option>
-                                    <option value="noite">Noite (18h - 22h)</option>
-                                    <option value="integral">Integral (08h - 17h)</option>
-                                </select>
+                                    <label for="calculadora-turno">Turno:</label>
+                                    <select id="calculadora-turno">
+                                        <option value="manhã">Manhã (08h - 12h)</option>
+                                        <option value="tarde">Tarde (13h - 17h)</option>
+                                        <option value="noite">Noite (18h - 22h)</option>
+                                        <option value="integral">Integral (08h - 17h)</option>
+                                    </select>
                                 </div>
                                 
-<div class="form-group">
-    <label for="remote-percentage-select">Porcentagem Remota</label>
-    <select id="remote-percentage-select" name="remote-percentage">
-        <option value="0">0% (Presencial)</option>
-        <option value="10">10%</option>
-        <option value="20">20%</option>
-        <option value="100">100% (Remoto)</option>
-    </select>
-</div>
-
-<div id="remote-details-options" class="toggle-section hidden">
-    </div>
-                                    <div id="remote-details-options" class="hidden">
+                                <div class="form-group">
+                                    <label for="calculadora-porcentagem-remoto">Porcentagem Remota</label>
+                                    <select id="calculadora-porcentagem-remoto" name="calculadora-porcentagem-remoto">
+                                        <option value="0">0% (Presencial)</option>
+                                        <option value="10">10%</option>
+                                        <option value="20">20%</option>
+                                        <option value="100">100% (Remoto)</option>
+                                    </select>
+                                </div>
+                                <div id="remote-details-options" class="toggle-section hidden"></div>
+                                <div id="remote-details-options" class="hidden">
                                     <label>Dias Remotos</label>
-                                    <div class="checkbox-group" id="remote-days-selector">
+                                    <div class="checkbox-group" id="calculadora-dias-semana">
                                         <label><input type="checkbox" data-day="segunda" checked> Seg</label>
                                         <label><input type="checkbox" data-day="terça" checked> Ter</label>
                                         <label><input type="checkbox" data-day="quarta" checked> Qua</label>
                                         <label><input type="checkbox" data-day="quinta" checked> Qui</label>
                                         <label><input type="checkbox" data-day="sexta" checked> Sex</label>
                                     </div>
-                                    </div>
                                 </div>
-                                </div>
-
                                 <div class="form-group hidden" id="tem-options">
-                                <div class="toggle-section">
-                                    <label>Opções de TEM</label>
-                                    <div id="tem-800h-options" class="hidden">
-                                    <label>
-                                        <input type="radio" name="tem-model" value="120h" checked> Modelo 120h (Presencial)
-                                        <div class="tooltip-container">
-                                            <span class="tooltip-icon">?</span>
-                                            <span class="tooltip-text">Aulas presenciais nos 3 primeiros meses e 4 horas de estudo em casa (44h/mês)</span>
+                                    <div class="toggle-section">
+                                        <label>Opções de TEM</label>
+                                        <div id="tem-800h-options" class="hidden">
+                                            <label>
+                                                <input type="radio" name="tem-model" value="120h" checked> Modelo 120h (Presencial)
+                                                <div class="tooltip-container">
+                                                    <span class="tooltip-icon">?</span>
+                                                    <span class="tooltip-text">Aulas presenciais nos 3 primeiros meses e 4 horas de estudo em casa (44h/mês)</span>
+                                                </div>
+                                            </label>
                                         </div>
-                                    </label>
-                                    </div>
-                                    <div id="tem-1200h-options" class="hidden">
-                                    <label>
-                                        <input type="radio" name="tem-model" value="260h" checked> Modelo 260h (Presencial)
-                                        <div class="tooltip-container">
-                                            <span class="tooltip-icon">?</span>
-                                            <span class="tooltip-text">Aulas presenciais nos 3 primeiros meses e 4 horas de estudo em casa (144h/mês)</span>
+                                        <div id="tem-1200h-options" class="hidden">
+                                            <label>
+                                                <input type="radio" name="tem-model" value="260h" checked> Modelo 260h (Presencial)
+                                                <div class="tooltip-container">
+                                                    <span class="tooltip-icon">?</span>
+                                                    <span class="tooltip-text">Aulas presenciais nos 3 primeiros meses e 4 horas de estudo em casa (144h/mês)</span>
+                                                </div>
+                                            </label>
                                         </div>
-                                    </label>
                                     </div>
-                                </div>
                                 </div>
 
                                 <div class="form-group hidden" id="aprendizagem-options">
-                                <div class="toggle-section">
-                                    <label>Opções de Aprendizagem</label>
-                                    <div id="aprendizagem-tradicional-options" class="hidden">
-                                    <label>
-                                        <input type="radio" name="aprendizagem-model" value="tradicional" checked> Modelo Tradicional
-                                        <div class="tooltip-container">
-                                            <span class="tooltip-icon">?</span>
-                                            <span class="tooltip-text">4 dias em empresa e 1 dia no Senac</span>
+                                    <div class="toggle-section">
+                                        <label>Opções de Aprendizagem</label>
+                                        <div id="aprendizagem-tradicional-options" class="hidden">
+                                            <label>
+                                                <input type="radio" name="aprendizagem-model" value="tradicional" checked> Modelo Tradicional
+                                                <div class="tooltip-container">
+                                                    <span class="tooltip-icon">?</span>
+                                                    <span class="tooltip-text">4 dias em empresa e 1 dia no Senac</span>
+                                                </div>
+                                            </label>
                                         </div>
-                                    </label>
                                     </div>
                                 </div>
-                                </div>
+
                                 <div class="form-group hidden" id="aprendizagem-options">
-                                <div class="toggle-section">
-                                    <label>Opções de Aprendizagem</label>
-                                    <div id="aprendizagem-tradicional-options" class="hidden">
-                                    <label>
-                                        <input type="radio" name="aprendizagem-model" value="tradicional" checked> Modelo Tradicional
-                                        <div class="tooltip-container">
-                                            <span class="tooltip-icon">?</span>
-                                            <span class="tooltip-text">4 dias em empresa e 1 dia no Senac</span>
+                                    <div class="toggle-section">
+                                        <label>Opções de Aprendizagem</label>
+                                        <div id="aprendizagem-tradicional-options" class="hidden">
+                                            <label>
+                                                <input type="radio" name="aprendizagem-model" value="tradicional" checked> Modelo Tradicional
+                                                <div class="tooltip-container">
+                                                    <span class="tooltip-icon">?</span>
+                                                    <span class="tooltip-text">4 dias em empresa e 1 dia no Senac</span>
+                                                </div>
+                                            </label>
                                         </div>
-                                    </label>
                                     </div>
-                                </div>
                                 </div>
                             </form>
                         </section>
                     </section>
                     <div class="results-section hidden" id="results-section">
-                    <h2>Cronograma Gerado</h2>
-                    <div id="results-content">
-                        <p>Preencha os dados e clique em Gerar Cronograma para visualizar os resultados aqui.</p>
-                        <div id="metrics-panel" class="metrics-panel hidden">
-                        <div class="metric-card">
-                            <span>Carga Horária Total</span>
-                            <p><span id="total-hours-value">0</span>h</p>
-                        </div>
-                        <div class="metric-card">
-                            <span>Duração Estimada</span>
-                            <p><span id="duration-value">0</span> dias</p>
-                        </div>
-                        </div>
-                        
-                        <div class="progress-bar-container hidden">
-                        <div class="progress-bar">
-                            <div id="progress-presencial" class="progress-fill" style="width: 0%;"></div>
-                            <div id="progress-remoto" class="progress-fill" style="width: 0%;"></div>
-                            <div id="progress-empresa" class="progress-fill" style="width: 0%;"></div>
-                        </div>
-                        </div>
-                        <div class="progress-legend hidden">
-                            <div class="legend-item"><span class="legend-color" style="background-color: #4CAF50;"></span><span class="legend-text">Presencial</span></div>
-                            <div class="legend-item"><span class="legend-color" style="background-color: #2196F3;"></span><span class="legend-text">Remoto</span></div>
-                            <div class="legend-item"><span class="legend-color" style="background-color: #FFC107;"></span><span class="legend-text">Empresa</span></div>
-                        </div>
+                        <h2>Cronograma Gerado</h2>
+                        <div id="results-content">
+                            <p>Preencha os dados e clique em Gerar Cronograma para visualizar os resultados aqui.</p>
+                            <div id="metrics-panel" class="metrics-panel hidden">
+                                <div class="metric-card">
+                                    <span>Carga Horária Total</span>
+                                    <p><span id="total-hours-value">0</span>h</p>
+                                </div>
+                                <div class="metric-card">
+                                    <span>Duração Estimada</span>
+                                    <p><span id="duration-value">0</span> dias</p>
+                                </div>
+                            </div>
+                            
+                            <div class="progress-bar-container hidden">
+                                <div class="progress-bar">
+                                    <div id="progress-presencial" class="progress-fill" style="width: 0%;"></div>
+                                    <div id="progress-remoto" class="progress-fill" style="width: 0%;"></div>
+                                    <div id="progress-empresa" class="progress-fill" style="width: 0%;"></div>
+                                </div>
+                            </div>
+                            <div class="progress-legend hidden">
+                                <div class="legend-item"><span class="legend-color" style="background-color: #4CAF50;"></span><span class="legend-text">Presencial</span></div>
+                                <div class="legend-item"><span class="legend-color" style="background-color: #2196F3;"></span><span class="legend-text">Remoto</span></div>
+                                <div class="legend-item"><span class="legend-color" style="background-color: #FFC107;"></span><span class="legend-text">Empresa</span></div>
+                            </div>
 
-                        <div id="calendar-visual" class="calendar-visual hidden"></div>
-                        <p id="holiday-info" style="font-size: 0.9em; color: #555; margin-top: 20px;"></p>
-                        <button id="export-pdf-button" class="hidden">Exportar para PDF</button>
-                    </div>
+                            <div id="calendar-visual" class="calendar-visual hidden"></div>
+                            <p id="holiday-info" style="font-size: 0.9em; color: #555; margin-top: 20px;"></p>
+                            <button id="export-pdf-button" class="hidden">Exportar para PDF</button>
+                        </div>
                     </div>
                 </main>
             </section>
+
             <section id="gerenciar-instrutores" class="content-section">
                 <header class="page-header">
                     <h1>Gerenciar Instrutores (e Habilitações)</h1>
@@ -296,24 +291,24 @@
             </header>
             <form id="agendamento-form">
                 <div class="form-group">
-                    <label for="curso-agendamento">Curso</label>
-                    <select id="curso-agendamento" required></select>
+                    <label for="agendamento-curso">Curso</label>
+                    <select id="agendamento-curso" required></select>
                 </div>
                 <div class="form-group">
-                    <label for="instrutor-agendamento">Instrutor</label>
-                    <select id="instrutor-agendamento" required></select>
+                    <label for="agendamento-instrutor">Instrutor</label>
+                    <select id="agendamento-instrutor" required></select>
                 </div>
                 <div class="form-group">
-                    <label for="data-inicio-agendamento">Data de Início</label>
-                    <input type="date" id="data-inicio-agendamento" required>
+                    <label for="agendamento-data-inicio">Data de Início</label>
+                    <input type="date" id="agendamento-data-inicio" required>
                 </div>
                 <div class="form-group">
-                    <label for="total-alunos-agendamento">Número de Alunos</label>
-                    <input type="number" id="total-alunos-agendamento" required>
+                    <label for="agendamento-total-alunos">Número de Alunos</label>
+                    <input type="number" id="agendamento-total-alunos" required>
                 </div>
                 <div class="form-group">
-                    <label for="turno-agendamento">Turno</label>
-                    <select id="turno-agendamento" required>
+                    <label for="agendamento-turno">Turno</label>
+                    <select id="agendamento-turno" required>
                         <option value="Manhã">Manhã</option>
                         <option value="Tarde">Tarde</option>
                         <option value="Noite">Noite</option>
@@ -322,7 +317,7 @@
                 </div>
                 <div class="form-group">
                     <label>Dias da Semana</label>
-                    <div id="dias-semana-agendamento" class="dias-semana-checkbox">
+                    <div id="agendamento-dias-semana" class="dias-semana-checkbox">
                         <input type="checkbox" id="segunda" name="diasSemana" value="1"><label for="segunda">Seg</label>
                         <input type="checkbox" id="terca" name="diasSemana" value="2"><label for="terca">Ter</label>
                         <input type="checkbox" id="quarta" name="diasSemana" value="3"><label for="quarta">Qua</label>
@@ -333,8 +328,8 @@
                 <div class="form-group">
                     <label for="agendamento-salas-display">Sala(s)</label>
                     <input type="text" id="agendamento-salas-display" readonly placeholder="Clique para buscar salas disponíveis">
-                    <input type="hidden" id="agendamento-salas-id-input">
-                    <button type="button" class="primary-btn" id="alocacao-manual-btn">Buscar Salas Automaticamente</button>
+                    <input type="hidden" id="agendamento-salas-id">
+                    <button type="button" class="primary-btn" id="alocar-sala-btn">Buscar Salas Automaticamente</button>
                 </div>
                 <div id="salasAlocadasInfo" class="alocacao-info"></div>
                 <div class="form-actions">
@@ -406,7 +401,7 @@
                 <p><strong>Alunos:</strong> <span id="detalhes-alunos"></span></p>
                 <p><strong>Instrutor:</strong> <span id="detalhes-instrutor"></span></p>
                 <p><strong>Status:</strong> <span id="detalhes-status"></span></p>
-                <input type="hidden" id="detalhes-turmaId">
+                <input type="hidden" id="detalhes-turma">
                 <div class="form-group">
                     <label for="detalhes-status-select">Alterar Status</label>
                     <select id="detalhes-status-select">
@@ -418,11 +413,11 @@
                     </select>
                 </div>
                 <div class="form-group">
-                    <label for="detalhes-instrutor-input">Atribuir Instrutor</label>
-                    <select id="detalhes-instrutor-input"></select>
+                    <label for="detalhes-instrutor">Atribuir Instrutor</label>
+                    <select id="detalhes-instrutor"></select>
                 </div>
                 <div class="form-actions">
-                    <button type="submit" class="primary-btn">Salvar Alterações</button>
+                    <button type="submit" class="primary-btn" id="">Salvar Alterações</button>
                     <button type="button" class="danger-btn" id="cancelar-turma-btn">Cancelar Turma</button>
                 </div>
             </form>
@@ -432,7 +427,7 @@
     <div id="alocacao-modal" class="modal">
         <div class="modal-content">
             <header class="modal-header">
-                <h2>Alocação Automática - Confirmação</h2>
+                <h2 id="alocacao-modal-title">Sugestão de Alocação Automática</h2>
                 <button class="close-btn">&times;</button>
             </header>
             <div id="alocacao-confirmacao-conteudo">
@@ -445,6 +440,7 @@
                 <input type="hidden" id="alocacao-turno">
                 <input type="hidden" id="alocacao-salas-id">
                 <input type="hidden" id="alocacao-dias-semana">
+                <input type="hidden" id="alocacao-instrutor-id"> 
             </div>
             <div class="form-actions">
                 <button class="primary-btn" id="confirmar-alocacao-btn">Confirmar Agendamento</button>
@@ -500,6 +496,15 @@
             </form>
         </div>
     </div>
+    <script src="./public/js/api.js"></script>
+    <script src="./public/js/utils.js"></script>
+    <script src="./public/js/modals.js"></script>
+    <script src="./public/js/agendar_turma.js"></script>
+    <script src="./public/js/alocacao_automatica.js"></script>
+    <script src="./public/js/gerenciar_feriados.js"></script>
+    <script src="./public/js/calculadora.js"></script>
+    <script src="./public/js/painel.js"></script>
+    <script src="./public/js/detalhe_turma.js"></script>
     <script src="./public/js/script.js"></script>
 </body>
 </html>
