@@ -25,7 +25,7 @@ const API_CONFIG = {
  * @param {object} options - Opções de fetch.
  * @param {boolean} [isRetry=false] - Flag para indicar se é uma tentativa de retry.
  * @returns {Promise<object>} - Dados JSON da resposta.
- */
+*/
 async function apiFetch(url, options, isRetry = false) {
     const controller = new AbortController();
     const idTimeout = setTimeout(() => controller.abort(), API_CONFIG.TIMEOUT_MS);

@@ -2,7 +2,7 @@
  * public/js/painel.js
  * Lógica para a seção 'Painel Visual (Agenda)'.
  */
-(function() {
+(function () {
     window.SGST = window.SGST || {};
 
     // --- 1. SELETORES DE DOM ESPECÍFICOS DO PAINEL ---
@@ -28,23 +28,23 @@
      */
     const renderCalendar = () => {
         // As salas são carregadas em 'dadosSalas' no script.js e devem estar em SGST.dadosSalas
-        dadosSalas = SGST.dadosSalas || []; 
-        
+        dadosSalas = SGST.dadosSalas || [];
+
         DOM.calendarGrid.innerHTML = ''; // Limpa o grid
 
         const year = dataAtual.getFullYear();
         const month = dataAtual.getMonth();
         const daysInMonth = new Date(year, month + 1, 0).getDate();
-        
+
         // --- 1. CONFIGURAÇÃO DA GRADE CSS ---
         // 150px para o cabeçalho 'Salas', e depois 1 coluna (1fr) para cada dia do mês
         DOM.calendarGrid.style.gridTemplateColumns = `150px repeat(${daysInMonth}, 1fr)`;
 
         // Atualiza o display (ex: "Setembro de 2025")
         DOM.monthYearDisplay.textContent = new Date(year, month).toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
-        
+
         // --- 2. CABEÇALHO DA GRADE (DIAS) ---
-        
+
         // Célula 'Salas'
         const salaHeaderCell = document.createElement('div');
         salaHeaderCell.className = 'grid-cell header-cell room-header';
@@ -57,7 +57,7 @@
             const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
             const isWeekend = date.getDay() === 0 || date.getDay() === 6; // 0=Dom, 6=Sáb
             const isHoliday = SGST.feriados.includes(dateStr);
-            
+
             const dateCell = document.createElement('div');
             dateCell.className = 'grid-cell header-cell';
             if (isWeekend) dateCell.classList.add('weekend');
@@ -66,13 +66,13 @@
             dateCell.title = date.toLocaleDateString('pt-BR', { weekday: 'short' }); // Dica: mostra dia da semana
             DOM.calendarGrid.appendChild(dateCell);
         }
-        
+
         // --- 3. LINHAS DAS SALAS E CONTEÚDO ---
         dadosSalas.forEach(sala => {
             renderRoomRow(sala, year, month, daysInMonth);
         });
     };
-    
+
     /**
      * Renderiza uma linha completa da sala no calendário (Cabeçalho da sala + células dos dias).
      */
@@ -87,11 +87,11 @@
         for (let day = 1; day <= daysInMonth; day++) {
             const date = new Date(year, month, day);
             const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-            
+
             const cell = document.createElement('div');
             const isWeekend = date.getDay() === 0 || date.getDay() === 6;
             const isHoliday = SGST.feriados.includes(dateStr);
-            
+
             cell.className = 'grid-cell room-day-cell multi-turno-cell'; // Nova classe para estilização e identificação
             if (isWeekend) cell.classList.add('weekend');
             if (isHoliday) cell.classList.add('holiday');
@@ -103,7 +103,7 @@
                 const dataAgendamento = a.data_aula.substring(0, 10);
                 return a.id_salas == sala.id_salas && dataAgendamento === dateStr;
             });
-            
+
             // Adiciona blocos de agendamento (Eventos)
             if (agendamentosDoDia.length > 0) {
                 agendamentosDoDia.forEach(agendamento => {
@@ -114,18 +114,18 @@
                         nome_curso: agendamento.nome_curso.split(' ')[0], // Apenas a primeira palavra
                         nome_sala: null // Não precisa da sala aqui
                     }, true); // O 'true' indica que é um bloco compacto
-                    
+
                     cell.appendChild(block);
                 });
             } else {
-                 // Ação para o clique em uma célula vazia (Agendar)
-                 cell.addEventListener('click', () => {
+                // Ação para o clique em uma célula vazia (Agendar)
+                cell.addEventListener('click', () => {
                     // Pré-preenche o formulário de agendamento com a Sala e a Data
                     document.getElementById('agendamento-salas-id-input').value = sala.id_salas;
                     document.getElementById('agendamento-salas-display').value = sala.nome_sala;
                     document.getElementById('agendamento-data-inicio').value = dateStr;
                     document.getElementById('salas-alocadas-info').innerHTML = `Sala selecionada: <strong>${sala.nome_sala}</strong>.`;
-                    
+
                     SGST.openModal(SGST.Modals.Elements.agendamento);
                 });
             }
@@ -133,14 +133,14 @@
             DOM.calendarGrid.appendChild(cell);
         }
     };
-    
+
     /**
      * Cria o elemento visual de um evento (agendamento). (MANTIDA, mas ajustada para flexibilidade)
      */
     const createEventElement = (agendamento, isCompact = false) => {
         const div = document.createElement('div');
         div.className = 'appointment-block'; // Mantém o nome da classe do seu código antigo
-        
+
         // Lógica de cores (MANTIDA)
         let colorClass = 'event-default';
         let backgroundColor = '#6c757d'; // Default
@@ -150,9 +150,9 @@
             case 'Noite': backgroundColor = '#6f42c2'; break;
             case 'Integral': backgroundColor = '#007bff'; break;
         }
-        
+
         div.style.backgroundColor = backgroundColor;
-        
+
         // Conteúdo
         if (isCompact) {
             // Visualização compacta (Sala x Dia)
@@ -161,15 +161,15 @@
             // Visualização de lista (Se for usada)
             div.textContent = `${agendamento.nome_curso} (${agendamento.nome_sala}) - ${agendamento.turno}`;
         }
-        
-        div.dataset.idTurma = agendamento.id_turmas; 
-        
+
+        div.dataset.idTurma = agendamento.id_turmas;
+
         div.addEventListener('click', (e) => {
-            e.stopPropagation(); 
+            e.stopPropagation();
             // Assume que a função de abrir detalhes agora está no SGST.Painel
             SGST.Painel.loadDetalhesTurma(agendamento.id_turmas);
         });
-        
+
         return div;
     };
 
@@ -179,7 +179,7 @@
      * FUNÇÕES DE DADOS (API)
      * -----------------------------------------------------
      */
-    
+
     /**
      * Carrega todos os agendamentos e feriados do backend.
      */
@@ -192,20 +192,20 @@
                 API.getAgendamentos(),
                 API.getFeriados()
             ]);
-            
+
             // Armazena dados no estado global
-            SGST.agendamentos = agendamentosData; 
+            SGST.agendamentos = agendamentosData;
             SGST.feriados = feriadosData.map(f => f.data_feriado); // Apenas as datas
-            
+
             renderCalendar();
-            
+
         } catch (error) {
             SGST.Utils.showToast(`Erro ao carregar dados da agenda: ${error.message}`, 'error');
         } finally {
             SGST.Utils.toggleLoading(false);
         }
     };
-    
+
     /**
      * Carrega os detalhes de uma turma (SUPOSIÇÃO DE ENDPOINT)
      * @param {number} turmaId - O ID da turma para carregar.
@@ -214,7 +214,7 @@
         // O backend não tem um 'controller' específico para buscar *detalhes* da turma
         // Faremos uma SUPOSIÇÃO de que existe um endpoint: /controllers/turma_detalhes.php?id={turmaId}
         // OU que a informação virá do próprio agendamento (API.getAgendamentos).
-        
+
         // Pelo seu código, faremos a SUPOSIÇÃO que você criará um endpoint:
         // /controllers/buscar_detalhes_turma.php?id=...
         const FAKE_ENDPOINT_URL = `./controllers/buscar_detalhes_turma.php?id=${turmaId}`;
@@ -223,7 +223,7 @@
         try {
             // Simulação de requisição para buscar detalhes da turma
             const response = await apiFetch(FAKE_ENDPOINT_URL, { method: 'GET' });
-            
+
             // Resposta Esperada (SUPOSTA): 
             /*
              { 
@@ -255,27 +255,27 @@
         document.getElementById('detalhes-instrutor').textContent = turmaData.instrutor_nome || 'N/A';
         document.getElementById('detalhes-status').textContent = turmaData.status || 'N/A';
         document.getElementById('detalhes-turma').value = turmaData.id;
-        
+
         const aulasList = document.getElementById('detalhes-aulas');
         aulasList.innerHTML = '';
 
         if (turmaData.dias_aula && turmaData.dias_aula.length) {
-             turmaData.dias_aula.forEach(aula => {
+            turmaData.dias_aula.forEach(aula => {
                 const li = document.createElement('li');
                 li.textContent = `${SGST.Utils.formatDate(aula.data_aula)} - ${aula.turno}`;
                 aulasList.appendChild(li);
-             });
+            });
         } else {
             aulasList.textContent = 'Nenhum dia de aula agendado.';
         }
     };
-    
+
     /**
      * -----------------------------------------------------
      * INICIALIZAÇÃO E LISTENERS
      * -----------------------------------------------------
      */
-     
+
     SGST.Painel = {
         dataAtual: dataAtual,
         loadAllDataAndRender: loadAllDataAndRender,
@@ -292,7 +292,7 @@
                 dataAtual.setMonth(dataAtual.getMonth() + 1);
                 loadAllDataAndRender();
             });
-            
+
             // Botão "Agendar Turma"
             DOM.addTurmaBtn.addEventListener('click', () => {
                 SGST.Utils.clearForm(document.getElementById('agendamento-form'));
@@ -301,10 +301,10 @@
 
             // Botão "Gerenciar Feriados"
             DOM.gerenciarFeriadosBtn.addEventListener('click', () => {
-                SGST.Feriados.loadFeriados(); // Supondo que essa função existe no módulo Feriados
+                SGST.Feriados.loadFeriados();
                 SGST.openModal(SGST.Modals.Elements.feriados);
             });
-            
+
             // Inicializa a carga de dados
             // loadAllDataAndRender(); // Será chamado pelo script.js
 

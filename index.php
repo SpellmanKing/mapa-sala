@@ -111,7 +111,7 @@
                                 <div class="filter-item checkbox-group-container">
                                 <div class="checkbox-group">
                                     <label><input type="checkbox" id="filter-tem"> TEM</label>
-                                    <label><input type="checkbox" id="filter-bolsa"> Bolsa</label>
+                                    <label><input ztype="checkbox" id="filter-bolsa"> Bolsa</label>
                                 </div>
                                 </div>
                             </div>

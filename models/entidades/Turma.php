@@ -13,7 +13,7 @@ class Turma {
      * @param string $novoStatus O novo status da turma.
      * @param int|null $novoInstrutorId O ID do novo instrutor (opcional).
      * @return bool Retorna true se a operação for bem-sucedida.
-     */
+    */
     
     public function atualizarStatus($turmaId, $novoStatus, $novoInstrutorId = null) {
         try {

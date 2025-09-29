@@ -1,0 +1,2783 @@
+// Arquivo: dados.js (Versão Final e Corrigida)
+const coursesData = [
+    {
+        "segmento": "Artes",
+        "modalidade": "Qualificação Profissional",
+        "nome_curso": "Florista",
+        "carga_horaria": 160,
+        "compativel_bolsa": true,
+        "valor": "3.704,00",
+        "tem": false
+    },
+    {
+        "segmento": "Artes",
+        "modalidade": "Qualificação Profissional",
+        "nome_curso": "Florista (Parceria Sindigêneros)",
+        "carga_horaria": 160,
+        "compativel_bolsa": true,
+        "valor": "5.212,94",
+        "tem": false
+    },
+    {
+        "segmento": "Artes",
+        "modalidade": "Aperfeiçoamento",
+        "nome_curso": "Fotografia comercial com celular",
+        "carga_horaria": 36,
+        "compativel_bolsa": true,
+        "valor": "531,00",
+        "tem": false
+    },
+    {
+        "segmento": "Artes",
+        "modalidade": "Aperfeiçoamento",
+        "nome_curso": "Fotografia de propaganda e publicidade",
+        "carga_horaria": 72,
+        "compativel_bolsa": true,
+        "valor": null,
+        "tem": false
+    },
+    {
+        "segmento": "Artes",
+        "modalidade": "Aperfeiçoamento",
+        "nome_curso": "Fotografia Jornalística e Documental",
+        "carga_horaria": 72,
+        "compativel_bolsa": true,
+        "valor": null,
+        "tem": false
+    },
+    {
+        "segmento": "Artes",
+        "modalidade": "Qualificação Profissional",
+        "nome_curso": "Fotógrafo",
+        "carga_horaria": 190,
+        "compativel_bolsa": true,
+        "valor": null,
+        "tem": false
+    },
+    {
+        "segmento": "Artes",
+        "modalidade": "Programa Socioprofissional",
+        "nome_curso": "Produção de Vídeo para Internet",
+        "carga_horaria": 36,
+        "compativel_bolsa": true,
+        "valor": "677,00",
+        "tem": false
+    },
+    {
+        "segmento": "Artes",
+        "modalidade": "Técnico de Nível Médio",
+        "nome_curso": "Técnico em Produção Cultural",
+        "carga_horaria": 800,
+        "compativel_bolsa": true,
+        "valor": "4.449,00",
+        "tem": true
+    },
+    {
+        "segmento": "Beleza",
+        "modalidade": "Aperfeiçoamento",
+        "nome_curso": "Alongamento de Unhas",
+        "carga_horaria": 60,
+        "compativel_bolsa": true,
+        "valor": "899,00",
+        "tem": false
+    },
+    {
+        "segmento": "Beleza",
+        "modalidade": "Aperfeiçoamento",
+        "nome_curso": "Aperfeiçoamento de Corte de Cabelo e Escova",
+        "carga_horaria": 60,
+        "compativel_bolsa": true,
+        "valor": "780,00",
+        "tem": false
+    },
+    {
+        "segmento": "Beleza",
+        "modalidade": "Qualificação Profissional",
+        "nome_curso": "Barbeiro",
+        "carga_horaria": 172,
+        "compativel_bolsa": true,
+        "valor": "1.509,99",
+        "tem": false
+    },
+    {
+        "segmento": "Beleza",
+        "modalidade": "Aperfeiçoamento",
+        "nome_curso": "Beleza de Milhões",
+        "carga_horaria": 100,
+        "compativel_bolsa": true,
+        "valor": "1.089,99",
+        "tem": false
+    },
+    {
+        "segmento": "Beleza",
+        "modalidade": "Aperfeiçoamento",
+        "nome_curso": "Cabeleireiro",
+        "carga_horaria": 400,
+        "compativel_bolsa": true,
+        "valor": "2.666,99",
+        "tem": false
+    },
+    {
+        "segmento": "Beleza",
+        "modalidade": "Aperfeiçoamento",
+        "nome_curso": "Colorimetria Avançada Aplicada a Cabeleireiros e Barbeiros",
+        "carga_horaria": 100,
+        "compativel_bolsa": true,
+        "valor": "999,99",
+        "tem": false
+    },
+    {
+        "segmento": "Beleza",
+        "modalidade": "Aperfeiçoamento",
+        "nome_curso": "Colorimetria Capilar: Noções Básicas",
+        "carga_horaria": 40,
+        "compativel_bolsa": true,
+        "valor": "675,00",
+        "tem": false
+    },
+    {
+        "segmento": "Beleza",
+        "modalidade": "Aperfeiçoamento",
+        "nome_curso": "Construção de Carreira para Profissionais da Beleza",
+        "carga_horaria": 36,
+        "compativel_bolsa": true,
+        "valor": "249,00",
+        "tem": false
+    },
+    {
+        "segmento": "Beleza",
+        "modalidade": "Qualificação Profissional",
+        "nome_curso": "Depilador",
+        "carga_horaria": 160,
+        "compativel_bolsa": true,
+        "valor": "1.689,99",
+        "tem": false
+    },
+    {
+        "segmento": "Beleza",
+        "modalidade": "Aperfeiçoamento",
+        "nome_curso": "Design de Barba",
+        "carga_horaria": 40,
+        "compativel_bolsa": true,
+        "valor": "453,00",
+        "tem": false
+    },
+    {
+        "segmento": "Beleza",
+        "modalidade": "Aperfeiçoamento",
+        "nome_curso": "Design de Corte Feminino: Técnicas Avançadas",
+        "carga_horaria": 72,
+        "compativel_bolsa": true,
+        "valor": "505,00",
+        "tem": false
+    },
+    {
+        "segmento": "Beleza",
+        "modalidade": "Aperfeiçoamento",
+        "nome_curso": "Design de Mechas",
+        "carga_horaria": 40,
+        "compativel_bolsa": true,
+        "valor": "486,50",
+        "tem": false
+    },
+    {
+        "segmento": "Beleza",
+        "modalidade": "Aperfeiçoamento",
+        "nome_curso": "Design de Sobrancelhas",
+        "carga_horaria": 60,
+        "compativel_bolsa": true,
+        "valor": "650,00",
+        "tem": false
+    },
+    {
+        "segmento": "Beleza",
+        "modalidade": "Programa Socioprofissional",
+        "nome_curso": "Extensão de Cílios: Fio a Fio",
+        "carga_horaria": 20,
+        "compativel_bolsa": false,
+        "valor": "509,90",
+        "tem": false
+    },
+    {
+        "segmento": "Beleza",
+        "modalidade": "Programa Socioprofissional",
+        "nome_curso": "Extensão de Cílios: Volume Russo",
+        "carga_horaria": 20,
+        "compativel_bolsa": false,
+        "valor": "409,90",
+        "tem": false
+    },
+    {
+        "segmento": "Beleza",
+        "modalidade": "Programa Socioprofissional",
+        "nome_curso": "Lash lifting e Brow lamination",
+        "carga_horaria": 20,
+        "compativel_bolsa": false,
+        "valor": "810,00",
+        "tem": false
+    },
+    {
+        "segmento": "Beleza",
+        "modalidade": "Qualificação Profissional",
+        "nome_curso": "Manicure e Pedicure",
+        "carga_horaria": 160,
+        "compativel_bolsa": true,
+        "valor": "1.759,99",
+        "tem": false
+    },
+    {
+        "segmento": "Beleza",
+        "modalidade": "Qualificação Profissional",
+        "nome_curso": "Maquiador",
+        "carga_horaria": 160,
+        "compativel_bolsa": true,
+        "valor": "1.769,99",
+        "tem": false
+    },
+    {
+        "segmento": "Beleza",
+        "modalidade": "Aperfeiçoamento",
+        "nome_curso": "Maquiagem Profissional Avançada",
+        "carga_horaria": 60,
+        "compativel_bolsa": true,
+        "valor": "785,99",
+        "tem": false
+    },
+    {
+        "segmento": "Beleza",
+        "modalidade": "Aperfeiçoamento",
+        "nome_curso": "Microblading Fio a Fio",
+        "carga_horaria": 60,
+        "compativel_bolsa": true,
+        "valor": "899,00",
+        "tem": false
+    },
+    {
+        "segmento": "Beleza",
+        "modalidade": "Aperfeiçoamento",
+        "nome_curso": "Micropigmentação",
+        "carga_horaria": 80,
+        "compativel_bolsa": true,
+        "valor": "1.195,00",
+        "tem": false
+    },
+    {
+        "segmento": "Beleza",
+        "modalidade": "Aperfeiçoamento",
+        "nome_curso": "Penteados Avançados",
+        "carga_horaria": 40,
+        "compativel_bolsa": true,
+        "valor": "479,99",
+        "tem": false
+    },
+    {
+        "segmento": "Beleza",
+        "modalidade": "Aperfeiçoamento",
+        "nome_curso": "Penteados e Corte de Cabelos Afro",
+        "carga_horaria": 40,
+        "compativel_bolsa": true,
+        "valor": "560,00",
+        "tem": false
+    },
+    {
+        "segmento": "Beleza",
+        "modalidade": "Aperfeiçoamento",
+        "nome_curso": "Práticas de Trabalho do Cabeleireiro",
+        "carga_horaria": 100,
+        "compativel_bolsa": true,
+        "valor": "960,00",
+        "tem": false
+    },
+    {
+        "segmento": "Beleza",
+        "modalidade": "Programa Socioprofissional",
+        "nome_curso": "Técnicas de Barbeiro",
+        "carga_horaria": 80,
+        "compativel_bolsa": false,
+        "valor": "649,00",
+        "tem": false
+    },
+    {
+        "segmento": "Beleza",
+        "modalidade": "Aperfeiçoamento",
+        "nome_curso": "Técnicas de Depilação",
+        "carga_horaria": 80,
+        "compativel_bolsa": true,
+        "valor": "1.005,00",
+        "tem": false
+    },
+    {
+        "segmento": "Beleza",
+        "modalidade": "Aperfeiçoamento",
+        "nome_curso": "Tratamento Capilar",
+        "carga_horaria": 40,
+        "compativel_bolsa": true,
+        "valor": "998,75",
+        "tem": false
+    },
+    {
+        "segmento": "Beleza",
+        "modalidade": "Aperfeiçoamento",
+        "nome_curso": "Unhas Perfeitas: Manicure e Pedicure",
+        "carga_horaria": 100,
+        "compativel_bolsa": true,
+        "valor": "939,99",
+        "tem": false
+    },
+    {
+        "segmento": "Comércio",
+        "modalidade": "Aperfeiçoamento",
+        "nome_curso": "A Arte de se Comunicar e de Vender Mais",
+        "carga_horaria": 30,
+        "compativel_bolsa": true,
+        "valor": "163,30",
+        "tem": false
+    },
+    {
+        "segmento": "Comércio",
+        "modalidade": "Aperfeiçoamento",
+        "nome_curso": "Abordagem para o Influenciador Digital",
+        "carga_horaria": 24,
+        "compativel_bolsa": true,
+        "valor": "212,00",
+        "tem": false
+    },
+    {
+        "segmento": "Comércio",
+        "modalidade": "Aperfeiçoamento",
+        "nome_curso": "Administração de Contas a Pagar, Contas a Receber e Tesouraria",
+        "carga_horaria": 24,
+        "compativel_bolsa": true,
+        "valor": "200,00",
+        "tem": false
+    },
+    {
+        "segmento": "Comércio",
+        "modalidade": "Aprendizagem",
+        "nome_curso": "Aprendizagem Profissional de Qualificação em Serviços Comerciais",
+        "carga_horaria": 1300,
+        "compativel_bolsa": true,
+        "valor": "2.193,34",
+        "tem": false
+    },
+    {
+        "segmento": "Comércio",
+        "modalidade": "Aprendizagem",
+        "nome_curso": "Aprendizagem Profissional de Qualificação em Serviços de Supermercados",
+        "carga_horaria": 1232,
+        "compativel_bolsa": true,
+        "valor": "2.193,34",
+        "tem": false
+    },
+    {
+        "segmento": "Comércio",
+        "modalidade": "Aprendizagem",
+        "nome_curso": "Aprendizagem Profissional de Qualificação em Serviços de Vendas",
+        "carga_horaria": 1232,
+        "compativel_bolsa": true,
+        "valor": "2.540,00",
+        "tem": false
+    },
+    {
+        "segmento": "Comércio",
+        "modalidade": "Aperfeiçoamento",
+        "nome_curso": "Atendimento e Vendas: Planejamento e Estratégias",
+        "carga_horaria": 80,
+        "compativel_bolsa": true,
+        "valor": "439,00",
+        "tem": false
+    },
+    {
+        "segmento": "Comércio",
+        "modalidade": "Aperfeiçoamento",
+        "nome_curso": "Compras e Estoque",
+        "carga_horaria": 30,
+        "compativel_bolsa": true,
+        "valor": "275,00",
+        "tem": false
+    },
+    {
+        "segmento": "Comércio",
+        "modalidade": "Aperfeiçoamento",
+        "nome_curso": "Criação de Identidade Visual e Manual de Marca",
+        "carga_horaria": 80,
+        "compativel_bolsa": true,
+        "valor": "782,00",
+        "tem": false
+    },
+    {
+        "segmento": "Comércio",
+        "modalidade": "Aperfeiçoamento",
+        "nome_curso": "E-Commerce: Vendendo no Comércio Eletrônico",
+        "carga_horaria": 42,
+        "compativel_bolsa": true,
+        "valor": "298,00",
+        "tem": false
+    },
+    {
+        "segmento": "Comércio",
+        "modalidade": "Aperfeiçoamento",
+        "nome_curso": "Ferramentas de Marketing Digital",
+        "carga_horaria": 24,
+        "compativel_bolsa": true,
+        "valor": "144,00",
+        "tem": false
+    },
+    {
+        "segmento": "Comércio",
+        "modalidade": "Aperfeiçoamento",
+        "nome_curso": "Gerenciamento de Custos no Comércio",
+        "carga_horaria": 30,
+        "compativel_bolsa": true,
+        "valor": "232,00",
+        "tem": false
+    },
+    {
+        "segmento": "Comércio",
+        "modalidade": "Aperfeiçoamento",
+        "nome_curso": "Inovação de Formatos e Canais de Venda",
+        "carga_horaria": 24,
+        "compativel_bolsa": true,
+        "valor": "360,00",
+        "tem": false
+    },
+    {
+        "segmento": "Comércio",
+        "modalidade": "Aperfeiçoamento",
+        "nome_curso": "Liderança Coach",
+        "carga_horaria": 24,
+        "compativel_bolsa": true,
+        "valor": "200,00",
+        "tem": false
+    },
+    {
+        "segmento": "Comércio",
+        "modalidade": "Programa Socioprofissional",
+        "nome_curso": "Oratória",
+        "carga_horaria": 30,
+        "compativel_bolsa": true,
+        "valor": "298,00",
+        "tem": false
+    },
+    {
+        "segmento": "Comércio",
+        "modalidade": "Aperfeiçoamento",
+        "nome_curso": "Planejamento e Implantação de Loja Virtual",
+        "carga_horaria": 24,
+        "compativel_bolsa": true,
+        "valor": "200,00",
+        "tem": false
+    },
+    {
+        "segmento": "Comércio",
+        "modalidade": "Aperfeiçoamento",
+        "nome_curso": "Planejamento Financeiro para o Comércio",
+        "carga_horaria": 24,
+        "compativel_bolsa": true,
+        "valor": "226,00",
+        "tem": false
+    },
+    {
+        "segmento": "Comércio",
+        "modalidade": "Aperfeiçoamento",
+        "nome_curso": "Produção de Imagens para Meios Digitais",
+        "carga_horaria": 42,
+        "compativel_bolsa": true,
+        "valor": "333,00",
+        "tem": false
+    },
+    {
+        "segmento": "Comércio",
+        "modalidade": "Aperfeiçoamento",
+        "nome_curso": "Relacionamento com o Cliente e o Pós-Venda",
+        "carga_horaria": 24,
+        "compativel_bolsa": true,
+        "valor": "224,00",
+        "tem": false
+    },
+    {
+        "segmento": "Comércio",
+        "modalidade": "Qualificação Profissional",
+        "nome_curso": "Repositor de mercadorias",
+        "carga_horaria": 160,
+        "compativel_bolsa": true,
+        "valor": "799,00",
+        "tem": false
+    },
+    {
+        "segmento": "Comércio",
+        "modalidade": "Habilitação Técnica",
+        "nome_curso": "Técnico em Transações Imobiliárias",
+        "carga_horaria": 800,
+        "compativel_bolsa": true,
+        "valor": "4.090,00",
+        "tem": false
+    },
+    {
+        "segmento": "Comunicação",
+        "modalidade": "Aperfeiçoamento",
+        "nome_curso": "Copywriting: Redação Web para Marketing e Vendas",
+        "carga_horaria": 36,
+        "compativel_bolsa": true,
+        "valor": "499,00",
+        "tem": false
+    },
+    {
+        "segmento": "Comunicação",
+        "modalidade": "Aperfeiçoamento",
+        "nome_curso": "Iluminação para vídeo",
+        "carga_horaria": 88,
+        "compativel_bolsa": true,
+        "valor": "513,00",
+        "tem": false
+    },
+    {
+        "segmento": "Comunicação",
+        "modalidade": "Qualificação Profissional",
+        "nome_curso": "Operador de áudio",
+        "carga_horaria": 208,
+        "compativel_bolsa": true,
+        "valor": "1.368,00",
+        "tem": false
+    },
+    {
+        "segmento": "Comunicação",
+        "modalidade": "Programa Socioprofissional",
+        "nome_curso": "Práticas de DJ",
+        "carga_horaria": 48,
+        "compativel_bolsa": true,
+        "valor": "409,99",
+        "tem": false
+    },
+    {
+        "segmento": "Comunicação",
+        "modalidade": "Aperfeiçoamento",
+        "nome_curso": "Produção de podcast em vídeo",
+        "carga_horaria": 40,
+        "compativel_bolsa": true,
+        "valor": "429,00",
+        "tem": false
+    },
+    {
+        "segmento": "Comunicação",
+        "modalidade": "Aperfeiçoamento",
+        "nome_curso": "Storytelling para Marcas e Produtos",
+        "carga_horaria": 42,
+        "compativel_bolsa": true,
+        "valor": "299,00",
+        "tem": false
+    },
+    {
+        "segmento": "Comunicação",
+        "modalidade": "Técnico de Nível Médio",
+        "nome_curso": "Técnico em multimídia",
+        "carga_horaria": 800,
+        "compativel_bolsa": true,
+        "valor": "4.530,00",
+        "tem": true
+    },
+    {
+        "segmento": "Comunicação",
+        "modalidade": "Programa SocioProfissional",
+        "nome_curso": "Oratória Experiêncie-  Comunicando com Alta Performance",
+        "carga_horaria": 42,
+        "compativel_bolsa": false,
+        "valor": "250,00",
+        "tem": false
+    },
+    {
+        "segmento": "Desing",
+        "modalidade": "Habilitação Técnica",
+        "nome_curso": "Técnico em Design de Interiores",
+        "carga_horaria": 1200,
+        "compativel_bolsa": true,
+        "valor": "6.197,00",
+        "tem": false
+    },
+    {
+        "segmento": "Educacional",
+        "modalidade": "Aprendizagem",
+        "nome_curso": "Aprendizagem Profissional de Qualificação em Comércio de bens, serviços e turismo",
+        "carga_horaria": 1800,
+        "compativel_bolsa": true,
+        "valor": "2.920,00",
+        "tem": false
+    },
+    {
+        "segmento": "Educacional",
+        "modalidade": "Qualificação Profissional",
+        "nome_curso": "Assistente de Secretaria Escolar",
+        "carga_horaria": 180,
+        "compativel_bolsa": true,
+        "valor": "920,00",
+        "tem": false
+    },
+    {
+        "segmento": "Educacional",
+        "modalidade": "Aperfeiçoamento",
+        "nome_curso": "Inclusão de Pessoas com Deficiência: planejamento e prática",
+        "carga_horaria": 36,
+        "compativel_bolsa": true,
+        "valor": "534,00",
+        "tem": false
+    },
+    {
+        "segmento": "Educacional",
+        "modalidade": "Habilitação Técnica",
+        "nome_curso": "Técnico em Secretaria Escolar",
+        "carga_horaria": 800,
+        "compativel_bolsa": true,
+        "valor": "3.480,00",
+        "tem": false
+    },
+    {
+        "segmento": "Eventos",
+        "modalidade": "Qualificação Profissional",
+        "nome_curso": "Organizador de Eventos",
+        "carga_horaria": 180,
+        "compativel_bolsa": true,
+        "valor": "1.209,99",
+        "tem": false
+    },
+    {
+        "segmento": "Eventos",
+        "modalidade": "Aperfeiçoamento",
+        "nome_curso": "Produção e Coordenação de  Projetos de Cenografia para eventos",
+        "carga_horaria": 36,
+        "compativel_bolsa": true,
+        "valor": "198,00",
+        "tem": false
+    },
+    {
+        "segmento": "Eventos",
+        "modalidade": "Aperfeiçoamento",
+        "nome_curso": "Projetos de Cenografia para Shows- produção de Cenários Lúdicos",
+        "carga_horaria": 48,
+        "compativel_bolsa": true,
+        "valor": "249,00",
+        "tem": false
+    },
+    {
+        "segmento": "Eventos",
+        "modalidade": "Qualificação Profissional",
+        "nome_curso": "Recepcionista de Eventos",
+        "carga_horaria": 160,
+        "compativel_bolsa": true,
+        "valor": "1.406,65",
+        "tem": false
+    },
+    {
+        "segmento": "Eventos",
+        "modalidade": "Técnico de Nível Médio",
+        "nome_curso": "Técnico em Eventos",
+        "carga_horaria": 800,
+        "compativel_bolsa": true,
+        "valor": "5.235,00",
+        "tem": true
+    },
+    {
+        "segmento": "Gastronomia",
+        "modalidade": "Aperfeiçoamento",
+        "nome_curso": "Açougueiro",
+        "carga_horaria": 160,
+        "compativel_bolsa": true,
+        "valor": "2.288,00",
+        "tem": false
+    },
+    {
+        "segmento": "Gastronomia",
+        "modalidade": "Aperfeiçoamento",
+        "nome_curso": "Aperfeiçoamento de Tortas Doces e Salgadas",
+        "carga_horaria": 40,
+        "compativel_bolsa": true,
+        "valor": "550,00",
+        "tem": false
+    },
+    {
+        "segmento": "Gastronomia",
+        "modalidade": "Qualificação Profissional",
+        "nome_curso": "Auxiliar de Cozinha",
+        "carga_horaria": 240,
+        "compativel_bolsa": true,
+        "valor": "2.704,99",
+        "tem": false
+    },
+    {
+        "segmento": "Gastronomia",
+        "modalidade": "Qualificação Profissional",
+        "nome_curso": "Auxiliar de Garçom (Cumim)",
+        "carga_horaria": 160,
+        "compativel_bolsa": true,
+        "valor": "1.249,99",
+        "tem": false
+    },
+    {
+        "segmento": "Gastronomia",
+        "modalidade": "Qualificação Profissional",
+        "nome_curso": "Auxiliar de Padeiro",
+        "carga_horaria": 180,
+        "compativel_bolsa": true,
+        "valor": null,
+        "tem": false
+    },
+    {
+        "segmento": "Gastronomia",
+        "modalidade": "Qualificação Profissional",
+        "nome_curso": "Barista",
+        "carga_horaria": 160,
+        "compativel_bolsa": true,
+        "valor": "1.502,99",
+        "tem": false
+    },
+    {
+        "segmento": "Gastronomia",
+        "modalidade": "Qualificação Profissional",
+        "nome_curso": "Bartender",
+        "carga_horaria": 200,
+        "compativel_bolsa": true,
+        "valor": "2.817,99",
+        "tem": false
+    },
+    {
+        "segmento": "Gastronomia",
+        "modalidade": "Aperfeiçoamento",
+        "nome_curso": "Boas Práticas na Manipulação de Alimentos",
+        "carga_horaria": 20,
+        "compativel_bolsa": true,
+        "valor": "200,00",
+        "tem": false
+    },
+    {
+        "segmento": "Gastronomia",
+        "modalidade": "Aperfeiçoamento",
+        "nome_curso": "Cake design - Aperfeiçoamento",
+        "carga_horaria": 40,
+        "compativel_bolsa": true,
+        "valor": "519,00",
+        "tem": false
+    },
+    {
+        "segmento": "Gastronomia",
+        "modalidade": "Aperfeiçoamento",
+        "nome_curso": "Compras e Estoque na Gastronomia",
+        "carga_horaria": 60,
+        "compativel_bolsa": false,
+        "valor": null,
+        "tem": false
+    },
+    {
+        "segmento": "Gastronomia",
+        "modalidade": "Qualificação Profissional",
+        "nome_curso": "Confeiteiro",
+        "carga_horaria": 300,
+        "compativel_bolsa": true,
+        "valor": "4.659,99",
+        "tem": false
+    },
+    {
+        "segmento": "Gastronomia",
+        "modalidade": "Aperfeiçoamento",
+        "nome_curso": "Cozinha Brasileira: Biomas e Cortes Nobres",
+        "carga_horaria": 140,
+        "compativel_bolsa": false,
+        "valor": null,
+        "tem": false
+    },
+    {
+        "segmento": "Gastronomia",
+        "modalidade": "Aperfeiçoamento",
+        "nome_curso": "Comida Natalina",
+        "carga_horaria": 40,
+        "compativel_bolsa": false,
+        "valor": "798,00",
+        "tem": false
+    },
+    {
+        "segmento": "Gastronomia",
+        "modalidade": "Aperfeiçoamento",
+        "nome_curso": "Cozinha Caribenha",
+        "carga_horaria": 40,
+        "compativel_bolsa": true,
+        "valor": "419,99",
+        "tem": false
+    },
+    {
+        "segmento": "Gastronomia",
+        "modalidade": "Aperfeiçoamento",
+        "nome_curso": "Cozinha Latino-Americana",
+        "carga_horaria": 60,
+        "compativel_bolsa": true,
+        "valor": "619,99",
+        "tem": false
+    },
+    {
+        "segmento": "Gastronomia",
+        "modalidade": "Aperfeiçoamento",
+        "nome_curso": "Cozinha Prática: Da Panela ao Prato (carreta)",
+        "carga_horaria": 80,
+        "compativel_bolsa": false,
+        "valor": "899,99",
+        "tem": false
+    },
+    {
+        "segmento": "Gastronomia",
+        "modalidade": "Qualificação Profissional",
+        "nome_curso": "Cozinheiro",
+        "carga_horaria": 500,
+        "compativel_bolsa": true,
+        "valor": "5.492,99",
+        "tem": false
+    },
+    {
+        "segmento": "Gastronomia",
+        "modalidade": "Aperfeiçoamento",
+        "nome_curso": "Eficiência na cozinha, Aproveitamento integral cozinha",
+        "carga_horaria": 16,
+        "compativel_bolsa": true,
+        "valor": "215,00",
+        "tem": false
+    },
+    {
+        "segmento": "Gastronomia",
+        "modalidade": "Aperfeiçoamento",
+        "nome_curso": "Elaboração de Fichas Técnicas",
+        "carga_horaria": 40,
+        "compativel_bolsa": true,
+        "valor": "299,00",
+        "tem": false
+    },
+    {
+        "segmento": "Gastronomia",
+        "modalidade": "Qualificação Profissional",
+        "nome_curso": "Garçom",
+        "carga_horaria": 240,
+        "compativel_bolsa": true,
+        "valor": "2.365,99",
+        "tem": false
+    },
+    {
+        "segmento": "Gastronomia",
+        "modalidade": "Aperfeiçoamento",
+        "nome_curso": "Garde Manger",
+        "carga_horaria": 20,
+        "compativel_bolsa": true,
+        "valor": "435,59",
+        "tem": false
+    },
+    {
+        "segmento": "Gastronomia",
+        "modalidade": "Aperfeiçoamento",
+        "nome_curso": "Hamburguer Gourmet",
+        "carga_horaria": 30,
+        "compativel_bolsa": true,
+        "valor": "399,00",
+        "tem": false
+    },
+    {
+        "segmento": "Gastronomia",
+        "modalidade": "Aperfeiçoamento",
+        "nome_curso": "Métodos de preparo de café",
+        "carga_horaria": 36,
+        "compativel_bolsa": true,
+        "valor": "459,00",
+        "tem": false
+    },
+    {
+        "segmento": "Gastronomia",
+        "modalidade": "Aperfeiçoamento",
+        "nome_curso": "Latte Art",
+        "carga_horaria": 40,
+        "compativel_bolsa": true,
+        "valor": "716,00",
+        "tem": false
+    },
+    {
+        "segmento": "Gastronomia",
+        "modalidade": "Aperfeiçoamento",
+        "nome_curso": "Padaria Artesanal",
+        "carga_horaria": 16,
+        "compativel_bolsa": false,
+        "valor": null,
+        "tem": false
+    },
+    {
+        "segmento": "Gastronomia",
+        "modalidade": "Aperfeiçoamento",
+        "nome_curso": "Preparo de Drinks com Café",
+        "carga_horaria": 40,
+        "compativel_bolsa": false,
+        "valor": "620,00",
+        "tem": false
+    },
+    {
+        "segmento": "Gastronomia",
+        "modalidade": "Qualificação Profissional",
+        "nome_curso": "Padeiro",
+        "carga_horaria": 260,
+        "compativel_bolsa": true,
+        "valor": "2.969,99",
+        "tem": false
+    },
+    {
+        "segmento": "Gastronomia",
+        "modalidade": "Qualificação Profissional",
+        "nome_curso": "Pizzaiolo",
+        "carga_horaria": 160,
+        "compativel_bolsa": true,
+        "valor": "1.632,99",
+        "tem": false
+    },
+    {
+        "segmento": "Gastronomia",
+        "modalidade": "Aperfeiçoamento",
+        "nome_curso": "Práticas Operacionais em Cafeteria",
+        "carga_horaria": 240,
+        "compativel_bolsa": true,
+        "valor": "3.900,83",
+        "tem": false
+    },
+    {
+        "segmento": "Gastronomia",
+        "modalidade": "Aperfeiçoamento",
+        "nome_curso": "Práticas Operacionais em Cozinha",
+        "carga_horaria": 240,
+        "compativel_bolsa": true,
+        "valor": "2.992,14",
+        "tem": false
+    },
+    {
+        "segmento": "Gastronomia",
+        "modalidade": "Aperfeiçoamento",
+        "nome_curso": "Práticas Operacionais - Nutrição e Dietética",
+        "carga_horaria": 360,
+        "compativel_bolsa": true,
+        "valor": "3.803,00",
+        "tem": false
+    },
+    {
+        "segmento": "Gastronomia",
+        "modalidade": "Aperfeiçoamento",
+        "nome_curso": "Práticas Operacionais em Serviços - Restaurante Escola",
+        "carga_horaria": 240,
+        "compativel_bolsa": true,
+        "valor": "2.859,29",
+        "tem": false
+    },
+    {
+        "segmento": "Gastronomia",
+        "modalidade": "Aperfeiçoamento",
+        "nome_curso": "Práticas Operacionais em Confeitaria",
+        "carga_horaria": 40,
+        "compativel_bolsa": true,
+        "valor": "1.112,00",
+        "tem": false
+    },
+    {
+        "segmento": "Gastronomia",
+        "modalidade": "Aperfeiçoamento",
+        "nome_curso": "Preparo de alimentos congelados",
+        "carga_horaria": 36,
+        "compativel_bolsa": true,
+        "valor": "322,00",
+        "tem": false
+    },
+    {
+        "segmento": "Gastronomia",
+        "modalidade": "Aperfeiçoamento",
+        "nome_curso": "Preparo de Bolos Tradicionais",
+        "carga_horaria": 30,
+        "compativel_bolsa": true,
+        "valor": "459,00",
+        "tem": false
+    },
+    {
+        "segmento": "Gastronomia",
+        "modalidade": "Qualificação Profissional",
+        "nome_curso": "Salgadeiro",
+        "carga_horaria": 160,
+        "compativel_bolsa": true,
+        "valor": "1.944,99",
+        "tem": false
+    },
+    {
+        "segmento": "Gastronomia",
+        "modalidade": "Aperfeiçoamento",
+        "nome_curso": "Sommelier de Cachaça",
+        "carga_horaria": 100,
+        "compativel_bolsa": true,
+        "valor": "1.368,00",
+        "tem": false
+    },
+    {
+        "segmento": "Gastronomia",
+        "modalidade": "Aperfeiçoamento",
+        "nome_curso": "Sommelier de Chá",
+        "carga_horaria": 40,
+        "compativel_bolsa": true,
+        "valor": "520,00",
+        "tem": false
+    },
+    {
+        "segmento": "Gastronomia",
+        "modalidade": "Aperfeiçoamento",
+        "nome_curso": "Sommelier de Vinho",
+        "carga_horaria": 144,
+        "compativel_bolsa": true,
+        "valor": "2.419,00",
+        "tem": false
+    },
+    {
+        "segmento": "Gastronomia",
+        "modalidade": "Aperfeiçoamento",
+        "nome_curso": "Sommelier: Cervejas",
+        "carga_horaria": 108,
+        "compativel_bolsa": true,
+        "valor": "2.041,99",
+        "tem": false
+    },
+    {
+        "segmento": "Gastronomia",
+        "modalidade": "Qualificação Profissional",
+        "nome_curso": "Sushiman",
+        "carga_horaria": 160,
+        "compativel_bolsa": true,
+        "valor": "2.335,00",
+        "tem": false
+    },
+    {
+        "segmento": "Gastronomia",
+        "modalidade": "Aperfeiçoamento",
+        "nome_curso": "Técnicas Básicas para Cozinheiro",
+        "carga_horaria": 80,
+        "compativel_bolsa": true,
+        "valor": "960,00",
+        "tem": false
+    },
+    {
+        "segmento": "Gastronomia",
+        "modalidade": "Aperfeiçoamento",
+        "nome_curso": "Técnicas de Confeitaria",
+        "carga_horaria": 60,
+        "compativel_bolsa": true,
+        "valor": "988,99",
+        "tem": false
+    },
+    {
+        "segmento": "Gastronomia",
+        "modalidade": "Aperfeiçoamento",
+        "nome_curso": "Técnicas de Petiscos e Comida de Boteco",
+        "carga_horaria": 40,
+        "compativel_bolsa": true,
+        "valor": "487,00",
+        "tem": false
+    },
+    {
+        "segmento": "Gastronomia",
+        "modalidade": "Aperfeiçoamento",
+        "nome_curso": "Técnicas de Produção de Biscoitos Finos e Artesanais",
+        "carga_horaria": 40,
+        "compativel_bolsa": true,
+        "valor": "565,00",
+        "tem": false
+    },
+    {
+        "segmento": "Gastronomia",
+        "modalidade": "Aperfeiçoamento",
+        "nome_curso": "Técnicas de Produção de Pães Caseiros e Artesanais",
+        "carga_horaria": 40,
+        "compativel_bolsa": true,
+        "valor": "469,00",
+        "tem": false
+    },
+    {
+        "segmento": "Gastronomia",
+        "modalidade": "Aperfeiçoamento",
+        "nome_curso": "Técnicas para Garçom",
+        "carga_horaria": 36,
+        "compativel_bolsa": true,
+        "valor": null,
+        "tem": false
+    },
+    {
+        "segmento": "Gastronomia",
+        "modalidade": "Aperfeiçoamento",
+        "nome_curso": "Técnicas para Pizzaiolo",
+        "carga_horaria": 40,
+        "compativel_bolsa": true,
+        "valor": "549,00",
+        "tem": false
+    },
+    {
+        "segmento": "Gastronomia",
+        "modalidade": "Técnico de Nível Médio",
+        "nome_curso": "Técnico em Gastronomia",
+        "carga_horaria": 800,
+        "compativel_bolsa": true,
+        "valor": "7.219,00",
+        "tem": true
+    },
+    {
+        "segmento": "Gastronomia",
+        "modalidade": "Aperfeiçoamento",
+        "nome_curso": "Sustentabilidade aplicada à cozinha",
+        "carga_horaria": 20,
+        "compativel_bolsa": true,
+        "valor": "299,00",
+        "tem": false
+    },
+    {
+        "segmento": "Gestão e Negócio",
+        "modalidade": "Aperfeiçoamento",
+        "nome_curso": "Alterações no Departamento Pessoal com a Implantação do E-Social",
+        "carga_horaria": 20,
+        "compativel_bolsa": true,
+        "valor": "200,00",
+        "tem": false
+    },
+    {
+        "segmento": "Gestão e Negócio",
+        "modalidade": "Aperfeiçoamento",
+        "nome_curso": "Aperfeiçoamento em Técnicas de Administração e Planejamento de Negócios",
+        "carga_horaria": 60,
+        "compativel_bolsa": true,
+        "valor": "331,00",
+        "tem": false
+    },
+    {
+        "segmento": "Gestão e Negócio",
+        "modalidade": "Aperfeiçoamento",
+        "nome_curso": "Aplicação de Inteligência Artificial para Negócios",
+        "carga_horaria": 16,
+        "compativel_bolsa": true,
+        "valor": "150,00",
+        "tem": false
+    },
+    {
+        "segmento": "Gestão e Negócio",
+        "modalidade": "Aprendizagem",
+        "nome_curso": "Aprendizagem Profissional de Qualificação em Serviços Administrativos",
+        "carga_horaria": 1300,
+        "compativel_bolsa": true,
+        "valor": "2.792,00",
+        "tem": false
+    },
+    {
+        "segmento": "Gestão e Negócio",
+        "modalidade": "Qualificação Profissional",
+        "nome_curso": "Assistente Administrativo",
+        "carga_horaria": 160,
+        "compativel_bolsa": true,
+        "valor": "1.169,99",
+        "tem": false
+    },
+    {
+        "segmento": "Gestão e Negócio",
+        "modalidade": "Qualificação Profissional",
+        "nome_curso": "Assistente de Contabilidade",
+        "carga_horaria": 160,
+        "compativel_bolsa": true,
+        "valor": "719,00",
+        "tem": false
+    },
+    {
+        "segmento": "Gestão e Negócio",
+        "modalidade": "Qualificação Profissional",
+        "nome_curso": "Assistente de Crédito e Cobrança",
+        "carga_horaria": 160,
+        "compativel_bolsa": true,
+        "valor": "950,00",
+        "tem": false
+    },
+    {
+        "segmento": "Gestão e Negócio",
+        "modalidade": "Qualificação Profissional",
+        "nome_curso": "Assistente de Faturamento",
+        "carga_horaria": 160,
+        "compativel_bolsa": true,
+        "valor": "705,00",
+        "tem": false
+    },
+    {
+        "segmento": "Gestão e Negócio",
+        "modalidade": "Qualificação Profissional",
+        "nome_curso": "Assistente de Logística",
+        "carga_horaria": 160,
+        "compativel_bolsa": true,
+        "valor": "888,00",
+        "tem": false
+    },
+    {
+        "segmento": "Gestão e Negócio",
+        "modalidade": "Qualificação Profissional",
+        "nome_curso": "Assistente de Marketing e Vendas",
+        "carga_horaria": 160,
+        "compativel_bolsa": true,
+        "valor": "709,00",
+        "tem": false
+    },
+    {
+        "segmento": "Gestão e Negócio",
+        "modalidade": "Qualificação Profissional",
+        "nome_curso": "Assistente de Pessoal",
+        "carga_horaria": 160,
+        "compativel_bolsa": true,
+        "valor": "966,00",
+        "tem": false
+    },
+    {
+        "segmento": "Gestão e Negócio",
+        "modalidade": "Qualificação Profissional",
+        "nome_curso": "Assistente de Recursos Humanos",
+        "carga_horaria": 160,
+        "compativel_bolsa": true,
+        "valor": "990,00",
+        "tem": false
+    },
+    {
+        "segmento": "Gestão e Negócio",
+        "modalidade": "Qualificação Profissional",
+        "nome_curso": "Assistente Financeiro",
+        "carga_horaria": 160,
+        "compativel_bolsa": true,
+        "valor": "1.334,99",
+        "tem": false
+    },
+    {
+        "segmento": "Gestão e Negócio",
+        "modalidade": "Aperfeiçoamento",
+        "nome_curso": "Atualização em Língua Portuguesa",
+        "carga_horaria": 160,
+        "compativel_bolsa": false,
+        "valor": "1.060,00",
+        "tem": false
+    },
+    {
+        "segmento": "Gestão e Negócio",
+        "modalidade": "Aperfeiçoamento",
+        "nome_curso": "Currículo Turbinado: Habilidades profissionais para o sucesso",
+        "carga_horaria": 80,
+        "compativel_bolsa": true,
+        "valor": "749,99",
+        "tem": false
+    },
+    {
+        "segmento": "Gestão e Negócio",
+        "modalidade": "Aperfeiçoamento",
+        "nome_curso": "Educação Financeira",
+        "carga_horaria": 20,
+        "compativel_bolsa": true,
+        "valor": "118,00",
+        "tem": false
+    },
+    {
+        "segmento": "Gestão e Negócio",
+        "modalidade": "Aperfeiçoamento",
+        "nome_curso": "Excelência em Atendimento e Vendas",
+        "carga_horaria": 40,
+        "compativel_bolsa": true,
+        "valor": "220,00",
+        "tem": false
+    },
+    {
+        "segmento": "Gestão e Negócio",
+        "modalidade": "Aperfeiçoamento",
+        "nome_curso": "Ferramentas de inovação e modelos de negócios para empresários e gestores",
+        "carga_horaria": 60,
+        "compativel_bolsa": true,
+        "valor": "259,00",
+        "tem": false
+    },
+    {
+        "segmento": "Gestão e Negócio",
+        "modalidade": "Aperfeiçoamento",
+        "nome_curso": "Finanças pessoais - planejamento e controle",
+        "carga_horaria": 40,
+        "compativel_bolsa": false,
+        "valor": "188,00",
+        "tem": false
+    },
+    {
+        "segmento": "Gestão e Negócio",
+        "modalidade": "Aperfeiçoamento",
+        "nome_curso": "Formação em Departamento Pessoal",
+        "carga_horaria": 160,
+        "compativel_bolsa": false,
+        "valor": "800,00",
+        "tem": false
+    },
+    {
+        "segmento": "Gestão e Negócio",
+        "modalidade": "Aperfeiçoamento",
+        "nome_curso": "Gestão de crises nas redes sociais",
+        "carga_horaria": 20,
+        "compativel_bolsa": true,
+        "valor": "150,00",
+        "tem": false
+    },
+    {
+        "segmento": "Gestão e Negócio",
+        "modalidade": "Aperfeiçoamento",
+        "nome_curso": "Gestão de pequenos negócios em comércio e serviços",
+        "carga_horaria": 100,
+        "compativel_bolsa": true,
+        "valor": "452,00",
+        "tem": false
+    },
+    {
+        "segmento": "Gestão e Negócio",
+        "modalidade": "Aperfeiçoamento",
+        "nome_curso": "Gestão de Redes Sociais e Criação de Conteúdo Digital",
+        "carga_horaria": 80,
+        "compativel_bolsa": true,
+        "valor": "574,99",
+        "tem": false
+    },
+    {
+        "segmento": "Gestão e Negócio",
+        "modalidade": "Aperfeiçoamento",
+        "nome_curso": "Libras",
+        "carga_horaria": 160,
+        "compativel_bolsa": false,
+        "valor": "960,00",
+        "tem": false
+    },
+    {
+        "segmento": "Gestão e Negócio",
+        "modalidade": "Aperfeiçoamento",
+        "nome_curso": "Masp: Metodologia para Análise e Solução de Problemas",
+        "carga_horaria": 60,
+        "compativel_bolsa": true,
+        "valor": "259,00",
+        "tem": false
+    },
+    {
+        "segmento": "Gestão e Negócio",
+        "modalidade": "Aperfeiçoamento",
+        "nome_curso": "Português para estrangeiros",
+        "carga_horaria": 60,
+        "compativel_bolsa": false,
+        "valor": "420,00",
+        "tem": false
+    },
+    {
+        "segmento": "Gestão e Negócio",
+        "modalidade": "Aperfeiçoamento",
+        "nome_curso": "Posicionamento: Como sua marca deve se comportar no mercado",
+        "carga_horaria": 40,
+        "compativel_bolsa": true,
+        "valor": "189,00",
+        "tem": false
+    },
+    {
+        "segmento": "Gestão e Negócio",
+        "modalidade": "Aperfeiçoamento",
+        "nome_curso": "Qualidade no Atendimento",
+        "carga_horaria": 16,
+        "compativel_bolsa": true,
+        "valor": "150,00",
+        "tem": false
+    },
+    {
+        "segmento": "Gestão e Negócio",
+        "modalidade": "Qualificação Profissional",
+        "nome_curso": "Recepcionista",
+        "carga_horaria": 160,
+        "compativel_bolsa": true,
+        "valor": "679,99",
+        "tem": false
+    },
+    {
+        "segmento": "Gestão e Negócio",
+        "modalidade": "Aperfeiçoamento",
+        "nome_curso": "Recrutamento e Seleção",
+        "carga_horaria": 40,
+        "compativel_bolsa": true,
+        "valor": "196,00",
+        "tem": false
+    },
+    {
+        "segmento": "Gestão e Negócio",
+        "modalidade": "Aperfeiçoamento",
+        "nome_curso": "Simples nacional na prática",
+        "carga_horaria": 40,
+        "compativel_bolsa": true,
+        "valor": "233,00",
+        "tem": false
+    },
+    {
+        "segmento": "Gestão e Negócio",
+        "modalidade": "Aperfeiçoamento",
+        "nome_curso": "Técnicas de Liderança",
+        "carga_horaria": 40,
+        "compativel_bolsa": true,
+        "valor": "188,00",
+        "tem": false
+    },
+    {
+        "segmento": "Gestão e Negócio",
+        "modalidade": "Aperfeiçoamento",
+        "nome_curso": "Técnicas de Rapport: negociação e influência",
+        "carga_horaria": 60,
+        "compativel_bolsa": true,
+        "valor": "369,00",
+        "tem": false
+    },
+    {
+        "segmento": "Gestão e Negócio",
+        "modalidade": "Técnico de Nível Médio",
+        "nome_curso": "Técnico em Administração",
+        "carga_horaria": 800,
+        "compativel_bolsa": true,
+        "valor": "4.419,99",
+        "tem": true
+    },
+    {
+        "segmento": "Gestão e Negócio",
+        "modalidade": "Técnico de Nível Médio",
+        "nome_curso": "Técnico em Contabilidade",
+        "carga_horaria": 800,
+        "compativel_bolsa": true,
+        "valor": "4.770,00",
+        "tem": true
+    },
+    {
+        "segmento": "Gestão e Negócio",
+        "modalidade": "Habilitação Técnica",
+        "nome_curso": "Técnico em Finanças",
+        "carga_horaria": 800,
+        "compativel_bolsa": true,
+        "valor": "3.359,99",
+        "tem": false
+    },
+    {
+        "segmento": "Gestão e Negócio",
+        "modalidade": "Habilitação Técnica",
+        "nome_curso": "Técnico em Logística",
+        "carga_horaria": 800,
+        "compativel_bolsa": true,
+        "valor": "3.745,00",
+        "tem": false
+    },
+    {
+        "segmento": "Gestão e Negócio",
+        "modalidade": "Técnico de Nível Médio",
+        "nome_curso": "Técnico em Marketing",
+        "carga_horaria": 800,
+        "compativel_bolsa": true,
+        "valor": "4.220,00",
+        "tem": true
+    },
+    {
+        "segmento": "Gestão e Negócio",
+        "modalidade": "Técnico de Nível Médio",
+        "nome_curso": "Técnico em Recursos Humanos",
+        "carga_horaria": 800,
+        "compativel_bolsa": true,
+        "valor": "4.279,99",
+        "tem": true
+    },
+    {
+        "segmento": "Gestão e Negócio",
+        "modalidade": "Técnico de Nível Médio",
+        "nome_curso": "Técnico em Secretariado",
+        "carga_horaria": 800,
+        "compativel_bolsa": true,
+        "valor": "3.945,99",
+        "tem": true
+    },
+    {
+        "segmento": "Gestão e Negócio",
+        "modalidade": "Aperfeiçoamento",
+        "nome_curso": "Tráfego Pago Como Anunciar no Instagram e Facebook",
+        "carga_horaria": 24,
+        "compativel_bolsa": true,
+        "valor": "199,00",
+        "tem": false
+    },
+    {
+        "segmento": "Hospedagem",
+        "modalidade": "Aprendizagem",
+        "nome_curso": "Aprendizagem Profissional de Qualificação em Serviços Hoteleiros",
+        "carga_horaria": 1920,
+        "compativel_bolsa": true,
+        "valor": "2.580,00",
+        "tem": false
+    },
+    {
+        "segmento": "Hospedagem",
+        "modalidade": "Qualificação Profissional",
+        "nome_curso": "Camareiro (a) em Meios de Hospedagem",
+        "carga_horaria": 160,
+        "compativel_bolsa": true,
+        "valor": "1.089,99",
+        "tem": false
+    },
+    {
+        "segmento": "Hospedagem",
+        "modalidade": "Qualificação Profissional",
+        "nome_curso": "Recepcionista em Meios de Hospedagem",
+        "carga_horaria": 160,
+        "compativel_bolsa": false,
+        "valor": "999,00",
+        "tem": false
+    },
+    {
+        "segmento": "Moda",
+        "modalidade": "Aperfeiçoamento",
+        "nome_curso": "Ajustes e Reformas do Vestuário",
+        "carga_horaria": 40,
+        "compativel_bolsa": true,
+        "valor": "549,99",
+        "tem": false
+    },
+    {
+        "segmento": "Moda",
+        "modalidade": "Aperfeiçoamento",
+        "nome_curso": "Análise de Coloração Pessoal",
+        "carga_horaria": 40,
+        "compativel_bolsa": true,
+        "valor": "300,99",
+        "tem": false
+    },
+    {
+        "segmento": "Moda",
+        "modalidade": "Aperfeiçoamento",
+        "nome_curso": "Aperfeiçoamento em Corte E Costura",
+        "carga_horaria": 60,
+        "compativel_bolsa": true,
+        "valor": "1.204,99",
+        "tem": false
+    },
+    {
+        "segmento": "Moda",
+        "modalidade": "Aperfeiçoamento",
+        "nome_curso": "Branding e Marketing de Moda",
+        "carga_horaria": 60,
+        "compativel_bolsa": true,
+        "valor": "449,99",
+        "tem": false
+    },
+    {
+        "segmento": "Moda",
+        "modalidade": "Aperfeiçoamento",
+        "nome_curso": "Consultoria de Estilo-Personal Stylist",
+        "carga_horaria": 60,
+        "compativel_bolsa": true,
+        "valor": "455,00",
+        "tem": false
+    },
+    {
+        "segmento": "Moda",
+        "modalidade": "Aperfeiçoamento",
+        "nome_curso": "Consultoria de Imagem",
+        "carga_horaria": 160,
+        "compativel_bolsa": true,
+        "valor": "1.290,00",
+        "tem": false
+    },
+    {
+        "segmento": "Moda",
+        "modalidade": "Aperfeiçoamento",
+        "nome_curso": "Costura Criativa",
+        "carga_horaria": 80,
+        "compativel_bolsa": true,
+        "valor": "1.390,00",
+        "tem": false
+    },
+    {
+        "segmento": "Moda",
+        "modalidade": "Aperfeiçoamento",
+        "nome_curso": "Costura Prática e Moda Criativa",
+        "carga_horaria": 100,
+        "compativel_bolsa": true,
+        "valor": "2.450,96",
+        "tem": false
+    },
+    {
+        "segmento": "Moda",
+        "modalidade": "Qualificação Profissional",
+        "nome_curso": "Costureiro",
+        "carga_horaria": 212,
+        "compativel_bolsa": true,
+        "valor": "2.689,99",
+        "tem": false
+    },
+    {
+        "segmento": "Moda",
+        "modalidade": "Aperfeiçoamento",
+        "nome_curso": "Desenho de Moda Digital",
+        "carga_horaria": 95,
+        "compativel_bolsa": true,
+        "valor": "568,00",
+        "tem": false
+    },
+    {
+        "segmento": "Moda",
+        "modalidade": "Aperfeiçoamento",
+        "nome_curso": "Estamparia -  Design de Superfície",
+        "carga_horaria": 80,
+        "compativel_bolsa": true,
+        "valor": "490,00",
+        "tem": false
+    },
+    {
+        "segmento": "Moda",
+        "modalidade": "Qualificação Profissional",
+        "nome_curso": "Estilista de Moda",
+        "carga_horaria": 408,
+        "compativel_bolsa": true,
+        "valor": "3.625,00",
+        "tem": false
+    },
+    {
+        "segmento": "Moda",
+        "modalidade": "Aperfeiçoamento",
+        "nome_curso": "Moda Pet",
+        "carga_horaria": 40,
+        "compativel_bolsa": true,
+        "valor": "890,00",
+        "tem": false
+    },
+    {
+        "segmento": "Moda",
+        "modalidade": "Aperfeiçoamento",
+        "nome_curso": "Modelagem de Alfaiataria Feminina",
+        "carga_horaria": 100,
+        "compativel_bolsa": true,
+        "valor": "1.209,00",
+        "tem": false
+    },
+    {
+        "segmento": "Moda",
+        "modalidade": "Aperfeiçoamento",
+        "nome_curso": "Modelagem para Corset",
+        "carga_horaria": 80,
+        "compativel_bolsa": true,
+        "valor": "1.036,99",
+        "tem": false
+    },
+    {
+        "segmento": "Moda",
+        "modalidade": "Qualificação Profissional",
+        "nome_curso": "Modelista",
+        "carga_horaria": 210,
+        "compativel_bolsa": true,
+        "valor": "1.711,99",
+        "tem": false
+    },
+    {
+        "segmento": "Moda",
+        "modalidade": "Aperfeiçoamento",
+        "nome_curso": "Moulage",
+        "carga_horaria": 80,
+        "compativel_bolsa": true,
+        "valor": "899,99",
+        "tem": false
+    },
+    {
+        "segmento": "Moda",
+        "modalidade": "Habilitação Técnica",
+        "nome_curso": "Técnico em Produção de Moda",
+        "carga_horaria": 800,
+        "compativel_bolsa": true,
+        "valor": "4.756,00",
+        "tem": false
+    },
+    {
+        "segmento": "Moda",
+        "modalidade": "Aperfeiçoamento",
+        "nome_curso": "Vitrinismo e Visual Merchandising para o Varejo de Moda",
+        "carga_horaria": 108,
+        "compativel_bolsa": true,
+        "valor": "1.200,00",
+        "tem": false
+    },
+    {
+        "segmento": "Produção Cultural e Design",
+        "modalidade": "Aperfeiçoamento",
+        "nome_curso": "Estratégias de Captação de Recursos para Projetos Culturais",
+        "carga_horaria": 28,
+        "compativel_bolsa": true,
+        "valor": "220,00",
+        "tem": false
+    },
+    {
+        "segmento": "Produção Cultural e Design",
+        "modalidade": "Habilitação Técnica",
+        "nome_curso": "Técnico em processos fotográficos",
+        "carga_horaria": 800,
+        "compativel_bolsa": true,
+        "valor": "4.349,00",
+        "tem": false
+    },
+    {
+        "segmento": "Produção Cultural e Design",
+        "modalidade": "Técnico de Nível Médio",
+        "nome_curso": "Técnico em produção de áudio e vídeo",
+        "carga_horaria": 1200,
+        "compativel_bolsa": true,
+        "valor": "6.720,00",
+        "tem": true
+    },
+    {
+        "segmento": "Produção Cultural e Design",
+        "modalidade": "Técnico de Nível Médio",
+        "nome_curso": "Técnico em Publicidade",
+        "carga_horaria": 900,
+        "compativel_bolsa": false,
+        "valor": "5.875,00",
+        "tem": true
+    },
+    {
+        "segmento": "Saúde",
+        "modalidade": "Aperfeiçoamento",
+        "nome_curso": "Análise em Faturamento Hospitalar",
+        "carga_horaria": 48,
+        "compativel_bolsa": true,
+        "valor": "289,00",
+        "tem": false
+    },
+    {
+        "segmento": "Saúde",
+        "modalidade": "Aprendizagem",
+        "nome_curso": "Aprendizagem Profissional de Qualificação em Serviços de Farmácias e Drogarias",
+        "carga_horaria": 1528,
+        "compativel_bolsa": true,
+        "valor": "2.209,00",
+        "tem": false
+    },
+    {
+        "segmento": "Saúde",
+        "modalidade": "Aperfeiçoamento",
+        "nome_curso": "Assistência em Enfermagem Oncológica",
+        "carga_horaria": 48,
+        "compativel_bolsa": true,
+        "valor": "347,00",
+        "tem": false
+    },
+    {
+        "segmento": "Saúde",
+        "modalidade": "Qualificação Profissional",
+        "nome_curso": "Atendente de Farmácia",
+        "carga_horaria": 240,
+        "compativel_bolsa": true,
+        "valor": "999,99",
+        "tem": false
+    },
+    {
+        "segmento": "Saúde",
+        "modalidade": "Aperfeiçoamento",
+        "nome_curso": "Atualização em Procedimentos Técnicos aos Profissionais de Enfermagem",
+        "carga_horaria": 200,
+        "compativel_bolsa": true,
+        "valor": null,
+        "tem": false
+    },
+    {
+        "segmento": "Saúde",
+        "modalidade": "Aperfeiçoamento",
+        "nome_curso": "Cálculos Utilizados na Dispensação e Manipulação Farmacêutica",
+        "carga_horaria": 16,
+        "compativel_bolsa": true,
+        "valor": "144,00",
+        "tem": false
+    },
+    {
+        "segmento": "Saúde",
+        "modalidade": "Qualificação Profissional",
+        "nome_curso": "Cuidador de Idoso",
+        "carga_horaria": 160,
+        "compativel_bolsa": true,
+        "valor": "814,99",
+        "tem": false
+    },
+    {
+        "segmento": "Saúde",
+        "modalidade": "Especialização Técnica de Nível Médio",
+        "nome_curso": "Especialização em Enfermagem em Saúde Mental",
+        "carga_horaria": 300,
+        "compativel_bolsa": true,
+        "valor": "1.489,00",
+        "tem": false
+    },
+    {
+        "segmento": "Saúde",
+        "modalidade": "Especialização Técnica de Nível Médio",
+        "nome_curso": "Especialização Técnica em Enfermagem do Trabalho",
+        "carga_horaria": 340,
+        "compativel_bolsa": true,
+        "valor": "1.299,99",
+        "tem": false
+    },
+    {
+        "segmento": "Saúde",
+        "modalidade": "Especialização Técnica de Nível Médio",
+        "nome_curso": "Especialização Técnica em Instrumentação Cirúrgica",
+        "carga_horaria": 360,
+        "compativel_bolsa": true,
+        "valor": "1.889,00",
+        "tem": false
+    },
+    {
+        "segmento": "Saúde",
+        "modalidade": "Especialização Técnica de Nível Médio",
+        "nome_curso": "Especialização Técnica em Unidade de Terapia Intensiva",
+        "carga_horaria": 380,
+        "compativel_bolsa": true,
+        "valor": "1.900,00",
+        "tem": false
+    },
+    {
+        "segmento": "Saúde",
+        "modalidade": "Especialização Técnica de Nível Médio",
+        "nome_curso": "Especialização Técnica em Urgência e Emergência",
+        "carga_horaria": 380,
+        "compativel_bolsa": true,
+        "valor": "1.822,00",
+        "tem": false
+    },
+    {
+        "segmento": "Saúde",
+        "modalidade": "Aperfeiçoamento",
+        "nome_curso": "Excelência no Atendimento ao Cliente em Farmácias e drogarias",
+        "carga_horaria": 24,
+        "compativel_bolsa": true,
+        "valor": "158,00",
+        "tem": false
+    },
+    {
+        "segmento": "Saúde",
+        "modalidade": "Aperfeiçoamento",
+        "nome_curso": "Faturamento de Serviços de Saúde",
+        "carga_horaria": 96,
+        "compativel_bolsa": true,
+        "valor": "536,00",
+        "tem": false
+    },
+    {
+        "segmento": "Saúde",
+        "modalidade": "Qualificação Profissional",
+        "nome_curso": "Higienista em Serviços de Saúde",
+        "carga_horaria": 240,
+        "compativel_bolsa": true,
+        "valor": "1.021,00",
+        "tem": false
+    },
+    {
+        "segmento": "Saúde",
+        "modalidade": "Aperfeiçoamento",
+        "nome_curso": "Massagem Modeladora",
+        "carga_horaria": 48,
+        "compativel_bolsa": true,
+        "valor": "549,00",
+        "tem": false
+    },
+    {
+        "segmento": "Saúde",
+        "modalidade": "Aperfeiçoamento",
+        "nome_curso": "Noções de Interpretação Clínica de Exames Laboratoriais",
+        "carga_horaria": 40,
+        "compativel_bolsa": true,
+        "valor": "250,00",
+        "tem": false
+    },
+    {
+        "segmento": "Saúde",
+        "modalidade": "Aperfeiçoamento",
+        "nome_curso": "Operações Farmacotécnicas Aplicadas á Farmácia de Manipulação",
+        "carga_horaria": 36,
+        "compativel_bolsa": true,
+        "valor": null,
+        "tem": false
+    },
+    {
+        "segmento": "Saúde",
+        "modalidade": "Aperfeiçoamento",
+        "nome_curso": "Procedimentos Básicos de Enfermagem e Protocolos de Aplicabilidade na Prática Clínica",
+        "carga_horaria": 200,
+        "compativel_bolsa": true,
+        "valor": null,
+        "tem": false
+    },
+    {
+        "segmento": "Saúde",
+        "modalidade": "Aperfeiçoamento",
+        "nome_curso": "Qualidade e Eficiência na Coleta de Sangue Venoso e Capilar",
+        "carga_horaria": 40,
+        "compativel_bolsa": true,
+        "valor": "404,40",
+        "tem": false
+    },
+    {
+        "segmento": "Saúde",
+        "modalidade": "Qualificação Profissional",
+        "nome_curso": "Recepcionista em Serviços de Saúde",
+        "carga_horaria": 240,
+        "compativel_bolsa": true,
+        "valor": "1.349,00",
+        "tem": false
+    },
+    {
+        "segmento": "Saúde",
+        "modalidade": "Aperfeiçoamento",
+        "nome_curso": "Técnicas de Aplicação de Medicamentos Injetavéis",
+        "carga_horaria": 40,
+        "compativel_bolsa": true,
+        "valor": "445,00",
+        "tem": false
+    },
+    {
+        "segmento": "Saúde",
+        "modalidade": "Técnico de Nível Médio",
+        "nome_curso": "Técnico em Análises Clínicas",
+        "carga_horaria": 1200,
+        "compativel_bolsa": true,
+        "valor": "7.700,00",
+        "tem": true
+    },
+    {
+        "segmento": "Saúde",
+        "modalidade": "Habilitação Técnica",
+        "nome_curso": "Técnico em Enfermagem",
+        "carga_horaria": 1800,
+        "compativel_bolsa": true,
+        "valor": "9.800,00",
+        "tem": false
+    },
+    {
+        "segmento": "Saúde",
+        "modalidade": "Habilitação Técnica",
+        "nome_curso": "Técnico em Estética",
+        "carga_horaria": 1200,
+        "compativel_bolsa": true,
+        "valor": "7.800,00",
+        "tem": false
+    },
+    {
+        "segmento": "Saúde",
+        "modalidade": "Técnico de Nível Médio",
+        "nome_curso": "Técnico em Farmácia",
+        "carga_horaria": 1200,
+        "compativel_bolsa": true,
+        "valor": "6.270,00",
+        "tem": true
+    },
+    {
+        "segmento": "Saúde",
+        "modalidade": "Técnico de Nível Médio",
+        "nome_curso": "Técnico em Hemoterapia",
+        "carga_horaria": 1200,
+        "compativel_bolsa": true,
+        "valor": "6.999,99",
+        "tem": true
+    },
+    {
+        "segmento": "Saúde",
+        "modalidade": "Habilitação Técnica",
+        "nome_curso": "Técnico em Massoterapia",
+        "carga_horaria": 1200,
+        "compativel_bolsa": true,
+        "valor": "5.499,99",
+        "tem": false
+    },
+    {
+        "segmento": "Saúde",
+        "modalidade": "Técnico de Nível Médio",
+        "nome_curso": "Técnico em Nutrição E Dietética",
+        "carga_horaria": 1200,
+        "compativel_bolsa": true,
+        "valor": "5.500,00",
+        "tem": true
+    },
+    {
+        "segmento": "Saúde",
+        "modalidade": "Técnico de Nível Médio",
+        "nome_curso": "Técnico em Podologia",
+        "carga_horaria": 1200,
+        "compativel_bolsa": true,
+        "valor": "6.499,00",
+        "tem": true
+    },
+    {
+        "segmento": "Saúde",
+        "modalidade": "Qualificação Profissional",
+        "nome_curso": "Agente Comunitário",
+        "carga_horaria": 240,
+        "compativel_bolsa": false,
+        "valor": "1.750,00",
+        "tem": false
+    },
+    {
+        "segmento": "Saúde",
+        "modalidade": "Aprendizagem",
+        "nome_curso": "Aprendizagem Profissional de Qualificação em Serviços Administrativos em Instituições de Saúde.",
+        "carga_horaria": 1520,
+        "compativel_bolsa": true,
+        "valor": "3.550,00",
+        "tem": false
+    },
+    {
+        "segmento": "Saúde",
+        "modalidade": "Aperfeiçoamento",
+        "nome_curso": "Atendimento em Pet Shop",
+        "carga_horaria": 32,
+        "compativel_bolsa": true,
+        "valor": "161,00",
+        "tem": false
+    },
+    {
+        "segmento": "Saúde",
+        "modalidade": "Aperfeiçoamento",
+        "nome_curso": "Banho e tosa em cães e gatos",
+        "carga_horaria": 108,
+        "compativel_bolsa": true,
+        "valor": null,
+        "tem": false
+    },
+    {
+        "segmento": "Saúde",
+        "modalidade": "Aperfeiçoamento",
+        "nome_curso": "Drenagem Linfática Manual",
+        "carga_horaria": 60,
+        "compativel_bolsa": true,
+        "valor": "452,00",
+        "tem": false
+    },
+    {
+        "segmento": "Saúde",
+        "modalidade": "Aperfeiçoamento",
+        "nome_curso": "Habilidades Essenciais no Manejo de Feridas",
+        "carga_horaria": 20,
+        "compativel_bolsa": true,
+        "valor": null,
+        "tem": false
+    },
+    {
+        "segmento": "Saúde",
+        "modalidade": "Aperfeiçoamento",
+        "nome_curso": "Habilitação em Sutura Simples para Enfermeiros",
+        "carga_horaria": 20,
+        "compativel_bolsa": true,
+        "valor": null,
+        "tem": false
+    },
+    {
+        "segmento": "Saúde",
+        "modalidade": "Aperfeiçoamento",
+        "nome_curso": "Instrumentação em Cirurgia Videolaparoscópica",
+        "carga_horaria": 40,
+        "compativel_bolsa": true,
+        "valor": null,
+        "tem": false
+    },
+    {
+        "segmento": "Saúde",
+        "modalidade": "Aperfeiçoamento",
+        "nome_curso": "Massagem Relaxante",
+        "carga_horaria": 48,
+        "compativel_bolsa": true,
+        "valor": null,
+        "tem": false
+    },
+    {
+        "segmento": "Saúde",
+        "modalidade": "Aperfeiçoamento",
+        "nome_curso": "Práticas Operacionais em Nutrição e Dietética",
+        "carga_horaria": 240,
+        "compativel_bolsa": true,
+        "valor": "3.803,00",
+        "tem": false
+    },
+    {
+        "segmento": "Saúde",
+        "modalidade": "Aperfeiçoamento",
+        "nome_curso": "Simulação Realística: diretrizes do suporte básico de vida",
+        "carga_horaria": 40,
+        "compativel_bolsa": true,
+        "valor": "204,00",
+        "tem": false
+    },
+    {
+        "segmento": "Saúde",
+        "modalidade": "Qualificação Profissional",
+        "nome_curso": "Vendedor de Produtos e Serviços Ópticos",
+        "carga_horaria": 240,
+        "compativel_bolsa": false,
+        "valor": "1.269,00",
+        "tem": false
+    },
+    {
+        "segmento": "Segurança",
+        "modalidade": "Aprendizagem",
+        "nome_curso": "Aprendizagem Profissional de Qualificação em Serviços de Vigilância",
+        "carga_horaria": 800,
+        "compativel_bolsa": true,
+        "valor": "3.528,00",
+        "tem": false
+    },
+    {
+        "segmento": "Segurança",
+        "modalidade": "Aperfeiçoamento",
+        "nome_curso": "NR 10- Segurança em Instalações em eletricidade",
+        "carga_horaria": 16,
+        "compativel_bolsa": true,
+        "valor": "360,00",
+        "tem": false
+    },
+    {
+        "segmento": "Segurança",
+        "modalidade": "Aperfeiçoamento",
+        "nome_curso": "NR 20- Segurança e Saúde no Trabalho com Inflamáveis e Combustíveis.",
+        "carga_horaria": 40,
+        "compativel_bolsa": true,
+        "valor": "299,00",
+        "tem": false
+    },
+    {
+        "segmento": "Segurança",
+        "modalidade": "Aperfeiçoamento",
+        "nome_curso": "NR 23- Proteção Contra Incêndio",
+        "carga_horaria": 40,
+        "compativel_bolsa": true,
+        "valor": "299,00",
+        "tem": false
+    },
+    {
+        "segmento": "Segurança",
+        "modalidade": "Aperfeiçoamento",
+        "nome_curso": "NR 35 – Segurança no Trabalho em Altura",
+        "carga_horaria": 20,
+        "compativel_bolsa": true,
+        "valor": "199,99",
+        "tem": false
+    },
+    {
+        "segmento": "Segurança",
+        "modalidade": "Aperfeiçoamento",
+        "nome_curso": "NR 5 – CIPA: Comissão Interna de Prevenção de Acidentes",
+        "carga_horaria": 16,
+        "compativel_bolsa": true,
+        "valor": "226,00",
+        "tem": false
+    },
+    {
+        "segmento": "Segurança",
+        "modalidade": "Aperfeiçoamento",
+        "nome_curso": "NR 9 – Programa de Prevenção de Riscos Ambientais",
+        "carga_horaria": 20,
+        "compativel_bolsa": true,
+        "valor": "116,00",
+        "tem": false
+    },
+    {
+        "segmento": "Segurança",
+        "modalidade": "Habilitação Técnica",
+        "nome_curso": "Técnico em Prevenção e Combate a Incêndio",
+        "carga_horaria": 1000,
+        "compativel_bolsa": true,
+        "valor": "5.250,00",
+        "tem": false
+    },
+    {
+        "segmento": "Segurança",
+        "modalidade": "Técnico de Nível Médio",
+        "nome_curso": "Técnico em Segurança Do Trabalho",
+        "carga_horaria": 1200,
+        "compativel_bolsa": true,
+        "valor": "5.366,00",
+        "tem": true
+    },
+    {
+        "segmento": "Segurança",
+        "modalidade": "Ação extensiva",
+        "nome_curso": "Treinamento e Capacitação dos Trabalhadores em Postos de Serviços Revendedores de Combustíveis Automotivos conforme NR 20",
+        "carga_horaria": 4,
+        "compativel_bolsa": false,
+        "valor": "99,00",
+        "tem": false
+    },
+    {
+        "segmento": "Tecnologia e Games",
+        "modalidade": "Qualificação Profissional",
+        "nome_curso": "Administrador de Banco de Dados",
+        "carga_horaria": 200,
+        "compativel_bolsa": true,
+        "valor": "1.200,00",
+        "tem": false
+    },
+    {
+        "segmento": "Tecnologia e Games",
+        "modalidade": "Qualificação Profissional",
+        "nome_curso": "Administrador de Redes",
+        "carga_horaria": 200,
+        "compativel_bolsa": true,
+        "valor": "1.185,00",
+        "tem": false
+    },
+    {
+        "segmento": "Tecnologia e Games",
+        "modalidade": "Aprendizagem",
+        "nome_curso": "Aprendizagem Profissional de Qualificação em Desenvolvimento de Softwares",
+        "carga_horaria": 1000,
+        "compativel_bolsa": true,
+        "valor": null,
+        "tem": false
+    },
+    {
+        "segmento": "Tecnologia e Games",
+        "modalidade": "Aperfeiçoamento",
+        "nome_curso": "Arquitetura de Sistemas Cloud Computing",
+        "carga_horaria": 30,
+        "compativel_bolsa": true,
+        "valor": "280,00",
+        "tem": false
+    },
+    {
+        "segmento": "Tecnologia e Games",
+        "modalidade": "Qualificação Profissional",
+        "nome_curso": "Assistente de Tecnologias da Informação",
+        "carga_horaria": 200,
+        "compativel_bolsa": true,
+        "valor": "1.044,99",
+        "tem": false
+    },
+    {
+        "segmento": "Tecnologia e Games",
+        "modalidade": "Aperfeiçoamento",
+        "nome_curso": "AutoCAD - Desenho de Ambientes em 2D",
+        "carga_horaria": 60,
+        "compativel_bolsa": true,
+        "valor": "474,00",
+        "tem": false
+    },
+    {
+        "segmento": "Tecnologia e Games",
+        "modalidade": "Aperfeiçoamento",
+        "nome_curso": "ChatGPT na Prática",
+        "carga_horaria": 36,
+        "compativel_bolsa": false,
+        "valor": "209,00",
+        "tem": false
+    },
+    {
+        "segmento": "Tecnologia e Games",
+        "modalidade": "Aperfeiçoamento",
+        "nome_curso": "Cloud computing - Gerenciamento de Serviços de computação em nuvem",
+        "carga_horaria": 100,
+        "compativel_bolsa": true,
+        "valor": "860,00",
+        "tem": false
+    },
+    {
+        "segmento": "Tecnologia e Games",
+        "modalidade": "Aperfeiçoamento",
+        "nome_curso": "Construção de Websites com PHP e MySQL",
+        "carga_horaria": 60,
+        "compativel_bolsa": true,
+        "valor": "508,00",
+        "tem": false
+    },
+    {
+        "segmento": "Tecnologia e Games",
+        "modalidade": "Qualificação Profissional",
+        "nome_curso": "Desenvolvedor Back-end",
+        "carga_horaria": 500,
+        "compativel_bolsa": true,
+        "valor": "12.739,00",
+        "tem": false
+    },
+    {
+        "segmento": "Tecnologia e Games",
+        "modalidade": "Qualificação Profissional",
+        "nome_curso": "Desenvolvedor Front-End",
+        "carga_horaria": 264,
+        "compativel_bolsa": true,
+        "valor": "1.146,00",
+        "tem": false
+    },
+    {
+        "segmento": "Tecnologia e Games",
+        "modalidade": "Aperfeiçoamento",
+        "nome_curso": "Desenvolvimento de Aplicativos Móveis",
+        "carga_horaria": 100,
+        "compativel_bolsa": true,
+        "valor": "450,00",
+        "tem": false
+    },
+    {
+        "segmento": "Tecnologia e Games",
+        "modalidade": "Qualificação Profissional",
+        "nome_curso": "Editor de Projeto Visual Gráfico",
+        "carga_horaria": 160,
+        "compativel_bolsa": true,
+        "valor": "705,00",
+        "tem": false
+    },
+    {
+        "segmento": "Tecnologia e Games",
+        "modalidade": "Aperfeiçoamento",
+        "nome_curso": "Excel Com Vba e Dashboard",
+        "carga_horaria": 60,
+        "compativel_bolsa": true,
+        "valor": "667,90",
+        "tem": false
+    },
+    {
+        "segmento": "Tecnologia e Games",
+        "modalidade": "Aperfeiçoamento",
+        "nome_curso": "Formação - programação python",
+        "carga_horaria": 156,
+        "compativel_bolsa": true,
+        "valor": "675,00",
+        "tem": false
+    },
+    {
+        "segmento": "Tecnologia e Games",
+        "modalidade": "Aperfeiçoamento",
+        "nome_curso": "Front-End: Html, Css, Bootstrap, js e Jquery",
+        "carga_horaria": 100,
+        "compativel_bolsa": true,
+        "valor": "400,00",
+        "tem": false
+    },
+    {
+        "segmento": "Tecnologia e Games",
+        "modalidade": "Aperfeiçoamento",
+        "nome_curso": "Implementar protocolos de rede em roteadores e switches",
+        "carga_horaria": 96,
+        "compativel_bolsa": true,
+        "valor": "431,50",
+        "tem": false
+    },
+    {
+        "segmento": "Tecnologia e Games",
+        "modalidade": "Programa Socioprofissional",
+        "nome_curso": "Informática para Melhor Idade - COMERCIAL",
+        "carga_horaria": 100,
+        "compativel_bolsa": false,
+        "valor": "537,00",
+        "tem": false
+    },
+    {
+        "segmento": "Tecnologia e Games",
+        "modalidade": "Aperfeiçoamento",
+        "nome_curso": "Informática Windows e Office Fundamental",
+        "carga_horaria": 100,
+        "compativel_bolsa": true,
+        "valor": "501,99",
+        "tem": false
+    },
+    {
+        "segmento": "Tecnologia e Games",
+        "modalidade": "Aperfeiçoamento",
+        "nome_curso": "Inteligência Artificial - Como Fazer a Pergunta Correta",
+        "carga_horaria": 20,
+        "compativel_bolsa": true,
+        "valor": "150,00",
+        "tem": false
+    },
+    {
+        "segmento": "Tecnologia e Games",
+        "modalidade": "Aperfeiçoamento",
+        "nome_curso": "Lógica de Programação",
+        "carga_horaria": 40,
+        "compativel_bolsa": true,
+        "valor": "450,00",
+        "tem": false
+    },
+    {
+        "segmento": "Tecnologia e Games",
+        "modalidade": "Aperfeiçoamento",
+        "nome_curso": "Microsoft Power bi - Avançado",
+        "carga_horaria": 20,
+        "compativel_bolsa": true,
+        "valor": "378,00",
+        "tem": false
+    },
+    {
+        "segmento": "Tecnologia e Games",
+        "modalidade": "Aperfeiçoamento",
+        "nome_curso": "Microsoft Power Bi - Básico",
+        "carga_horaria": 20,
+        "compativel_bolsa": false,
+        "valor": "370,00",
+        "tem": false
+    },
+    {
+        "segmento": "Tecnologia e Games",
+        "modalidade": "Aperfeiçoamento",
+        "nome_curso": "PHP com MySQL",
+        "carga_horaria": 160,
+        "compativel_bolsa": true,
+        "valor": "970,00",
+        "tem": false
+    },
+    {
+        "segmento": "Tecnologia e Games",
+        "modalidade": "Aperfeiçoamento",
+        "nome_curso": "Planejar e implementar a segurança física e lógica em redes de computadores",
+        "carga_horaria": 72,
+        "compativel_bolsa": true,
+        "valor": "350,00",
+        "tem": false
+    },
+    {
+        "segmento": "Tecnologia e Games",
+        "modalidade": "Qualificação Profissional",
+        "nome_curso": "Programador de Sistemas",
+        "carga_horaria": 200,
+        "compativel_bolsa": true,
+        "valor": "1.159,99",
+        "tem": false
+    },
+    {
+        "segmento": "Tecnologia e Games",
+        "modalidade": "Qualificação Profissional",
+        "nome_curso": "Programador Web",
+        "carga_horaria": 240,
+        "compativel_bolsa": true,
+        "valor": "1.119,99",
+        "tem": false
+    },
+    {
+        "segmento": "Tecnologia e Games",
+        "modalidade": "Aperfeiçoamento",
+        "nome_curso": "Proteção de dados em segurança de redes de computadores",
+        "carga_horaria": 36,
+        "compativel_bolsa": true,
+        "valor": "199,90",
+        "tem": false
+    },
+    {
+        "segmento": "Tecnologia e Games",
+        "modalidade": "Aperfeiçoamento",
+        "nome_curso": "Técnicas Avançadas de Word, Excel e Powerpoint",
+        "carga_horaria": 60,
+        "compativel_bolsa": true,
+        "valor": "399,00",
+        "tem": false
+    },
+    {
+        "segmento": "Tecnologia e Games",
+        "modalidade": "Técnico de Nível Médio",
+        "nome_curso": "Técnico em Ciências de Dados",
+        "carga_horaria": 1000,
+        "compativel_bolsa": true,
+        "valor": "5.228,00",
+        "tem": true
+    },
+    {
+        "segmento": "Tecnologia e Games",
+        "modalidade": "Técnico de Nível Médio",
+        "nome_curso": "Técnico em Computação Gráfica",
+        "carga_horaria": 1000,
+        "compativel_bolsa": true,
+        "valor": "5.215,00",
+        "tem": true
+    },
+    {
+        "segmento": "Tecnologia e Games",
+        "modalidade": "Técnico de Nível Médio",
+        "nome_curso": "Técnico em Desenvolvimento de Sistemas",
+        "carga_horaria": 1200,
+        "compativel_bolsa": true,
+        "valor": "6.235,00",
+        "tem": true
+    },
+    {
+        "segmento": "Tecnologia e Games",
+        "modalidade": "Habilitação Técnica",
+        "nome_curso": "Técnico em Informática",
+        "carga_horaria": 1200,
+        "compativel_bolsa": true,
+        "valor": "4.675,00",
+        "tem": false
+    },
+    {
+        "segmento": "Tecnologia e Games",
+        "modalidade": "Técnico de Nível Médio",
+        "nome_curso": "Técnico em Informática para Internet",
+        "carga_horaria": 1000,
+        "compativel_bolsa": true,
+        "valor": "5.226,00",
+        "tem": true
+    },
+    {
+        "segmento": "Tecnologia e Games",
+        "modalidade": "Técnico de Nível Médio",
+        "nome_curso": "Técnico em Inteligência Artificial",
+        "carga_horaria": 1200,
+        "compativel_bolsa": true,
+        "valor": "6.232,00",
+        "tem": true
+    },
+    {
+        "segmento": "Tecnologia e Games",
+        "modalidade": "Técnico de Nível Médio",
+        "nome_curso": "Técnico em Programação de Jogos Digitais",
+        "carga_horaria": 1000,
+        "compativel_bolsa": true,
+        "valor": "5.215,00",
+        "tem": true
+    },
+    {
+        "segmento": "Tecnologia e Games",
+        "modalidade": "Habilitação Técnica",
+        "nome_curso": "Técnico em Redes de Computadores",
+        "carga_horaria": 1000,
+        "compativel_bolsa": true,
+        "valor": "4.438,00",
+        "tem": false
+    },
+    {
+        "segmento": "Tecnologia e Games",
+        "modalidade": "Técnico de Nível Médio",
+        "nome_curso": "Técnico em Segurança Cibernética",
+        "carga_horaria": 1000,
+        "compativel_bolsa": true,
+        "valor": "5.536,00",
+        "tem": true
+    },
+    {
+        "segmento": "Tecnologia e Games",
+        "modalidade": "Aperfeiçoamento",
+        "nome_curso": "Informática Básica",
+        "carga_horaria": 20,
+        "compativel_bolsa": true,
+        "valor": "140,00",
+        "tem": false
+    },
+    {
+        "segmento": "Transporte e Armazenagem",
+        "modalidade": "Aprendizagem",
+        "nome_curso": "Aprendizagem Profissional de Qualificação em Serviços de Atendimento em Postos de Combustíveis",
+        "carga_horaria": 1540,
+        "compativel_bolsa": true,
+        "valor": "2.726,00",
+        "tem": false
+    },
+    {
+        "segmento": "Transporte e Armazenagem",
+        "modalidade": "Qualificação Profissional",
+        "nome_curso": "Frentista",
+        "carga_horaria": 160,
+        "compativel_bolsa": true,
+        "valor": "1.030,00",
+        "tem": false
+    },
+    {
+        "segmento": "Turismo",
+        "modalidade": "Aperfeiçoamento",
+        "nome_curso": "Atendimento, Hospitalidade e Cidadania Profissional",
+        "carga_horaria": 20,
+        "compativel_bolsa": true,
+        "valor": null,
+        "tem": false
+    }
+];
+const calendarData = {
+    "2025": {
+        "feriados": [
+            "2025-01-01",
+            "2025-03-03",
+            "2025-03-04",
+            "2025-04-17",
+            "2025-04-18",
+            "2025-04-21",
+            "2025-05-01",
+            "2025-06-19",
+            "2025-11-15",
+            "2025-11-30",
+            "2025-12-25"
+        ],
+        "pontes": [
+            "2025-06-20"
+        ],
+        "recessos": {
+            "GERAL": [
+                {
+                    "start": "2025-07-07",
+                    "end": "2025-07-26"
+                }
+            ],
+            "APRENDIZAGEM": []
+        },
+        "nao_letivos": [
+            "2025-02-03",
+            "2025-02-04",
+            "2025-02-05",
+            "2025-02-06",
+            "2025-02-07",
+            "2025-03-05",
+            "2025-07-28",
+            "2025-07-29",
+            "2025-07-30",
+            "2025-07-31",
+            "2025-08-01",
+            "2025-11-20",
+            "2025-11-21",
+            "2025-12-22",
+            "2025-12-23",
+            "2025-12-24",
+            "2025-12-26",
+            "2025-12-29",
+            "2025-12-30",
+            "2025-12-31"
+        ]
+    },
+    "2026": {
+        "feriados": [
+            "2026-01-01",
+            "2026-02-16",
+            "2026-02-17",
+            "2026-04-02",
+            "2026-04-03",
+            "2026-04-21",
+            "2026-05-01",
+            "2026-06-04",
+            "2026-09-07",
+            "2026-10-12",
+            "2026-10-15",
+            "2026-11-02",
+            "2026-11-15",
+            "2026-11-20",
+            "2026-11-30",
+            "2026-12-25"
+        ],
+        "pontes": [
+            "2026-02-18",
+            "2026-04-20",
+            "2026-06-05"
+        ],
+        "recessos": {
+            "FIC": [
+                {
+                    "start": "2026-07-13",
+                    "end": "2026-08-01"
+                }
+            ],
+            "TEM": [
+                {
+                    "start": "2026-07-13",
+                    "end": "2026-08-01"
+                }
+            ],
+            "APRENDIZAGEM": [
+                {
+                    "start": "2026-07-13",
+                    "end": "2026-07-25"
+                }
+            ]
+        },
+        "nao_letivos": [
+            "2026-01-02",
+            "2026-01-05",
+            "2026-01-06",
+            "2026-01-07",
+            "2026-01-08",
+            "2026-01-09",
+            "2026-01-12",
+            "2026-01-13",
+            "2026-01-14",
+            "2026-01-15",
+            "2026-01-16",
+            "2026-01-19",
+            "2026-01-20",
+            "2026-01-21",
+            "2026-01-22",
+            "2026-01-23",
+            "2026-01-26",
+            "2026-01-27",
+            "2026-01-28",
+            "2026-01-29",
+            "2026-01-30",
+            "2026-02-02",
+            "2026-02-03",
+            "2026-02-04",
+            "2026-02-05",
+            "2026-02-06",
+            "2026-02-09",
+            "2026-08-03",
+            "2026-08-04",
+            "2026-08-05",
+            "2026-08-06",
+            "2026-08-07",
+            "2026-12-21",
+            "2026-12-22",
+            "2026-12-23",
+            "2026-12-24",
+            "2026-12-28",
+            "2026-12-29",
+            "2026-12-30",
+            "2026-12-31"
+        ]
+    },
+    "2027": {
+        "feriados": [
+            "2027-01-01",
+            "2027-02-08",
+            "2027-02-09",
+            "2027-03-25",
+            "2027-03-26",
+            "2027-04-21",
+            "2027-05-01",
+            "2027-05-27",
+            "2027-09-07",
+            "2027-10-12",
+            "2027-10-15",
+            "2027-11-02",
+            "2027-11-15",
+            "2027-11-20",
+            "2027-11-30",
+            "2027-12-25"
+        ],
+        "pontes": [
+            "2027-05-28",
+            "2027-09-06",
+            "2027-11-01",
+            "2027-11-29"
+        ],
+        "recessos": {
+            "GERAL": [
+                {
+                    "start": "2027-01-02",
+                    "end": "2027-02-14"
+                }
+            ]
+        },
+        "nao_letivos": [
+            "2027-02-10",
+            "2027-07-05",
+            "2027-07-06",
+            "2027-07-07",
+            "2027-07-08",
+            "2027-07-09",
+            "2027-07-12",
+            "2027-07-13",
+            "2027-07-14",
+            "2027-07-15",
+            "2027-07-16",
+            "2027-07-19",
+            "2027-07-20",
+            "2027-07-21",
+            "2027-07-22",
+            "2027-07-23",
+            "2027-07-26",
+            "2027-07-27",
+            "2027-07-28",
+            "2027-07-29",
+            "2027-07-30",
+            "2027-12-20",
+            "2027-12-21",
+            "2027-12-22",
+            "2027-12-23",
+            "2027-12-24",
+            "2027-12-27",
+            "2027-12-28",
+            "2027-12-29",
+            "2027-12-30",
+            "2027-12-31"
+        ]
+    }
+};
+// FIM DO ARQUIVO DE DADOS

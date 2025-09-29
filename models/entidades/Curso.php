@@ -115,7 +115,7 @@ class Curso {
                     c.modalidade,
                     c.curso_tem,
                     c.bolsa_compativel,
-                    c.dias_semana
+                    c.valor
                 FROM cursos c
                 LEFT JOIN tipos_sala ts ON c.idTipo_sala = ts.idTipo_sala
                 WHERE 1=1
