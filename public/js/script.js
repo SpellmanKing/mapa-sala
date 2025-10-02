@@ -83,9 +83,9 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             // Carrega dados para Agendamento/Detalhe/Alocação
             await Promise.all([
-                 API.getAllCursos().then(data => SGST.dadosCursos = data),
-                 API.getAllInstrutores().then(data => SGST.dadosInstrutores = data),
-                 API.getAllSalas().then(data => SGST.dadosSalas = data),
+                API.getAllCursos().then(data => SGST.dadosCursos = data),
+                API.getAllInstrutores().then(data => SGST.dadosInstrutores = data),
+                API.getAllSalas().then(data => SGST.dadosSalas = data),
             ]);
             
             // Popula os selects do modal de agendamento e detalhes

@@ -36,159 +36,83 @@
 
     /**
      * Exibe uma mensagem de notificação (toast) no canto da tela.
-     * Adiciona um elemento div no body e o remove após um tempo.
-     * @param {string} message - A mensagem a ser exibida.
-     * @param {('success'|'error'|'warning'|'info')} type - Tipo da mensagem (para estilização).
+     * @param {string} message - Mensagem a ser exibida.
+     * @param {string} type - Tipo de mensagem ('success', 'error', 'info').
      */
     SGST.Utils.showToast = (message, type = 'info') => {
-        // Cria ou encontra o container
-        let container = document.getElementById('toast-container');
-        if (!container) {
-            container = document.createElement('div');
-            container.id = 'toast-container';
-            // Adiciona o CSS básico do container
-            container.style.cssText = `
-                position: fixed;
-                top: 20px;
-                right: 20px;
-                z-index: 1000;
-                display: flex;
-                flex-direction: column-reverse; /* Novas mensagens ficam no topo */
-            `;
-            document.body.appendChild(container);
-        }
-
-        // Cria o elemento toast
         const toast = document.createElement('div');
-        toast.className = `toast toast-${type}`;
+        toast.classList.add('toast', `toast-${type}`);
         toast.textContent = message;
-        
-        // Estilização base do toast (complementar ao style.css)
-        toast.style.cssText = `
-            margin-bottom: 10px;
-            padding: 10px 20px;
-            border-radius: 5px;
-            color: #fff;
-            box-shadow: 0 3px 6px rgba(0,0,0,0.2);
-            opacity: 0;
-            transition: opacity 0.5s, transform 0.5s;
-            transform: translateX(100%);
-            cursor: pointer;
-        `;
-        
-        // Estilos específicos de tipo
-        switch (type) {
-            case 'success': toast.style.backgroundColor = '#4CAF50'; break;
-            case 'error': toast.style.backgroundColor = '#F44336'; break;
-            case 'warning': toast.style.backgroundColor = '#FF9800'; break;
-            case 'info': 
-            default: toast.style.backgroundColor = '#2196F3'; break;
+
+        const container = document.getElementById('toast-container');
+        if (container) {
+            container.appendChild(toast);
+        } else {
+            // Se o container não existir, cria um no body
+            const newContainer = document.createElement('div');
+            newContainer.id = 'toast-container';
+            document.body.appendChild(newContainer);
+            newContainer.appendChild(toast);
         }
 
-        container.appendChild(toast);
-
-        // Animação de entrada
         setTimeout(() => {
-            toast.style.opacity = '1';
-            toast.style.transform = 'translateX(0)';
+            toast.classList.add('show');
         }, 10);
 
-        // Animação de saída e remoção
-        const timeout = setTimeout(() => {
-            toast.style.opacity = '0';
-            toast.style.transform = 'translateX(100%)';
-            setTimeout(() => {
-                if (toast.parentElement) {
-                    toast.parentElement.removeChild(toast);
-                }
-            }, 500); // Espera a transição terminar
-        }, 5000); // 5 segundos de exibição
-
-        // Clicar no toast remove ele imediatamente
-        toast.addEventListener('click', () => {
-            clearTimeout(timeout);
-            toast.style.opacity = '0';
-            toast.style.transform = 'translateX(100%)';
-            setTimeout(() => {
-                if (toast.parentElement) {
-                    toast.parentElement.removeChild(toast);
-                }
-            }, 500);
-        });
-    };
-    
-    /**
-     * -----------------------------------------------------
-     * FUNÇÕES HELPERS DE DOM
-     * -----------------------------------------------------
-     */
-    
-    /**
-     * Valida um formulário, verificando se todos os campos obrigatórios estão preenchidos.
-     * @param {HTMLElement} formElement - O formulário HTML a ser validado.
-     * @returns {boolean} - True se o formulário for válido.
-     */
-    SGST.Utils.validateForm = (formElement) => {
-        let isValid = true;
-        const requiredFields = formElement.querySelectorAll('[required]');
-        
-        requiredFields.forEach(field => {
-            // Remove qualquer classe de erro anterior
-            field.classList.remove('input-error');
-            
-            if (field.type === 'number' && field.value <= 0) {
-                 field.classList.add('input-error');
-                 isValid = false;
-            } else if (!field.value.trim()) {
-                field.classList.add('input-error');
-                isValid = false;
-            }
-        });
-
-        if (!isValid) {
-            SGST.Utils.showToast('Por favor, preencha todos os campos obrigatórios.', 'error');
-            SGST.Utils.log('VALIDATION', 'Formulário inválido: campos obrigatórios não preenchidos.');
-        }
-
-        return isValid;
+        setTimeout(() => {
+            toast.classList.remove('show');
+            toast.addEventListener('transitionend', () => toast.remove());
+        }, 4000);
     };
 
     /**
      * Limpa todos os campos de um formulário.
-     * @param {HTMLElement} formElement - O formulário HTML.
+     * @param {HTMLElement} formElement - O elemento <form> a ser limpo.
      */
     SGST.Utils.clearForm = (formElement) => {
-        formElement.reset();
-        formElement.querySelectorAll('.input-error').forEach(el => el.classList.remove('input-error'));
-        // Limpa inputs hidden específicos, se necessário
-        const hiddenIds = ['agendamento-salas-id', 'feriado-id'];
-        hiddenIds.forEach(id => {
-            const input = formElement.querySelector(`#${id}`);
-            if (input) input.value = '';
+        if (!formElement) return;
+
+        Array.from(formElement.elements).forEach(element => {
+            // Limpa campos de texto, número, email
+            if (['text', 'number', 'email', 'hidden', 'date'].includes(element.type)) {
+                element.value = '';
+            } 
+            // Reseta selects
+            else if (element.tagName === 'SELECT') {
+                element.selectedIndex = 0;
+            } 
+            // Desmarca checkboxes e radio buttons
+            else if (['checkbox', 'radio'].includes(element.type)) {
+                element.checked = false;
+            }
         });
+        SGST.Utils.log('FORM_CLEAR', `Formulário ${formElement.id} limpo.`);
     };
 
     /**
-     * Atualiza um elemento SELECT com dados de uma lista.
-     * @param {string} selector - Seletor CSS para o elemento <select>.
-     * @param {Array<object>} data - Array de objetos com { id, nome }.
-     * @param {string} idKey - Chave do ID no objeto de dados.
-     * @param {string} nameKey - Chave do nome no objeto de dados.
-     * @param {string} [defaultText='Selecione...'] - Texto da primeira opção.
-     * @param {string|number} [selectedValue=null] - O valor a ser selecionado por padrão.
+     * Preenche um <select> com dados da API.
+     * @param {string} selector - Seletor CSS do elemento <select>.
+     * @param {array} data - Array de objetos a serem usados.
+     * @param {string} idKey - Chave do ID no objeto (ex: 'id_cursos').
+     * @param {string} nameKey - Chave do nome a ser exibido (ex: 'nome_curso').
+     * @param {string} defaultText - Texto da opção padrão (opcional).
+     * @param {any} selectedValue - Valor a ser pré-selecionado (opcional).
      */
     SGST.Utils.populateSelect = (selector, data, idKey, nameKey, defaultText = 'Selecione...', selectedValue = null) => {
         const select = document.querySelector(selector);
         if (!select) {
-            SGST.Utils.log('DOM_ERROR', `Elemento SELECT não encontrado: ${selector}`);
+            SGST.Utils.log('DOM_ERROR', `Seletor ${selector} não encontrado para população.`);
             return;
         }
-
+        
         select.innerHTML = ''; // Limpa as opções existentes
 
         const defaultOption = document.createElement('option');
         defaultOption.value = '';
         defaultOption.textContent = defaultText;
+        defaultOption.disabled = (defaultText === 'Selecione...');
+        defaultOption.hidden = true;
+        defaultOption.selected = true; 
         select.appendChild(defaultOption);
 
         data.forEach(item => {
@@ -199,6 +123,7 @@
 
             if (selectedValue !== null && String(item[idKey]) === String(selectedValue)) {
                 option.selected = true;
+                defaultOption.selected = false; // Se um valor for selecionado, desmarca o default
             }
 
             select.appendChild(option);
@@ -207,7 +132,6 @@
 
     /**
      * Exibe ou oculta um elemento de carregamento global.
-     * (Assume a existência de um elemento com ID 'loading-spinner' no index.php)
      * @param {boolean} show - True para exibir, False para ocultar.
      */
     SGST.Utils.toggleLoading = (show) => {
@@ -236,4 +160,19 @@
         }
     };
     
+    /**
+     * Retorna o dia da semana em Português.
+     * @param {number} dayIndex - Índice do dia da semana (0=Dom, 1=Seg, ... 6=Sáb).
+     */
+    SGST.Utils.getDayName = (dayIndex) => {
+         const days = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
+         return days[dayIndex];
+    };
+
+    // Função de inicialização
+    SGST.Utils.init = () => {
+        // Nada a inicializar aqui, as funções são expostas no SGST.Utils
+        SGST.Utils.log('UTILS_INIT', 'Utilitários JS carregados.');
+    };
+
 })();

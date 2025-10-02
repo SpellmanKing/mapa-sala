@@ -10,84 +10,86 @@
         agendamento: document.getElementById('agendamento-modal'),
         detalhes: document.getElementById('detalhes-modal'),
         alocacao: document.getElementById('alocacao-modal'),
-        instrutor: document.getElementById('instrutor-modal'), // Gerenciar Instrutores
-        curso: document.getElementById('curso-modal'), // Gerenciar Cursos
-        feriado: document.getElementById('feriado-modal') // Gerenciar Feriados (SUPOSIÇÃO DE ID: feriado-modal, pois o index.php não o define explicitamente)
+        instrutor: document.getElementById('instrutor-modal'),
+        curso: document.getElementById('curso-modal'), 
+        feriado: document.getElementById('feriado-modal') 
     };
     
-    // Supondo a existência de um ID 'feriado-modal' para a seção 'gerenciar-feriados'
-    if (!modais.feriado) {
-        SGST.Utils.log('DOM_WARN', "Modal de Feriado ('#feriado-modal') não encontrado. Criando um placeholder para evitar erros.");
-        // Cria um elemento placeholder para o modal de feriado se não existir
-        modais.feriado = document.createElement('div');
-        modais.feriado.id = 'feriado-modal'; 
+    // Supondo que 'feriado-modal' e outros modais estejam corretamente definidos no index.php
+    for (const key in modais) {
+        if (!modais[key]) {
+             SGST.Utils.log('DOM_WARN', `Modal de ${key} ('#${key}-modal') não encontrado.`);
+        }
     }
 
     const closeBtns = document.querySelectorAll('.modal .close-btn, .modal .secondary-btn');
+    const modalBackdrops = document.querySelectorAll('.modal');
 
     /**
      * -----------------------------------------------------
      * FUNÇÕES GERAIS DE MODAL
      * -----------------------------------------------------
      */
-    
+
     /**
-     * Abre um modal.
-     * @param {HTMLElement} modalElement - O elemento do modal.
+     * Abre um modal específico.
+     * @param {HTMLElement} modalElement - O elemento DOM do modal.
      */
     SGST.openModal = (modalElement) => {
-        if (modalElement) {
-            modalElement.style.display = 'block';
-            modalElement.classList.add('is-active'); // Para estilização via CSS
-        }
+        if (!modalElement) return;
+        modalElement.style.display = 'flex';
+        // Adiciona classe para transição (se o CSS suportar)
+        setTimeout(() => modalElement.classList.add('open'), 10); 
     };
 
     /**
-     * Fecha um modal.
-     * @param {HTMLElement} modalElement - O elemento do modal.
+     * Fecha um modal específico.
+     * @param {HTMLElement} modalElement - O elemento DOM do modal.
      */
     SGST.closeModal = (modalElement) => {
-        if (modalElement) {
+        if (!modalElement) return;
+        modalElement.classList.remove('open');
+        // Espera a transição CSS terminar para remover o display: flex
+        setTimeout(() => {
             modalElement.style.display = 'none';
-            modalElement.classList.remove('is-active');
-        }
+        }, 300); 
     };
-
+    
     /**
-     * Handler para fechar modais ao clicar no botão de fechar ou cancelar.
-     * @param {Event} event - O evento de clique.
+     * Handler para fechar modais.
+     * @param {Event} event - O evento de clique (pode ser um botão 'X' ou 'Cancelar').
      */
     const handleCloseModal = (event) => {
-        const modalContent = event.target.closest('.modal-content');
-        if (modalContent) {
-             // Encontra o modal pai do botão clicado
-            const modalElement = event.target.closest('.modal');
-            if (modalElement) {
-                // Se for o formulário de Agendamento, limpa os campos após fechar
-                if (modalElement === modais.agendamento) {
-                    SGST.Utils.clearForm(document.getElementById('agendamento-form'));
-                    // Reseta estado da alocação se for o modal de agendamento
-                    SGST.Alocacao.resetAlocacaoState(); 
-                }
-                 // Se for o formulário de Feriado, limpa os campos após fechar
-                if (modalElement === modais.feriado) {
-                    SGST.Utils.clearForm(document.getElementById('feriado-form')); // SUPOSIÇÃO ID
-                }
-                
-                SGST.closeModal(modalElement);
+        event.preventDefault();
+        // Encontra o modal pai do botão clicado
+        const modalElement = event.target.closest('.modal');
+        
+        if (modalElement) {
+            // Lógica específica: se for o modal de feriado, limpa os campos após fechar
+            if (modalElement === modais.feriado) {
+                const feriadoForm = document.getElementById('feriado-form');
+                if (feriadoForm) SGST.Utils.clearForm(feriadoForm);
             }
+             // Se for o modal de agendamento, reseta o estado da alocação
+            if (modalElement === modais.agendamento && SGST.Alocacao) {
+                SGST.Alocacao.resetAlocacaoState();
+            }
+            
+            SGST.closeModal(modalElement);
         }
     };
 
     /**
-     * Handler para fechar modais ao clicar fora.
+     * Handler para fechar modais ao clicar fora (no backdrop).
      * @param {Event} event - O evento de clique.
      */
     const handleOutsideClick = (event) => {
+        // Itera sobre todos os modais para ver se o clique foi no backdrop
         for (const key in modais) {
-            if (modais[key] === event.target) {
-                // Dispara o mesmo handler de fechar, para limpar o formulário se necessário
-                handleCloseModal({ target: modais[key] });
+            const modalElement = modais[key];
+            if (modalElement && modalElement === event.target) {
+                 // Dispara o mesmo handler de fechar, para limpar o formulário se necessário
+                handleCloseModal({ target: modalElement });
                 break;
             }
         }
@@ -107,7 +109,9 @@
             });
 
             // Adiciona listener para fechar modais ao clicar fora
-            document.addEventListener('click', handleOutsideClick);
+            modalBackdrops.forEach(backdrop => {
+                backdrop.addEventListener('click', handleOutsideClick);
+            });
             
             // Mapeia os modais para o objeto SGST global
             SGST.Modals.Elements = modais;
