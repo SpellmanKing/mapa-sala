@@ -8,9 +8,9 @@
     // --- 1. SELETORES DE DOM
     const calculadoraDOM = {
         // Filtros
-        filterSegmento: document.getElementById('filter-segmento'), // SUPOSIÇÃO ID
-        filterModalidade: document.getElementById('filter-modalidade'), // SUPOSIÇÃO ID
-        filterNomeCurso: document.getElementById('filter-nome-curso'), // SUPOSIÇÃO ID
+        filterSegmento: document.getElementById('filter-segmento'),
+        filterModalidade: document.getElementById('filter-modalidade'),
+        filterNomeCurso: document.getElementById('filter-nome-curso'),
         filterChMin: document.getElementById('filter-ch-min'),
         filterChMax: document.getElementById('filter-ch-max'),
         filterTem: document.getElementById('filter-tem'),
@@ -57,7 +57,7 @@
         try {
             // A API.buscarCursosComFiltros usa o controller calculadora_inteligente.php GET
             const cursos = await API.buscarCursosComFiltros(filtros);
-            SGST.dadosCursos = cursos; // Armazena todos os cursos (com os dados extras, se existirem)
+            SGST.dadosCursos = cursos;
             
             SGST.Utils.populateSelect(
                 '#calculadora-curso-select', 

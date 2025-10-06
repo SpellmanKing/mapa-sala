@@ -1,8 +1,9 @@
 <?php
 ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 
-// controllers/get_feriados.php (Agora um Controller CRUD)
+
 header('Content-Type: application/json');
 
 require __DIR__ . '/../models/Conexao.php';
@@ -33,7 +34,7 @@ try {
                 exit;
             }
             $id = $feriadoModel->cadastrarFeriado($data['data_feriado'], $data['descricao'], $data['tipo']);
-            http_response_code(201); // Created
+            http_response_code(201); 
             echo json_encode(['message' => 'Registro criado com sucesso!', 'id' => $id]);
             break;
 

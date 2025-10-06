@@ -1,5 +1,6 @@
 <?php
 ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 
 header('Content-Type: application/json');
@@ -28,7 +29,6 @@ $novoStatus = $data['status'];
 try {
     $pdo = Conexao::getInstancia();
     
-    // O front-end agora envia o ID do instrutor diretamente.
     $novoInstrutorId = null;
     if (!empty($data['instrutorId'])) {
         $novoInstrutorId = $data['instrutorId'];

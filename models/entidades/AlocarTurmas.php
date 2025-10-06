@@ -1,6 +1,4 @@
 <?php
-
-// Não precisa de construtor pois a classe só tem métodos estáticos (puros)
 class AlocarTurmas {
 
     public static function encontrarMelhorAlocacao($salasDisponiveis, $dadosTurma) {

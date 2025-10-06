@@ -1,6 +1,8 @@
 <?php
 ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
+
 // controllers/alocar_turma.php
 header('Content-Type: application/json');
 
@@ -9,8 +11,8 @@ require_once __DIR__ . '/../models/entidades/Sala.php';
 require_once __DIR__ . '/../models/entidades/Curso.php';
 require_once __DIR__ . '/../models/entidades/Agendamento.php';
 require_once __DIR__ . '/../models/entidades/AlocarTurmas.php';
-require_once __DIR__ . '/../models/entidades/Feriado.php'; // Inclui o novo model de Feriado
-require_once __DIR__ . '/calcular_cronograma.php'; // Inclui a função calcularCronograma (agora atualizada)
+require_once __DIR__ . '/../models/entidades/Feriado.php';
+require_once __DIR__ . '/calcular_cronograma.php';
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     http_response_code(405);
@@ -37,7 +39,7 @@ try {
     $totalAlunos = $data['totalAlunos'];
     $turno = $data['turno'];
     $diasSemana = $data['diasSemana'];
-    $porcentagemRemoto = $data['porcentagemRemoto'] ?? 0; // Se houver
+    $porcentagemRemoto = $data['porcentagemRemoto'] ?? 0;
 
     // 1. Busca a carga horária e o tipo de sala necessários para o curso
     $dadosCurso = $curso->buscarPorId($cursoId);

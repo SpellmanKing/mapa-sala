@@ -1,8 +1,8 @@
 <?php
 ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 
-// controllers/gerenciar_instrutores.php
 header('Content-Type: application/json');
 
 require __DIR__ . '/../models/Conexao.php';
@@ -43,7 +43,7 @@ try {
                 $instrutor->gerenciarHabilitacoes($instrutorId, $cursosIds);
             }
             
-            http_response_code(201); // Created
+            http_response_code(201);
             echo json_encode(['message' => 'Instrutor criado e cursos vinculados com sucesso!', 'id' => $instrutorId]);
             break;
 
@@ -65,7 +65,7 @@ try {
             echo json_encode(['message' => 'Instrutor e cursos atualizados com sucesso!']);
             break;
 
-        case 'DELETE': // Deletar instrutor
+        case 'DELETE':
             $id = $_GET['id'] ?? null;
             if (!$id) {
                 http_response_code(400);

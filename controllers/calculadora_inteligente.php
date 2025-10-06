@@ -6,7 +6,6 @@ error_reporting(E_ALL);
 
 header('Content-Type: application/json');
 
-// Garante que todos os arquivos de classe são carregados
 require __DIR__ . '/../models/Conexao.php';
 require __DIR__ . '/../models/entidades/Curso.php';
 
@@ -22,8 +21,6 @@ try {
 
     // Passa os parâmetros GET diretamente para o método do Model
     $filtros = $_GET;
-
-    // A lógica de construção da query foi movida para o Model (Curso.php)
     $cursos = $cursoModel->buscarCursosComFiltros($filtros);
     
     echo json_encode($cursos);

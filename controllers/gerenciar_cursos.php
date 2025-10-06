@@ -1,5 +1,6 @@
 <?php
 ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 
 // controllers/gerenciar_cursos.php
@@ -23,7 +24,7 @@ try {
     $data = json_decode(file_get_contents('php://input'), true);
 
     switch ($method) {
-        case 'POST': // Criar curso
+        case 'POST':
             if (empty($data['nome_curso']) || empty($data['carga_horaria']) || empty($data['idTipo_sala'])) {
                 http_response_code(400);
                 echo json_encode(['error' => 'Nome, carga horária e tipo de sala são obrigatórios.']);
@@ -33,7 +34,7 @@ try {
             echo json_encode(['message' => 'Curso criado com sucesso!', 'id' => $cursoId]);
             break;
 
-        case 'PUT': // Atualizar curso
+        case 'PUT': 
             if (empty($data['id_cursos']) || empty($data['nome_curso']) || empty($data['carga_horaria']) || empty($data['idTipo_sala'])) {
                 http_response_code(400);
                 echo json_encode(['error' => 'ID, nome, carga horária e tipo de sala são obrigatórios.']);
@@ -43,7 +44,7 @@ try {
             echo json_encode(['message' => 'Curso atualizado com sucesso!']);
             break;
 
-        case 'DELETE': // Deletar curso
+        case 'DELETE':
             $id = $_GET['id'] ?? null;
             if (!$id) {
                 http_response_code(400);

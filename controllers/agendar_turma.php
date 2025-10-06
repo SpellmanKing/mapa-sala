@@ -1,39 +1,40 @@
 <?php
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
+
 // controllers/agendar_turma.php
 header('Content-Type: application/json');
 
-// Garante que todos os arquivos de classe são carregados
 require_once __DIR__ . '/../models/Conexao.php';
 require_once __DIR__ . '/../models/entidades/Instrutor.php';
 require_once __DIR__ . '/../models/entidades/Curso.php';
 require_once __DIR__ . '/../models/entidades/Agendamento.php';
-require_once __DIR__ . '/../models/entidades/Feriado.php'; // Model de Feriado necessário para buscar as datas
-require_once __DIR__ . '/calcular_cronograma.php'; // Inclui a função calcularCronograma
+require_once __DIR__ . '/../models/entidades/Feriado.php';
+require_once __DIR__ . '/calcular_cronograma.php'; 
 
 try {
     $pdo = Conexao::getInstancia();
     $agendamento = new Agendamento($pdo);
-    $feriadoModel = new Feriado($pdo); // Nova instância do model Feriado
+    $feriadoModel = new Feriado($pdo); 
     
     // Verifica o método da requisição para decidir a ação
     $method = $_SERVER['REQUEST_METHOD'];
     
     switch ($method) {
-        case 'GET': // Busca todos os agendamentos (lógica existente)
+        case 'GET':
             $agendamentos = $agendamento->buscarTodos();
             echo json_encode($agendamentos);
             break;
             
-        case 'POST': // Agenda uma nova turma
+        case 'POST': 
             $data = json_decode(file_get_contents('php://input'), true);
 
-            // 1. Validação de Dados: Verifica se os dados essenciais estão presentes
-            // Validação mais robusta é recomendada no frontend, mas a essencial está aqui
             if (empty($data['cursoId']) || empty($data['dataInicio']) || empty($data['totalAlunos']) || empty($data['turno']) || empty($data['diasSemana']) || !isset($data['instrutorId'])) {
                 throw new InvalidArgumentException('Dados incompletos para agendamento. Verifique curso, data de início, alunos, turno, dias da semana e instrutor.');
             }
             
-            // 2. Busca o curso para obter Carga Horária e Dias da Semana (Regra de Negócio)
+            // 2. Busca o curso para obter Carga Horária e Dias da Semana
             $cursoModel = new Curso($pdo);
             $curso = $cursoModel->buscarPorId($data['cursoId']);
 
@@ -45,15 +46,14 @@ try {
             $cargaHorariaTotal = (int) $curso['carga_horaria'];
             $tipoSalaNecessaria = $curso['necessidade_sala'];
             
-            // O ideal é que os dias da semana do curso venham do banco ou que o front-end envie um array.
             // Para simplificar, assumimos que o front-end envia um array de dias da semana (1 a 7).
             $diasSemana = $data['diasSemana']; 
-            $porcentagemRemoto = $data['porcentagemRemoto'] ?? 0; // Se houver
+            $porcentagemRemoto = $data['porcentagemRemoto'] ?? 0; 
 
             // 3. Busca Feriados e Calcula o Cronograma
             // CHAMA A FUNÇÃO AGORA NO CONTROLLER
             $feriadosRecessos = $feriadoModel->buscarTodos();
-            $datasFeriados = array_column($feriadosRecessos, 'data_feriado'); // Array simples de datas
+            $datasFeriados = array_column($feriadosRecessos, 'data_feriado');
 
             $cronograma = calcularCronograma($cargaHorariaTotal, $data['dataInicio'], $data['turno'], $diasSemana, $datasFeriados, $porcentagemRemoto);
 

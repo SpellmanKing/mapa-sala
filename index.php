@@ -50,7 +50,7 @@
                 <header class="page-header">
                     <h1>Painel Visual de Salas</h1>
                     <div class="header-actions">
-                        <button id="gerenciar-feriados" class="secondary-btn"><i class="fas fa-calendar-times"></i> Gerenciar Feriados</button>
+                        <button id="gerenciar-feriados" class="secondary-btn"><i class="fas fa-calendar-times"></i> Adicionar Feriados</button>
                         <button id="add-turma-btn" class="primary-btn"><i class="fas fa-plus"></i> Agendar Turma</button>
                     </div>
                 </header>

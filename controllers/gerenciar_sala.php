@@ -1,11 +1,10 @@
 <?php
-// controllers/gerenciar_sala.php
 ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 
 header('Content-Type: application/json');
 
-// Garante que o arquivo da classe seja incluído
 require __DIR__ . '/../models/Conexao.php';
 require __DIR__ . '/../models/entidades/Sala.php';
 
@@ -17,11 +16,10 @@ try {
     $method = $_SERVER['REQUEST_METHOD'];
     
     if ($method === 'GET') {
-        // Busca todas as salas (método existe em Sala.php)
         $salas = $sala->buscarTodas();
         http_response_code(200);
         echo json_encode($salas);
-        exit; // Adicionar exit é crucial após o GET
+        exit;
     }
     
     // Se o método não for GET, retorna 405 (Método Não Permitido)
