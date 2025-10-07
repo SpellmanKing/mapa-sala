@@ -299,6 +299,10 @@
                     <select id="agendamento-instrutor" required></select>
                 </div>
                 <div class="form-group">
+                    <label for="agendamento-codigo">Codigo da Turma</label>
+                    <input id="agendamento-codigo" required></select>
+                </div>
+                <div class="form-group">
                     <label for="agendamento-data-inicio">Data de Início</label>
                     <input type="date" id="agendamento-data-inicio" required>
                 </div>

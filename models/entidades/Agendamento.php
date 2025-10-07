@@ -124,6 +124,7 @@ class Agendamento {
             $sql = "SELECT 
                         t.id_turmas,
                         i.nome_instrutor AS instrutor,
+                        t.codigo_turma,
                         t.total_alunos,
                         t.status,
                         t.turno,

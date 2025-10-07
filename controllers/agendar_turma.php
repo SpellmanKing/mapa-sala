@@ -25,6 +25,7 @@ try {
         case 'GET':
             $agendamentos = $agendamento->buscarTodos();
             echo json_encode($agendamentos);
+            
             break;
             
         case 'POST': 
