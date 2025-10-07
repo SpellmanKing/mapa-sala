@@ -30,33 +30,32 @@ try {
         case 'POST': 
             $data = json_decode(file_get_contents('php://input'), true);
 
-            if (empty($data['cursoId']) || empty($data['dataInicio']) || empty($data['totalAlunos']) || empty($data['turno']) || empty($data['diasSemana']) || !isset($data['instrutorId'])) {
-                throw new InvalidArgumentException('Dados incompletos para agendamento. Verifique curso, data de início, alunos, turno, dias da semana e instrutor.');
+            // 1. Validação inicial de campos obrigatórios
+            if (empty($data['cursoId']) || empty($data['dataInicio']) || empty($data['totalAlunos']) || 
+            empty($data['turno']) || empty($data['diasSemana']) || empty($data['cargaHoraria']) || 
+            empty($data['salasIds']) || !is_array($data['diasSemana'])) {
+                http_response_code(400);
+                echo json_encode(['error' => 'Dados incompletos. Por favor, preencha todos os campos obrigatórios.']);
+                exit;
             }
             
-            // 2. Busca o curso para obter Carga Horária e Dias da Semana
-            $cursoModel = new Curso($pdo);
-            $curso = $cursoModel->buscarPorId($data['cursoId']);
-
-            if (!$curso) {
-                throw new InvalidArgumentException('Curso não encontrado.');
-            }
-
-            // O curso deve ter a carga horária e a necessidade de sala
-            $cargaHorariaTotal = (int) $curso['carga_horaria'];
-            $tipoSalaNecessaria = $curso['necessidade_sala'];
-            
-            // Para simplificar, assumimos que o front-end envia um array de dias da semana (1 a 7).
-            $diasSemana = $data['diasSemana']; 
-            $porcentagemRemoto = $data['porcentagemRemoto'] ?? 0; 
+            // 2. Type Casting e Sanitização de Entradas Chave (Mitigação de Segurança)
+           $cursoId = (int) $data['cursoId'];
+           $totalAlunos = (int) $data['totalAlunos'];
+           $cargaHoraria = (int) $data['cargaHoraria'];
+           $instrutorId = !empty($data['instrutorId']) ? (int) $data['instrutorId'] : null;
+           $dataInicio = trim($data['dataInicio']);
+           $salasIds = is_array($data['salasIds']) ? array_map('intval', $data['salasIds']) : [intval($data['salasIds'])];
+           
+           // Validação de formato de data e valores numéricos
+           if ($cursoId <= 0 || $totalAlunos <= 0 || $cargaHoraria <= 0 || !preg_match('/^\d{4}-\d{2}-\d{2}$/', $dataInicio)) {
+               throw new InvalidArgumentException("Dados numéricos ou de data inválidos.");
+           }
 
             // 3. Busca Feriados e Calcula o Cronograma
-            // CHAMA A FUNÇÃO AGORA NO CONTROLLER
-            $feriadosRecessos = $feriadoModel->buscarTodos();
-            $datasFeriados = array_column($feriadosRecessos, 'data_feriado');
+            $feriados = $feriadoModel->buscarTodos();
 
-            $cronograma = calcularCronograma($cargaHorariaTotal, $data['dataInicio'], $data['turno'], $diasSemana, $datasFeriados, $porcentagemRemoto);
-
+            $cronograma = calcularCronograma($cargaHoraria, $dataInicio, $data['turno'], $data['diasSemana'], $feriados, $data['porcentagemRemoto'] ?? 0);
             $dataTermino = $cronograma['data_termino'];
 
             // 4. Validação da Disponibilidade de Salas: 
@@ -79,18 +78,16 @@ try {
             }
             
             // 5. Organiza os dados da turma para o Agendamento
-            $instrutorId = is_numeric($data['instrutorId']) ? (int) $data['instrutorId'] : null;
             $dadosTurma = [
-                'cursoId' => $data['cursoId'],
-                'dataInicio' => $data['dataInicio'],
+                'cursoId' => $cursoId,
+                'dataInicio' => $dataInicio,
                 'dataTermino' => $dataTermino,
-                'totalAlunos' => $data['totalAlunos'],
+                'totalAlunos' => $totalAlunos,
                 'instrutorId' => $instrutorId, 
                 'turno' => $data['turno']
             ];
 
             // 6. Cria a instância do Agendamento e agenda a turma
-            // O model Agendamento.php garante a validação do instrutor e a integridade transacional.
             $agendador = new Agendamento($pdo);
             $novaTurmaId = $agendador->agendarNovaTurma($dadosTurma, $cronograma['diasLetivos'], $salasIds);
 

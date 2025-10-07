@@ -14,6 +14,14 @@ class Agendamento {
                 throw new InvalidArgumentException("É necessário fornecer um ID de instrutor para agendar uma turma.");
             }
             
+            // 1. Validação da Habilitação do Instrutor (Corretude Lógica)
+            require_once __DIR__ . '/Instrutor.php';
+            $instrutorModel = new Instrutor($this->pdo);
+
+            if (!$instrutorModel->estaHabilitadoParaCurso($dadosTurma['instrutorId'], $dadosTurma['cursoId'])) {
+                throw new InvalidArgumentException("O instrutor selecionado (ID: {$dadosTurma['instrutorId']}) não está habilitado para o curso (ID: {$dadosTurma['cursoId']}).");
+            }
+
             $this->pdo->beginTransaction();
 
             $sql_turma = "INSERT INTO turmas
@@ -31,20 +39,14 @@ class Agendamento {
             ]);
 
             $novaTurmaId = $this->pdo->lastInsertId();
-            $sql_agendamento = "INSERT INTO agendamentos (id_turmas, id_salas, data_aula, turno) VALUES (?, ?, ?, ?)";
+            $sql_agendamento = "INSERT INTO agendamentos (id_turmas, id_salas, data_aula) VALUES (?, ?, ?)"; 
             $stmt_agendamento = $this->pdo->prepare($sql_agendamento);
 
-            foreach ($diasLetivos as $diaAula) {
-                $dataAula = $diaAula['date'];
+            // Loop para inserção de agendamentos diários
+            foreach ($diasLetivos as $index => $diaLetivo) {
+                $salaId = $salasIds[$index % count($salasIds)];
                 
-                foreach ($salasIds as $salaId) {
-                    $stmt_agendamento->execute([
-                        $novaTurmaId, 
-                        (int)$salaId, 
-                        $dataAula, 
-                        $dadosTurma['turno']
-                    ]);
-                }
+                $stmt_agendamento->execute([$novaTurmaId, $salaId, $diaLetivo['data']]);
             }
 
             $this->pdo->commit();

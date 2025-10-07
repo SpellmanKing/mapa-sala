@@ -30,7 +30,15 @@ try {
                 echo json_encode(['error' => 'Nome, carga horária e tipo de sala são obrigatórios.']);
                 exit;
             }
-            $cursoId = $curso->cadastarCurso($data['nome_curso'], $data['carga_horaria'], $data['idTipo_sala']);
+
+            // Validação e Type Casting (POST)
+            $cargaHoraria = (int) $data['carga_horaria'];
+            $idTipoSala = (int) $data['idTipo_sala'];
+            if ($cargaHoraria <= 0 || $idTipoSala <= 0) {
+                throw new InvalidArgumentException("Carga horária e ID do tipo de sala devem ser números positivos.");
+            }
+            
+            $cursoId = $curso->cadastarCurso($data['nome_curso'], $cargaHoraria, $idTipoSala);
             echo json_encode(['message' => 'Curso criado com sucesso!', 'id' => $cursoId]);
             break;
 
@@ -40,7 +48,16 @@ try {
                 echo json_encode(['error' => 'ID, nome, carga horária e tipo de sala são obrigatórios.']);
                 exit;
             }
-            $curso->atualizarCurso($data['id_cursos'], $data['nome_curso'], $data['carga_horaria'], $data['idTipo_sala']);
+           
+            // Validação e Type Casting (PUT)
+            $idCurso = (int) $data['id_cursos'];
+            $cargaHoraria = (int) $data['carga_horaria'];
+            $idTipoSala = (int) $data['idTipo_sala'];
+            if ($idCurso <= 0 || $cargaHoraria <= 0 || $idTipoSala <= 0) {
+                throw new InvalidArgumentException("IDs e carga horária devem ser números positivos.");
+            }
+            
+            $curso->atualizarCurso($idCurso, $data['nome_curso'], $cargaHoraria, $idTipoSala);
             echo json_encode(['message' => 'Curso atualizado com sucesso!']);
             break;
 
@@ -51,7 +68,14 @@ try {
                 echo json_encode(['error' => 'ID do curso é obrigatório.']);
                 exit;
             }
-            $curso->excluirCurso($id);
+
+            // Type Casting para DELETE (GET param)
+            $idCurso = (int) $id;
+            if ($idCurso <= 0) {
+                throw new InvalidArgumentException("ID do curso inválido.");
+            }
+
+            $curso->excluirCurso($idCurso);
             echo json_encode(['message' => 'Curso deletado com sucesso!']);
             break;
 

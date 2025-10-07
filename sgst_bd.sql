@@ -583,39 +583,52 @@ INSERT INTO turmas (id_cursos, id_instrutores, codigo_turma, status, data_inicio
 -- -----------------------------------------------------
 DROP TABLE IF EXISTS `agendamentos` ;
 CREATE TABLE IF NOT EXISTS `agendamentos` (
-  `id_agendamentos` INT NOT NULL AUTO_INCREMENT,
-  `id_turmas` INT NOT NULL,
-  `id_salas` INT NOT NULL,
-  `data_aula` DATE NOT NULL,
-  `turno` VARCHAR(50) NOT NULL,
-  PRIMARY KEY (`id_agendamentos`),
-  CONSTRAINT `fk_agendamento_turma`
-    FOREIGN KEY (`id_turmas`) REFERENCES `turmas` (`id_turmas`)
-    ON DELETE CASCADE
+  `id_agendamento` INT NOT NULL AUTO_INCREMENT,
+  `id_turmas` INT NOT NULL COMMENT 'FK para a turma agendada',
+  `id_salas` INT NOT NULL COMMENT 'FK para a sala alocada',
+  `data_aula` DATE NOT NULL COMMENT 'Data específica da aula',
+  PRIMARY KEY (`id_agendamento`),
+  
+  -- Índices Únicos Compostos (Essenciais para evitar conflitos)
+  UNIQUE INDEX `uk_sala_dia` (`id_salas` ASC, `data_aula` ASC) COMMENT 'Garante que uma sala não seja agendada mais de uma vez por dia',
+  UNIQUE INDEX `uk_turma_dia` (`id_turmas` ASC, `data_aula` ASC) COMMENT 'Garante que uma turma não tenha mais de uma aula por dia',
+  
+  -- Índices FK
+  INDEX `fk_agendamentos_turmas1_idx` (`id_turmas` ASC),
+  INDEX `fk_agendamentos_salas1_idx` (`id_salas` ASC),
+
+  -- Chaves Estrangeiras
+  CONSTRAINT `fk_agendamentos_turmas1`
+    FOREIGN KEY (`id_turmas`)
+    REFERENCES `turmas` (`id_turmas`)
+    ON DELETE CASCADE -- Se a turma é deletada, seus agendamentos são removidos.
     ON UPDATE CASCADE,
-  CONSTRAINT `fk_agendamento_sala`
-    FOREIGN KEY (`id_salas`) REFERENCES `salas` (`id_salas`)
-    ON DELETE CASCADE
+    
+  CONSTRAINT `fk_agendamentos_salas1`
+    FOREIGN KEY (`id_salas`)
+    REFERENCES `salas` (`id_salas`)
+    ON DELETE RESTRICT -- Não permite deletar uma sala se houver agendamentos futuros (garantia de integridade).
     ON UPDATE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT = 'Armazena cada dia de aula alocada para uma turma em uma sala.';
+
 
 --
 -- Despejando dados para a tabela `agendamentos`
 --
 
-INSERT INTO agendamentos (id_turmas, id_salas, data_aula, turno) VALUES
-(1, 1, '2025-09-15', 'Manhã'),
-(1, 1, '2025-09-22', 'Manhã'),
-(2, 12, '2025-10-01', 'Tarde'),
-(2, 12, '2025-10-08', 'Tarde'),
-(3, 11, '2025-09-22', 'Noite'),
-(3, 11, '2025-09-29', 'Noite'),
-(4, 7, '2025-09-25', 'Manhã'),
-(4, 7, '2025-10-02', 'Manhã'),
-(5, 10, '2025-10-06', 'Tarde'),
-(5, 10, '2025-10-13', 'Tarde'),
-(6, 8, '2025-10-10', 'Noite'),
-(6, 8, '2025-10-17', 'Noite');
+INSERT INTO agendamentos (id_turmas, id_salas, data_aula) VALUES
+(1, 1, '2025-09-15'),
+(1, 1, '2025-09-22'),
+(2, 12, '2025-10-01'),
+(2, 12, '2025-10-08'),
+(3, 11, '2025-09-22'),
+(3, 11, '2025-09-29'),
+(4, 7, '2025-09-25'),
+(4, 7, '2025-10-02'),
+(5, 10, '2025-10-06'),
+(5, 10, '2025-10-13'),
+(6, 8, '2025-10-10'),
+(6, 8, '2025-10-17');
 
 -- -----------------------------------------------------
 -- Table `feriados_recessos`
