@@ -1,8 +1,9 @@
 <?php
+// controllers/gerenciar_feriado.php
+
 ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
-
 
 header('Content-Type: application/json');
 
@@ -12,6 +13,13 @@ require __DIR__ . '/../models/entidades/Feriado.php';
 try {
     $pdo = Conexao::getInstancia();
     $feriadoModel = new Feriado($pdo);
+
+    // Função Auxiliar para mapear nome do tipo (string) para o ID (INT)
+    // IDs baseados na inserção SQL: 1=feriado, 2=recesso
+    $getTipoFeriadoId = function (string $nomeTipo): int {
+        $tipos = ['feriado' => 1, 'recesso' => 2];
+        return $tipos[strtolower($nomeTipo)] ?? 0;
+    };
 
     $method = $_SERVER['REQUEST_METHOD'];
 
@@ -33,7 +41,15 @@ try {
                 echo json_encode(['error' => 'Data, descrição e tipo são obrigatórios.']);
                 exit;
             }
-            $id = $feriadoModel->cadastrarFeriado($data['data_feriado'], $data['descricao'], $data['tipo']);
+            
+            $idTipoFeriado = $getTipoFeriadoId($data['tipo']);
+            if ($idTipoFeriado === 0) {
+                http_response_code(400);
+                echo json_encode(['error' => 'Tipo de feriado inválido. Use "feriado" ou "recesso".']);
+                exit;
+            }
+
+            $id = $feriadoModel->cadastrarFeriado($data['data_feriado'], $data['descricao'], $idTipoFeriado);
             http_response_code(201); 
             echo json_encode(['message' => 'Registro criado com sucesso!', 'id' => $id]);
             break;
@@ -44,7 +60,15 @@ try {
                 echo json_encode(['error' => 'ID, data, descrição e tipo são obrigatórios.']);
                 exit;
             }
-            $feriadoModel->atualizarFeriado($data['id_feriado'], $data['data_feriado'], $data['descricao'], $data['tipo']);
+            
+            $idTipoFeriado = $getTipoFeriadoId($data['tipo']);
+            if ($idTipoFeriado === 0) {
+                http_response_code(400);
+                echo json_encode(['error' => 'Tipo de feriado inválido. Use "feriado" ou "recesso".']);
+                exit;
+            }
+
+            $feriadoModel->atualizarFeriado($data['id_feriado'], $data['data_feriado'], $data['descricao'], $idTipoFeriado);
             echo json_encode(['message' => 'Registro atualizado com sucesso!']);
             break;
 
@@ -55,7 +79,7 @@ try {
                 echo json_encode(['error' => 'ID do feriado é obrigatório.']);
                 exit;
             }
-            $feriadoModel->excluirFeriado($id);
+            $feriadoModel->deletarFeriado($id);
             echo json_encode(['message' => 'Registro deletado com sucesso!']);
             break;
 
@@ -66,7 +90,6 @@ try {
     }
 
 } catch (Exception $e) {
-    // Captura exceções do Model e erros gerais
     http_response_code(500); 
-    echo json_encode(['error' => 'Erro na operação: ' . $e->getMessage()]);
+    echo json_encode(['error' => 'Erro interno do servidor: ' . $e->getMessage()]);
 }

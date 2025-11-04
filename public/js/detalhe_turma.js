@@ -5,62 +5,80 @@
 (function() {
     window.SGST = window.SGST || {};
 
-    // --- 1. SELETORES DE DOM
+    // --- 1. SELETORES DE DOM (Adaptados ao index.php)
     const detalhesForm = document.getElementById('detalhes-form');
-    const turmaIdInput = document.getElementById('detalhes-turma');
+    const turmaIdInput = document.getElementById('detalhes-turma-id'); // CORRIGIDO: id="detalhes-turma-id"
+    const turmaCodigoDisplay = document.getElementById('detalhes-turma-codigo');
+    const turmaCursoDisplay = document.getElementById('detalhes-turma-curso');
     const statusSelect = document.getElementById('detalhes-status-select');
     const instrutorSelect = document.getElementById('detalhes-instrutor');
-    const cancelarTurmaBtn = document.getElementById('cancelar-turma-btn');
-    let remarcarBtn = document.getElementById('remarcar-turma-btn');
-    const salvarDetalhesBtn = detalhesForm.querySelector('button[type="submit"]');
-
-    if (!remarcarBtn) {
-        SGST.Utils.log('DOM_WARN', "Botão de Remarcar Turma não encontrado. Criando placeholder.");
-        const tempBtn = document.createElement('button');
-        tempBtn.id = 'remarcar-turma-btn';
-        remarcarBtn = tempBtn;
-    }
-
-    /**
-     * -----------------------------------------------------
-     * FUNÇÕES DE SUBMISSÃO
-     * -----------------------------------------------------
-     */
     
+    // Adicione os botões de ação que devem existir no modal (se ausentes, a inicialização falhará)
+    const cancelarTurmaBtn = detalhesForm.querySelector('#cancelar-turma-btn') || document.createElement('button'); 
+    const salvarDetalhesBtn = detalhesForm.querySelector('button[type="submit"]') || document.createElement('button');
+    let remarcarBtn = detalhesForm.querySelector('#remarcar-turma-btn') || document.createElement('button');
+
+
     /**
-     * Lida com a submissão para atualizar o status e/ou instrutor.
+     * Preenche o modal de detalhes com os dados da turma selecionada.
+     * @param {object} agendamentoData - Dados completos de um registro de agendamento.
+     */
+    const populateDetalhesModal = (agendamentoData) => {
+        
+        // 1. Preenchimento de Campos de Display
+        turmaIdInput.value = agendamentoData.id_turmas; 
+        turmaCodigoDisplay.textContent = agendamentoData.codigo_turma || `ID: ${agendamentoData.id_turmas}`;
+        turmaCursoDisplay.textContent = `${agendamentoData.nome_curso} (${agendamentoData.total_alunos} alunos, ${agendamentoData.turno})`;
+        
+        // 2. Preenchimento do Status (STRING)
+        statusSelect.value = agendamentoData.status; 
+        
+        // 3. Preenchimento do Instrutor
+        const instrutorAtual = agendamentoData.instrutor || 'Manter Atual';
+        const instrutorObj = (SGST.dadosInstrutores || []).find(i => i.nome_instrutor === instrutorAtual);
+        
+        if (instrutorObj) {
+            instrutorSelect.value = instrutorObj.id_instrutores;
+        } else {
+            instrutorSelect.value = 'null'; // Ou a opção 'Manter Atual' / 'Sem Instrutor'
+        }
+        
+        SGST.openModal(SGST.Modals.Elements.detalhes);
+    };
+
+    /**
+     * Lida com a submissão para atualizar o status e/ou instrutor (POST gerenciar_turma.php).
      */
     const handleUpdateStatus = async (e) => {
         e.preventDefault();
+        SGST.Utils.toggleLoading(true, salvarDetalhesBtn);
         
-        const turmaId = turmaIdInput.value;
-        const novoStatus = statusSelect.value;
-        const novoInstrutorId = instrutorSelect.value ? parseInt(instrutorSelect.value) : null;
-
-        if (!turmaId || !novoStatus) {
-            SGST.Utils.showToast('ID da Turma e Status são obrigatórios.', 'error');
-            return;
-        }
-
-        const payload = {
-            turmaId: parseInt(turmaId),
-            status: novoStatus,
-            instrutorId: novoInstrutorId
-        };
-        
-        SGST.Utils.toggleLoading(true);
         try {
-            // Atualiza o status/instrutor (POST gerenciar_turma.php)
-            const response = await API.atualizarStatusTurma(payload);
+            const turmaId = parseInt(turmaIdInput.value);
+            const novoStatus = statusSelect.value; 
+            const novoInstrutorId = instrutorSelect.value !== 'null' ? parseInt(instrutorSelect.value) : null;
             
-            SGST.Utils.showToast(response.message || 'Turma atualizada com sucesso!', 'success');
-            SGST.closeModal(SGST.Modals.Elements.detalhes);
-            SGST.Painel.loadAllDataAndRender(); // Recarrega o calendário
+            if (turmaId <= 0 || !novoStatus) {
+                SGST.Utils.showToast('Dados de turma ou status inválidos.', 'error');
+                return;
+            }
 
+            const payload = {
+                turmaId: turmaId,
+                status: novoStatus, // STRING
+                instrutorId: novoInstrutorId
+            };
+
+            await API.atualizarStatusTurma(payload);
+            
+            SGST.Utils.showToast('Turma atualizada com sucesso!', 'success');
+            SGST.closeModal(SGST.Modals.Elements.detalhes);
+            SGST.Painel.loadAllDataAndRender(); // Recarrega o painel
+            
         } catch (error) {
-            SGST.Utils.showToast(`Falha ao atualizar turma: ${error.message}`, 'error');
+             SGST.Utils.showToast(`Falha na atualização: ${error.message}`, 'error');
         } finally {
-            SGST.Utils.toggleLoading(false);
+            SGST.Utils.toggleLoading(false, salvarDetalhesBtn);
         }
     };
     
@@ -98,15 +116,15 @@
      * -----------------------------------------------------
      */
      
+    // Mapeia a função de preenchimento para ser chamada pelo Painel (painel.js)
+    SGST.Painel = SGST.Painel || {};
+    SGST.Painel.loadDetalhesTurma = populateDetalhesModal;
+
     SGST.DetalheTurma = {
         init: () => {
-            // Preenche o SELECT de instrutores
-            if (SGST.dadosInstrutores && SGST.dadosInstrutores.length > 0) {
-                 SGST.Utils.populateSelect('#detalhes-instrutor', SGST.dadosInstrutores, 'id_instrutores', 'nome_instrutor', 'Manter Atual');
-            } else {
-                 SGST.Agendamento.loadFormOptions(); // Garante que os instrutores sejam carregados
-            }
-
+            // Preenche o SELECT de instrutores (usa dados globais)
+            SGST.Utils.populateSelect('#detalhes-instrutor', SGST.dadosInstrutores || [], 'id_instrutores', 'nome_instrutor', 'Manter Atual');
+            
             // Listener para o formulário de atualização
             detalhesForm.addEventListener('submit', handleUpdateStatus);
             

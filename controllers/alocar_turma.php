@@ -3,7 +3,6 @@ ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 
-// controllers/alocar_turma.php
 header('Content-Type: application/json');
 
 require_once __DIR__ . '/../models/Conexao.php';
@@ -28,76 +27,139 @@ if (empty($data['cursoId']) || empty($data['totalAlunos']) || empty($data['turno
     exit;
 }
 
+// Função Auxiliar para mapear nome do turno (string) para o ID (INT)
+$getTurnoId = function (string $nomeTurno): int {
+    $turnos = ['manhã' => 1, 'tarde' => 2, 'noite' => 3, 'integral' => 4, 'vespertino' => 5];
+    return $turnos[strtolower($nomeTurno)] ?? 0;
+};
+
 try {
     $pdo = Conexao::getInstancia();
-    $curso = new Curso($pdo);
-    $sala = new Sala($pdo);
+    $salaModel = new Sala($pdo);
     $agendamento = new Agendamento($pdo);
+    $feriadoModel = new Feriado($pdo);
 
-    $cursoId = $data['cursoId'];
+    // Obter e validar dados de entrada
+    $cursoId = (int) $data['cursoId'];
+    $totalAlunos = (int) $data['totalAlunos'];
     $dataInicio = $data['dataInicio'];
-    $totalAlunos = $data['totalAlunos'];
     $turno = $data['turno'];
     $diasSemana = $data['diasSemana'];
-    $porcentagemRemoto = $data['porcentagemRemoto'] ?? 0;
 
-    // 1. Busca a carga horária e o tipo de sala necessários para o curso
-    $dadosCurso = $curso->buscarPorId($cursoId);
-    if (!$dadosCurso) {
-        http_response_code(404);
-        echo json_encode(['success' => false, 'error' => 'Curso não encontrado.']);
+    $turnoId = $getTurnoId($turno);
+    if ($turnoId === 0) {
+        throw new InvalidArgumentException("Turno inválido.");
+    }
+
+    // Obter dados do Curso
+    $cursoModel = new Curso($pdo);
+    $cursoData = $cursoModel->buscarPorId($cursoId);
+
+    if (!$cursoData) {
+        throw new InvalidArgumentException("Curso não encontrado.");
+    }
+
+    $tipoSalaNecessaria = (int) $cursoData['id_tipo_sala'];
+    $isTEMOuAprendizagem = $cursoData['curso_tem'] == 1; // Flag para lógica híbrida/prioridade
+
+    // Regra de Negócio: Cursos não ministrados na unidade (verificação de tipo de sala vazia)
+    if (empty($tipoSalaNecessaria)) {
+        http_response_code(200);
+        echo json_encode(['success' => false, 'error' => 'Este curso necessita de uma sala ou laboratório específico que não temos no Senac Talal Abu Allan.']);
         exit;
     }
-    $cargaHorariaTotal = $dadosCurso['carga_horaria'];
-    $tipoSalaNecessaria = $dadosCurso['necessidade_sala'];
 
-    // 2. Calcula o cronograma (dias letivos)
-    // A função calcularCronograma agora busca feriados do banco de dados internamente.
-    $cronograma = calcularCronograma($cargaHorariaTotal, $dataInicio, $turno, $diasSemana, [], $porcentagemRemoto);
-    $diasLetivos = array_column($cronograma['diasLetivos'], 'date');
-    $dataTermino = $cronograma['data_termino'];
+    // Calcula Cronograma
+    $feriadosRecessos = $feriadoModel->buscarDatasNaoLetivas($dataInicio, (new DateTime('+1 year'))->format('Y-m-d'));
+    $cronograma = calcularCronograma($cursoData['carga_horaria'], $dataInicio, $turno, $diasSemana, $feriadosRecessos);
+    $dataTermino = $cronograma['dataTermino'];
 
-    // 3. Busca todas as salas e filtra por disponibilidade
-    $todasSalas = $sala->buscarTodas(); 
+    // Busca Salas Livres e Compatíveis (Filtro Inicial)
     $salasDisponiveis = [];
+    $todasSalas = $salaModel->buscarTodas(); 
 
+    // Filtra apenas salas compatíveis com o tipo e livres em todos os dias
     foreach ($todasSalas as $s) {
-        // Verifica se a sala está disponível para todos os dias do cronograma
+        // Compatibilidade: A sala deve ser do tipo necessário.
+        if ($s['idTipo_sala'] != $tipoSalaNecessaria) { 
+            continue;
+        }
+
+        // Disponibilidade (Sala Livre): Checa todos os dias do cronograma
         $estaLivre = true;
-        foreach ($diasLetivos as $dia) {
-            if (!$agendamento->verificarDisponibilidade($s['id_salas'], $dia, $turno)) {
+        foreach ($cronograma['diasLetivos'] as $dia) {
+            // O Model deve verificar o agendamento apenas pela data (id_salas, data_aula)
+            if (!$agendamento->verificarDisponibilidade($s['id_salas'], $dia)) { 
                 $estaLivre = false;
                 break;
             }
         }
         
-        // Se a sala estiver disponível para todos os dias, e for do tipo compatível, a adicionamos
-        if ($estaLivre && $s['tipo_sala'] === $tipoSalaNecessaria) {
-            // Adiciona a sala se a capacidade for pelo menos 50% dos alunos, para otimizar o uso
-            if ($s['capacidade_maxima'] >= ($totalAlunos * 0.5)) { 
-                $salasDisponiveis[] = $s;
-            }
+        // Se a sala estiver disponível para todos os dias, a adicionamos
+        if ($estaLivre) {
+            $salasDisponiveis[] = $s;
         }
     }
 
-    // 4. Usa o alocador inteligente para encontrar a melhor sala
-    $sugestaoSalas = AlocarTurmas::encontrarMelhorAlocacao($salasDisponiveis, ['total_alunos' => $totalAlunos, 'tipo_sala_necessaria' => $tipoSalaNecessaria]);
-    
+    // Aplica Algoritmo de Otimização (Melhor Encaixe/Ocupação Máxima)
+    $dadosAlocacao = [
+        'total_alunos' => $totalAlunos, 
+        'tipo_sala_necessaria' => $tipoSalaNecessaria,
+        'ehHibrida' => $isTEMOuAprendizagem ? 1 : 0
+    ];
+
+    $sugestaoSalas = AlocarTurmas::encontrarMelhorAlocacao($salasDisponiveis, $dadosAlocacao);
+
     if ($sugestaoSalas) {
+        http_response_code(200);
         echo json_encode([
             'success' => true,
             'salas' => $sugestaoSalas,
             'message' => 'Alocação automática concluída com sucesso. Verifique a sugestão abaixo.',
             'dataInicio' => $dataInicio,
-            'dataTermino' => $dataTermino
+            'dataTermino' => $dataTermino,
+            'turnoId' => $turnoId 
         ]);
         exit;
     }
 
-    http_response_code(404);
-    echo json_encode(['success' => false, 'error' => 'Não foi possível encontrar uma sala disponível que atenda aos requisitos de capacidade ou tipo para a turma.']);
+    // Alocação Impossível: Tenta Auditório 
+    // Busca Auditório (idTipo_sala = 5)
+    $auditório = array_filter($todasSalas, fn($s) => $s['idTipo_sala'] == 5 && $s['capacidade_maxima'] >= $totalAlunos);
+    
+    if (!empty($auditório)) {
+        $sAuditório = reset($auditório); 
+        $estaLivre = true;
+        
+        foreach ($cronograma['diasLetivos'] as $dia) {
+            if (!$agendamento->verificarDisponibilidade($sAuditório['id_salas'], $dia)) {
+                $estaLivre = false;
+                break;
+            }
+        }
 
+        if ($estaLivre) {
+            http_response_code(200);
+            echo json_encode([
+                'success' => false, // Indica que não é a alocação padrão
+                'salas' => [$sAuditório],
+                'message' => 'Alocação padrão impossível. Sugestão: Auditório (último recurso).',
+                'dataInicio' => $dataInicio,
+                'dataTermino' => $dataTermino,
+                'turnoId' => $turnoId
+            ]);
+            exit;
+        }
+    }
+
+    // Falha Total
+    http_response_code(404);
+    echo json_encode(['success' => false, 'error' => 'Nenhuma sala livre, compatível ou de último recurso encontrada para o cronograma e regras.']);
+
+} catch (InvalidArgumentException $e) {
+    http_response_code(400); 
+    echo json_encode(['error' => $e->getMessage()]);
 } catch (Exception $e) {
     http_response_code(500);
-    echo json_encode(['success' => false, 'error' => 'Erro interno do servidor: ' . $e->getMessage()]);
+    echo json_encode(['error' => 'Erro interno do servidor: ' . $e->getMessage()]);
 }

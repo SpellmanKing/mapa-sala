@@ -8,13 +8,16 @@ class Agendamento {
         $this->pdo = $pdo;
     }
 
-    public function agendarNovaTurma($dadosTurma, $diasLetivos, $salasIds) {
+    /**
+     * Cadastra a nova turma e seus respectivos agendamentos.
+     */
+    public function agendarNovaTurma($dadosTurma, $diasLetivos, $salasIds): int {
         try {
             if (empty($dadosTurma['instrutorId'])) {
                 throw new InvalidArgumentException("É necessário fornecer um ID de instrutor para agendar uma turma.");
             }
             
-            // 1. Validação da Habilitação do Instrutor (Corretude Lógica)
+            // 1. Validação da Habilitação do Instrutor
             require_once __DIR__ . '/Instrutor.php';
             $instrutorModel = new Instrutor($this->pdo);
 
@@ -24,94 +27,51 @@ class Agendamento {
 
             $this->pdo->beginTransaction();
 
+            // ID 1 é 'Planejada' na tabela status_turma
+            $STATUS_PLANEJADA_ID = 1; 
+
             $sql_turma = "INSERT INTO turmas
-                          (id_cursos, id_instrutores, data_inicio, data_termino, total_alunos, turno, status)
-                          VALUES (?, ?, ?, ?, ?, ?, 'Planejada')";
+                          (id_cursos, id_instrutores, data_inicio, data_termino, total_alunos, fk_id_turno, fk_id_status, eh_hibrida)
+                          VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
 
             $stmt_turma = $this->pdo->prepare($sql_turma);
             $stmt_turma->execute([
-                $dadosTurma['cursoId'],
-                $dadosTurma['instrutorId'],
-                $dadosTurma['dataInicio'],
-                $dadosTurma['dataTermino'],
-                $dadosTurma['totalAlunos'],
-                $dadosTurma['turno']
+                $dadosTurma['cursoId'], 
+                $dadosTurma['instrutorId'], 
+                $dadosTurma['dataInicio'], 
+                $dadosTurma['dataTermino'], 
+                $dadosTurma['totalAlunos'], 
+                $dadosTurma['turnoId'],
+                $STATUS_PLANEJADA_ID, 
+                $dadosTurma['ehHibrida'] ?? 0
             ]);
 
-            $novaTurmaId = $this->pdo->lastInsertId();
-            $sql_agendamento = "INSERT INTO agendamentos (id_turmas, id_salas, data_aula) VALUES (?, ?, ?)"; 
+            $turmaId = $this->pdo->lastInsertId();
+
+            // 2. Inserir Agendamentos (Dias de Aula)
+            $sql_agendamento = "INSERT INTO agendamentos (id_turmas, id_salas, data_aula) VALUES (?, ?, ?)";
             $stmt_agendamento = $this->pdo->prepare($sql_agendamento);
 
-            // Loop para inserção de agendamentos diários
-            foreach ($diasLetivos as $index => $diaLetivo) {
-                $salaId = $salasIds[$index % count($salasIds)];
-                
-                $stmt_agendamento->execute([$novaTurmaId, $salaId, $diaLetivo['data']]);
+            foreach ($diasLetivos as $dataAula) {
+                foreach ($salasIds as $salaId) {
+                    // Nota: O índice UNIQUE na tabela agendamentos (id_salas, data_aula) garantirá que não haja sobreposição de sala.
+                    $stmt_agendamento->execute([$turmaId, $salaId, $dataAula]);
+                }
             }
 
             $this->pdo->commit();
-            return $novaTurmaId;
-            
+            return $turmaId;
+
         } catch (PDOException $e) {
             $this->pdo->rollBack();
-            // Lança uma exceção mais específica para o Controller tratar
-            throw new Exception("Erro de banco de dados ao agendar a turma: " . $e->getMessage());
-        } catch (Exception $e) {
-            $this->pdo->rollBack(); // Garante o rollback mesmo se a exceção não for PDO
-            throw $e; // Relança a exceção de Argumento Inválido, por exemplo
-        }
-    }
-    
-    /**
-     * Verifica a disponibilidade de uma sala em um dia e turno específicos.
-     * @param int $salaId O ID da sala.
-     * @param string $data A data da aula (YYYY-MM-DD).
-     * @param string $turno O turno da aula ('Manhã', 'Tarde', 'Noite', 'Integral').
-     * @return bool True se a sala estiver disponível, false caso contrário.
-    */
-    public function verificarDisponibilidade(int $salaId, string $data, string $turno): bool {
-        try {
-            if ($turno === 'Integral') {
-                // Se a nova turma for 'Integral', verifica se há QUALQUER agendamento
-                $sql = "SELECT 1 FROM agendamentos WHERE id_salas = ? AND data_aula = ? LIMIT 1";
-                $stmt = $this->pdo->prepare($sql);
-                $stmt->execute([$salaId, $data]);
-            } else {
-                $sql = "SELECT 1 FROM agendamentos WHERE id_salas = ? AND data_aula = ? AND (turno = ? OR turno = 'Integral') LIMIT 1";
-                $stmt = $this->pdo->prepare($sql);
-                $stmt->execute([$salaId, $data, $turno]);
+            // 23000 é o código para violação de chave única. Útil para identificar conflitos.
+            if ($e->getCode() == 23000) { 
+                 throw new Exception("Erro de Conflito de Agendamento: A sala já está ocupada na data " . $dataAula . " ou a turma já tem aula.");
             }
-
-            return $stmt->fetch(PDO::FETCH_ASSOC) === false; 
-        } catch (PDOException $e) {
-            throw new Exception("Erro ao verificar disponibilidade: " . $e->getMessage());
-        }
-    }
-
-    /**
-     * Busca todos os agendamentos no banco de dados, com detalhes da turma e sala.
-    */
-    public function buscarTodosCalculadora() {
-        try {
-            $sql = "
-                SELECT 
-                    a.id_agendamentos, 
-                    a.data_aula, 
-                    a.turno,
-                    s.nome_sala,
-                    t.id_turmas,
-                    c.nome_curso
-                FROM agendamentos a
-                JOIN salas s ON a.id_salas = s.id_salas
-                JOIN turmas t ON a.id_turmas = t.id_turmas
-                JOIN cursos c ON t.id_cursos = c.id_cursos
-                ORDER BY a.data_aula DESC, s.nome_sala ASC";
-
-            $stmt = $this->pdo->query($sql);
-            $agendamentos = $stmt->fetchAll(PDO::FETCH_ASSOC);
-            return $agendamentos;
-        } catch (PDOException $e) {
-            throw new Exception("Erro ao buscar agendamentos: " . $e->getMessage());
+            throw new Exception("Erro ao agendar nova turma: " . $e->getMessage());
+        } catch (InvalidArgumentException $e) {
+            $this->pdo->rollBack();
+            throw $e; // Propaga exceções de validação de argumento
         }
     }
 
@@ -126,8 +86,8 @@ class Agendamento {
                         i.nome_instrutor AS instrutor,
                         t.codigo_turma,
                         t.total_alunos,
-                        t.status,
-                        t.turno,
+                        st.nome_status AS status,
+                        tu.nome_turno AS turno,
                         c.nome_curso,
                         s.nome_sala,
                         s.id_salas,
@@ -136,6 +96,8 @@ class Agendamento {
                     JOIN turmas t ON a.id_turmas = t.id_turmas
                     JOIN cursos c ON t.id_cursos = c.id_cursos
                     JOIN salas s ON a.id_salas = s.id_salas
+                    JOIN status_turma st ON t.fk_id_status = st.id_status
+                    JOIN turno tu ON t.fk_id_turno = tu.id_turno         
                     LEFT JOIN instrutores i ON t.id_instrutores = i.id_instrutores
                     ORDER BY a.data_aula ASC, s.nome_sala ASC";
 

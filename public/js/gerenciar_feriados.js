@@ -5,22 +5,65 @@
 (function() {
     window.SGST = window.SGST || {};
 
-    // --- 1. SELETORES DE DOM
-    const feriadoSection = document.getElementById('gerenciar-feriados');
-    const feriadoForm = document.getElementById('feriado-form');
-    const feriadoListBody = document.getElementById('feriado-list-view');
-    const addFeriadoBtn = feriadoSection ? feriadoSection.querySelector('#feriado-form-submit-btn') : null;
-
-    if (!feriadoForm || !feriadoListBody || !addFeriadoBtn) {
-        SGST.Utils.log('DOM_WARN', "Elementos de Feriados não encontrados. O módulo será desabilitado.");
-        return;
+    // --- 1. SELETORES DE DOM (Assumidos no Modal de Feriados, que deve ser adicionado ao index.php)
+    const feriadoModal = document.getElementById('feriado-modal');
+    if (!feriadoModal) {
+        // Cria um placeholder para o modal que falta no DOM
+        window.SGST.Modals = window.SGST.Modals || { Elements: {} };
+        window.SGST.Modals.Elements.feriado = document.createElement('div');
     }
 
+    // Seletores que DEVEM existir no Modal de Feriados:
+    const feriadoForm = feriadoModal.querySelector('#feriado-form') || document.createElement('form');
+    const feriadoListBody = feriadoModal.querySelector('#feriado-list-view') || document.createElement('div');
+    const addFeriadoBtn = feriadoModal.querySelector('#feriado-form-submit-btn') || document.createElement('button');
+
     /**
-     * -----------------------------------------------------
-     * FUNÇÕES DE DADOS (CRUD)
-     * -----------------------------------------------------
+     * Lida com a submissão do formulário (POST/PUT).
      */
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        SGST.Utils.toggleLoading(true);
+        
+        // Coleta de dados
+        const feriadoId = feriadoForm.querySelector('#feriado-id')?.value;
+        const dataFeriado = feriadoForm.querySelector('#feriado-data')?.value;
+        const descricao = feriadoForm.querySelector('#feriado-descricao')?.value;
+        const tipo = feriadoForm.querySelector('#feriado-tipo')?.value; // String ('feriado' ou 'recesso')
+
+        if (!dataFeriado || !descricao || !tipo) {
+            SGST.Utils.showToast('Todos os campos são obrigatórios.', 'error');
+            SGST.Utils.toggleLoading(false);
+            return;
+        }
+        
+        const payload = {
+            data_feriado: dataFeriado,
+            descricao: descricao,
+            tipo: tipo 
+        };
+        
+        try {
+            let response;
+            if (feriadoId) { // PUT (Update)
+                payload.id_feriado = parseInt(feriadoId);
+                response = await API.updateFeriado(payload);
+            } else { // POST (Create)
+                response = await API.createFeriado(payload);
+            }
+            
+            SGST.Utils.showToast(response.message || 'Operação concluída com sucesso!', 'success');
+            // Fechamento e recarga do painel
+            SGST.closeModal(feriadoModal);
+            SGST.Feriados.loadFeriados(); 
+            SGST.Painel.loadAllDataAndRender();
+            
+        } catch (error) {
+             SGST.Utils.showToast(`Falha na operação: ${error.message}`, 'error');
+        } finally {
+            SGST.Utils.toggleLoading(false);
+        }
+    };
 
     /**
      * Carrega e renderiza a lista de feriados.
@@ -42,44 +85,6 @@
         }
     };
     
-    /**
-     * Submete o formulário (Adicionar/Editar).
-     */
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        
-        if (!SGST.Utils.validateForm(feriadoForm)) return;
-        
-        const isEdit = !!document.getElementById('feriado-id').value;
-        const feriadoId = document.getElementById('feriado-id').value;
-
-        const payload = {
-            id_feriado: isEdit ? parseInt(feriadoId) : undefined, // O controller PUT espera id_feriado
-            data_feriado: feriadoForm.querySelector('#feriado-data').value,
-            descricao: feriadoForm.querySelector('#feriado-descricao').value,
-            tipo: feriadoForm.querySelector('#feriado-tipo').value
-        };
-
-        SGST.Utils.toggleLoading(true);
-        try {
-            let response;
-            if (isEdit) {
-                response = await API.updateFeriado(payload);
-            } else {
-                response = await API.addFeriado(payload);
-            }
-            
-            SGST.Utils.showToast(response.message || 'Operação realizada com sucesso!', 'success');
-            SGST.closeModal(SGST.Modals.Elements.feriado);
-            SGST.Utils.clearForm(feriadoForm);
-            loadFeriados(); // Recarrega a lista e o calendário
-
-        } catch (error) {
-            SGST.Utils.showToast(`Erro ao salvar: ${error.message}`, 'error');
-        } finally {
-            SGST.Utils.toggleLoading(false);
-        }
-    };
 
     /**
      * Exclui um feriado.
@@ -167,23 +172,9 @@
      
     SGST.Feriados = {
         loadFeriados: loadFeriados,
-        
         init: () => {
-            // Inicializa a lista ao abrir a seção
-            SGST.activeSectionHandlers['gerenciar-feriados'] = loadFeriados;
-
-            // Listener para o botão de adicionar
-            addFeriadoBtn.addEventListener('click', () => {
-                SGST.Utils.clearForm(feriadoForm);
-                const modalTitle = document.getElementById('feriado-modal');
-                if (modalTitle) modalTitle.textContent = 'Adicionar Feriado/Recesso';
-                SGST.openModal(SGST.Modals.Elements.feriado);
-            });
-            
-            // Listener para o formulário (POST/PUT)
+             // Listener para o formulário (POST/PUT)
             feriadoForm.addEventListener('submit', handleSubmit);
-            
-            SGST.Utils.log('FERIADOS_INIT', 'Gerenciar Feriados listeners inicializados.');
         }
     };
 

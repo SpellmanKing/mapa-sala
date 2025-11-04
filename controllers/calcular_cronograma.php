@@ -14,100 +14,71 @@ error_reporting(E_ALL);
  * @param int $porcentagemRemoto Porcentagem da carga horária que deve ser remota (0 a 100).
  * @return array Contendo a data de término, dias letivos, e o calendário completo.
  */
+
 function calcularCronograma(int $cargaHorariaTotal, string $dataInicio, string $turno, array $diasSemanaSelecionados, array $feriadosRecessosParam = [], $porcentagemRemoto = 0): array {
     
     // Regra de negócio: Carga horária por dia
     $horasPorDia = 0;
-    switch ($turno) {
+  switch ($turno) {
         case 'Manhã':
         case 'Tarde':
         case 'Noite':
-            $horasPorDia = 4;
+            $horasPorDia = 4; // Simplificação: 4h/dia padrão
             break;
         case 'Integral':
-            $horasPorDia = 8;
+            $horasPorDia = 8; // 8h/dia
+            break;
+        case 'Vespertino':
+            $horasPorDia = 5; // 5h/dia (Adicionado para flexibilidade)
             break;
         default:
-            throw new InvalidArgumentException("Turno inválido.");
+            throw new InvalidArgumentException("Turno inválido ou horas por dia não configuradas.");
     }
 
     if ($horasPorDia <= 0) {
         throw new InvalidArgumentException("Não foi possível determinar a carga horária diária.");
     }
     
-    $cargaHorariaRestante = $cargaHorariaTotal;
-    $diasLetivosNecessarios = ceil($cargaHorariaTotal / $horasPorDia);
+    // Calcula o Total de Dias Letivos (TDL) necessários
+    $totalDiasLetivos = (int) ceil($cargaHorariaTotal / $horasPorDia); // TDL = CH Total / CH Diária
     
     // Calculo para dias remotos
     $diasRemotosNecessarios = floor($diasLetivosNecessarios * ($porcentagemRemoto / 100));
     $diasPresenciaisNecessarios = $diasLetivosNecessarios - $diasRemotosNecessarios;
     
-    $diasPresenciais = 0;
-    $diasRemotos = 0;
-    
-    $calendario = [];
-    $totalDiasAula = 0;
-    
+    // Estruturas de controle para a simulação
     $currentDate = new DateTime($dataInicio);
+    $feriadosMap = array_flip($feriadosRecessosParam); // Mapa para busca rápida O(1)
+    
+    $diasLetivos = [];
+    $totalDiasAula = 0;
     $dataTermino = null;
 
-    // Loop até que a carga horária restante seja totalmente distribuída
-    while ($cargaHorariaRestante > 0) {
-        $dataTermino = $currentDate->format('Y-m-d');
-        
-        // 1. Verifica se a data atual é feriado/recesso
-        $diaFormatado = $currentDate->format('Y-m-d');
-        $isFeriadoOuRecesso = in_array($diaFormatado, $feriadosRecessosParam);
-        
-        // 2. Verifica o dia da semana (1=Segunda, 7=Domingo)
-        $diaDaSemana = (int)$currentDate->format('N'); 
-        
-        // 3. Define se é um dia de aula potencial
-        $isDiaDeAula = in_array($diaDaSemana, $diasSemanaSelecionados) && !$isFeriadoOuRecesso;
+    // Simulação da Agenda
+    while ($totalDiasAula < $totalDiasLetivos) {
+        $diaDaSemana = (int) $currentDate->format('N'); // 1 (Segunda) a 7 (Domingo)
+        $dataAtual = $currentDate->format('Y-m-d');
 
-        $diaData = [
-            'date' => $diaFormatado,
-            'is_weekend' => ($diaDaSemana == 6 || $diaDaSemana == 7),
-            'is_holiday' => $isFeriadoOuRecesso,
-            'is_class_day' => $isDiaDeAula,
-            'type' => null, // 'presencial' ou 'remoto'
-            'description' => '' // Descrição do dia (Aula, Feriado, Recesso, etc)
-        ];
+        $isDiaDeAulaProgramado = in_array($diaDaSemana, $diasSemanaSelecionados);
+        $isFeriadoOuRecesso = isset($feriadosMap[$dataAtual]);
 
-        if ($isFeriadoOuRecesso) {
-            // Se for feriado, buscar descrição do feriado (opcional, mas útil para o calendário)
-            $diaData['description'] = 'Feriado/Recesso';
-        }
-        
-        if ($isDiaDeAula) {
-            $cargaHorariaRestante -= $horasPorDia;
-            $totalDiasAula++;
+        // Se for um dia da semana de aula programado E não for feriado/recesso
+        if ($isDiaDeAulaProgramado && !$isFeriadoOuRecesso) {
             
-            // Lógica para diferenciar dias presenciais/remotos
-            // Prioriza dias remotos para distribuir uniformemente (ou conforme a regra de negócio)
-            if ($diasRemotos < $diasRemotosNecessarios) {
-                $diasRemotos++;
-                $diaData['type'] = 'remoto';
-                $diaData['description'] = "Dia de Aula Remoto";
-            } else {
-                $diasPresenciais++;
-                $diaData['type'] = 'presencial';
-                $diaData['description'] = "Dia de Aula Presencial";
-            }
+            $diasLetivos[] = $dataAtual;
+            $totalDiasAula++;
+            $dataTermino = $dataAtual; // A data de término é o último dia de aula contado
         }
-        
-        $calendario[] = $diaData;
 
-        // Avança para o próximo dia
         $currentDate->modify('+1 day');
     }
         
     return [
-        'total_carga_horaria' => $cargaHorariaTotal,
-        'data_termino' => $dataTermino,
-        'diasLetivos' => array_filter($calendario, function($dia) {
-            return $dia['is_class_day'];
-        }),
-        'calendarioCompleto' => $calendario
+        'dataTermino' => $dataTermino,
+        'diasLetivos' => $diasLetivos,
+        'totalDiasAula' => $totalDiasAula,
+        'horasPorDia' => $horasPorDia
+        // Outras informações de calendário (presencial/remoto) podem ser adicionadas se necessário,
+        // mas não são estritamente necessárias para a alocação de sala/agendamento.
     ];
 }

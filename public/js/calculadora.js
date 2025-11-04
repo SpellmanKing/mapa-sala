@@ -19,6 +19,11 @@
         clearFiltersButton: document.getElementById('clear-filters-button'),
         
         // Formulário de Cálculo
+        calculadoraForm: document.getElementById('calculadora-form'),
+        courseSelect: document.getElementById('calculadora-curso-select'),
+        dataInicioInput: document.getElementById('calculadora-data-inicio'),
+        turnoSelect: document.getElementById('calculadora-turno'),
+
         courseSelect: document.getElementById('calculadora-curso-select'),
         dataInicioInput: document.getElementById('calculadora-data-inicio'),
         turnoSelect: document.getElementById('calculadora-turno'),
@@ -28,141 +33,90 @@
         
         // Resultados
         dataTerminoDisplay: document.getElementById('data-termino-resultado'),
-        diasLetivosTableBody: document.getElementById('dias-letivos-table-body'),
-        exportPdfButton: document.getElementById('export-pdf-button')
+        diasLetivosDisplay: document.getElementById('dias-letivos-resultado'),
+        dataTerminoDisplay: document.getElementById('data-termino-resultado'),
+        diasLetivosDisplay: document.getElementById('dias-letivos-resultado'),
+        exportPdfButton: document.getElementById('export-pdf-button'),
+
+        // Botões
+        applyFiltersButton: document.getElementById('apply-filters-button'),
+        clearFiltersButton: document.getElementById('clear-filters-button'),
+        exportPdfButton: document.getElementById('export-pdf-button') 
+    };
+
+    let dadosCursos = [];
+
+    // Supondo que os checkboxes dos dias da semana são injetados DENTRO do calculadora-form
+    const getDiasSemanaSelecionados = () => {
+        return Array.from(calculadoraDOM.calculadoraForm.querySelectorAll('input[name="dias-semana"]:checked'))
+                                .map(checkbox => parseInt(checkbox.value));
     };
 
     /**
-     * -----------------------------------------------------
-     * FUNÇÕES DE FILTRO DE CURSOS
-     * -----------------------------------------------------
-     */
-
     /**
-     * Coleta os filtros e chama a API para buscar e popular a lista de cursos.
+     * Popula o select de cursos.
      */
-    const filterAndPopulateCourses = async () => {
-        const filtros = {};
-        
-        // Coleta todos os filtros
-        if (calculadoraDOM.filterSegmento.value) filtros.segmento = calculadoraDOM.filterSegmento.value;
-        if (calculadoraDOM.filterModalidade.value) filtros.modalidade = calculadoraDOM.filterModalidade.value;
-        if (calculadoraDOM.filterNomeCurso.value) filtros.nome_curso = calculadoraDOM.filterNomeCurso.value;
-        if (calculadoraDOM.filterChMin.value) filtros.ch_min = calculadoraDOM.filterChMin.value;
-        if (calculadoraDOM.filterChMax.value) filtros.ch_max = calculadoraDOM.filterChMax.value;
-        if (calculadoraDOM.filterTem.checked) filtros.tem = 'true';
-        if (calculadoraDOM.filterBolsa.checked) filtros.bolsa = 'true';
-
+    const loadCourses = async () => {
         SGST.Utils.toggleLoading(true);
         try {
-            // A API.buscarCursosComFiltros usa o controller calculadora_inteligente.php GET
-            const cursos = await API.buscarCursosComFiltros(filtros);
-            SGST.dadosCursos = cursos;
+            dadosCursos = await API.getAllCursos(); // GET gerenciar_cursos.php
             
-            SGST.Utils.populateSelect(
-                '#calculadora-curso-select', 
-                cursos, 
-                'id_cursos', 
-                'nome_curso', 
-                'Selecione o Curso'
-            );
+            // Popula o <select>
+            SGST.Utils.populateSelect('#calculadora-curso-select', dadosCursos, 'id_cursos', 'nome_curso', 'Selecione o Curso');
             
-            // Dispara o cálculo se já havia um curso selecionado
-            calculateSchedule(); 
-
         } catch (error) {
-            SGST.Utils.showToast(`Erro ao buscar cursos: ${error.message}`, 'error');
+            SGST.Utils.showToast('Erro ao carregar cursos: ' + error.message, 'error');
         } finally {
             SGST.Utils.toggleLoading(false);
         }
     };
 
     /**
-     * -----------------------------------------------------
-     * FUNÇÕES DE CÁLCULO DE CRONOGRAMA
-     * -----------------------------------------------------
-     */
-
-    /**
-     * Valida os campos de cálculo e chama a API.
+     * FUNÇÃO PRINCIPAL: Calcula o cronograma chamando o backend.
      */
     const calculateSchedule = async () => {
         const cursoId = calculadoraDOM.courseSelect.value;
         const dataInicio = calculadoraDOM.dataInicioInput.value;
-        const turno = calculadoraDOM.turnoSelect.value;
-        const porcentagemRemoto = calculadoraDOM.remotePercentageSelect.value;
-        const cursoSelecionado = SGST.dadosCursos.find(c => c.id_cursos == cursoId);
+        const turno = calculadoraDOM.turnoSelect.value; // String do Turno
+        const cursoSelecionado = dadosCursos.find(c => c.id_cursos == cursoId);
+        const diasSemana = getDiasSemanaSelecionados(); // Obtém os dias selecionados
         
-        const diasSemanaSelecionados = Array.from(calculadoraDOM.diasSemanaContainer.querySelectorAll('input[type="checkbox"]:checked'))
-            .map(cb => parseInt(cb.value));
-
-        if (!cursoId || !dataInicio || !turno || diasSemanaSelecionados.length === 0) {
-            SGST.Utils.log('CALC_SKIP', 'Campos de cálculo incompletos. Pulando cálculo.');
-            calculadoraDOM.dataTerminoDisplay.textContent = 'N/A';
-            calculadoraDOM.diasLetivosTableBody.innerHTML = '';
+        if (!cursoSelecionado || !dataInicio || !turno || diasSemana.length === 0) {
+            calculadoraDOM.dataTerminoDisplay.textContent = '--';
+            calculadoraDOM.diasLetivosDisplay.innerHTML = '';
             return;
         }
-        
-        if (!cursoSelecionado) {
-            SGST.Utils.showToast('Detalhes do curso não encontrados.', 'error');
-            return;
-        }
-        
-        const cargaHorariaTotal = cursoSelecionado.carga_horaria; // Assumindo que o campo carga_horaria está no objeto curso
-
-        // Prepara o Payload para o cálculo do cronograma
-        const payload = {
-            cargaHorariaTotal: parseInt(cargaHorariaTotal),
-            dataInicio: dataInicio,
-            turno: turno,
-            diasSemanaSelecionados: diasSemanaSelecionados,
-            // OBS: Feriados e Recessos são buscados pelo backend PHP (Feriado.php)
-            porcentagemRemoto: parseInt(porcentagemRemoto)
-        };
 
         SGST.Utils.toggleLoading(true);
         try {
-            // A API.calcularCronograma usa o controller calcular_cronograma.php POST (SUPOSIÇÃO)
-            const response = await API.calcularCronograma(payload);
+            const payload = {
+                cargaHorariaTotal: parseInt(cursoSelecionado.carga_horaria),
+                dataInicio: dataInicio,
+                turno: turno,
+                diasSemana: diasSemana
+            };
+
+            // Chamada ao endpoint calcular_cronograma.php (UC-002)
+            const result = await API.getCronograma(payload); 
             
-            renderSchedule(response);
+            // Exibição dos resultados
+            calculadoraDOM.dataTerminoDisplay.textContent = SGST.Utils.formatDate(result.dataTermino);
+            
+            let diasHtml = `
+                <p>Dias de Aula (Total: ${result.diasLetivos.length}):</p>
+                <ul>${result.diasLetivos.map(d => `<li>${SGST.Utils.formatDate(d)}</li>`).join('')}</ul>
+            `;
+            calculadoraDOM.diasLetivosDisplay.innerHTML = diasHtml;
+
+            SGST.Utils.showToast('Cálculo concluído. Data de término estimada.', 'success');
 
         } catch (error) {
-            SGST.Utils.showToast(`Erro ao calcular cronograma: ${error.message}`, 'error');
-            calculadoraDOM.dataTerminoDisplay.textContent = 'Erro';
-            calculadoraDOM.diasLetivosTableBody.innerHTML = '';
+            calculadoraDOM.dataTerminoDisplay.textContent = 'Erro no cálculo.';
+            calculadoraDOM.diasLetivosDisplay.innerHTML = '';
+            SGST.Utils.showToast('Erro ao calcular cronograma: ' + error.message, 'error');
         } finally {
             SGST.Utils.toggleLoading(false);
         }
-    };
-
-    /**
-     * Renderiza o resultado do cronograma na interface.
-     */
-    const renderSchedule = (scheduleData) => {
-        // Data de término
-        calculadoraDOM.dataTerminoDisplay.textContent = SGST.Utils.formatDate(scheduleData.data_termino || 'N/A');
-
-        // Tabela de Dias Letivos
-        const diasLetivos = scheduleData.diasLetivos || [];
-        calculadoraDOM.diasLetivosTableBody.innerHTML = '';
-
-        if (diasLetivos.length === 0) {
-            calculadoraDOM.diasLetivosTableBody.innerHTML = '<tr><td colspan="4" class="empty-state">Nenhum dia letivo encontrado.</td></tr>';
-            return;
-        }
-
-        diasLetivos.forEach(dia => {
-            const row = calculadoraDOM.diasLetivosTableBody.insertRow();
-            
-            // Estilização baseada no tipo (presencial/remoto)
-            row.className = dia.type === 'remoto' ? 'row-remoto' : 'row-presencial';
-
-            row.insertCell().textContent = SGST.Utils.formatDate(dia.data);
-            row.insertCell().textContent = dia.description;
-            row.insertCell().textContent = dia.type ? dia.type.charAt(0).toUpperCase() + dia.type.slice(1) : 'N/A';
-            row.insertCell().textContent = dia.is_class_day ? 'Sim' : 'Não';
-        });
     };
 
     /**
@@ -172,10 +126,17 @@
      */
     
     SGST.Calculadora = {
-        filterAndPopulateCourses: filterAndPopulateCourses, // Exportado para ser chamado no init
-        calculateSchedule: calculateSchedule,
-
         init: () => {
+            // Listener para recalcular o cronograma ao mudar qualquer input relevante
+            calculadoraDOM.courseSelect.addEventListener('change', calculateSchedule);
+            calculadoraDOM.dataInicioInput.addEventListener('change', calculateSchedule);
+            calculadoraDOM.turnoSelect.addEventListener('change', calculateSchedule);
+            // Assumimos que o form deve escutar mudanças nos checkboxes que serão injetados
+            calculadoraDOM.calculadoraForm.addEventListener('change', (e) => {
+                if (e.target.name === 'dias-semana') {
+                    calculateSchedule();
+                }
+            });
             // Handlers para os filtros
             calculadoraDOM.applyFiltersButton.addEventListener('click', (e) => {
                 e.preventDefault();

@@ -13,6 +13,59 @@ DROP SCHEMA IF EXISTS `sgst_bd` ;
 CREATE SCHEMA IF NOT EXISTS `sgst_bd` DEFAULT CHARACTER SET utf8 ;
 USE `sgst_bd` ;
 
+
+-- -----------------------------------------------------
+-- Table `status_turma`
+-- -----------------------------------------------------
+DROP TABLE IF EXISTS `status_turma` ;
+CREATE TABLE IF NOT EXISTS `status_turma` (
+  `id_status` INT NOT NULL AUTO_INCREMENT,
+  `nome_status` VARCHAR(50) NOT NULL UNIQUE,
+  PRIMARY KEY (`id_status`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+-- Inserção de dados para `status_turma`
+INSERT INTO status_turma (nome_status) VALUES
+('Planejada'),
+('Confirmada'),
+('Em Andamento'),
+('Concluída'),
+('Cancelada');
+
+
+-- -----------------------------------------------------
+-- Table `turno`
+-- -----------------------------------------------------
+DROP TABLE IF EXISTS `turno` ;
+CREATE TABLE IF NOT EXISTS `turno` (
+  `id_turno` INT NOT NULL AUTO_INCREMENT,
+  `nome_turno` VARCHAR(50) NOT NULL UNIQUE,
+  PRIMARY KEY (`id_turno`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+-- Inserção de dados para `turno`
+INSERT INTO turno (nome_turno) VALUES
+('Manhã'),
+('Tarde'),
+('Noite'),
+('Integral'),
+('Vespertino');
+
+-- -----------------------------------------------------
+-- Table `tipo_feriado`
+-- -----------------------------------------------------
+DROP TABLE IF EXISTS `tipo_feriado` ;
+CREATE TABLE IF NOT EXISTS `tipo_feriado` (
+  `id_tipo_feriado` INT NOT NULL AUTO_INCREMENT,
+  `nome_tipo` VARCHAR(50) NOT NULL UNIQUE,
+  PRIMARY KEY (`id_tipo_feriado`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+-- Inserção de dados para `tipo_feriado`
+INSERT INTO tipo_feriado (nome_tipo) VALUES
+('feriado'),
+('recesso');
+
 -- -----------------------------------------------------
 -- Table `tipos_sala`
 -- -----------------------------------------------------
@@ -23,10 +76,7 @@ CREATE TABLE IF NOT EXISTS `tipos_sala` (
   PRIMARY KEY (`idTipo_sala`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
---
--- Despejando dados para a tabela `tipos_sala`
---
-
+-- Inserção de dados para `tipos_sala`
 INSERT INTO tipos_sala (nome_tipo) VALUES
 ('Sala de aula Inovadora'),
 ('Laboratório de TI'),
@@ -54,11 +104,7 @@ CREATE TABLE IF NOT EXISTS `salas` (
     ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
-
---
--- Despejando dados para a tabela `salas`
---
-
+-- Inserção de dados para `salas`
 INSERT INTO salas (nome_sala, capacidade_maxima, idTipo_sala, local, recursos_especiais) VALUES
 ('Inovadora 1', 30, 1, 'Cep Talal Abu Allan', '1º Andar, carteiras universitárias, TV ou projetor, lousa digital ou quadro branco, acesso à internet, tomadas, iluminação adequada, climatização, espaço para dinâmicas, decoração moderna, recursos multimídia, ambiente colaborativo'),
 ('Inovadora 2', 20, 1, 'Cep Talal Abu Allan', '2º Andar, mesas móveis trapézio, TV ou projetor, lousa digital ou quadro branco, internet, tomadas, iluminação adequada, climatização, espaço para dinâmicas, decoração moderna, recursos multimídia, ambiente colaborativo'),
@@ -100,18 +146,13 @@ CREATE TABLE IF NOT EXISTS `cursos` (
     ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
---
--- Despejando dados para a tabela `cursos`
---
+-- Inserção de dados para `cursos`
 INSERT INTO cursos (nome_curso, segmento, modalidade, carga_horaria, valor, curso_tem, bolsa_compativel, idTipo_sala) VALUES
--- Comunicação (Sala de aula Inovadora = 1)
 ('Fotografia de propaganda e publicidade', 'Comunicação', 'Presencial', 72, 800.00, 0, 1, 1),
 ('Fotografia Jornalística e Documental', 'Comunicação', 'Presencial', 72, 750.00, 0, 1, 1),
 ('Fotógrafo', 'Comunicação', 'Presencial', 190, 1500.00, 0, 1, 1),
 ('Produção de Vídeo para Internet', 'Comunicação', 'Presencial', 36, 600.00, 0, 1, 1),
 ('Técnico em Produção Cultural', 'Comunicação', 'Presencial', 800, 3500.00, 1, 1, 1),
-
--- Beleza (Laboratório de Imagem Pessoal = 4)
 ('Aperfeiçoamento de Corte de Cabelo e Escova', 'Beleza', 'Presencial', 60, 900.00, 0, 1, 4),
 ('Beleza de Milhões', 'Beleza', 'Presencial', 100, 1200.00, 0, 1, 4),
 ('Colorimetria Avançada Aplicada a Cabeleireiros e Barbeiros', 'Beleza', 'Presencial', 100, 1300.00, 0, 1, 4),
@@ -134,31 +175,21 @@ INSERT INTO cursos (nome_curso, segmento, modalidade, carga_horaria, valor, curs
 ('Técnicas de Depilação', 'Beleza', 'Presencial', 80, 900.00, 0, 1, 4),
 ('Tratamento Capilar', 'Beleza', 'Presencial', 40, 800.00, 0, 1, 4),
 ('Unhas Perfeitas: Manicure e Pedicure', 'Beleza', 'Presencial', 100, 1200.00, 0, 1, 4),
-
--- Comunicação/Vendas (Sala Inovadora = 1)
 ('A Arte de se Comunicar e de Vender Mais', 'Comunicação', 'EaD', 30, 400.00, 0, 1, 1),
 ('Copywriting: Redação Web para Marketing e Vendas', 'Comunicação', 'EaD', 36, 500.00, 0, 1, 1),
-
--- Comunicação/Áudio (Laboratório de TI = 2)
 ('Operador de áudio', 'Comunicação', 'Presencial', 208, 1800.00, 0, 1, 2),
 ('Práticas de DJ', 'Comunicação', 'Presencial', 48, 600.00, 0, 1, 2),
 ('Produção de podcast em vídeo', 'Comunicação', 'Presencial', 40, 700.00, 0, 1, 2),
 ('Storytelling para Marcas e Produtos', 'Comunicação', 'EaD', 42, 500.00, 0, 1, 1),
 ('Técnico em Multimídia', 'Comunicação', 'Presencial', 800, 3800.00, 1, 1, 2),
-
--- Educação (Sala de aula Inovadora = 1)
 ('Assistente de Secretaria Escolar', 'Educação', 'Presencial', 180, 900.00, 0, 1, 1),
 ('Inclusão de Pessoas com Deficiência', 'Educação', 'EaD', 36, 400.00, 0, 1, 1),
 ('Técnico em Secretaria Escolar', 'Educação', 'Presencial', 800, 3500.00, 1, 1, 1),
-
--- Eventos (Sala de aula Inovadora = 1)
 ('Organizador de Eventos', 'Eventos', 'Presencial', 180, 1000.00, 0, 1, 1),
 ('Produção e Coordenação de Projetos de Cenografia', 'Eventos', 'Presencial', 36, 500.00, 0, 1, 1),
 ('Projetos de Cenografia para Shows', 'Eventos', 'Presencial', 48, 600.00, 0, 1, 1),
 ('Recepcionista de Eventos', 'Eventos', 'Presencial', 160, 800.00, 0, 1, 1),
 ('Técnico em Eventos', 'Eventos', 'Presencial', 800, 3600.00, 1, 1, 1),
-
--- Gastronomia (Laboratório de Gastronomia = 7)
 ('Açougueiro', 'Gastronomia', 'Presencial', 160, 1000.00, 0, 1, 7),
 ('Auxiliar de Cozinha', 'Gastronomia', 'Presencial', 240, 1200.00, 0, 1, 7),
 ('Auxiliar de Garçom (Cumim)', 'Gastronomia', 'Presencial', 160, 800.00, 0, 1, 7),
@@ -175,8 +206,6 @@ INSERT INTO cursos (nome_curso, segmento, modalidade, carga_horaria, valor, curs
 ('Sommelier de Vinho', 'Gastronomia', 'Presencial', 144, 1500.00, 0, 1, 7),
 ('Sushiman', 'Gastronomia', 'Presencial', 160, 2000.00, 0, 1, 7),
 ('Técnico em Gastronomia', 'Gastronomia', 'Presencial', 800, 4200.00, 1, 0, 7),
-
--- Gestão (Sala de aula Inovadora = 1)
 ('Assistente Administrativo', 'Gestão', 'EaD', 160, 800.00, 0, 1, 1),
 ('Assistente de Contabilidade', 'Gestão', 'EaD', 160, 850.00, 0, 1, 1),
 ('Assistente de Crédito e Cobrança', 'Gestão', 'EaD', 160, 850.00, 0, 1, 1),
@@ -195,8 +224,6 @@ INSERT INTO cursos (nome_curso, segmento, modalidade, carga_horaria, valor, curs
 ('Técnico em Secretariado', 'Gestão', 'Presencial', 800, 3200.00, 1, 1, 1),
 ('Camareiro em Meios de Hospedagem', 'Gestão', 'Presencial', 160, 800.00, 0, 1, 1),
 ('Recepcionista em Meios de Hospedagem', 'Gestão', 'Presencial', 160, 800.00, 0, 1, 1),
-
--- Moda (Laboratório de Moda = 3)
 ('Ajustes e Reformas do Vestuário', 'Moda', 'Presencial', 40, 600.00, 0, 1, 3),
 ('Análise de Coloração Pessoal', 'Moda', 'Presencial', 40, 700.00, 0, 1, 3),
 ('Branding e Marketing de Moda', 'Moda', 'EaD', 60, 800.00, 0, 1, 3),
@@ -213,8 +240,6 @@ INSERT INTO cursos (nome_curso, segmento, modalidade, carga_horaria, valor, curs
 ('Moulage', 'Moda', 'Presencial', 80, 1100.00, 0, 1, 3),
 ('Técnico em Produção de Moda', 'Moda', 'Presencial', 800, 4000.00, 1, 1, 3),
 ('Vitrinismo e Visual Merchandising para o Varejo de Moda', 'Moda', 'Presencial', 108, 1200.00, 0, 1, 3),
-
--- Tecnologia (Laboratório de TI = 2)
 ('Administrador de Redes', 'Tecnologia da Informação', 'Presencial', 200, 2000.00, 0, 1, 2),
 ('Arquitetura de Sistemas Cloud Computing', 'Tecnologia da Informação', 'EaD', 30, 400.00, 0, 1, 2),
 ('Assistente de Tecnologias da Informação', 'Tecnologia da Informação', 'Presencial', 200, 1500.00, 0, 1, 2),
@@ -242,6 +267,7 @@ INSERT INTO cursos (nome_curso, segmento, modalidade, carga_horaria, valor, curs
 ('Técnico em Redes de Computadores', 'Tecnologia da Informação', 'Presencial', 800, 3500.00, 1, 1, 2),
 ('Web Designer - Criação e Desenvolvimento de Sites', 'Tecnologia da Informação', 'Presencial', 200, 2000.00, 0, 1, 2);
 
+
 -- -----------------------------------------------------
 -- Table `instrutores`
 -- -----------------------------------------------------
@@ -254,10 +280,7 @@ CREATE TABLE IF NOT EXISTS `instrutores` (
   PRIMARY KEY (`id_instrutores`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
---
--- Despejando dados para a tabela `instrutores`
---
-
+-- Inserção de dados para `instrutores`
 INSERT INTO instrutores (nome_instrutor, segmento_principal) VALUES
 ('Adailton Rodrigues Duarte', 'Educacional'),
 ('Michelle Pereira Soares', 'Educacional'),
@@ -378,6 +401,7 @@ INSERT INTO instrutores (nome_instrutor, segmento_principal) VALUES
 ('Romulo Cesar Silvestre Leite', 'Tecnologia da Informação'),
 ('Ricardo De Souza Serra', 'Tecnologia da Informação');
 
+
 -- -----------------------------------------------------
 -- Table `instrutores_cursos`
 -- -----------------------------------------------------
@@ -398,145 +422,6 @@ CREATE TABLE IF NOT EXISTS `instrutores_cursos` (
   UNIQUE (`id_instrutores`, `id_cursos`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
---
--- Despejando dados para a tabela `instrutores_cursos`  
---
-
--- ==============================
--- BELEZA
--- ==============================
-INSERT INTO instrutores_cursos (id_instrutores, id_cursos)
-SELECT i.id_instrutores, c.id_cursos
-FROM instrutores i
-JOIN cursos c ON c.nome_curso IN (
- 'Alongamento de Unhas','Barbeiro','Cabeleireiro','Depilador','Manicure e Pedicure','Maquiador',
- 'Aperfeiçoamento de Corte de Cabelo e Escova','Beleza de Milhões','Colorimetria Avançada Aplicada a Cabeleireiros e Barbeiros',
- 'Colorimetria Capilar: Noções Básicas','Construção de Carreira para Profissionais da Beleza','Design de Barba',
- 'Design de Corte Feminino: Técnicas Avançadas','Design de Mechas','Design de Sobrancelhas',
- 'Extensão de Cílios: Fio a Fio','Extensão de Cílios: Volume Russo','Lash lifting e Brow lamination',
- 'Maquiagem Profissional Avançada','Microblading Fio a Fio','Micropigmentação','Penteados Avançados',
- 'Penteados e Corte de Cabelos Afro','Práticas de Trabalho do Cabeleireiro','Técnicas de Barbeiro',
- 'Técnicas de Depilação','Tratamento Capilar','Unhas Perfeitas: Manicure e Pedicure'
-)
-WHERE i.segmento_principal = 'Beleza';
-
--- ==============================
--- MODA
--- ==============================
-INSERT INTO instrutores_cursos (id_instrutores, id_cursos)
-SELECT i.id_instrutores, c.id_cursos
-FROM instrutores i
-JOIN cursos c ON c.nome_curso IN (
- 'Costureiro','Estilista de Moda','Produção de Moda','Aperfeiçoamento em Corte e Costura',
- 'Ajustes e Reformas do Vestuário','Análise de Coloração Pessoal','Branding e Marketing de Moda',
- 'Consultoria de Estilo - Personal Stylist','Consultoria de Imagem','Costura Criativa',
- 'Costura Prática e Moda Criativa','Desenho de Moda Digital','Estamparia - Design de Superfície',
- 'Moda Pet','Modelagem de Alfaiataria Feminina','Modelagem para Corset','Modelista','Moulage',
- 'Técnico em Produção de Moda','Vitrinismo e Visual Merchandising para o Varejo de Moda'
-)
-WHERE i.segmento_principal = 'Moda';
-
--- ==============================
--- TECNOLOGIA DA INFORMAÇÃO
--- ==============================
-INSERT INTO instrutores_cursos (id_instrutores, id_cursos)
-SELECT i.id_instrutores, c.id_cursos
-FROM instrutores i
-JOIN cursos c ON c.nome_curso IN (
- 'Administrador de Banco de Dados','Administrador de Redes','Assistente de Tecnologias da Informação',
- 'Desenvolvedor Back-end','Desenvolvedor Front-End','Desenvolvimento de Aplicativos Móveis',
- 'Editor de Projeto Visual Gráfico','Formação - programação Python','Front-End: Html, Css, Bootstrap, js e Jquery',
- 'Implementar protocolos de rede em roteadores e switches','Informática Básica','Informática para Melhor Idade',
- 'Informática Windows e Office Fundamental','Inteligência Artificial - Como Fazer a Pergunta Correta',
- 'Lógica de Programação','Microsoft Power Bi - Avançado','Microsoft Power Bi - Básico',
- 'PHP com MySQL','Planejar e implementar segurança em redes','Programador de Sistemas',
- 'Programador Web','Proteção de dados em redes de computadores','Técnicas Avançadas de Word, Excel e Powerpoint',
- 'Técnico em Ciências de Dados','Técnico em Computação Gráfica','Técnico em Desenvolvimento de Sistemas',
- 'Técnico em Informática','Técnico em Informática para Internet','Técnico em Inteligência Artificial',
- 'Técnico em Programação de Jogos Digitais','Técnico em Redes de Computadores','Técnico em Segurança Cibernética'
-)
-WHERE i.segmento_principal = 'Tecnologia da Informação';
-
--- ==============================
--- GASTRONOMIA
--- ==============================
-INSERT INTO instrutores_cursos (id_instrutores, id_cursos)
-SELECT i.id_instrutores, c.id_cursos
-FROM instrutores i
-JOIN cursos c ON c.nome_curso IN (
- 'Açougueiro','Auxiliar de Cozinha','Auxiliar de Garçom (Cumim)','Auxiliar de Padeiro',
- 'Barista','Bartender','Cake design - Aperfeiçoamento','Confeiteiro','Cozinheiro','Garçom',
- 'Padeiro','Pizzaiolo','Salgadeiro','Sommelier de Vinho','Sushiman','Técnico em Gastronomia'
-)
-WHERE i.segmento_principal = 'Gastronomia';
-
--- ==============================
--- GESTÃO
--- ==============================
-INSERT INTO instrutores_cursos (id_instrutores, id_cursos)
-SELECT i.id_instrutores, c.id_cursos
-FROM instrutores i
-JOIN cursos c ON c.nome_curso IN (
- 'Assistente Administrativo','Assistente de Contabilidade','Assistente de Crédito e Cobrança',
- 'Assistente de Logística','Assistente de Marketing e Vendas','Assistente de Pessoal',
- 'Assistente de Recursos Humanos','Assistente Financeiro','Recepcionista',
- 'Técnico em Administração','Técnico em Contabilidade','Técnico em Finanças',
- 'Técnico em Logística','Técnico em Marketing','Técnico em Recursos Humanos','Técnico em Secretariado'
-)
-WHERE i.segmento_principal = 'Gestão';
-
--- ==============================
--- EDUCAÇÃO
--- ==============================
-INSERT INTO instrutores_cursos (id_instrutores, id_cursos)
-SELECT i.id_instrutores, c.id_cursos
-FROM instrutores i
-JOIN cursos c ON c.nome_curso IN (
- 'Assistente de Secretaria Escolar','Técnico em Secretaria Escolar','Inclusão de Pessoas com Deficiência'
-)
-WHERE i.segmento_principal = 'Educacional';
-
--- ==============================
--- COMUNICAÇÃO
--- ==============================
-INSERT INTO instrutores_cursos (id_instrutores, id_cursos)
-SELECT i.id_instrutores, c.id_cursos
-FROM instrutores i
-JOIN cursos c ON c.nome_curso IN (
- 'Fotografia comercial com celular','Fotografia de propaganda e publicidade',
- 'Fotografia Jornalística e Documental','Produção de Vídeo para Internet',
- 'Operador de áudio','Práticas de DJ','Produção de podcast em vídeo',
- 'Storytelling para Marcas e Produtos','Técnico em Multimídia'
-)
-WHERE i.segmento_principal = 'Comunicação';
-
--- ==============================
--- SEGURANÇA
--- ==============================
-INSERT INTO instrutores_cursos (id_instrutores, id_cursos)
-SELECT i.id_instrutores, c.id_cursos
-FROM instrutores i
-JOIN cursos c ON c.nome_curso IN (
- 'Técnico em Segurança do Trabalho','Técnico em Prevenção e Combate a Incêndio',
- 'NR 10- Segurança em Instalações em eletricidade','NR 20- Segurança e Saúde no Trabalho com Inflamáveis',
- 'NR 23- Proteção Contra Incêndio','NR 35 – Segurança no Trabalho em Altura','NR 5 – CIPA: Comissão Interna de Prevenção de Acidentes',
- 'NR 9 – Programa de Prevenção de Riscos Ambientais'
-)
-WHERE i.segmento_principal = 'Segurança';
-
--- ==============================
--- SAÚDE
--- ==============================
-INSERT INTO instrutores_cursos (id_instrutores, id_cursos)
-SELECT i.id_instrutores, c.id_cursos
-FROM instrutores i
-JOIN cursos c ON c.nome_curso IN (
- 'Atendente de Farmácia','Cuidador de Idoso','Recepcionista em Serviços de Saúde',
- 'Técnico em Enfermagem','Técnico em Estética','Técnico em Análises Clínicas','Técnico em Farmácia',
- 'Técnico em Hemoterapia','Técnico em Massoterapia','Técnico em Nutrição E Dietética','Técnico em Podologia'
-)
-WHERE i.segmento_principal = 'Saúde';
-
 
 -- -----------------------------------------------------
 -- Table `turmas`
@@ -547,14 +432,16 @@ CREATE TABLE IF NOT EXISTS `turmas` (
   `id_cursos` INT NOT NULL,
   `id_instrutores` INT NULL,
   `codigo_turma` VARCHAR(50) UNIQUE,
-  `status` VARCHAR(50) DEFAULT 'Planejada',
+  `fk_id_status` INT DEFAULT 1, 
+  `fk_id_turno` INT NOT NULL, 
   `data_inicio` DATE NOT NULL,
-  `data_termino` DATE,
-  `turno` VARCHAR(50),
-  `total_alunos` INT,
-  `alunos_pagantes` INT,
-  `alunos_bolsistas` INT,
+  `data_termino` DATE, 
+  `total_alunos` INT NOT NULL, 
+  `alunos_pagantes` INT DEFAULT 0,
+  `alunos_bolsistas` INT DEFAULT 0,
   `observacoes` TEXT,
+  `eh_hibrida` TINYINT(1) DEFAULT 0 COMMENT '1 se a turma for dividida em 2 salas. Usado na lógica do TEM.',
+  
   PRIMARY KEY (`id_turmas`),
   CONSTRAINT `fk_turma_curso`
     FOREIGN KEY (`id_cursos`) REFERENCES `cursos` (`id_cursos`)
@@ -563,20 +450,26 @@ CREATE TABLE IF NOT EXISTS `turmas` (
   CONSTRAINT `fk_turma_instrutor`
     FOREIGN KEY (`id_instrutores`) REFERENCES `instrutores` (`id_instrutores`)
     ON DELETE SET NULL
+    ON UPDATE CASCADE,
+  CONSTRAINT `fk_turma_status`
+    FOREIGN KEY (`fk_id_status`) REFERENCES `status_turma` (`id_status`)
+    ON DELETE RESTRICT
+    ON UPDATE CASCADE,
+  CONSTRAINT `fk_turma_turno`
+    FOREIGN KEY (`fk_id_turno`) REFERENCES `turno` (`id_turno`)
+    ON DELETE RESTRICT
     ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
---
--- Despejando dados para a tabela `turmas`
---
-
-INSERT INTO turmas (id_cursos, id_instrutores, codigo_turma, status, data_inicio, data_termino, turno, total_alunos, alunos_pagantes, alunos_bolsistas, observacoes) VALUES
-(1, 1, 'TURMA-2025-001', 'Planejada', '2025-09-15', '2025-11-15', 'Manhã', 20, 15, 5, 'Turma inicial de Florista'),
-(3, 2, 'TURMA-2025-002', 'Planejada', '2025-10-01', '2025-12-01', 'Tarde', 18, 12, 6, 'Curso Alongamento de Unhas'),
-(5, 6, 'TURMA-2025-003', 'Planejada', '2025-09-20', '2026-01-20', 'Noite', 25, 20, 5, 'Turma Cabeleireiro - módulo avançado'),
-(9, 10, 'TURMA-2025-004', 'Planejada', '2025-09-25', '2026-02-25', 'Manhã', 30, 25, 5, 'Administrador de Banco de Dados'),
-(13, 12, 'TURMA-2025-005', 'Planejada', '2025-10-05', '2026-02-05', 'Tarde', 15, 10, 5, 'Curso Costureiro'),
-(11, 14, 'TURMA-2025-006', 'Planejada', '2025-10-10', '2026-03-10', 'Noite', 28, 22, 6, 'Curso Técnico em Redes');
+-- Inserção de dados para `turmas`
+-- Usando 1=Manhã, 2=Tarde, 3=Noite do INSERT INTO turno
+INSERT INTO turmas (id_cursos, id_instrutores, codigo_turma, fk_id_status, data_inicio, data_termino, fk_id_turno, total_alunos, alunos_pagantes, alunos_bolsistas, observacoes) VALUES
+(1, 1, 'TURMA-2025-001', 1, '2025-09-15', '2025-11-15', 1, 20, 15, 5, 'Turma inicial de Florista'),
+(3, 2, 'TURMA-2025-002', 1, '2025-10-01', '2025-12-01', 2, 18, 12, 6, 'Curso Alongamento de Unhas'),
+(5, 6, 'TURMA-2025-003', 1, '2025-09-20', '2026-01-20', 3, 25, 20, 5, 'Turma Cabeleireiro - módulo avançado'),
+(9, 10, 'TURMA-2025-004', 1, '2025-09-25', '2026-02-25', 1, 30, 25, 5, 'Administrador de Banco de Dados'),
+(13, 12, 'TURMA-2025-005', 1, '2025-10-05', '2026-02-05', 2, 15, 10, 5, 'Curso Costureiro'),
+(11, 14, 'TURMA-2025-006', 1, '2025-10-10', '2026-03-10', 3, 28, 22, 6, 'Curso Técnico em Redes');
 
 -- -----------------------------------------------------
 -- Table `agendamentos`
@@ -588,34 +481,23 @@ CREATE TABLE IF NOT EXISTS `agendamentos` (
   `id_salas` INT NOT NULL COMMENT 'FK para a sala alocada',
   `data_aula` DATE NOT NULL COMMENT 'Data específica da aula',
   PRIMARY KEY (`id_agendamento`),
-  
-  -- Índices Únicos Compostos (Essenciais para evitar conflitos)
   UNIQUE INDEX `uk_sala_dia` (`id_salas` ASC, `data_aula` ASC) COMMENT 'Garante que uma sala não seja agendada mais de uma vez por dia',
   UNIQUE INDEX `uk_turma_dia` (`id_turmas` ASC, `data_aula` ASC) COMMENT 'Garante que uma turma não tenha mais de uma aula por dia',
-  
-  -- Índices FK
   INDEX `fk_agendamentos_turmas1_idx` (`id_turmas` ASC),
   INDEX `fk_agendamentos_salas1_idx` (`id_salas` ASC),
-
-  -- Chaves Estrangeiras
   CONSTRAINT `fk_agendamentos_turmas1`
     FOREIGN KEY (`id_turmas`)
     REFERENCES `turmas` (`id_turmas`)
-    ON DELETE CASCADE -- Se a turma é deletada, seus agendamentos são removidos.
+    ON DELETE CASCADE 
     ON UPDATE CASCADE,
-    
   CONSTRAINT `fk_agendamentos_salas1`
     FOREIGN KEY (`id_salas`)
     REFERENCES `salas` (`id_salas`)
-    ON DELETE RESTRICT -- Não permite deletar uma sala se houver agendamentos futuros (garantia de integridade).
+    ON DELETE RESTRICT 
     ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT = 'Armazena cada dia de aula alocada para uma turma em uma sala.';
 
-
---
--- Despejando dados para a tabela `agendamentos`
---
-
+-- Inserção de dados para `agendamentos`
 INSERT INTO agendamentos (id_turmas, id_salas, data_aula) VALUES
 (1, 1, '2025-09-15'),
 (1, 1, '2025-09-22'),
@@ -630,6 +512,7 @@ INSERT INTO agendamentos (id_turmas, id_salas, data_aula) VALUES
 (6, 8, '2025-10-10'),
 (6, 8, '2025-10-17');
 
+
 -- -----------------------------------------------------
 -- Table `feriados_recessos`
 -- -----------------------------------------------------
@@ -638,116 +521,117 @@ CREATE TABLE IF NOT EXISTS `feriados_recessos` (
   `id_feriado` INT NOT NULL AUTO_INCREMENT,
   `data_feriado` DATE NOT NULL UNIQUE,
   `descricao` VARCHAR(255) NOT NULL,
-  `tipo` ENUM('feriado', 'recesso') NOT NULL,
-  PRIMARY KEY (`id_feriado`)
+  `fk_id_tipo_feriado` INT NOT NULL, 
+  PRIMARY KEY (`id_feriado`),
+  CONSTRAINT `fk_feriado_tipo`
+    FOREIGN KEY (`fk_id_tipo_feriado`) REFERENCES `tipo_feriado` (`id_tipo_feriado`)
+    ON DELETE RESTRICT
+    ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 
---
--- Despejando dados para a tabela `feriados_recessos`
---
+-- Usando 1=feriado, 2=recesso do INSERT INTO tipo_feriado
+INSERT INTO feriados_recessos (data_feriado, descricao, fk_id_tipo_feriado) VALUES
+-- === FERIADOS OFICIAIS (1) ===
+('2025-01-01', 'Confraternização Universal', 1),
+('2025-02-25', 'Carnaval', 1),
+('2025-02-26', 'Quarta-feira de Cinzas', 1),
+('2025-04-18', 'Sexta-feira Santa', 1),
+('2025-04-21', 'Tiradentes', 1),
+('2025-05-01', 'Dia do Trabalho', 1),
+('2025-06-19', 'Corpus Christi', 1),
+('2025-09-07', 'Independência do Brasil', 1),
+('2025-10-12', 'Nossa Senhora Aparecida', 1),
+('2025-11-02', 'Finados', 1),
+('2025-11-15', 'Proclamação da República', 1),
+('2025-12-25', 'Natal', 1),
+('2026-01-01', 'Confraternização Universal', 1),
+('2026-02-17', 'Carnaval', 1),
+('2026-02-18', 'Quarta-feira de Cinzas', 1),
+('2026-02-19', 'Carnaval – ponto facultativo', 1),
+('2026-04-03', 'Sexta-feira Santa', 1),
+('2026-04-21', 'Tiradentes', 1),
+('2026-05-01', 'Dia do Trabalho', 1),
+('2026-06-04', 'Corpus Christi', 1),
+('2026-07-09', 'Revolução Constitucionalista (SP)', 1),
+('2026-09-07', 'Independência do Brasil', 1),
+('2026-10-12', 'Nossa Senhora Aparecida', 1),
+('2026-10-28', 'Dia do Servidor Público', 1),
+('2026-11-02', 'Finados', 1),
+('2026-11-15', 'Proclamação da República', 1),
+('2026-11-20', 'Dia da Consciência Negra', 1),
+('2026-12-25', 'Natal', 1),
 
--- === FERIADOS OFICIAIS ===
-INSERT INTO feriados_recessos (data_feriado, descricao, tipo) VALUES
-('2025-01-01', 'Confraternização Universal', 'feriado'),
-('2025-02-25', 'Carnaval', 'feriado'),
-('2025-02-26', 'Quarta-feira de Cinzas', 'feriado'),
-('2025-04-18', 'Sexta-feira Santa', 'feriado'),
-('2025-04-21', 'Tiradentes', 'feriado'),
-('2025-05-01', 'Dia do Trabalho', 'feriado'),
-('2025-06-19', 'Corpus Christi', 'feriado'),
-('2025-09-07', 'Independência do Brasil', 'feriado'),
-('2025-10-12', 'Nossa Senhora Aparecida', 'feriado'),
-('2025-11-02', 'Finados', 'feriado'),
-('2025-11-15', 'Proclamação da República', 'feriado'),
-('2025-12-25', 'Natal', 'feriado'),
-('2026-01-01', 'Confraternização Universal', 'feriado'),
-('2026-02-17', 'Carnaval', 'feriado'),
-('2026-02-18', 'Quarta-feira de Cinzas', 'feriado'),
-('2026-02-19', 'Carnaval – ponto facultativo', 'feriado'),
-('2026-04-03', 'Sexta-feira Santa', 'feriado'),
-('2026-04-21', 'Tiradentes', 'feriado'),
-('2026-05-01', 'Dia do Trabalho', 'feriado'),
-('2026-06-04', 'Corpus Christi', 'feriado'),
-('2026-07-09', 'Revolução Constitucionalista (SP)', 'feriado'),
-('2026-09-07', 'Independência do Brasil', 'feriado'),
-('2026-10-12', 'Nossa Senhora Aparecida', 'feriado'),
-('2026-10-28', 'Dia do Servidor Público', 'feriado'),
-('2026-11-02', 'Finados', 'feriado'),
-('2026-11-15', 'Proclamação da República', 'feriado'),
-('2026-11-20', 'Dia da Consciência Negra', 'feriado'),
-('2026-12-25', 'Natal', 'feriado');
+-- === PONTES (RECESSO - 2) ===
+INSERT INTO feriados_recessos (data_feriado, descricao, fk_id_tipo_feriado) VALUES
+('2025-02-28', 'Ponte de Carnaval', 2),
+('2025-04-19', 'Ponte Páscoa/Tiradentes', 2),
+('2025-06-20', 'Ponte Corpus Christi', 2),
+('2025-07-10', 'Recesso Julho', 2),
+('2025-10-13', 'Ponte Nossa Senhora Aparecida', 2),
+('2025-10-29', 'Ponte Dia do Servidor', 2),
+('2025-11-03', 'Ponte Finados', 2),
+('2025-11-14', 'Ponte Proclamação da República', 2),
+('2025-11-16', 'Recesso Especial', 2),
+('2026-02-20', 'Ponte Carnaval', 2),
+('2026-04-04', 'Ponte Páscoa/Tiradentes', 2),
+('2026-06-05', 'Ponte Corpus Christi', 2);
 
--- === PONTES (RECESSO) ===
-INSERT INTO feriados_recessos (data_feriado, descricao, tipo) VALUES
-('2025-02-28', 'Ponte de Carnaval', 'recesso'),
-('2025-04-19', 'Ponte Páscoa/Tiradentes', 'recesso'),
-('2025-06-20', 'Ponte Corpus Christi', 'recesso'),
-('2025-07-10', 'Recesso Julho', 'recesso'),
-('2025-10-13', 'Ponte Nossa Senhora Aparecida', 'recesso'),
-('2025-10-29', 'Ponte Dia do Servidor', 'recesso'),
-('2025-11-03', 'Ponte Finados', 'recesso'),
-('2025-11-14', 'Ponte Proclamação da República', 'recesso'),
-('2025-11-16', 'Recesso Especial', 'recesso'),
-('2026-02-20', 'Ponte Carnaval', 'recesso'),
-('2026-04-04', 'Ponte Páscoa/Tiradentes', 'recesso'),
-('2026-06-05', 'Ponte Corpus Christi', 'recesso');
-
--- === DIAS NÃO LETIVOS (RECESSO) ===
-INSERT INTO feriados_recessos (data_feriado, descricao, tipo) VALUES
-('2025-01-02', 'Recesso Escolar', 'recesso'),
-('2025-01-03', 'Recesso Escolar', 'recesso'),
-('2025-01-06', 'Recesso Escolar', 'recesso'),
-('2025-01-07', 'Recesso Escolar', 'recesso'),
-('2025-01-08', 'Recesso Escolar', 'recesso'),
-('2025-01-09', 'Recesso Escolar', 'recesso'),
-('2025-01-10', 'Recesso Escolar', 'recesso'),
-('2025-01-13', 'Recesso Escolar', 'recesso'),
-('2025-01-14', 'Recesso Escolar', 'recesso'),
-('2025-01-15', 'Recesso Escolar', 'recesso'),
-('2025-01-16', 'Recesso Escolar', 'recesso'),
-('2025-01-17', 'Recesso Escolar', 'recesso'),
-('2025-01-20', 'Recesso Escolar', 'recesso'),
-('2025-01-21', 'Recesso Escolar', 'recesso'),
-('2025-01-22', 'Recesso Escolar', 'recesso'),
-('2025-01-23', 'Recesso Escolar', 'recesso'),
-('2025-01-24', 'Recesso Escolar', 'recesso'),
-('2025-01-27', 'Recesso Escolar', 'recesso'),
-('2025-01-28', 'Recesso Escolar', 'recesso'),
-('2025-01-29', 'Recesso Escolar', 'recesso'),
-('2025-01-30', 'Recesso Escolar', 'recesso'),
-('2025-01-31', 'Recesso Escolar', 'recesso'),
-('2026-01-02', 'Recesso Escolar', 'recesso'),
-('2026-01-05', 'Recesso Escolar', 'recesso'),
-('2026-01-06', 'Recesso Escolar', 'recesso'),
-('2026-01-07', 'Recesso Escolar', 'recesso'),
-('2026-01-08', 'Recesso Escolar', 'recesso'),
-('2026-01-09', 'Recesso Escolar', 'recesso'),
-('2026-01-12', 'Recesso Escolar', 'recesso'),
-('2026-01-13', 'Recesso Escolar', 'recesso'),
-('2026-01-14', 'Recesso Escolar', 'recesso'),
-('2026-01-15', 'Recesso Escolar', 'recesso'),
-('2026-01-16', 'Recesso Escolar', 'recesso'),
-('2026-01-19', 'Recesso Escolar', 'recesso'),
-('2026-01-20', 'Recesso Escolar', 'recesso'),
-('2026-01-21', 'Recesso Escolar', 'recesso'),
-('2026-01-22', 'Recesso Escolar', 'recesso'),
-('2026-01-23', 'Recesso Escolar', 'recesso'),
-('2026-01-26', 'Recesso Escolar', 'recesso'),
-('2026-01-27', 'Recesso Escolar', 'recesso'),
-('2026-01-28', 'Recesso Escolar', 'recesso'),
-('2026-01-29', 'Recesso Escolar', 'recesso'),
-('2026-01-30', 'Recesso Escolar', 'recesso'),
-('2026-02-02', 'Recesso Escolar', 'recesso'),
-('2026-02-03', 'Recesso Escolar', 'recesso'),
-('2026-02-04', 'Recesso Escolar', 'recesso'),
-('2026-02-05', 'Recesso Escolar', 'recesso'),
-('2026-02-06', 'Recesso Escolar', 'recesso'),
-('2026-02-09', 'Recesso Escolar', 'recesso'),
-('2026-02-10', 'Recesso Escolar', 'recesso'),
-('2026-02-11', 'Recesso Escolar', 'recesso'),
-('2026-02-12', 'Recesso Escolar', 'recesso'),
-('2026-02-13', 'Recesso Escolar', 'recesso');
+-- === DIAS NÃO LETIVOS (RECESSO - 2) ===
+INSERT INTO feriados_recessos (data_feriado, descricao, fk_id_tipo_feriado) VALUES
+('2025-01-02', 'Recesso Escolar', 2),
+('2025-01-03', 'Recesso Escolar', 2),
+('2025-01-06', 'Recesso Escolar', 2),
+('2025-01-07', 'Recesso Escolar', 2),
+('2025-01-08', 'Recesso Escolar', 2),
+('2025-01-09', 'Recesso Escolar', 2),
+('2025-01-10', 'Recesso Escolar', 2),
+('2025-01-13', 'Recesso Escolar', 2),
+('2025-01-14', 'Recesso Escolar', 2),
+('2025-01-15', 'Recesso Escolar', 2),
+('2025-01-16', 'Recesso Escolar', 2),
+('2025-01-17', 'Recesso Escolar', 2),
+('2025-01-20', 'Recesso Escolar', 2),
+('2025-01-21', 'Recesso Escolar', 2),
+('2025-01-22', 'Recesso Escolar', 2),
+('2025-01-23', 'Recesso Escolar', 2),
+('2025-01-24', 'Recesso Escolar', 2),
+('2025-01-27', 'Recesso Escolar', 2),
+('2025-01-28', 'Recesso Escolar', 2),
+('2025-01-29', 'Recesso Escolar', 2),
+('2025-01-30', 'Recesso Escolar', 2),
+('2025-01-31', 'Recesso Escolar', 2),
+('2026-01-02', 'Recesso Escolar', 2),
+('2026-01-05', 'Recesso Escolar', 2),
+('2026-01-06', 'Recesso Escolar', 2),
+('2026-01-07', 'Recesso Escolar', 2),
+('2026-01-08', 'Recesso Escolar', 2),
+('2026-01-09', 'Recesso Escolar', 2),
+('2026-01-12', 'Recesso Escolar', 2),
+('2026-01-13', 'Recesso Escolar', 2),
+('2026-01-14', 'Recesso Escolar', 2),
+('2026-01-15', 'Recesso Escolar', 2),
+('2026-01-16', 'Recesso Escolar', 2),
+('2026-01-19', 'Recesso Escolar', 2),
+('2026-01-20', 'Recesso Escolar', 2),
+('2026-01-21', 'Recesso Escolar', 2),
+('2026-01-22', 'Recesso Escolar', 2),
+('2026-01-23', 'Recesso Escolar', 2),
+('2026-01-26', 'Recesso Escolar', 2),
+('2026-01-27', 'Recesso Escolar', 2),
+('2026-01-28', 'Recesso Escolar', 2),
+('2026-01-29', 'Recesso Escolar', 2),
+('2026-01-30', 'Recesso Escolar', 2),
+('2026-02-02', 'Recesso Escolar', 2),
+('2026-02-03', 'Recesso Escolar', 2),
+('2026-02-04', 'Recesso Escolar', 2),
+('2026-02-05', 'Recesso Escolar', 2),
+('2026-02-06', 'Recesso Escolar', 2),
+('2026-02-09', 'Recesso Escolar', 2),
+('2026-02-10', 'Recesso Escolar', 2),
+('2026-02-11', 'Recesso Escolar', 2),
+('2026-02-12', 'Recesso Escolar', 2),
+('2026-02-13', 'Recesso Escolar', 2);
 
 
 SET SQL_MODE=@OLD_SQL_MODE;
