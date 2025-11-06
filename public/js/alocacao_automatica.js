@@ -1,186 +1,120 @@
+// public/js/alocacao_automatica.js
+
+const alocacaoModal = document.getElementById('alocacao-modal');
+const confirmarAlocacaoBtn = document.getElementById('confirmar-alocacao-btn');
+const alocacaoForm = document.getElementById('agendamento-form');
+
+let dadosTurmaCache = {}; // Armazena dados da turma para uso na confirmação
+
 /**
- * public/js/alocacao_automatica.js
- * Lógica para o processo de Alocação Automática de Salas e Confirmação.
+ * Inicia o processo de busca de salas automáticas e abre o modal de confirmação.
+ * @param {object} dados Dados completos da turma (id_curso, data_inicio, data_termino, etc.).
  */
-(function() {
-    window.SGST = window.SGST || {};
-
-    // --- 1. SELETORES DE DOM (Adaptados ao index.php)
-    const agendamentoForm = document.getElementById('agendamento-form');
-    const alocarBtn = document.getElementById('alocar-sala-btn');
-    const agendamentoSalasDisplay = document.getElementById('agendamento-salas-display');
-    const agendamentoSalasIdInput = document.getElementById('agendamento-salas-id');
-    const agendamentoDataTerminoInput = document.getElementById('agendamento-data-termino');
+const iniciarBuscaAlocacao = async (dados) => {
     
-    // Elementos do Modal de Alocação
-    const alocacaoModal = document.getElementById('alocacao-modal');
-    const alocacaoResultadoDisplay = document.getElementById('alocacao-resultado-display'); // OK
-    const confirmarAlocacaoBtn = alocacaoModal.querySelector('#confirmar-alocacao-btn');
-    const cancelarAlocacaoBtn = alocacaoModal.querySelector('#cancelar-alocacao-btn');
+    // Cache dos dados para uso na confirmação
+    dadosTurmaCache = dados; 
     
-    // Variável para armazenar os dados de alocação sugeridos (estado central)
-    let sugestaoAlocacaoData = null;
-
-    /**
-     * Valida os campos necessários para a alocação e monta o payload.
-     */
-    const getAlocacaoPayload = () => {
-        const cursoId = agendamentoForm.querySelector('#agendamento-curso').value;
-        const totalAlunos = agendamentoForm.querySelector('#agendamento-total-alunos').value;
-        const turno = agendamentoForm.querySelector('#agendamento-turno').value; // String ('Manhã', 'Tarde', etc.)
-        const dataInicio = agendamentoForm.querySelector('#agendamento-data-inicio').value;
-        
-        // Dias da Semana (Array de números 1 a 7)
-        const diasSemana = Array.from(agendamentoForm.querySelectorAll('input[name="dias-semana"]:checked'))
-                                .map(checkbox => parseInt(checkbox.value));
-
-        if (!cursoId || !totalAlunos || !turno || !dataInicio || diasSemana.length === 0) {
-            SGST.Utils.showToast('Preencha Curso, Alunos, Turno, Data de Início e Dias da Semana.', 'error');
-            return null;
-        }
-
-        return {
-            cursoId: parseInt(cursoId),
-            totalAlunos: parseInt(totalAlunos),
-            turno: turno, 
-            dataInicio: dataInicio,
-            diasSemana: diasSemana
-        };
+    // 1. Prepara dados para a API (AlocacaoService)
+    const params = {
+        curso_id: dados.id_curso,
+        data_inicio: dados.data_inicio,
+        data_termino: dados.data_termino, // Necessário apenas para checagem de conflito (futuro)
+        total_alunos: dados.total_alunos,
+        dias: dados.dias_semana.join(','),
+        // O turno e instrutor serão usados para a checagem de conflitos no Backend (futuro)
     };
 
-    /**
-     * Handler para a resposta da API de alocação automática.
-     */
-    const handleAlocacaoResponse = (response) => {
-        sugestaoAlocacaoData = response;
-        
-        const salas = response.salas || [];
-        const salasNomes = salas.map(s => s.nome_sala).join(' e ');
-        const salasIds = salas.map(s => s.id_salas).join(',');
-
-        let resultadoHTML = ``;
-        
-        if (response.success === true) {
-            // Alocação ideal (Melhor Encaixe ou Ocupação Máxima)
-            resultadoHTML += `
-                <p>✅ **SUCESSO NA ALOCAÇÃO AUTOMÁTICA**</p>
-                <p>Sugestão de Sala(s): <strong>${salasNomes}</strong> (${salasIds})</p>
-                <p>Previsão de Término: <strong>${SGST.Utils.formatDate(response.dataTermino)}</strong></p>
-                <p class="text-info">${response.message}</p>
-            `;
-            confirmarAlocacaoBtn.disabled = false;
-        } else if (response.salas && response.salas.length > 0 && response.message && response.message.includes('Auditório')) {
-            // Regra: Auditório (Último Recurso) - RF10
-            resultadoHTML += `
-                <p>⚠️ **ALOCAÇÃO NÃO-PADRÃO (ÚLTIMO RECURSO)**</p>
-                <p>O algoritmo não encontrou o encaixe ideal/compatível.</p>
-                <p>Sugestão: <strong>${salasNomes}</strong> (${salasIds})</p>
-                <p>Previsão de Término: <strong>${SGST.Utils.formatDate(response.dataTermino)}</strong></p>
-                <p class="text-warning">${response.message}</p>
-            `;
-            confirmarAlocacaoBtn.disabled = false;
-        } else {
-            // Falha Total (404)
-            resultadoHTML += `
-                <p>❌ **FALHA NA ALOCAÇÃO**</p>
-                <p class="text-danger">${response.error || response.message || 'Não foi possível encontrar uma sala disponível e compatível.'}</p>
-            `;
-            confirmarAlocacaoBtn.disabled = true;
-        }
-        
-        alocacaoResultadoDisplay.innerHTML = resultadoHTML;
-        SGST.openModal(alocacaoModal);
-    };
-
-    /**
-     * Busca a sugestão de alocação no backend.
-     */
-    const buscarAlocacao = async () => {
-        SGST.Utils.toggleLoading(true);
-        try {
-            const payload = getAlocacaoPayload();
-            if (!payload) return;
-
-            const response = await API.getAlocacaoSugestion(payload); // POST alocar_turma.php
-            handleAlocacaoResponse(response);
-            
-        } catch (error) {
-            SGST.Utils.showToast(`Erro ao buscar alocação: ${error.message}`, 'error');
-            resetAlocacaoState();
-        } finally {
-            SGST.Utils.toggleLoading(false);
-        }
-    };
-
-    /**
-     * Confirma a sugestão, armazena os IDs no formulário principal e fecha o modal.
-     */
-    const handleConfirmarAlocacao = (e) => {
-        e.preventDefault();
-        if (!sugestaoAlocacaoData || !sugestaoAlocacaoData.salas) {
-            SGST.Utils.showToast('Nenhuma sugestão de sala para confirmar.', 'error');
-            return;
-        }
-
-        const salasIds = sugestaoAlocacaoData.salas.map(s => s.id_salas).join(',');
-        const salasNomes = sugestaoAlocacaoData.salas.map(s => s.nome_sala).join(' e ');
-
-        // 1. Atualiza o input hidden para o agendamento final
-        agendamentoSalasIdInput.value = salasIds;
-
-        // 2. Atualiza o display visual do agendamento
-        agendamentoSalasDisplay.innerHTML = `<p class="text-success">Alocado em: <strong>${salasNomes}</strong> (${salasIds})</p>`;
-
-        // 3. Atualiza a data de término no formulário principal
-        agendamentoDataTerminoInput.value = sugestaoAlocacaoData.dataTermino;
-        
-        SGST.closeModal(alocacaoModal);
-        SGST.Utils.showToast('Sugestão de alocação confirmada!', 'success');
-    };
-
-    /**
-     * Reseta o estado da alocação e os campos visuais.
-     */
-    const resetAlocacaoState = () => {
-        sugestaoAlocacaoData = null;
-        agendamentoSalasIdInput.value = '';
-        agendamentoSalasDisplay.innerHTML = '<p class="info-text">Nenhuma sala alocada. Use o botão para alocação automática.</p>';
-        if (agendamentoDataTerminoInput) {
-            agendamentoDataTerminoInput.value = '';
-        }
-    };
-
-    /**
-     * -----------------------------------------------------
-     * INICIALIZAÇÃO E LISTENERS
-     * -----------------------------------------------------
-     */
+    // 2. Chama o motor de regras do Backend (RF04, RF05, RF10)
+    const result = await Api.alocacaoAutomatica(params);
     
-    SGST.Alocacao = {
-        resetAlocacaoState: resetAlocacaoState,
-        init: () => {
-            alocarBtn.addEventListener('click', (e) => {
-                e.preventDefault();
-                buscarAlocacao();
-            });
-            
-            confirmarAlocacaoBtn.addEventListener('click', handleConfirmarAlocacao);
-            
-            cancelarAlocacaoBtn.addEventListener('click', (e) => {
-                e.preventDefault();
-                SGST.closeModal(alocacaoModal);
-            });
-            
-            // Listener para limpar o estado ao mudar os inputs relevantes
-            agendamentoForm.querySelectorAll('#agendamento-curso, #agendamento-total-alunos, #agendamento-turno, #agendamento-data-inicio').forEach(element => {
-                 element.addEventListener('change', resetAlocacaoState);
-            });
-            agendamentoForm.querySelector('#agendamento-dias-semana-container').addEventListener('change', (e) => {
-                 if(e.target.name === 'dias-semana') resetAlocacaoState();
-            });
+    if (result.status === 'success') {
+        const sala = result.sala_sugerida;
+        
+        // 3. Atualiza os Modais com os dados sugeridos
+        
+        // Modal de Agendamento original (para visualização do usuário)
+        document.getElementById('agendamento-salas-display').value = `${sala.nome_sala} (Cap. ${sala.capacidade_maxima})`;
+        document.getElementById('agendamento-salas-id').value = sala.id_salas;
+        
+        // Modal de Confirmação (Alocação Automática)
+        document.getElementById('alocacao-modal-title').textContent = `Sugestão: ${sala.nome_sala}`;
+        document.getElementById('alocacao-curso-nome').textContent = `${dados.curso_nome} (${dados.total_alunos} Alunos)`;
+        document.getElementById('alocacao-data-inicio').textContent = Utils.formatDate(dados.data_inicio);
+        document.getElementById('alocacao-data-termino').textContent = Utils.formatDate(dados.data_termino);
+        document.getElementById('alocacao-salas-sugeridas').innerHTML = `
+            <strong>${sala.nome_sala}</strong> (Tipo: ${sala.nome_tipo ?? 'N/A'}, Capacidade: ${sala.capacidade_maxima})
+            <br>
+            <span style="color: green; font-size: 0.9em;">Regra Aplicada: ${result.regra_aplicada}</span>
+        `;
+        
+        // Preenche campos escondidos para a submissão final
+        document.getElementById('alocacao-curso-id').value = dados.id_curso;
+        document.getElementById('alocacao-total-alunos').value = dados.total_alunos;
+        document.getElementById('alocacao-salas-id').value = sala.id_salas;
+        document.getElementById('alocacao-turno').value = dados.turno;
+        document.getElementById('alocacao-instrutor-id').value = dados.instrutor_id;
+        document.getElementById('alocacao-dias-semana').value = dados.dias_semana.join(',');
 
-            resetAlocacaoState();
-        }
+
+        // 4. Fecha o modal de Agendamento e abre o de Confirmação
+        closeModal('agendamento-modal');
+        openModal('alocacao-modal');
+
+    } else {
+        // Se a busca falhar, exibe a mensagem de erro (incluindo "Auditório Falhou")
+        Utils.showMessage(`Falha na Alocação Automática: ${result.message}`, 'error');
+        
+        // Se falhou, o campo ID da sala deve ser limpo para impedir agendamento manual
+        document.getElementById('agendamento-salas-id').value = '';
+    }
+};
+
+/**
+ * Lida com o clique em "Confirmar Agendamento" no modal de Alocação.
+ */
+confirmarAlocacaoBtn?.addEventListener('click', async () => {
+    
+    // Coleta todos os dados necessários (do cache e dos campos escondidos)
+    const finalData = {
+        id_curso: document.getElementById('alocacao-curso-id').value,
+        id_instrutor: document.getElementById('alocacao-instrutor-id').value,
+        codigo_turma: document.getElementById('agendamento-codigo').value, // Pega o código do modal anterior
+        data_inicio: document.getElementById('alocacao-data-inicio').getAttribute('data-value'),
+        data_termino: document.getElementById('alocacao-data-termino').textContent,
+        turno: document.getElementById('alocacao-turno').value,
+        total_alunos: document.getElementById('alocacao-total-alunos').value,
+        id_sala: document.getElementById('alocacao-salas-id').value,
+        dias_semana: document.getElementById('alocacao-dias-semana').value,
     };
+    
+    // 1. Validação final (apenas para garantir)
+    if (!finalData.id_sala || !finalData.id_curso || !finalData.data_inicio) {
+        Utils.showMessage("Erro de dados: Informações essenciais da sala ou turma estão faltando.", 'error');
+        return;
+    }
+    
+    // 2. Submete o agendamento real para o Backend
+    const result = await Api.agendarTurma(finalData);
 
-})();
+    if (result.status === 'success') {
+        Utils.showMessage("🎉 Agendamento Confirmado! A turma foi alocada e registrada.", 'success');
+        closeModal('alocacao-modal');
+        
+        // Recarregar o painel visual
+        if(typeof loadPainelVisual === 'function') {
+             loadPainelVisual();
+        }
+    } else {
+        // Exibe erro de persistência ou conflito
+        Utils.showMessage(`Falha ao registrar agendamento: ${result.message}`, 'error');
+    }
+});
+
+// Listener para Cancelar no modal de alocação (apenas fecha o modal)
+document.getElementById('cancelar-alocacao-btn')?.addEventListener('click', () => {
+    closeModal('alocacao-modal');
+});
+
+// Exporta a função para ser chamada pelo agendar_turma.js
+window.iniciarBuscaAlocacao = iniciarBuscaAlocacao;

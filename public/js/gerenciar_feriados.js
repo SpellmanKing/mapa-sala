@@ -1,181 +1,131 @@
-/**
- * public/js/gerenciarFeriados.js
- * Lógica para a seção 'Gerenciar Feriados' (CRUD).
- */
-(function() {
-    window.SGST = window.SGST || {};
+// public/js/gerenciar_feriados.js
 
-    // --- 1. SELETORES DE DOM (Assumidos no Modal de Feriados, que deve ser adicionado ao index.php)
-    const feriadoModal = document.getElementById('feriado-modal');
-    if (!feriadoModal) {
-        // Cria um placeholder para o modal que falta no DOM
-        window.SGST.Modals = window.SGST.Modals || { Elements: {} };
-        window.SGST.Modals.Elements.feriado = document.createElement('div');
+const feriadoForm = document.getElementById('feriado-form');
+const feriadoList = document.getElementById('feriado-list-view');
+const btnCancel = document.getElementById('feriado-form-cancel-btn');
+
+/**
+ * Carrega a lista de feriados e renderiza no modal.
+ */
+const loadFeriadosList = async () => {
+    feriadoList.innerHTML = '<p class="loading-message">Carregando feriados...</p>';
+    
+    const result = await Api.getFeriados();
+
+    if (result.status === 'success') {
+        renderFeriadosList(result.data);
+    } else {
+        feriadoList.innerHTML = `<p class="danger-btn" style="padding: 10px;">Erro ao carregar: ${result.message}</p>`;
+    }
+};
+
+/**
+ * Renderiza a lista de feriados no HTML.
+ */
+const renderFeriadosList = (feriados) => {
+    feriadoList.innerHTML = ''; // Limpa
+    
+    if (feriados.length === 0) {
+        feriadoList.innerHTML = '<p>Nenhuma data não letiva cadastrada.</p>';
+        return;
     }
 
-    // Seletores que DEVEM existir no Modal de Feriados:
-    const feriadoForm = feriadoModal.querySelector('#feriado-form') || document.createElement('form');
-    const feriadoListBody = feriadoModal.querySelector('#feriado-list-view') || document.createElement('div');
-    const addFeriadoBtn = feriadoModal.querySelector('#feriado-form-submit-btn') || document.createElement('button');
-
-    /**
-     * Lida com a submissão do formulário (POST/PUT).
-     */
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        SGST.Utils.toggleLoading(true);
+    feriados.forEach(feriado => {
+        const item = document.createElement('div');
+        item.className = 'list-item';
         
-        // Coleta de dados
-        const feriadoId = feriadoForm.querySelector('#feriado-id')?.value;
-        const dataFeriado = feriadoForm.querySelector('#feriado-data')?.value;
-        const descricao = feriadoForm.querySelector('#feriado-descricao')?.value;
-        const tipo = feriadoForm.querySelector('#feriado-tipo')?.value; // String ('feriado' ou 'recesso')
+        // 1. Determina o nome do tipo (Feriado=1, Recesso=2)
+        const tipoNome = feriado.fk_id_tipo_feriado == 1 ? 'Feriado' : 'Recesso'; 
+        const badgeClass = tipoNome.toLowerCase();
 
-        if (!dataFeriado || !descricao || !tipo) {
-            SGST.Utils.showToast('Todos os campos são obrigatórios.', 'error');
-            SGST.Utils.toggleLoading(false);
-            return;
-        }
-        
-        const payload = {
-            data_feriado: dataFeriado,
-            descricao: descricao,
-            tipo: tipo 
-        };
-        
-        try {
-            let response;
-            if (feriadoId) { // PUT (Update)
-                payload.id_feriado = parseInt(feriadoId);
-                response = await API.updateFeriado(payload);
-            } else { // POST (Create)
-                response = await API.createFeriado(payload);
-            }
-            
-            SGST.Utils.showToast(response.message || 'Operação concluída com sucesso!', 'success');
-            // Fechamento e recarga do painel
-            SGST.closeModal(feriadoModal);
-            SGST.Feriados.loadFeriados(); 
-            SGST.Painel.loadAllDataAndRender();
-            
-        } catch (error) {
-             SGST.Utils.showToast(`Falha na operação: ${error.message}`, 'error');
-        } finally {
-            SGST.Utils.toggleLoading(false);
-        }
-    };
+        item.innerHTML = `
+            <div class="date-info">
+                <strong>${Utils.formatDate(feriado.data_feriado)}</strong>
+                - ${feriado.descricao}
+                <span class="badge ${badgeClass}">${tipoNome}</span>
+            </div>
+            <div class="actions">
+                <button class="secondary-btn edit-btn" data-id="${feriado.id_feriado}">Editar</button>
+                <button class="danger-btn delete-btn" data-id="${feriado.id_feriado}">Excluir</button>
+            </div>
+        `;
 
-    /**
-     * Carrega e renderiza a lista de feriados.
-     */
-    const loadFeriados = async () => {
-        SGST.Utils.toggleLoading(true);
-        try {
-            const feriados = await API.getFeriados();
-            SGST.feriados = feriados.map(f => f.data_feriado); // Atualiza estado global
-            renderFeriadosList(feriados);
-            // Se o Painel estiver ativo, recarrega o calendário para refletir as mudanças
-            if (document.querySelector('.nav-item.active').dataset.target === 'painel-visual') {
-                 SGST.Painel.loadAllDataAndRender();
-            }
-        } catch (error) {
-            SGST.Utils.showToast(`Erro ao carregar feriados: ${error.message}`, 'error');
-        } finally {
-            SGST.Utils.toggleLoading(false);
-        }
+        // Adiciona listeners para Editar e Excluir
+        item.querySelector('.edit-btn').addEventListener('click', () => editFeriado(feriado));
+        item.querySelector('.delete-btn').addEventListener('click', () => deleteFeriado(feriado.id_feriado, feriado.descricao));
+        
+        feriadoList.appendChild(item);
+    });
+};
+
+/**
+ * Lida com o envio do formulário (Salvar/Atualizar - RF01).
+ */
+feriadoForm?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    const data = {
+        id: document.getElementById('feriado-id').value || null,
+        data: document.getElementById('feriado-data').value,
+        descricao: document.getElementById('feriado-descricao').value,
+        // Adaptação: O banco de dados usa ID (1=feriado, 2=recesso).
+        tipo: document.getElementById('feriado-tipo').value === 'Feriado' ? 1 : 2 
     };
     
+    const result = await Api.saveFeriado(data);
 
-    /**
-     * Exclui um feriado.
-     */
-    const handleDelete = async (id) => {
-        if (!confirm('Tem certeza que deseja excluir este feriado/recesso?')) return;
-        
-        SGST.Utils.toggleLoading(true);
-        try {
-            const response = await API.deleteFeriado(id);
-            SGST.Utils.showToast(response.message || 'Excluído com sucesso!', 'success');
-            loadFeriados();
-        } catch (error) {
-            SGST.Utils.showToast(`Erro ao excluir: ${error.message}`, 'error');
-        } finally {
-            SGST.Utils.toggleLoading(false);
-        }
-    };
+    if (result.status === 'success') {
+        Utils.showMessage(result.message);
+        feriadoForm.reset();
+        loadFeriadosList(); // Recarrega a lista
+        // Resetar o modo de edição
+        document.getElementById('feriado-id').value = '';
+        document.getElementById('feriado-form-title').textContent = 'Adicionar';
+        document.getElementById('feriado-form-submit-btn').textContent = 'Salvar';
+    } else {
+        Utils.showMessage(result.message, 'error');
+    }
+});
 
-    /**
-     * -----------------------------------------------------
-     * FUNÇÕES DE RENDERIZAÇÃO
-     * -----------------------------------------------------
-     */
-
-    /**
-     * Preenche a tabela com a lista de feriados.
-     */
-    const renderFeriadosList = (feriados) => {
-        feriadoListBody.innerHTML = '';
-        if (feriados.length === 0) {
-            feriadoListBody.innerHTML = '<tr><td colspan="5" class="empty-state">Nenhum feriado ou recesso cadastrado.</td></tr>';
-            return;
-        }
-
-        feriados.forEach(f => {
-            const row = feriadoListBody.insertRow();
-            row.dataset.id = f.id_feriado;
-            
-            row.insertCell().textContent = SGST.Utils.formatDate(f.data_feriado);
-            row.insertCell().textContent = f.descricao;
-            row.insertCell().textContent = f.tipo.charAt(0).toUpperCase() + f.tipo.slice(1); // Capitaliza
-
-            // Coluna de Ações
-            const actionsCell = row.insertCell();
-            actionsCell.className = 'action-buttons';
-            
-            const editBtn = document.createElement('button');
-            editBtn.className = 'icon-button edit-btn';
-            editBtn.innerHTML = '<i class="fas fa-edit"></i>';
-            editBtn.addEventListener('click', () => populateFormForEdit(f));
-
-            const deleteBtn = document.createElement('button');
-            deleteBtn.className = 'icon-button delete-btn';
-            deleteBtn.innerHTML = '<i class="fas fa-trash-alt"></i>';
-            deleteBtn.addEventListener('click', () => handleDelete(f.id_feriado));
-
-            actionsCell.appendChild(editBtn);
-            actionsCell.appendChild(deleteBtn);
-        });
-    };
+/**
+ * Preenche o formulário para edição.
+ */
+const editFeriado = (feriado) => {
+    document.getElementById('feriado-id').value = feriado.id_feriado;
+    document.getElementById('feriado-data').value = feriado.data_feriado;
+    document.getElementById('feriado-descricao').value = feriado.descricao;
     
-    /**
-     * Preenche o modal para edição.
-     */
-    const populateFormForEdit = (feriado) => {
-        const modalTitle = document.getElementById('feriado-modal');
-        
-        // Assume os IDs: feriado-id, feriado-data, feriado-descricao, feriado-tipo
-        document.getElementById('feriado-id').value = feriado.id_feriado; 
-        document.getElementById('feriado-data').value = feriado.data_feriado;
-        document.getElementById('feriado-descricao').value = feriado.descricao;
-        document.getElementById('feriado-tipo').value = feriado.tipo;
+    // Adaptação de volta para o nome para preencher o <select>
+    const tipoNome = feriado.fk_id_tipo_feriado == 1 ? 'Feriado' : 'Recesso';
+    document.getElementById('feriado-tipo').value = tipoNome;
 
-        if (modalTitle) modalTitle.textContent = 'Editar Feriado/Recesso';
-        
-        SGST.openModal(SGST.Modals.Elements.feriado);
-    };
+    // Altera o texto do formulário para Edição
+    document.getElementById('feriado-form-title').textContent = 'Editar';
+    document.getElementById('feriado-form-submit-btn').textContent = 'Atualizar';
+};
 
-    /**
-     * -----------------------------------------------------
-     * INICIALIZAÇÃO E LISTENERS
-     * -----------------------------------------------------
-     */
-     
-    SGST.Feriados = {
-        loadFeriados: loadFeriados,
-        init: () => {
-             // Listener para o formulário (POST/PUT)
-            feriadoForm.addEventListener('submit', handleSubmit);
+/**
+ * Lida com a exclusão de um feriado.
+ */
+const deleteFeriado = async (id, descricao) => {
+    if (confirm(`Tem certeza que deseja excluir a data não letiva: ${descricao} (${Utils.formatDate(document.getElementById('feriado-data').value)})?`)) {
+        const result = await Api.deleteFeriado(id);
+        
+        if (result.status === 'success') {
+            Utils.showMessage(result.message);
+            loadFeriadosList();
+        } else {
+            Utils.showMessage(result.message, 'error');
         }
-    };
+    }
+};
 
-})();
+/**
+ * Lida com o botão Cancelar/Limpar no formulário de feriados.
+ */
+btnCancel?.addEventListener('click', () => {
+    feriadoForm.reset();
+    document.getElementById('feriado-id').value = '';
+    document.getElementById('feriado-form-title').textContent = 'Adicionar';
+    document.getElementById('feriado-form-submit-btn').textContent = 'Salvar';
+});

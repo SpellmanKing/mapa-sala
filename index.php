@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SGST - Painel de Gestão de Salas</title>
-    <link rel="stylesheet" href="./public/css/style.css">
+    <link rel="stylesheet" href="./Public/CSS/style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 </head>
 <body>
@@ -60,16 +60,8 @@
                         <h2 id="current-month-year"></h2>
                         <button id="next-month-btn" class="nav-btn"><i class="fas fa-chevron-right"></i></button>
                         <div class="filters">
-                            <select id="turno-filter" class="filter-select">
-                                <option value="todos">Todos os Turnos</option>
-                                <option value="manha">Manhã</option>
-                                <option value="tarde">Tarde</option>
-                                <option value="noite">Noite</option>
-                                <option value="integral">Integral</option>
-                            </select>
-                            <select id="tipo-sala-filter" class="filter-select">
-                                <option value="todos">Todos os Tipos</option>
-                            </select>
+                            <select id="turno-filter" class="filter-select">...</select>
+                            <select id="tipo-sala-filter" class="filter-select">...</select>
                         </div>
                     </div>
                     <div id="calendar-grid" class="calendar-grid"></div>
@@ -266,8 +258,7 @@
                     <h1>Gerenciar Instrutores (e Habilitações)</h1>
                     <button id="add-instrutor-btn" class="primary-btn"><i class="fas fa-user-plus"></i> Adicionar Instrutor</button>
                 </header>
-                <div id="instrutor-list">
-                </div>
+                <div id="instrutor-list"></div>
             </section>
 
             <section id="gerenciar-cursos" class="content-section">
@@ -275,12 +266,10 @@
                     <h1>Gerenciar Cursos</h1>
                     <button id="add-curso-btn" class="primary-btn"><i class="fas fa-plus-square"></i> Adicionar Curso</button>
                 </header>
-                <div id="curso-list">
-                    </div>
+                <div id="curso-list"></div>
             </section>
 
-            <section id="integracoes" class="content-section">
-            </section>
+            <section id="integracoes" class="content-section"></section>
         </div>
     </div>
     <div id="agendamento-modal" class="modal">
@@ -500,15 +489,17 @@
             </form>
         </div>
     </div>
-    <script src="./public/js/api.js"></script>
-    <script src="./public/js/utils.js"></script>
-    <script src="./public/js/modals.js"></script>
-    <script src="./public/js/agendar_turma.js"></script>
-    <script src="./public/js/alocacao_automatica.js"></script>
-    <script src="./public/js/gerenciar_feriados.js"></script>
-    <script src="./public/js/calculadora.js"></script>
-    <script src="./public/js/painel.js"></script>
-    <script src="./public/js/detalhe_turma.js"></script>
-    <script src="./public/js/script.js"></script>
+    <script src="./Public/JS/api.js"></script>
+    <script src="./Public/JS/utils.js"></script>
+    <script src="./Public/JS/modals.js"></script>
+    <script src="./Public/JS/agendar_turma.js"></script>
+    <script src="./Public/JS/alocacao_automatica.js"></script>
+    <script src="./Public/JS/gerenciar_feriados.js"></script>
+    <script src="./Public/JS/gerenciar_instrutores.js"></script>
+    <script src="./Public/JS/gerenciar_cursos.js"></script>
+    <script src="./Public/JS/calculadora.js"></script>
+    <script src="./Public/JS/painel.js"></script>
+    <script src="./Public/JS/detalhe_turma.js"></script>
+    <script src="./Public/JS/script.js"></script>
 </body>
 </html>

@@ -477,12 +477,12 @@ INSERT INTO turmas (id_cursos, id_instrutores, codigo_turma, fk_id_status, data_
 DROP TABLE IF EXISTS `agendamentos` ;
 CREATE TABLE IF NOT EXISTS `agendamentos` (
   `id_agendamento` INT NOT NULL AUTO_INCREMENT,
-  `id_turmas` INT NOT NULL COMMENT 'FK para a turma agendada',
-  `id_salas` INT NOT NULL COMMENT 'FK para a sala alocada',
-  `data_aula` DATE NOT NULL COMMENT 'Data específica da aula',
+  `id_turmas` INT NOT NULL,
+  `id_salas` INT NOT NULL,
+  `data_aula` DATE NOT NULL,
   PRIMARY KEY (`id_agendamento`),
-  UNIQUE INDEX `uk_sala_dia` (`id_salas` ASC, `data_aula` ASC) COMMENT 'Garante que uma sala não seja agendada mais de uma vez por dia',
-  UNIQUE INDEX `uk_turma_dia` (`id_turmas` ASC, `data_aula` ASC) COMMENT 'Garante que uma turma não tenha mais de uma aula por dia',
+  UNIQUE INDEX `uk_sala_dia` (`id_salas` ASC, `data_aula` ASC),
+  UNIQUE INDEX `uk_turma_dia` (`id_turmas` ASC, `data_aula` ASC),
   INDEX `fk_agendamentos_turmas1_idx` (`id_turmas` ASC),
   INDEX `fk_agendamentos_salas1_idx` (`id_salas` ASC),
   CONSTRAINT `fk_agendamentos_turmas1`
@@ -560,7 +560,7 @@ INSERT INTO feriados_recessos (data_feriado, descricao, fk_id_tipo_feriado) VALU
 ('2026-11-02', 'Finados', 1),
 ('2026-11-15', 'Proclamação da República', 1),
 ('2026-11-20', 'Dia da Consciência Negra', 1),
-('2026-12-25', 'Natal', 1),
+('2026-12-25', 'Natal', 1);
 
 -- === PONTES (RECESSO - 2) ===
 INSERT INTO feriados_recessos (data_feriado, descricao, fk_id_tipo_feriado) VALUES

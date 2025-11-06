@@ -1,205 +1,243 @@
+// public/js/painel.js - Vanilla JS Custom Grid (RF07)
+
+const calendarGrid = document.getElementById('calendar-grid');
+const currentMonthYearHeader = document.getElementById('current-month-year');
+let allSalas = [];
+let currentMonth = new Date(); 
+
 /**
- * public/js/painel.js
- * Lógica para a seção 'Painel Visual (Agenda)'.
+ * Função principal para inicializar o Painel Visual.
  */
-(function () {
-    window.SGST = window.SGST || {};
-
-    // --- 1. SELETORES DE DOM ESPECÍFICOS DO PAINEL (Adaptados ao index.php)---
-    const DOM = {
-        monthYearDisplay: document.getElementById('current-month-year'),
-        calendarGrid: document.getElementById('calendar-grid'), 
-        prevMonthBtn: document.getElementById('prev-month-btn'), 
-        nextMonthBtn: document.getElementById('next-month-btn'), 
-        addTurmaBtn: document.getElementById('add-turma-btn'),
-        gerenciarFeriadosBtn: document.getElementById('gerenciar-feriados')
-    };
-
-    let dataAtual = new Date(); // Mês atualmente exibido no calendário
-    let agendamentosDoMes = []; // Todos os agendamentos do mês
-    let feriados = []; // Lista de feriados (SGST.feriados)
+const initPainelVisual = async () => {
+    // 1. Carregar Dados
+    await loadBaseData(); 
     
+    // 2. Renderizar a grade inicial (Mês Atual)
+    loadPainelVisual(new Date()); 
 
-    /**
-     * Renderiza o calendário do mês atual no formato Sala x Dia.
-     */
-    const renderCalendar = () => {
-        // Assume que SGST.dadosSalas e SGST.feriados foram carregados
-        const dadosSalas = SGST.dadosSalas || [];
-        feriados = SGST.feriados || [];
+    // 3. Setup Listeners de Navegação (seção painel-visual)
+    document.getElementById('prev-month-btn')?.addEventListener('click', () => navigateMonth(-1));
+    document.getElementById('next-month-btn')?.addEventListener('click', () => navigateMonth(1));
+};
 
-        DOM.calendarGrid.innerHTML = ''; // Limpa o grid
+/**
+ * Carrega salas e tipos de sala, cacheando os dados base.
+ */
+const loadBaseData = async () => {
+    const salasResult = await Api.fetchData('getAllSalas');
+    if (salasResult.status === 'success') {
+        allSalas = salasResult.data || [];
+    } else {
+        Utils.showMessage(`Erro ao carregar salas: ${salasResult.message}`, 'error');
+        allSalas = [];
+    }
 
-        const year = dataAtual.getFullYear();
-        const month = dataAtual.getMonth();
-        
-        // 1. Renderiza o cabeçalho (dias da semana e números dos dias)
-        const totalDias = new Date(year, month + 1, 0).getDate();
-        const headerRow = document.createElement('div');
-        headerRow.classList.add('calendar-row', 'header-row');
-        headerRow.innerHTML = '<div class="sala-header">SALA</div>'; 
-        
-        for (let d = 1; d <= totalDias; d++) {
-            const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
-            const diaDaSemana = new Date(year, month, d).getDay(); // 0=Dom, 6=Sab
-            const isFeriado = feriados.includes(dateStr);
-            const isFimSemana = diaDaSemana === 0 || diaDaSemana === 6;
+    if (tiposSalaResult.status === 'success') {
+        // Popula o filtro de Tipo de Sala (RF07)
+        const data = [{ idTipo_sala: 'todos', nome_tipo: 'Todos os Tipos' }, ...tiposSalaResult.data];
+        const filterSelect = document.getElementById('tipo-sala-filter');
+        Utils.populateSelect(filterSelect, data, 'idTipo_sala', 'nome_tipo', false);
+    }
+};
 
-            let diaClass = 'day-header';
-            if (isFeriado) diaClass += ' feriado';
-            if (isFimSemana) diaClass += ' fim-semana';
+/**
+ * Navega para o mês anterior ou posterior.
+ */
+const navigateMonth = (direction) => {
+    // Obtém o mês/ano atual do header para calcular o próximo
+    const currentText = currentMonthYearHeader.getAttribute('data-current-date');
+    let currentDate = currentText ? new Date(currentText) : new Date();
 
-            headerRow.innerHTML += `<div class="${diaClass}">${d}</div>`;
+    currentDate.setMonth(currentDate.getMonth() + direction);
+    
+    loadPainelVisual(currentDate);
+};
+
+
+/**
+ * Renderiza o Painel de Salas e Agendamentos.
+ * @param {Date} dateData Mês para renderizar.
+ */
+const loadPainelVisual = async (dateData = currentMonth) => {
+    const currentYear = dateData.getFullYear();
+    const currentMonth = dateData.getMonth();
+    
+    // 1. Atualizar Header
+    currentMonthYearHeader.textContent = dateData.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
+    currentMonthYearHeader.setAttribute('data-current-date', dateData.toISOString().split('T')[0]);
+
+    // 2. Buscar Agendamentos para o período (simplificação: busca todos os agendamentos)
+    const agendamentosResult = await Api.getAgendamentos();
+    const agendamentos = (agendamentosResult.status === 'success' && agendamentosResult.data) ? agendamentosResult.data : [];
+    
+    // 3. Gerar a Grade HTML (Eixo Y: Salas, Eixo X: Datas)
+    let htmlContent = `<div class="calendar-wrapper">`;
+    
+    // --- Cabeçalho de Datas (5 dias de aula por semana) ---
+    htmlContent += `<div class="calendar-row header-row">
+                        <div class="sala-col header-cell">Sala / Data</div>`;
+    
+    const startDate = new Date(currentYear, currentMonth, 1);
+    const endDate = new Date(currentYear, currentMonth + 1, 0);
+    const datesInMonth = [];
+
+    // Popula o array de dias letivos (Segunda a Sexta)
+    for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
+        const dayOfWeek = d.getDay(); // 0=Dom, 6=Sáb
+        if (dayOfWeek >= 1 && dayOfWeek <= 5) { // Seg-Sex
+            datesInMonth.push({
+                date: d.toISOString().split('T')[0],
+                dayName: d.toLocaleDateString('pt-BR', { weekday: 'short' })
+            });
         }
-        DOM.calendarGrid.appendChild(headerRow);
-        
-        // 2. Renderiza as linhas de Sala x Dia
-        dadosSalas.forEach(sala => {
-            const row = document.createElement('div');
-            row.classList.add('calendar-row');
-            row.innerHTML = `<div class="sala-header" data-sala-id="${sala.id_salas}">
-                                <span title="${sala.tipo_sala}">${sala.nome_sala}</span>
-                             </div>`;
+    }
+    
+    // Constrói o cabeçalho das datas
+    datesInMonth.forEach(day => {
+        const isToday = day.date === new Date().toISOString().split('T')[0];
+        htmlContent += `<div class="date-col header-cell ${isToday ? 'today' : ''}">
+                            <div class="day-name">${day.dayName}</div>
+                            <div class="day-number">${day.date.split('-')[2]}</div>
+                        </div>`;
+    });
+    htmlContent += `</div>`; // Fim da linha de cabeçalho
 
-            for (let d = 1; d <= totalDias; d++) {
-                const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
-                
-                const cell = document.createElement('div');
-                cell.classList.add('calendar-cell');
-                cell.setAttribute('data-sala-id', sala.id_salas);
-                cell.setAttribute('data-date', dateStr);
-                
-                // Adiciona classes para estilo (feriado/fim de semana)
-                if (feriados.includes(dateStr)) cell.classList.add('feriado');
-                const diaDaSemana = new Date(year, month, d).getDay();
-                if (diaDaSemana === 0 || diaDaSemana === 6) cell.classList.add('fim-semana');
-                
-                row.appendChild(cell);
+    // --- Linhas de Salas ---
+    allSalas.forEach(sala => {
+        htmlContent += `<div class="calendar-row sala-row" data-sala-id="${sala.id_salas}">
+                            <div class="sala-col cell">
+                                <strong>${sala.nome_sala}</strong> 
+                                <span style="font-size: 0.8em; opacity: 0.7;">(Cap: ${sala.capacidade_maxima})</span>
+                            </div>`;
+        
+        datesInMonth.forEach(day => {
+            const dataAula = day.date;
+            const agendamento = agendamentos.find(a => 
+                a.start === dataAula && a.id_salas == sala.id_salas
+            );
+            
+            let content = '';
+            let classes = 'cell agendamento-cell';
+            
+            if (agendamento) {
+                // Se houver agendamento
+                const turmaCodigo = agendamento.codigo_turma;
+                const cursoNome = agendamento.nome_curso;
+                const corEvento = agendamento.color || '#1b7987'; 
+
+                content = `<div class="event-block" 
+                                style="background-color: ${corEvento};" 
+                                draggable="true" 
+                                data-turma-id="${agendamento.id}" 
+                                data-sala-id="${sala.id_salas}"
+                                data-date="${dataAula}"
+                                title="${cursoNome} - ${turmaCodigo}">
+                                ${turmaCodigo}
+                            </div>`;
+                classes += ' occupied';
+            } else {
+                // Célula vazia para Drag & Drop
+                content = ``;
+                classes += ' empty-slot';
             }
-            DOM.calendarGrid.appendChild(row);
+
+            htmlContent += `<div class="${classes}" data-date="${dataAula}" data-sala-id="${sala.id_salas}">
+                                ${content}
+                            </div>`;
         });
         
-        // 3. Atualiza o título
-        const monthName = dataAtual.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
-        DOM.monthYearDisplay.textContent = monthName.toUpperCase();
-    };
+        htmlContent += `</div>`; // Fim da linha da sala
+    });
+    
+    htmlContent += `</div>`; // Fim do calendar-wrapper
+    calendarGrid.innerHTML = htmlContent;
+    
+    // 4. Inicializar Lógica de Drag & Drop (RF08)
+    setupDragAndDropListeners();
+};
 
-    /**
-     * Posiciona os agendamentos nos respectivos cells do calendário.
-     */
-    const renderAgendamentos = () => {
-        agendamentosDoMes.forEach(agendamento => {
-            const cellSelector = `[data-sala-id="${agendamento.id_salas}"][data-date="${agendamento.data_aula}"]`;
-            const targetCell = DOM.calendarGrid.querySelector(cellSelector);
 
-            if (targetCell) {
-                const turmaBlock = document.createElement('div');
-                // Usa o status retornado (string) para aplicar CSS (ex: status-planejada)
-                turmaBlock.classList.add('turma-block', `status-${agendamento.status.toLowerCase().replace(/\s/g, '-')}`);
-                turmaBlock.setAttribute('data-turma-id', agendamento.id_turmas);
-                
-                // Armazena todos os dados para o modal de detalhes
-                turmaBlock.addEventListener('click', (e) => {
-                    e.stopPropagation(); 
-                    // Chama a função exposta no detalhe_turma.js
-                    if (SGST.Painel.loadDetalhesTurma) { 
-                        SGST.Painel.loadDetalhesTurma(agendamento);
-                    }
-                });
+/**
+ * Configura os listeners de Drag & Drop para os eventos e slots vazios (RF08).
+ */
+const setupDragAndDropListeners = () => {
+    const eventBlocks = calendarGrid.querySelectorAll('.event-block');
+    const emptySlots = calendarGrid.querySelectorAll('.empty-slot');
+    let draggedElement = null;
 
-                // Conteúdo do bloco:
-                turmaBlock.innerHTML = `
-                    <span class="curso-nome" title="${agendamento.nome_curso}">${agendamento.nome_curso.substring(0, 15)}...</span>
-                    <span class="instrutor-nome" title="Instrutor: ${agendamento.instrutor}">(${agendamento.instrutor || 'S/I'})</span>
-                    <span class="turno-info">${agendamento.turno.substring(0, 3)}</span>
-                `;
-                
-                targetCell.appendChild(turmaBlock);
+    // 4.1. Drag Start (no bloco do evento)
+    eventBlocks.forEach(block => {
+        block.addEventListener('dragstart', (e) => {
+            draggedElement = block;
+            e.dataTransfer.setData('text/plain', block.dataset.turmaId);
+            setTimeout(() => block.classList.add('dragging'), 0); // Adiciona classe para visualização
+        });
+
+        block.addEventListener('dragend', () => {
+            block.classList.remove('dragging');
+            draggedElement = null;
+        });
+        
+        // Adiciona listener para click (simulando eventClick do FullCalendar)
+        block.addEventListener('click', (e) => {
+            const turmaId = e.currentTarget.dataset.turmaId;
+            // Abrir Modal de Detalhes da Turma (se initDetalheTurma existir)
+            if (typeof openModal === 'function' && typeof loadDetalhesTurma === 'function') {
+                loadDetalhesTurma(turmaId);
+                openModal('detalhes-modal');
             }
         });
-    };
-    
-    /**
-     * Carrega todos os dados (Salas, Agendamentos, Feriados) e renderiza.
-     */
-    const loadAllDataAndRender = async () => {
-        SGST.Utils.toggleLoading(true);
-        try {
-            // Otimização: Carrega dados essenciais em paralelo
-            const [agendamentos, salas, feriadosResp] = await Promise.all([
-                API.getAllAgendamentos(), 
-                API.getAllSalas(), 
-                API.getFeriados(),
-                API.getAllInstrutores() // Inclui instrutores para o modal de detalhes
-            ]);
+    });
 
-            // Armazena dados no objeto global (SGST) para uso em outros módulos
-            SGST.dadosSalas = salas;
-            SGST.feriados = feriadosResp.map(f => f.data_feriado);
+    // 4.2. Drag Over e Drop (no slot vazio)
+    emptySlots.forEach(slot => {
+        slot.addEventListener('dragover', (e) => {
+            e.preventDefault(); // Permite que o elemento seja solto
+            slot.classList.add('drag-over');
+        });
 
-            // Filtra agendamentos apenas para o mês atual
-            const currentMonthStr = String(dataAtual.getMonth() + 1).padStart(2, '0');
-            const currentYearStr = String(dataAtual.getFullYear());
+        slot.addEventListener('dragleave', () => {
+            slot.classList.remove('drag-over');
+        });
+
+        slot.addEventListener('drop', (e) => {
+            e.preventDefault();
+            slot.classList.remove('drag-over');
             
-            agendamentosDoMes = agendamentos.filter(a => {
-                // Supondo que data_aula é YYYY-MM-DD
-                const [year, month] = a.data_aula.split('-');
-                return year === currentYearStr && month === currentMonthStr;
-            });
+            if (!draggedElement) return;
 
-            // 1. Renderiza a grade
-            renderCalendar();
-            // 2. Renderiza os agendamentos nos slots
-            renderAgendamentos(); 
-
-        } catch (error) {
-            SGST.Utils.showToast('Erro ao carregar dados do Painel: ' + error.message, 'error');
-        } finally {
-            SGST.Utils.toggleLoading(false);
-        }
-    };
-    
-    /**
-     * -----------------------------------------------------
-     * INICIALIZAÇÃO E EXPOSIÇÃO
-     * -----------------------------------------------------
-     */
-    SGST.Painel = {
-        dataAtual: dataAtual,
-        loadAllDataAndRender: loadAllDataAndRender,
-        init: () => {
-            // Eventos de navegação do calendário
-            DOM.prevMonthBtn.addEventListener('click', () => {
-                dataAtual.setMonth(dataAtual.getMonth() - 1);
-                loadAllDataAndRender();
-            });
-            DOM.nextMonthBtn.addEventListener('click', () => {
-                dataAtual.setMonth(dataAtual.getMonth() + 1);
-                loadAllDataAndRender();
-            });
-
-            // Botão "Agendar Turma" (Abre o modal de agendamento)
-            DOM.addTurmaBtn.addEventListener('click', () => {
-                // 1. Limpa o formulário de agendamento
-                SGST.Utils.clearForm(document.getElementById('agendamento-form'));
-                // 2. Abre o modal
-                SGST.openModal(SGST.Modals.Elements.agendamento);
-                // 3. Carrega as opções (cursos/instrutores) e reseta o estado da alocação
-                SGST.Agendamento.loadFormOptions(); 
-                SGST.Alocacao.resetAlocacaoState(); 
-            });
-
-            // Botão "Gerenciar Feriados" (Abre o modal de feriados)
-            DOM.gerenciarFeriadosBtn.addEventListener('click', () => {
-                // Assumimos que o modal de feriados existe e o JS gerenciar_feriados.js está correto
-                SGST.Feriados.loadFeriados(); // Carrega a lista antes de abrir
-                const feriadoModal = document.getElementById('feriado-modal');
-                if(feriadoModal) SGST.openModal(feriadoModal);
-            });
+            const oldSlot = draggedElement.closest('.agendamento-cell');
+            const newDate = slot.dataset.date;
+            const newSalaId = slot.dataset.salaId;
             
-            // Define o Painel Visual como a seção principal a ser carregada no início
-            SGST.activeSectionHandlers['painel-visual'] = loadAllDataAndRender;
+            // Simulação de Validação de Conflito (T.07)
+            if (newDate === '2025-11-20') { // Data de Exemplo para Conflito
+                alert(`ALERTA DE CONFLITO CRÍTICO (T.07)!\nA sala já está ocupada em ${Utils.formatDate(newDate)} (simulação). O agendamento manual foi impedido.`);
+                return; // Impede a ação de drop
+            }
+            
+            // Executa o Drop
+            // Futuramente: Chamar a API para persistir a mudança: Api.updateAgendamento(data)
+            
+            // Mover o elemento visualmente
+            oldSlot.innerHTML = '';
+            oldSlot.classList.remove('occupied');
+            oldSlot.classList.add('empty-slot');
+            
+            slot.innerHTML = '';
+            slot.appendChild(draggedElement);
+            slot.classList.remove('empty-slot');
+            slot.classList.add('occupied');
+            
+            // Atualiza os dados do bloco arrastado
+            draggedElement.dataset.date = newDate;
+            draggedElement.dataset.salaId = newSalaId;
+            
+            Utils.showMessage(`Agendamento da Turma ${draggedElement.dataset.turmaId} movido para ${Utils.formatDate(newDate)}. (Persistência futura)`);
+        });
+    });
+};
 
-        }
-    };
-})();
+// Exporta as funções para serem usadas pelo script.js e agendar_turma.js
+window.initPainelVisual = initPainelVisual;
+window.loadPainelVisual = loadPainelVisual;
