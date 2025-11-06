@@ -36,7 +36,7 @@ class Database {
             // echo "Conexão com o banco de dados estabelecida com sucesso!";
         } catch (PDOException $e) {
             // Em caso de falha, exibe o erro e interrompe a execução
-            die("Erro de Conexão: " . $e->getMessage());
+            die(json_encode(['status' => 'error', 'message' => 'Erro de Conexão com o BD: ' . $e->getMessage()]));
         }
     }
 
@@ -56,10 +56,7 @@ class Database {
             
             return $stmt;
         } catch (PDOException $e) {
-            // Em ambientes de produção, você deve apenas logar o erro, não exibi-lo!
-            echo "Erro na Consulta: " . $e->getMessage() . "\n";
-            echo "SQL: " . $sql . "\n";
-            return false;
+            throw new Exception("Erro de Consulta: " . $e->getMessage() . " | SQL: " . $sql);
         }
     }
 

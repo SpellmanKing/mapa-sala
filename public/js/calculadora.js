@@ -129,7 +129,7 @@ const triggerCalculation = async () => {
         dias: diasNumericos.join(',') // Envia como string separada por vírgula (ex: "1,3,5")
     };
     
-    // 3. Chamar a API (RF02)
+    // 3. Chamar a API  2)
     const result = await Api.calcularDataTermino(dataToCalculate);
 
     if (result.status === 'success') {

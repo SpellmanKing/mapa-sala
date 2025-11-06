@@ -32,20 +32,8 @@ try {
         // --- ROTAS DE PAINEL ---
         case 'getAgendamentos':
             $agendamentos = $turmaModel->getAgendamentosParaPainel();
-            $response = ['status' => 'success', 'data' => $eventos];
+            $response = ['status' => 'success', 'data' => $agendamentos]; 
             break;
-            // $eventos = array_map(function($agendamento) {
-            //     return [
-            //         'id' => $agendamento['id_turmas'],
-            //         'start' => $agendamento['start'],
-            //         'title' => $agendamento['title'] . " - " . $agendamento['codigo_turma'] . " (" . $agendamento['turno'] . ")",
-            //         'color' => '#1b7987', 
-            //         'allDay' => true,
-            //         'extendedProps' => $agendamento 
-            //     ];
-            // }, $agendamentos);
-            // break;
-            
         case 'agendarTurma':
             if ($_SERVER['REQUEST_METHOD'] !== 'POST' || empty($input)) {
                 throw new Exception("Requisição inválida para agendar turma.");
@@ -58,7 +46,7 @@ try {
             $response = ['status' => 'success', 'message' => 'Turma agendada com sucesso! ID: ' . $id_turma];
             break;
 
-        // --- ROTAS DA CALCULADORA INTELIGENTE (RF02) ---
+        // --- ROTAS DA CALCULADORA INTELIGENTE ---
         case 'calcularTermino':
             $carga_horaria = $_GET['ch'] ?? 0;
             $data_inicio = $_GET['inicio'] ?? '';
@@ -73,7 +61,7 @@ try {
             $response = ['status' => 'success', 'data_termino' => $data_termino];
             break;
             
-        // --- ROTAS DE ALOCAÇÃO AUTOMÁTICA (RF04, RF05, RF10) ---
+        // --- ROTAS DE ALOCAÇÃO AUTOMÁTICA ---
         case 'alocacaoAutomatica':
             $id_curso = $_GET['curso_id'] ?? 0;
             $data_inicio = $_GET['data_inicio'] ?? '';
@@ -92,7 +80,7 @@ try {
             $response = $resultado_alocacao;
             break;
             
-        // --- ROTAS CRUD FERIADOS (RF01) ---
+        // --- ROTAS CRUD FERIADOS ---
         case 'getFeriados': $response = ['status' => 'success', 'data' => $calendarioModel->getAllFeriados()];
             break;
             // Adaptação: Assumindo que a coluna na tabela é 'fk_id_tipo_feriado' (1=Feriado, 2=Recesso)
@@ -108,7 +96,7 @@ try {
             $response = ['status' => 'success', 'message' => 'Data não letiva deletada com sucesso.'];
             break;
 
-        // --- ROTAS CRUD INSTRUTORES (RF01) ---
+        // --- ROTAS CRUD INSTRUTORES ---
         case 'getInstrutores': 
             $response = ['status' => 'success', 'data' => $instrutorModel->getAllInstrutores()]; 
             break;
@@ -129,7 +117,7 @@ try {
             $response = ['status' => 'success', 'message' => 'Instrutor excluído com sucesso!'];
             break;
 
-        // --- ROTAS CRUD CURSOS (RF01) ---
+        // --- ROTAS CRUD CURSOS ---
         case 'getCursos': 
             $response = ['status' => 'success', 'data' => $cursoModel->getAllCursos()]; 
             break;

@@ -35,11 +35,17 @@ const initAgendarTurma = async () => {
     }
 
     // Configura listeners
-    addTurmaBtn?.addEventListener('click', () => openModal('agendamento-modal'));
+    addTurmaBtn?.addEventListener('click', () => {
+        if (typeof openModal === 'function') { 
+            openModal('agendamento-modal');
+        }
+    });
     alocarSalaBtn?.addEventListener('click', handleAlocarSala);
     
     // Configura o Agendamento Manual (apenas um placeholder para o beta)
     agendamentoForm?.addEventListener('submit', handleAgendamentoManual);
+
+
 };
 
 
@@ -69,7 +75,7 @@ const handleAlocarSala = async () => {
          return;
     }
     
-    // 2. Chama a Calculadora Inteligente (RF02) para obter a data de término
+    // 2. Chama a Calculadora Inteligente  2) para obter a data de término
     // NOTA: A calculadora está no TurmaModel, acessada via API
     const termoResult = await Api.calcularDataTermino({ 
         ch: carga_horaria, 

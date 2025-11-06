@@ -3,7 +3,7 @@ require_once 'Database.php';
 
 /**
  * Classe CalendarioModel
- * Responsável por gerenciar datas não letivas (feriados e recessos) e o CRUD (RF01).
+ * Responsável por gerenciar datas não letivas (feriados e recessos) e o CRUD.
  */
 class CalendarioModel {
     private $db;
@@ -32,7 +32,7 @@ class CalendarioModel {
     }
     
     /**
-     * Adiciona ou atualiza um feriado/recesso (Simples CRUD - RF01).
+     * Adiciona ou atualiza um feriado/recesso (Simples CRUD).
      */
     public function saveFeriado($data, $descricao, $tipo, $id = null) {
         if ($id) {

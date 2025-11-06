@@ -14,7 +14,7 @@ class InstrutorModel {
     }
     
     /**
-     * Adiciona ou atualiza um instrutor (CRUD - RF01).
+     * Adiciona ou atualiza um instrutor (CRUD).
      * Nota: No sistema final, seria necessário tratar 'habilidades_extras'.
      */
     public function saveInstrutor($nome, $segmento, $id = null) {
@@ -31,7 +31,7 @@ class InstrutorModel {
     }
 
     /**
-     * Deleta um instrutor (CRUD - RF01).
+     * Deleta um instrutor (CRUD).
      */
     public function deleteInstrutor($id) {
         // Observação: O FK na tabela 'turmas' está como ON DELETE SET NULL, então a exclusão é segura.

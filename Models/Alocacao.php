@@ -4,13 +4,13 @@ require_once 'SalaModel.php';
 require_once 'CalendarioModel.php'; 
 /**
  * Classe Alocacao
- * Implementa a complexa lógica de Alocação Automática (RF04, RF05, RF09, RF10).
+ * Implementa a complexa lógica de Alocação Automática
  */
 class Alocacao {
     private $db;
     private $salaModel;
     
-    // Regra de Capacidade Padrão (RF09)
+    // Regra de Capacidade Padrão
     const CAPACIDADE_PADRAO_PERCENTUAL = 0.8;
 
     public function __construct() {
@@ -27,7 +27,8 @@ class Alocacao {
      * @param int $total_alunos Número de alunos na turma.
      * @param array $dias_semana Dias da semana que a turma terá aula (ex: [1, 3, 5] para Seg, Qua, Sex).
      * @return array Sugestões de salas.
-     */
+    */
+
     public function buscarSalasAutomaticas($id_curso, $data_inicio, $data_termino, $total_alunos, $dias_semana) {
         
         // 1. Obter Requisitos da Turma
@@ -37,19 +38,19 @@ class Alocacao {
         }
         $tipo_sala_exigido = $curso['idTipo_sala'];
         
-        // 2. Buscar Salas Livres e Compatíveis (RF04)
+        // 2. Buscar Salas Livres e Compatíveis 
         // Simplificação: Buscamos apenas salas que atendam ao Tipo e à Capacidade.
         $salas_compativeis = $this->salaModel->getSalasPorTipo($tipo_sala_exigido);
         $salas_elegiveis = [];
 
         foreach ($salas_compativeis as $sala) {
             
-            // Aplica a Regra de Capacidade Padrão (RF09): Ocupação máxima de 80%
+            // Aplica a Regra de Capacidade Padrão: Ocupação máxima de 80%
             $capacidade_minima_necessaria = ceil($total_alunos / self::CAPACIDADE_PADRAO_PERCENTUAL);
             
             if ($sala['capacidade_maxima'] >= $capacidade_minima_necessaria) {
                 
-                // Calcula o "Melhor Encaixe" (RF05): menor diferença é melhor.
+                // Calcula o "Melhor Encaixe": menor diferença é melhor.
                 $diferenca_capacidade = $sala['capacidade_maxima'] - $total_alunos;
 
                 $sala['diferenca_capacidade'] = $diferenca_capacidade;
@@ -59,7 +60,7 @@ class Alocacao {
             }
         }
         
-        // 3. Aplica Prioridade e Melhor Encaixe (RF05)
+        // 3. Aplica Prioridade e Melhor Encaixe
         // Ordenação: 1. Melhor Encaixe (menor diferença é melhor)
         usort($salas_elegiveis, function($a, $b) {
             return $a['diferenca_capacidade'] <=> $b['diferenca_capacidade'];
@@ -77,7 +78,7 @@ class Alocacao {
             ];
         }
 
-        // 4. Uso do Auditório como último recurso (RF10)
+        // 4. Uso do Auditório como último recurso
         // Se nenhuma sala específica foi encontrada, mas a turma é grande o suficiente.
         $id_auditório = 5; 
         if ($total_alunos > 35) {

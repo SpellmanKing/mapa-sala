@@ -25,7 +25,7 @@ const iniciarBuscaAlocacao = async (dados) => {
         // O turno e instrutor serão usados para a checagem de conflitos no Backend (futuro)
     };
 
-    // 2. Chama o motor de regras do Backend (RF04, RF05, RF10)
+    // 2. Chama o motor de regras do Backend  4, RF05, RF10)
     const result = await Api.alocacaoAutomatica(params);
     
     if (result.status === 'success') {

@@ -1,4 +1,4 @@
-// public/js/painel.js - Vanilla JS Custom Grid (RF07)
+// public/js/painel.js - Vanilla JS Custom Grid  7)
 
 const calendarGrid = document.getElementById('calendar-grid');
 const currentMonthYearHeader = document.getElementById('current-month-year');
@@ -24,19 +24,27 @@ const initPainelVisual = async () => {
  * Carrega salas e tipos de sala, cacheando os dados base.
  */
 const loadBaseData = async () => {
-    const salasResult = await Api.fetchData('getAllSalas');
+    const [salasResult, tiposSalaResult] = await Promise.all([
+        Api.fetchData('getAllSalas'),
+        Api.fetchData('getTiposSala') 
+    ]);
+
+// 1. Processar Salas
     if (salasResult.status === 'success') {
         allSalas = salasResult.data || [];
     } else {
+        // Agora, se o erro do BD retornar JSON, a mensagem será limpa
         Utils.showMessage(`Erro ao carregar salas: ${salasResult.message}`, 'error');
         allSalas = [];
     }
 
     if (tiposSalaResult.status === 'success') {
-        // Popula o filtro de Tipo de Sala (RF07)
+        // Popula o filtro de Tipo de Sala
         const data = [{ idTipo_sala: 'todos', nome_tipo: 'Todos os Tipos' }, ...tiposSalaResult.data];
         const filterSelect = document.getElementById('tipo-sala-filter');
         Utils.populateSelect(filterSelect, data, 'idTipo_sala', 'nome_tipo', false);
+    }else {
+        Utils.showMessage(`Erro ao carregar tipos de sala: ${tiposSalaResult.message}`, 'error');
     }
 };
 
@@ -44,13 +52,18 @@ const loadBaseData = async () => {
  * Navega para o mês anterior ou posterior.
  */
 const navigateMonth = (direction) => {
-    // Obtém o mês/ano atual do header para calcular o próximo
-    const currentText = currentMonthYearHeader.getAttribute('data-current-date');
-    let currentDate = currentText ? new Date(currentText) : new Date();
+    // // Obtém o mês/ano atual do header para calcular o próximo
+    // const currentText = currentMonthYearHeader.getAttribute('data-current-date');
+    // let currentDate = currentText ? new Date(currentText) : new Date();
 
-    currentDate.setMonth(currentDate.getMonth() + direction);
+    // currentDate.setMonth(currentDate.getMonth() + direction);
     
-    loadPainelVisual(currentDate);
+    // loadPainelVisual(currentDate);
+
+    // Usa a variável global currentMonth para calcular o próximo mês
+    currentMonth.setMonth(currentMonth.getMonth() + direction);
+    
+    loadPainelVisual(currentMonth);
 };
 
 
@@ -59,6 +72,7 @@ const navigateMonth = (direction) => {
  * @param {Date} dateData Mês para renderizar.
  */
 const loadPainelVisual = async (dateData = currentMonth) => {
+    currentMonth = new Date(dateData.getFullYear(), dateData.getMonth(), 1);
     const currentYear = dateData.getFullYear();
     const currentMonth = dateData.getMonth();
     
@@ -100,14 +114,14 @@ const loadPainelVisual = async (dateData = currentMonth) => {
                             <div class="day-number">${day.date.split('-')[2]}</div>
                         </div>`;
     });
-    htmlContent += `</div>`; // Fim da linha de cabeçalho
+    htmlContent += `</div>`;
 
     // --- Linhas de Salas ---
     allSalas.forEach(sala => {
         htmlContent += `<div class="calendar-row sala-row" data-sala-id="${sala.id_salas}">
                             <div class="sala-col cell">
                                 <strong>${sala.nome_sala}</strong> 
-                                <span style="font-size: 0.8em; opacity: 0.7;">(Cap: ${sala.capacidade_maxima})</span>
+                                <span style="font-size: 0.8em; opacity: 0.7;">(Capacidade: ${sala.capacidade_maxima})</span>
                             </div>`;
         
         datesInMonth.forEach(day => {
@@ -120,7 +134,6 @@ const loadPainelVisual = async (dateData = currentMonth) => {
             let classes = 'cell agendamento-cell';
             
             if (agendamento) {
-                // Se houver agendamento
                 const turmaCodigo = agendamento.codigo_turma;
                 const cursoNome = agendamento.nome_curso;
                 const corEvento = agendamento.color || '#1b7987'; 
@@ -152,13 +165,13 @@ const loadPainelVisual = async (dateData = currentMonth) => {
     htmlContent += `</div>`; // Fim do calendar-wrapper
     calendarGrid.innerHTML = htmlContent;
     
-    // 4. Inicializar Lógica de Drag & Drop (RF08)
+    // 4. Inicializar Lógica de Drag & Drop  8)
     setupDragAndDropListeners();
 };
 
 
 /**
- * Configura os listeners de Drag & Drop para os eventos e slots vazios (RF08).
+ * Configura os listeners de Drag & Drop para os eventos e slots vazios  8).
  */
 const setupDragAndDropListeners = () => {
     const eventBlocks = calendarGrid.querySelectorAll('.event-block');

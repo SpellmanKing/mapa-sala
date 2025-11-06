@@ -23,7 +23,7 @@ class CursoModel {
     }
     
     /**
-     * Adiciona ou atualiza um curso (CRUD - RF01).
+     * Adiciona ou atualiza um curso (CRUD).
      */
     public function saveCurso($nome, $carga_horaria, $segmento, $idTipo_sala, $id = null) {
         // Usando valores padrão para campos não essenciais no modal beta
@@ -62,7 +62,7 @@ class CursoModel {
     }
 
     /**
-     * Deleta um curso (CRUD - RF01).
+     * Deleta um curso (CRUD).
      */
     public function deleteCurso($id) {
         // Segue o comportamento CASCADE do seu BD para turmas associadas (ideal é usar RESTRICT).
