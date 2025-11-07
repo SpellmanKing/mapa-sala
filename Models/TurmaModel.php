@@ -50,26 +50,34 @@ class TurmaModel {
      */
     public function getAgendamentosParaPainel() {
         $sql = "SELECT 
-                    ag.id_agendamento AS id,
-                    ag.data_aula AS start,
-                    s.id_salas,
-                    s.nome_sala AS title,
-                    t.id_turmas,
-                    t.codigo_turma,
-                    c.nome_curso,
-                    tr.nome_turno AS turno,
-                    s.capacidade_maxima
-                FROM agendamentos ag
-                JOIN salas s ON ag.id_salas = s.id_salas
-                JOIN turmas t ON ag.id_turmas = t.id_turmas
-                JOIN cursos c ON t.id_cursos = c.id_cursos
-                JOIN turno tr ON t.fk_id_turno = tr.id_turno";
+                    a.id_agendamentos AS id, 
+                    t.codigo_turma, 
+                    c.nome_curso, 
+                    a.data_agendamento AS start, 
+                    a.data_agendamento AS end, 
+                    a.id_salas, 
+                    ts.nome_status, 
+                    '#1b7987' AS color,
+                    c.carga_horaria 
+                FROM 
+                    agendamentos a
+                JOIN 
+                    turmas t ON a.id_turmas = t.id_turmas
+                JOIN 
+                    cursos c ON t.id_cursos = c.id_cursos
+                JOIN 
+                    status_turma ts ON t.fk_id_status = ts.id_status";
+        
         return $this->db->fetchAll($sql);
     }
     
     // Método para simular o agendamento real da turma (necessário para a rota 'agendarTurma' no Controller)
     public function agendarNovaTurma($id_curso, $id_instrutor, $codigo_turma, $data_inicio, $data_termino, $turno, $total_alunos, $id_sala, $dias_semana_raw) {
-        $dias_semana = explode(',', $dias_semana_raw);
+        
+        // Validação básica para evitar Notice PHP
+        if (empty($id_sala) || empty($data_termino)) {
+            throw new Exception("Dados de alocação (Sala e Data Término) são obrigatórios para registrar a turma.");
+        }
 
         // 1. Encontrar o ID do turno
         $turno_id = $this->db->fetchOne("SELECT id_turno FROM turno WHERE nome_turno = :nome", ['nome' => $turno])['id_turno'] ?? 1; // Padrão: Manhã
@@ -86,10 +94,30 @@ class TurmaModel {
 
         // 3. Gerar e Inserir Agendamentos (simplificado para fins do beta)
         // No sistema completo, precisaria iterar dia a dia como na calculadora
-        $datas_agendar = [$data_inicio, $data_termino]; // Apenas as datas inicial e final para o beta
+        $dias_semana = explode(',', $dias_semana_raw);
+        $datas_a_agendar = [];
+
+        // **LÓGICA SIMPLIFICADA PARA GERAR DIAS DE AULA** (Deve ser mais complexa no futuro)
+        // Para este beta, vamos considerar que a alocação será registrada no primeiro dia
+        // e usaremos a data de início e término. No sistema completo, você
+        // teria que gerar uma data de agendamento para CADA dia de aula.
+
+        // Inserimos a data de início (e a de término, para simplificar a visualização do período)
+        $datas_agendar = [$data_inicio]; 
+        if ($data_inicio != $data_termino) {
+            $datas_agendar[] = $data_termino;
+        }
+
         foreach ($datas_agendar as $data_aula) {
-            $sql_agendamento = "INSERT INTO agendamentos (id_turmas, id_salas, data_aula) VALUES (:turma, :sala, :data)";
-            $this->db->query($sql_agendamento, ['turma' => $id_turma, 'sala' => $id_sala, 'data' => $data_aula]);
+            $sql_alocacao = "INSERT INTO agendamentos (id_turmas, id_salas, data_agendamento, fk_id_turno) 
+                             VALUES (:turma, :sala, :data_aula, :turno_id)";
+            $params_alocacao = [
+                'turma' => $id_turma, 
+                'sala' => $id_sala, 
+                'data_aula' => $data_aula,
+                'turno_id' => $turno_id
+            ];
+            $this->db->query($sql_alocacao, $params_alocacao);
         }
         
         return $id_turma;

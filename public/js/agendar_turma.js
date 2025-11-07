@@ -40,18 +40,35 @@ const initAgendarTurma = async () => {
             openModal('agendamento-modal');
         }
     });
-    alocarSalaBtn?.addEventListener('click', handleAlocarSala);
+
+    // Listener para o botão "Buscar Salas Automaticamente"
+    alocarSalaBtn.addEventListener('click', async () => {
+        // 1. Calcula a Data de Término
+        const dataTermino = await calcularDataTermino(dadosTurma);
+        
+        // 2. Chama a Lógica de Alocação
+        if (dataTermino) {
+            // Envia TODOS os dados, incluindo a data de término calculada
+            const dadosComTermino = { ...dadosTurma, data_termino: dataTermino };
+            
+            // Inicia a busca (Função definida em alocacao_automatica.js)
+            iniciarBuscaAlocacao(dadosComTermino); 
+            
+            // Fecha o modal de Agendamento (para abrir o de Alocação)
+            closeModal('agendamento-modal'); 
+        }
+    });
     
-    // Configura o Agendamento Manual (apenas um placeholder para o beta)
-    agendamentoForm?.addEventListener('submit', handleAgendamentoManual);
-
-
+    // // Configura o Agendamento Manual (apenas um placeholder para o beta)
+    // agendamentoForm?.addEventListener('submit', handleAgendamentoManual);
 };
 
 
 /**
  * * Lida com o clique no botão "Buscar Salas Automaticamente".
- * */
+ * 
+*/
+
 const handleAlocarSala = async () => {
     // 1. Coleta e Validação dos Dados Essenciais
     const id_curso = agendamentoCursoSelect.value;
@@ -71,8 +88,8 @@ const handleAlocarSala = async () => {
     const carga_horaria = curso ? curso.carga_horaria : 0;
     
     if (carga_horaria === 0) {
-         Utils.showMessage("Carga horária do curso não encontrada. Impossível calcular.", 'error');
-         return;
+        Utils.showMessage("Carga horária do curso não encontrada. Impossível calcular.", 'error');
+        return;
     }
     
     // 2. Chama a Calculadora Inteligente  2) para obter a data de término

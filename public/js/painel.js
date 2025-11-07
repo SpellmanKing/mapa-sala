@@ -1,9 +1,9 @@
-// public/js/painel.js - Vanilla JS Custom Grid  7)
+// public/js/painel.js - Vanilla JS Custom Grid
 
 const calendarGrid = document.getElementById('calendar-grid');
 const currentMonthYearHeader = document.getElementById('current-month-year');
 let allSalas = [];
-let currentMonth = new Date(); 
+let currentMonth = new Date();
 
 /**
  * Função principal para inicializar o Painel Visual.
@@ -29,7 +29,7 @@ const loadBaseData = async () => {
         Api.fetchData('getTiposSala') 
     ]);
 
-// 1. Processar Salas
+    // 1. Processar Salas
     if (salasResult.status === 'success') {
         allSalas = salasResult.data || [];
     } else {
@@ -73,12 +73,12 @@ const navigateMonth = (direction) => {
  */
 const loadPainelVisual = async (dateData = currentMonth) => {
     currentMonth = new Date(dateData.getFullYear(), dateData.getMonth(), 1);
-    const currentYear = dateData.getFullYear();
-    const currentMonth = dateData.getMonth();
+    const currentYear = currentMonth.getFullYear();
+    const currentMon = currentMonth.getMonth();
     
     // 1. Atualizar Header
-    currentMonthYearHeader.textContent = dateData.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
-    currentMonthYearHeader.setAttribute('data-current-date', dateData.toISOString().split('T')[0]);
+    currentMonthYearHeader.textContent = currentMonth.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
+    currentMonthYearHeader.setAttribute('data-current-date', currentMonth.toISOString().split('T')[0]);
 
     // 2. Buscar Agendamentos para o período (simplificação: busca todos os agendamentos)
     const agendamentosResult = await Api.getAgendamentos();
@@ -91,8 +91,8 @@ const loadPainelVisual = async (dateData = currentMonth) => {
     htmlContent += `<div class="calendar-row header-row">
                         <div class="sala-col header-cell">Sala / Data</div>`;
     
-    const startDate = new Date(currentYear, currentMonth, 1);
-    const endDate = new Date(currentYear, currentMonth + 1, 0);
+    const startDate = new Date(currentYear, currentMon, 1);
+    const endDate = new Date(currentYear, currentMon + 1, 0);
     const datesInMonth = [];
 
     // Popula o array de dias letivos (Segunda a Sexta)
@@ -114,7 +114,7 @@ const loadPainelVisual = async (dateData = currentMonth) => {
                             <div class="day-number">${day.date.split('-')[2]}</div>
                         </div>`;
     });
-    htmlContent += `</div>`;
+    htmlContent += `</div>`; // Fim da linha de cabeçalho
 
     // --- Linhas de Salas ---
     allSalas.forEach(sala => {

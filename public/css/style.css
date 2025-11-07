@@ -60,11 +60,11 @@ body {
 
 .sidebar-nav a.active {
   background-color: var(--primary-color);
-  color: var(--white);
+  color: var(--blue-light);
 }
 
 .sidebar-nav a.active i {
-  color: var(--white);
+  color: var(--blue-light);
 }
 
 .sidebar-nav i {
