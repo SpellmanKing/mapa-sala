@@ -92,7 +92,7 @@ const handleAlocarSala = async () => {
         return;
     }
     
-    // 2. Chama a Calculadora Inteligente  2) para obter a data de término
+    // 2. Chama a Calculadora Inteligente para obter a data de término
     // NOTA: A calculadora está no TurmaModel, acessada via API
     const termoResult = await Api.calcularDataTermino({ 
         ch: carga_horaria, 

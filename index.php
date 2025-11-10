@@ -103,8 +103,7 @@
                                 <div class="filter-item checkbox-group-container">
                                 <div class="checkbox-group">
                                     <label><input type="checkbox" id="filter-tem"> TEM</label>
-                                    <label><input ztype="checkbox" id="filter-bolsa"> Bolsa</label>
-                                </div>
+                                    <label><input type="checkbox" id="filter-bolsa"> Bolsa</label> </div>
                                 </div>
                             </div>
                             <div class="action-buttons">
@@ -134,10 +133,10 @@
                                 <div class="form-group">
                                     <label for="calculadora-turno">Turno:</label>
                                     <select id="calculadora-turno">
-                                        <option value="manhã">Manhã (08h - 12h)</option>
-                                        <option value="tarde">Tarde (13h - 17h)</option>
-                                        <option value="noite">Noite (18h - 22h)</option>
-                                        <option value="integral">Integral (08h - 17h)</option>
+                                        <option value="Manhã">Manhã (08h - 12h)</option>
+                                        <option value="Tarde">Tarde (13h - 17h)</option>
+                                        <option value="Noite">Noite (18h - 22h)</option>
+                                        <option value="Integral">Integral (08h - 17h)</option>
                                     </select>
                                 </div>
                                 
@@ -199,22 +198,7 @@
                                         </div>
                                     </div>
                                 </div>
-
-                                <div class="form-group hidden" id="aprendizagem-options">
-                                    <div class="toggle-section">
-                                        <label>Opções de Aprendizagem</label>
-                                        <div id="aprendizagem-tradicional-options" class="hidden">
-                                            <label>
-                                                <input type="radio" name="aprendizagem-model" value="tradicional" checked> Modelo Tradicional
-                                                <div class="tooltip-container">
-                                                    <span class="tooltip-icon">?</span>
-                                                    <span class="tooltip-text">4 dias em empresa e 1 dia no Senac</span>
-                                                </div>
-                                            </label>
-                                        </div>
-                                    </div>
-                                </div>
-                            </form>
+                                </form>
                         </section>
                     </section>
                     <div class="results-section hidden" id="results-section">
@@ -289,8 +273,7 @@
                 </div>
                 <div class="form-group">
                     <label for="agendamento-codigo">Codigo da Turma</label>
-                    <input id="agendamento-codigo" required></select>
-                </div>
+                    <input id="agendamento-codigo" required> </div>
                 <div class="form-group">
                     <label for="agendamento-data-inicio">Data de Início</label>
                     <input type="date" id="agendamento-data-inicio" required>
@@ -489,6 +472,7 @@
             </form>
         </div>
     </div>
+    <div id="toast-container"></div>
     <script src="./Public/JS/api.js"></script>
     <script src="./Public/JS/utils.js"></script>
     <script src="./Public/JS/modals.js"></script>
@@ -499,7 +483,6 @@
     <script src="./Public/JS/gerenciar_cursos.js"></script>
     <script src="./Public/JS/calculadora.js"></script>
     <script src="./Public/JS/painel.js"></script>
-    <!--<script src="./Public/JS/detalhe_turma.js"></script>-->
     <script src="./Public/JS/script.js"></script>
 </body>
 </html>

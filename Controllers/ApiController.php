@@ -1,7 +1,4 @@
 <?php
-// Define que o conteúdo retornado será em JSON
-header('Content-Type: application/json; charset=utf-8');
-header("Access-Control-Allow-Origin: *"); 
 
 // Inclui todos os Models e Services
 require_once '../Models/Database.php'; 

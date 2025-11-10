@@ -45,11 +45,10 @@ CREATE TABLE IF NOT EXISTS `turno` (
 
 -- Inserção de dados para `turno`
 INSERT INTO turno (nome_turno) VALUES
-('Manhã'),
-('Tarde'),
-('Noite'),
-('Integral'),
-('Vespertino');
+('Matutino'),
+('Vespertino'),
+('Noturno'),
+('Integral');
 
 -- -----------------------------------------------------
 -- Table `tipo_feriado`

@@ -87,7 +87,7 @@ const loadPainelVisual = async (dateData = currentMonth) => {
     // 3. Gerar a Grade HTML (Eixo Y: Salas, Eixo X: Datas)
     let htmlContent = `<div class="calendar-wrapper">`;
     
-    // --- Cabeçalho de Datas (5 dias de aula por semana) ---
+    // --- Cabeçalho de Datas  ---
     htmlContent += `<div class="calendar-row header-row">
                         <div class="sala-col header-cell">Sala / Data</div>`;
     
@@ -97,8 +97,8 @@ const loadPainelVisual = async (dateData = currentMonth) => {
 
     // Popula o array de dias letivos (Segunda a Sexta)
     for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
-        const dayOfWeek = d.getDay(); // 0=Dom, 6=Sáb
-        if (dayOfWeek >= 1 && dayOfWeek <= 5) { // Seg-Sex
+        const dayOfWeek = d.getDay();
+        if (dayOfWeek >= 0 && dayOfWeek <= 7) { // Inclui todos os dias (0=Dom, 6=Sáb)
             datesInMonth.push({
                 date: d.toISOString().split('T')[0],
                 dayName: d.toLocaleDateString('pt-BR', { weekday: 'short' })
@@ -165,7 +165,7 @@ const loadPainelVisual = async (dateData = currentMonth) => {
     htmlContent += `</div>`; // Fim do calendar-wrapper
     calendarGrid.innerHTML = htmlContent;
     
-    // 4. Inicializar Lógica de Drag & Drop  8)
+    // 4. Inicializar Lógica de Drag & Drop 
     setupDragAndDropListeners();
 };
 
