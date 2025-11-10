@@ -15,13 +15,12 @@ class Alocacao {
 
     public function __construct() {
         $this->db = new Database();
-        // Inicializar Models
         $this->salaModel = new SalaModel();
     }
 
     /**
      * Implementa a lógica principal da Alocação Automática.
-     * * @param int $id_curso ID do curso.
+     * @param int $id_curso ID do curso.
      * @param string $data_inicio Data de início.
      * @param string $data_termino Data de término (já calculada).
      * @param int $total_alunos Número de alunos na turma.
@@ -32,7 +31,8 @@ class Alocacao {
     public function buscarSalasAutomaticas($id_curso, $data_inicio, $data_termino, $total_alunos, $dias_semana) {
         
         // 1. Obter Requisitos da Turma
-        $curso = $this->db->fetchOne("SELECT curso_tem, idTipo_sala FROM cursos WHERE id_cursos = :id", ['id' => $id_curso]);
+        // Adicionando 'carga_horaria' para completude, embora a alocação use apenas 'idTipo_sala'
+        $curso = $this->db->fetchOne("SELECT curso_tem, idTipo_sala, carga_horaria FROM cursos WHERE id_cursos = :id", ['id' => $id_curso]);
         if (!$curso) {
             return ['status' => 'error', 'message' => 'Curso não encontrado.'];
         }
@@ -45,7 +45,7 @@ class Alocacao {
 
         foreach ($salas_compativeis as $sala) {
             
-            // Aplica a Regra de Capacidade Padrão: Ocupação máxima de 80%
+            // Aplica a Regra de Capacidade Padrão: Ocupação mínima de 80% do necessário.
             $capacidade_minima_necessaria = ceil($total_alunos / self::CAPACIDADE_PADRAO_PERCENTUAL);
             
             if ($sala['capacidade_maxima'] >= $capacidade_minima_necessaria) {

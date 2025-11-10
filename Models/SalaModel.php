@@ -16,7 +16,7 @@ class SalaModel {
     }
     
     /**
-     * NOVO: Retorna todas as salas para o Painel Visual
+     * Retorna todas as salas para o Painel Visual
      */
     public function getAllSalas() {
         $sql = "SELECT id_salas, nome_sala, capacidade_maxima, idTipo_sala FROM salas ORDER BY nome_sala";

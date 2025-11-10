@@ -36,12 +36,12 @@
                             <span>Gerenciar Cursos</span>
                         </a>
                     </li>
-                    <li>
+                    <!-- <li>
                         <a href="#" class="nav-item" data-target="integracoes">
                             <i class="fas fa-puzzle-piece"></i>
                             <span>Integração Futuras</span>
                         </a>
-                    </li>
+                    </li> -->
                 </ul>
             </nav>
         </aside>
