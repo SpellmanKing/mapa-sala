@@ -41,7 +41,7 @@ const initAgendarTurma = async () => {
         }
     });
 
-    // CORREÇÃO: Chama handleAlocarSala ao clicar em Buscar Salas Automaticamente
+    // Chama handleAlocarSala ao clicar em Buscar Salas Automaticamente
     alocarSalaBtn.addEventListener('click', handleAlocarSala);
     
     // Configura o Agendamento Manual (submissão do formulário)
@@ -53,7 +53,7 @@ const initAgendarTurma = async () => {
  * @returns {object|null} Dados da turma ou null se houver falha na validação.
  */
 const getAgendamentoData = () => {
-    // Captura os valores dos checkboxes marcados (1 a 5)
+    // Captura os valores dos checkboxes marcados
     const diasCheckboxes = document.querySelectorAll('#agendamento-dias-semana input[name="diasSemana"]:checked');
     const dias_semana = Array.from(diasCheckboxes).map(cb => cb.value);
     
@@ -134,7 +134,7 @@ const handleAgendamentoManual = (e) => {
     const salaID = document.getElementById('alocacao-salas-id').value;
     
     if (!salaID) {
-        // CORREÇÃO: Agora o aviso é claro, vem do handleAgendamentoManual (o submit)
+        // Agora o aviso é claro, vem do handleAgendamentoManual
         Utils.showMessage("A Alocação Automática deve ser executada antes de agendar. Clique em 'Buscar Salas Automaticamente'.", 'warning');
         // Adiciona foco ao botão para guiar o usuário
         alocarSalaBtn.focus(); 
@@ -162,27 +162,30 @@ const handleAgendamentoManual = (e) => {
     };
     
     // Validação final de dados de alocação
-     if (!agendamentoData.data_termino || !agendamentoData.id_sala || !agendamentoData.dias_semana) {
-         // O erro que você estava vendo vinha daqui
-         Utils.showMessage("Dados de alocação incompletos. Execute a 'Busca Automática' novamente.", 'error');
-         return;
-     }
+    if (!agendamentoData.data_termino || !agendamentoData.id_sala || !agendamentoData.dias_semana) {
+    // O erro que você estava vendo vinha daqui
+    Utils.showMessage("Dados de alocação incompletos. Execute a 'Busca Automática' novamente.", 'error');
+    return;
+    }
 
     // Chamada final para a API
     Api.agendarTurma(agendamentoData).then(result => {
         if (result.status === 'success') {
-            Utils.showMessage("Turma agendada com sucesso! Código: " + agendamentoData.codigo_turma, 'success');
-            closeModal('agendamento-modal');
+            Utils.showMessage("🎉 Agendamento Confirmado! Código: " + agendamentoData.codigo_turma, 'success');
+            closeModal('alocacao-modal');
+            
+            // Limpa o formulário principal para evitar duplicidade de código
+            agendamentoForm.reset(); 
             
             // Recarregar o painel visual
             if(typeof loadPainelVisual === 'function') {
-                 loadPainelVisual();
+                loadPainelVisual();
             }
         } else {
-            Utils.showMessage(`Falha no agendamento: ${result.message}`, 'error');
+            // Exibe erro de persistência ou conflito
+            Utils.showMessage(`Falha ao registrar agendamento: ${result.message}`, 'error');
         }
     });
-
 };
 
 // Inicializa a função de agendamento ao carregar o DOM

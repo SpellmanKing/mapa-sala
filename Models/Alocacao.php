@@ -74,7 +74,7 @@ class Alocacao {
                 'status' => 'success', 
                 'sala_sugerida' => $sala_sugerida,
                 'data_alocacao' => $this->gerarDatasAlocacao($data_inicio, $data_termino, $dias_semana),
-                'regra_aplicada' => "Melhor Encaixe (Capacidade: {$sala_sugerida['capacidade_maxima']} / Alunos: {$total_alunos}) - RF05"
+                'regra_aplicada' => "Melhor Encaixe (Capacidade: {$sala_sugerida['capacidade_maxima']} / Alunos: {$total_alunos})"
             ];
         }
 
@@ -88,7 +88,7 @@ class Alocacao {
                     'status' => 'success', 
                     'sala_sugerida' => $auditório,
                     'data_alocacao' => $this->gerarDatasAlocacao($data_inicio, $data_termino, $dias_semana),
-                    'regra_aplicada' => 'Uso do Auditório (Último Recurso - RF10)'
+                    'regra_aplicada' => 'Uso do Auditório'
                 ];
             }
         }
