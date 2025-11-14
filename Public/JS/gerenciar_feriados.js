@@ -35,6 +35,8 @@ const renderFeriadosList = (feriados) => {
         item.className = 'list-item';
         
         // 1. Determina o nome do tipo (Feriado=1, Recesso=2)
+        // O backend agora retorna `nome_tipo` (do JOIN), mas a lógica de ID para nome ainda é usada aqui.
+        // O `fk_id_tipo_feriado` é o que vem do banco de dados (1 ou 2).
         const tipoNome = feriado.fk_id_tipo_feriado == 1 ? 'Feriado' : 'Recesso'; 
         const badgeClass = tipoNome.toLowerCase();
 
@@ -59,7 +61,7 @@ const renderFeriadosList = (feriados) => {
 };
 
 /**
- * Lida com o envio do formulário (Salvar/Atualizar - RF01).
+ * Lida com o envio do formulário (Salvar/Atualizar).
  */
 feriadoForm?.addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -108,7 +110,8 @@ const editFeriado = (feriado) => {
  * Lida com a exclusão de um feriado.
  */
 const deleteFeriado = async (id, descricao) => {
-    if (confirm(`Tem certeza que deseja excluir a data não letiva: ${descricao} (${Utils.formatDate(document.getElementById('feriado-data').value)})?`)) {
+    // CORRIGIDO: O campo data não existe no escopo, deve ser passado ou removido
+    if (confirm(`Tem certeza que deseja excluir a data não letiva: ${descricao}?`)) {
         const result = await Api.deleteFeriado(id);
         
         if (result.status === 'success') {

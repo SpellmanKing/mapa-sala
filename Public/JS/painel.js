@@ -126,6 +126,7 @@ const loadPainelVisual = async (dateData = currentMonth) => {
         
         datesInMonth.forEach(day => {
             const dataAula = day.date;
+            // Busca apenas o primeiro agendamento para aquela Sala e Data (simplificação)
             const agendamento = agendamentos.find(a => 
                 a.start === dataAula && a.id_salas == sala.id_salas
             );

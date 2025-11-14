@@ -89,7 +89,7 @@ const setupInstrutorListeners = () => {
         openModal('instrutor-modal');
     });
 
-    // Ação: Envio do Formulário (Salvar/Atualizar - RF01)
+    // Ação: Envio do Formulário (Salvar/Atualizar)
     instrutorForm?.addEventListener('submit', handleSaveInstrutor);
 };
 

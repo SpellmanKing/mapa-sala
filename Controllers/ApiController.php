@@ -80,7 +80,7 @@ try {
         // --- ROTAS CRUD FERIADOS ---
         case 'getFeriados': $response = ['status' => 'success', 'data' => $calendarioModel->getAllFeriados()];
             break;
-            // Assumindo que a coluna na tabela é 'fk_id_tipo_feriado' (1=Feriado, 2=Recesso)
+            // Assumindo que a coluna na tabela é 'fk_id_tipo_feriado' (1=Feriado, 2=Recesso). O JS envia 'tipo' como ID.
         case 'saveFeriado':
             if ($_SERVER['REQUEST_METHOD'] !== 'POST' || empty($input)) { throw new Exception("Requisição inválida para salvar feriado."); }
             // O Model espera (data, descricao, tipo_id, id)

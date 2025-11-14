@@ -16,7 +16,11 @@ class CalendarioModel {
      * Busca todas as datas de feriados e recessos para a listagem.
      */
     public function getAllFeriados() {
-        $sql = "SELECT * FROM feriados_recessos ORDER BY data_feriado";
+        // Junta com tipo_feriado para buscar o nome do tipo.
+        $sql = "SELECT fr.*, tf.nome_tipo 
+                FROM feriados_recessos fr
+                JOIN tipo_feriado tf ON fr.fk_id_tipo_feriado = tf.id_tipo_feriado
+                ORDER BY data_feriado";
         return $this->db->fetchAll($sql);
     }
 
@@ -37,11 +41,11 @@ class CalendarioModel {
     public function saveFeriado($data, $descricao, $tipo, $id = null) {
         if ($id) {
             // Atualizar
-            $sql = "UPDATE feriados_recessos SET data_feriado = :data, descricao = :descricao, tipo = :tipo WHERE id_feriado = :id";
+            $sql = "UPDATE feriados_recessos SET data_feriado = :data, descricao = :descricao, fk_id_tipo_feriado = :tipo WHERE id_feriado = :id";
             $params = ['data' => $data, 'descricao' => $descricao, 'tipo' => $tipo, 'id' => $id];
         } else {
             // Inserir
-            $sql = "INSERT INTO feriados_recessos (data_feriado, descricao, tipo) VALUES (:data, :descricao, :tipo)";
+            $sql = "INSERT INTO feriados_recessos (data_feriado, descricao, fk_id_tipo_feriado) VALUES (:data, :descricao, :tipo)";
             $params = ['data' => $data, 'descricao' => $descricao, 'tipo' => $tipo];
         }
         return $this->db->query($sql, $params);

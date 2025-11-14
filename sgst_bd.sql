@@ -431,8 +431,8 @@ CREATE TABLE IF NOT EXISTS `turmas` (
   `id_cursos` INT NOT NULL,
   `id_instrutores` INT NULL,
   `codigo_turma` VARCHAR(50) UNIQUE,
-  `fk_id_status` INT DEFAULT 1, 
-  `fk_id_turno` INT NOT NULL, 
+  `id_status` INT DEFAULT 1, 
+  `id_turno` INT NOT NULL, 
   `data_inicio` DATE NOT NULL,
   `data_termino` DATE, 
   `total_alunos` INT NOT NULL, 
@@ -451,24 +451,25 @@ CREATE TABLE IF NOT EXISTS `turmas` (
     ON DELETE SET NULL
     ON UPDATE CASCADE,
   CONSTRAINT `fk_turma_status`
-    FOREIGN KEY (`fk_id_status`) REFERENCES `status_turma` (`id_status`)
+    FOREIGN KEY (`id_status`) REFERENCES `status_turma` (`id_status`)
     ON DELETE RESTRICT
     ON UPDATE CASCADE,
   CONSTRAINT `fk_turma_turno`
-    FOREIGN KEY (`fk_id_turno`) REFERENCES `turno` (`id_turno`)
+    FOREIGN KEY (`id_turno`) REFERENCES `turno` (`id_turno`)
     ON DELETE RESTRICT
     ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 -- Inserção de dados para `turmas`
--- Usando 1=Manhã, 2=Tarde, 3=Noite do INSERT INTO turno
-INSERT INTO turmas (id_cursos, id_instrutores, codigo_turma, fk_id_status, data_inicio, data_termino, fk_id_turno, total_alunos, alunos_pagantes, alunos_bolsistas, observacoes) VALUES
-(1, 1, 'TURMA-2025-001', 1, '2025-09-15', '2025-11-15', 1, 20, 15, 5, 'Turma inicial de Florista'),
-(3, 2, 'TURMA-2025-002', 1, '2025-10-01', '2025-12-01', 2, 18, 12, 6, 'Curso Alongamento de Unhas'),
-(5, 6, 'TURMA-2025-003', 1, '2025-09-20', '2026-01-20', 3, 25, 20, 5, 'Turma Cabeleireiro - módulo avançado'),
-(9, 10, 'TURMA-2025-004', 1, '2025-09-25', '2026-02-25', 1, 30, 25, 5, 'Administrador de Banco de Dados'),
-(13, 12, 'TURMA-2025-005', 1, '2025-10-05', '2026-02-05', 2, 15, 10, 5, 'Curso Costureiro'),
-(11, 14, 'TURMA-2025-006', 1, '2025-10-10', '2026-03-10', 3, 28, 22, 6, 'Curso Técnico em Redes');
+-- Usando 1=Manhã, 2=Tarde, 3=Noite, 4=Integral
+-- DATAS AJUSTADAS PARA NOVEMBRO/DEZEMBRO DE 2025
+INSERT INTO turmas (id_cursos, id_instrutores, codigo_turma, id_status, data_inicio, data_termino, id_turno, total_alunos, alunos_pagantes, alunos_bolsistas, observacoes) VALUES
+(1, 1, 'TURMA-2025-001', 1, '2025-11-17', '2025-12-17', 1, 20, 15, 5, 'Turma inicial de Florista'),
+(3, 2, 'TURMA-2025-002', 1, '2025-11-03', '2025-12-03', 2, 18, 12, 6, 'Curso Alongamento de Unhas'),
+(5, 6, 'TURMA-2025-003', 1, '2025-11-10', '2026-03-10', 3, 25, 20, 5, 'Turma Cabeleireiro - módulo avançado'),
+(9, 10, 'TURMA-2025-004', 1, '2025-11-14', '2026-04-14', 1, 30, 25, 5, 'Administrador de Banco de Dados'),
+(13, 12, 'TURMA-2025-005', 1, '2025-11-24', '2026-03-24', 2, 15, 10, 5, 'Curso Costureiro'),
+(11, 14, 'TURMA-2025-006', 1, '2025-11-28', '2026-04-28', 3, 28, 22, 6, 'Curso Técnico em Redes');
 
 -- -----------------------------------------------------
 -- Table `agendamentos`
@@ -478,6 +479,7 @@ CREATE TABLE IF NOT EXISTS `agendamentos` (
   `id_agendamento` INT NOT NULL AUTO_INCREMENT,
   `id_turmas` INT NOT NULL,
   `id_salas` INT NOT NULL,
+  `id_turno` INT NOT NULL, 
   `data_aula` DATE NOT NULL,
   PRIMARY KEY (`id_agendamento`),
   UNIQUE INDEX `uk_sala_dia` (`id_salas` ASC, `data_aula` ASC),
@@ -493,23 +495,28 @@ CREATE TABLE IF NOT EXISTS `agendamentos` (
     FOREIGN KEY (`id_salas`)
     REFERENCES `salas` (`id_salas`)
     ON DELETE RESTRICT 
+    ON UPDATE CASCADE,
+  CONSTRAINT `fk_agendamentos_turno1`
+    FOREIGN KEY (`id_turno`) REFERENCES `turno` (`id_turno`)
+    ON DELETE RESTRICT
     ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT = 'Armazena cada dia de aula alocada para uma turma em uma sala.';
 
 -- Inserção de dados para `agendamentos`
-INSERT INTO agendamentos (id_turmas, id_salas, data_aula) VALUES
-(1, 1, '2025-09-15'),
-(1, 1, '2025-09-22'),
-(2, 12, '2025-10-01'),
-(2, 12, '2025-10-08'),
-(3, 11, '2025-09-22'),
-(3, 11, '2025-09-29'),
-(4, 7, '2025-09-25'),
-(4, 7, '2025-10-02'),
-(5, 10, '2025-10-06'),
-(5, 10, '2025-10-13'),
-(6, 8, '2025-10-10'),
-(6, 8, '2025-10-17');
+-- DATAS AJUSTADAS PARA NOVEMBRO/DEZEMBRO DE 2025
+INSERT INTO agendamentos (id_turmas, id_salas,id_turno, data_aula) VALUES
+(1, 1, 4, '2025-11-17'), -- Seg
+(1, 1, 4 ,'2025-11-24'), -- Seg
+(2, 12, 4, '2025-11-03'), -- Seg
+(2, 12, 4 ,'2025-11-10'), -- Seg
+(3, 11, 4 ,'2025-11-10'), -- Seg
+(3, 11, 4 ,'2025-11-17'), -- Seg
+(4, 7, 4 ,'2025-11-14'), -- Sex
+(4, 7, 4 ,'2025-11-21'), -- Sex
+(5, 10, 4, '2025-11-24'), -- Seg
+(5, 10, 4, '2025-12-01'), -- Seg
+(6, 8, 4 ,'2025-11-28'), -- Sex
+(6, 8, 4, '2025-12-05'); -- Sex
 
 
 -- -----------------------------------------------------

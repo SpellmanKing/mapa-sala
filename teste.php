@@ -6,3 +6,4 @@ try {
 } catch (Exception $e) {
     echo "ERRO DE CONEXÃO: " . $e->getMessage();
 }
+?>

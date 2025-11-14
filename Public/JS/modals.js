@@ -40,11 +40,12 @@ const closeModal = (modalId) => {
     const modal = document.getElementById(modalId);
     if (modal) {
         modal.classList.remove('active');
-        // Opcional: Limpar formulário ao fechar
+        // Limpar formulário ao fechar
         const form = modal.querySelector('form');
         if (form) {
-             form.reset();
+            form.reset();
         }
+        
         // Limpar ID de edição
         document.getElementById('feriado-id').value = '';
         document.getElementById('feriado-form-title').textContent = 'Adicionar';
