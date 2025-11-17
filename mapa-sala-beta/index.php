@@ -300,17 +300,79 @@
                         <input type="checkbox" id="quinta" name="diasSemana" value="4"><label for="quinta">Qui</label>
                         <input type="checkbox" id="sexta" name="diasSemana" value="5"><label for="sexta">Sex</label>
                     </div>
+                </div>    
+                <div class="form-group">
+                    <label>Alocação</label>
+                    <button type="button" class="primary-btn" id="alocar-sala-btn">Buscar Sugestão Automática</button>
+                </div>
+                <div id="salasAlocadasInfo" class="alocacao-info">
+                    <p><strong>Sala Sugerida:</strong> <span id="agendamento-salas-display" class="highlight-info-text">N/A</span></p> 
+                </div>
+                <input type="hidden" id="agendamento-salas-id">
+
+                <div class="form-actions">
+                    <button type="button" class="secondary-btn" onclick="closeModal('agendamento-modal')">Cancelar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    <div id="alocacao-modal" class="modal">
+        <div class="modal-content">
+            <header class="modal-header">
+                <h2 id="alocacao-modal-title">Sugestão de Alocação Automática</h2>
+                <button class="close-btn">&times;</button>
+            </header>
+            <div id="alocacao-confirmacao-conteudo">
+                <p><strong>Curso:</strong> <span id="alocacao-curso-nome"></span></p>
+                <p><strong>Data de Início:</strong> <span id="alocacao-data-inicio" data-value=""></span></p>
+                <p><strong>Data de Término (Estimada):</strong> <span id="alocacao-data-termino"></span></p>
+                <p><strong>Salas Sugeridas:</strong> <span id="alocacao-salas-sugeridas"></span></p>
+                <input type="hidden" id="alocacao-curso-id">
+                <input type="hidden" id="alocacao-total-alunos">
+                <input type="hidden" id="alocacao-turno">
+                <input type="hidden" id="alocacao-salas-id">
+                <input type="hidden" id="alocacao-dias-semana">
+                <input type="hidden" id="alocacao-instrutor-id"> 
+            </div>
+            <div class="form-actions">
+                <button class="primary-btn" id="confirmar-alocacao-btn">Confirmar Agendamento</button>
+                <button class="secondary-btn" id="cancelar-alocacao-btn">Cancelar</button>
+            </div>
+        </div>
+    </div>
+    <div id="detalhes-modal" class="modal">
+        <div class="modal-content">
+            <header class="modal-header">
+                <h2 id="detalhes-titulo">Detalhes da Turma</h2>
+                <button class="close-btn">&times;</button>
+            </header>
+            <form id="detalhes-form" class="form-detalhes">
+                <p><strong>Curso:</strong> <span id="detalhes-curso"></span></p>
+                <p><strong>Sala:</strong> <span id="detalhes-sala"></span></p>
+                <p><strong>Início:</strong> <span id="detalhes-data-inicio"></span></p>
+                <p><strong>Término:</strong> <span id="detalhes-data-termino"></span></p> 
+                <p><strong>Turno:</strong> <span id="detalhes-turno"></span></p>
+                <p><strong>Alunos:</strong> <span id="detalhes-alunos"></span></p>
+                <p><strong>Instrutor:</strong> <span id="detalhes-instrutor-atual"></span></p>
+                <p><strong>Status:</strong> <span id="detalhes-status"></span></p>
+                <input type="hidden" id="detalhes-turma">
+                <div class="form-group">
+                    <label for="detalhes-status-select">Alterar Status</label>
+                    <select id="detalhes-status-select">
+                        <option value="Planejada">Planejada</option>
+                        <option value="Confirmada">Confirmada</option>
+                        <option value="Em Andamento">Em Andamento</option>
+                        <option value="Concluída">Concluída</option>
+                        <option value="Cancelada">Cancelada</option>
+                    </select>
                 </div>
                 <div class="form-group">
-                    <label for="agendamento-salas-display">Sala(s)</label>
-                    <input type="text" id="agendamento-salas-display" readonly placeholder="Clique para buscar salas disponíveis">
-                    <input type="hidden" id="agendamento-salas-id">
-                    <button type="button" class="primary-btn" id="alocar-sala-btn">Buscar Salas Automaticamente</button>
+                    <label for="detalhes-instrutor-select">Atribuir Instrutor</label>
+                    <select id="detalhes-instrutor-select"></select> 
                 </div>
-                <div id="salasAlocadasInfo" class="alocacao-info"></div>
                 <div class="form-actions">
-                    <button type="submit" class="primary-btn">Agendar</button>
-                    <button type="button" id="cancelar-alocacao-btn" class="secondary-btn">Cancelar</button>
+                    <button type="submit" class="primary-btn" id="">Salvar Alterações</button>
+                    <button type="button" class="danger-btn" id="cancelar-turma-btn">Cancelar Turma</button>
                 </div>
             </form>
         </div>
@@ -359,68 +421,6 @@
                         </div>
                 </div>
 
-            </div>
-        </div>
-    </div>
-
-    <div id="detalhes-modal" class="modal">
-        <div class="modal-content">
-            <header class="modal-header">
-                <h2 id="detalhes-titulo">Detalhes da Turma</h2>
-                <button class="close-btn">&times;</button>
-            </header>
-            <form id="detalhes-form" class="form-detalhes">
-                <p><strong>Curso:</strong> <span id="detalhes-curso"></span></p>
-                <p><strong>Sala:</strong> <span id="detalhes-sala"></span></p>
-                <p><strong>Datas:</strong> <span id="detalhes-datas"></span></p>
-                <p><strong>Turno:</strong> <span id="detalhes-turno"></span></p>
-                <p><strong>Alunos:</strong> <span id="detalhes-alunos"></span></p>
-                <p><strong>Instrutor:</strong> <span id="detalhes-instrutor"></span></p>
-                <p><strong>Status:</strong> <span id="detalhes-status"></span></p>
-                <input type="hidden" id="detalhes-turma">
-                <div class="form-group">
-                    <label for="detalhes-status-select">Alterar Status</label>
-                    <select id="detalhes-status-select">
-                        <option value="Planejada">Planejada</option>
-                        <option value="Confirmada">Confirmada</option>
-                        <option value="Em Andamento">Em Andamento</option>
-                        <option value="Concluída">Concluída</option>
-                        <option value="Cancelada">Cancelada</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label for="detalhes-instrutor">Atribuir Instrutor</label>
-                    <select id="detalhes-instrutor"></select>
-                </div>
-                <div class="form-actions">
-                    <button type="submit" class="primary-btn" id="">Salvar Alterações</button>
-                    <button type="button" class="danger-btn" id="cancelar-turma-btn">Cancelar Turma</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <div id="alocacao-modal" class="modal">
-        <div class="modal-content">
-            <header class="modal-header">
-                <h2 id="alocacao-modal-title">Sugestão de Alocação Automática</h2>
-                <button class="close-btn">&times;</button>
-            </header>
-            <div id="alocacao-confirmacao-conteudo">
-                <p><strong>Curso:</strong> <span id="alocacao-curso-nome"></span></p>
-                <p><strong>Data de Início:</strong> <span id="alocacao-data-inicio" data-value=""></span></p>
-                <p><strong>Data de Término (Estimada):</strong> <span id="alocacao-data-termino"></span></p>
-                <p><strong>Salas Sugeridas:</strong> <span id="alocacao-salas-sugeridas"></span></p>
-                <input type="hidden" id="alocacao-curso-id">
-                <input type="hidden" id="alocacao-total-alunos">
-                <input type="hidden" id="alocacao-turno">
-                <input type="hidden" id="alocacao-salas-id">
-                <input type="hidden" id="alocacao-dias-semana">
-                <input type="hidden" id="alocacao-instrutor-id"> 
-            </div>
-            <div class="form-actions">
-                <button class="primary-btn" id="confirmar-alocacao-btn">Confirmar Agendamento</button>
-                <button class="secondary-btn" id="cancelar-alocacao-btn">Cancelar</button>
             </div>
         </div>
     </div>

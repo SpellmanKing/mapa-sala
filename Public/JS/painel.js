@@ -134,9 +134,11 @@ const loadPainelVisual = async (dateData = currentMonth) => {
             let content = '';
             let classes = 'cell agendamento-cell';
             
-            if (agendamento) {
+        if (agendamento) {
                 const turmaCodigo = agendamento.codigo_turma;
                 const cursoNome = agendamento.nome_curso;
+                const instrutorNome = agendamento.nome_instrutor || 'Instrutor N/A'; // Novo
+                const turnoNome = agendamento.nome_turno || 'Turno N/A'; // Novo
                 const corEvento = agendamento.color || '#1b7987'; 
 
                 content = `<div class="event-block" 
@@ -145,8 +147,10 @@ const loadPainelVisual = async (dateData = currentMonth) => {
                                 data-turma-id="${agendamento.id}" 
                                 data-sala-id="${sala.id_salas}"
                                 data-date="${dataAula}"
-                                title="${cursoNome} - ${turmaCodigo}">
-                                ${turmaCodigo}
+                                title="${cursoNome} - ${turmaCodigo} | Instrutor: ${instrutorNome} | Turno: ${turnoNome}">
+                                <strong>${turmaCodigo}</strong> <br>
+                                ${cursoNome} <br>
+                                <span style="font-size: 0.8em;">${turnoNome} - ${instrutorNome.split(' ')[0]}</span>
                             </div>`;
                 classes += ' occupied';
             } else {

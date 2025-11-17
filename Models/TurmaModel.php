@@ -53,6 +53,8 @@ class TurmaModel {
                     a.id_agendamentos AS id, 
                     t.codigo_turma, 
                     c.nome_curso, 
+                    i.nome_instrutor,
+                    tr.nome_turno,    
                     a.data_aula AS start,           
                     a.data_aula AS end,             
                     a.id_salas, 
@@ -65,6 +67,10 @@ class TurmaModel {
                     turmas t ON a.id_turmas = t.id_turmas
                 JOIN 
                     cursos c ON t.id_cursos = c.id_cursos
+                LEFT JOIN               
+                    instrutores i ON t.id_instrutores = i.id_instrutores 
+                LEFT JOIN           
+                    turno tr ON t.id_turno = tr.id_turno
                 JOIN 
                     status_turma ts ON t.id_status = ts.id_status";
         
