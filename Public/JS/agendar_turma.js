@@ -2,13 +2,12 @@
 
 const addTurmaBtn = document.getElementById('add-turma-btn');
 const agendamentoModal = document.getElementById('agendamento-modal');
-const agendamentoForm = document.getElementById('agendamento-form');
 const agendamentoCursoSelect = document.getElementById('agendamento-curso');
 const agendamentoInstrutorSelect = document.getElementById('agendamento-instrutor');
 const alocarSalaBtn = document.getElementById('alocar-sala-btn');
 
 let listaCursosCache = []; // Cache dos cursos carregados
-let listaInstrutoresCache = []; // Cache dos instrutores carregados
+let listaInstrutoresCache = []; // Cache dos instrutores carregados 
 
 /**
  * Função principal para inicializar: carrega dados e configura listeners.
@@ -22,6 +21,7 @@ const initAgendarTurma = async () => {
 
     if (cursosResult.status === 'success') {
         listaCursosCache = cursosResult.data;
+        // Popula o select do curso, mas não o de instrutor ainda
         Utils.populateSelect(agendamentoCursoSelect, listaCursosCache, 'id_cursos', 'nome_curso', true);
     } else {
         Utils.showMessage(`Erro ao carregar cursos: ${cursosResult.message}`, 'error');
@@ -29,7 +29,14 @@ const initAgendarTurma = async () => {
 
     if (instrutoresResult.status === 'success') {
         listaInstrutoresCache = instrutoresResult.data;
-        Utils.populateSelect(agendamentoInstrutorSelect, listaInstrutoresCache, 'id_instrutores', 'nome_instrutor', true);
+        // Popula o select do modal de detalhes 
+        const detalhesInstrutorSelect = document.getElementById('detalhes-instrutor-select');
+        if (detalhesInstrutorSelect) {
+            Utils.populateSelect(detalhesInstrutorSelect, listaInstrutoresCache, 'id_instrutores', 'nome_instrutor', true);
+        }
+        
+        // O select de instrutor do agendamento é carregado VAZIO no início
+        Utils.populateSelect(agendamentoInstrutorSelect, [], 'id_instrutores', 'nome_instrutor', true);
     } else {
         Utils.showMessage(`Erro ao carregar instrutores: ${instrutoresResult.message}`, 'error');
     }
@@ -41,20 +48,61 @@ const initAgendarTurma = async () => {
         }
     });
 
+    // Adiciona listener para filtrar instrutores ao mudar o curso
+    agendamentoCursoSelect.addEventListener('change', filterInstrutoresByCurso);
+
     // Chama handleAlocarSala ao clicar em Buscar Salas Automaticamente
     alocarSalaBtn.addEventListener('click', handleAlocarSala);
-    
-    // Configura o Agendamento Manual (submissão do formulário)
-    agendamentoForm?.addEventListener('submit', handleAgendamentoManual);
 };
+
+/**
+ * Filtra e repopula o select de instrutores baseado no curso selecionado.
+ * * NOTA: Esta lógica SIMULA o relacionamento via SEGMENTO (segmento_principal do instrutor 
+ * deve ser igual ao segmento do curso). Para uma checagem mais robusta (ex: 
+ * InstrutorCurso), a busca seria via API.
+ */
+const filterInstrutoresByCurso = () => {
+    const selectedCursoId = agendamentoCursoSelect.value;
+    
+    // Limpa o select se nenhum curso for selecionado
+    if (!selectedCursoId) {
+        Utils.populateSelect(agendamentoInstrutorSelect, [], 'id_instrutores', 'nome_instrutor', true);
+        return;
+    }
+    
+    const cursoSelecionado = listaCursosCache.find(c => c.id_cursos == selectedCursoId);
+    
+    if (!cursoSelecionado) {
+        Utils.showMessage("Curso selecionado não encontrado no cache.", 'error');
+        return;
+    }
+    
+    const segmentoCurso = cursoSelecionado.segmento;
+    
+    // Filtra os instrutores cujo segmento principal corresponde ao segmento do curso
+    const instrutoresFiltrados = listaInstrutoresCache.filter(instrutor => {
+        // Assume que o campo `segmento_principal` do instrutor é uma string que deve coincidir.
+        // A comparação é feita em minúsculas para robustez.
+        return instrutor.segmento_principal && instrutor.segmento_principal.toLowerCase() === segmentoCurso.toLowerCase();
+    });
+
+    // Repopula o select de instrutores com a lista filtrada
+    Utils.populateSelect(agendamentoInstrutorSelect, instrutoresFiltrados, 'id_instrutores', 'nome_instrutor', true);
+    
+    if (instrutoresFiltrados.length === 0) {
+        Utils.showMessage(`Nenhum instrutor encontrado para o segmento "${segmentoCurso}".`, 'warning');
+    }
+};
+
 
 /**
  * Coleta e valida os dados essenciais do formulário de agendamento.
  * @returns {object|null} Dados da turma ou null se houver falha na validação.
  */
 const getAgendamentoData = () => {
+    const agendamentoForm = document.getElementById('agendamento-form');
     // Captura os valores dos checkboxes marcados
-    const diasCheckboxes = document.querySelectorAll('#agendamento-dias-semana input[name="diasSemana"]:checked');
+    const diasCheckboxes = agendamentoForm.querySelectorAll('#agendamento-dias-semana input[name="diasSemana"]:checked');
     const dias_semana = Array.from(diasCheckboxes).map(cb => cb.value);
     
     const id_curso = agendamentoCursoSelect.value;
@@ -63,7 +111,7 @@ const getAgendamentoData = () => {
 
     // Validação de campos obrigatórios
     if (!id_curso || !data_inicio || !total_alunos || dias_semana.length === 0 || !agendamentoInstrutorSelect.value || !document.getElementById('agendamento-codigo').value) {
-        Utils.showMessage("Preencha todos os campos obrigatórios (Curso, Instrutor, Data, Alunos, Dias da Semana).", 'warning');
+        Utils.showMessage("Preencha todos os campos obrigatórios (Curso, Instrutor, Código, Data, Alunos, Dias da Semana).", 'warning');
         return null;
     }
 
@@ -91,13 +139,14 @@ const getAgendamentoData = () => {
  * Lida com o clique no botão "Buscar Salas Automaticamente".
  */
 const handleAlocarSala = async () => {
+    // 1. Coleta e valida os dados do form principal
     const dadosTurma = getAgendamentoData();
     
     if (!dadosTurma) {
         return; // Validação falhou, a mensagem já foi exibida
     }
     
-    // 1. Chama a Calculadora Inteligente para obter a data de término
+    // 2. Chama a Calculadora Inteligente para obter a data de término
     const termoResult = await Api.calcularDataTermino({ 
         ch: dadosTurma.carga_horaria, 
         inicio: dadosTurma.data_inicio, 
@@ -110,7 +159,7 @@ const handleAlocarSala = async () => {
     }
     const data_termino_estimada = termoResult.data_termino;
     
-    // 2. Chama o Módulo de Alocação Automática (Implementado em alocacao_automatica.js)
+    // 3. Chama o Módulo de Alocação Automática, passando todos os dados
     if (typeof iniciarBuscaAlocacao === 'function') {
         iniciarBuscaAlocacao({
             ...dadosTurma, // Espalha todos os dados coletados
@@ -124,73 +173,6 @@ const handleAlocarSala = async () => {
     }
 };
 
-/**
- * Lida com a submissão do formulário de Agendamento.
- */
-const handleAgendamentoManual = (e) => {
-    e.preventDefault();
-    
-    // Verifica se a Alocação Automática foi executada e preencheu o campo hidden da sala
-    const salaID = document.getElementById('alocacao-salas-id').value;
-    
-    if (!salaID) {
-        // Agora o aviso é claro, vem do handleAgendamentoManual
-        Utils.showMessage("A Alocação Automática deve ser executada antes de agendar. Clique em 'Buscar Salas Automaticamente'.", 'warning');
-        // Adiciona foco ao botão para guiar o usuário
-        alocarSalaBtn.focus(); 
-        return;
-    }
-    
-    // Coleta a data de término e dias da semana dos campos hidden preenchidos pelo modal de Alocação
-    // O campo data-value é mais seguro para pegar a data de término completa
-    const data_termino_el = document.getElementById('alocacao-data-termino');
-    const data_termino = data_termino_el ? (data_termino_el.dataset.value || data_termino_el.textContent) : ''; 
-    const dias_semana = document.getElementById('alocacao-dias-semana').value; 
-
-    // Coleta dados restantes do formulário principal
-    const agendamentoData = {
-        id_curso: agendamentoCursoSelect.value,
-        id_instrutor: agendamentoInstrutorSelect.value,
-        codigo_turma: document.getElementById('agendamento-codigo').value,
-        data_inicio: document.getElementById('agendamento-data-inicio').value,
-        turno: document.getElementById('agendamento-turno').value,
-        total_alunos: document.getElementById('agendamento-total-alunos').value,
-        // Dados de alocação
-        id_sala: salaID, 
-        data_termino: data_termino,
-        dias_semana: dias_semana, 
-    };
-    
-    // Validação final de dados de alocação
-    if (!agendamentoData.data_termino || !agendamentoData.id_sala || !agendamentoData.dias_semana) {
-    // O erro que você estava vendo vinha daqui
-    Utils.showMessage("Dados de alocação incompletos. Execute a 'Busca Automática' novamente.", 'error');
-    return;
-    }
-
-    // Chamada final para a API
-    Api.agendarTurma(agendamentoData).then(result => {
-        if (result.status === 'success') {
-            Utils.showMessage("🎉 Agendamento Confirmado! Código: " + agendamentoData.codigo_turma, 'success');
-            closeModal('alocacao-modal');
-            
-            // Limpa o formulário principal para evitar duplicidade de código
-            agendamentoForm.reset(); 
-            
-            // Recarregar o painel visual
-            if(typeof loadPainelVisual === 'function') {
-                loadPainelVisual();
-            }
-        } else {
-            // Exibe erro de persistência ou conflito
-            Utils.showMessage(`Falha ao registrar agendamento: ${result.message}`, 'error');
-        }
-    });
-};
-
-// Inicializa a função de agendamento ao carregar o DOM
-document.addEventListener('DOMContentLoaded', () => {
-    if (typeof initAgendarTurma === 'function') {
-        initAgendarTurma();
-    }
-});
+// Exporta as funções para serem usadas globalmente
+window.initAgendarTurma = initAgendarTurma;
+window.getAgendamentoData = getAgendamentoData;

@@ -527,17 +527,17 @@ CREATE TABLE IF NOT EXISTS `feriados_recessos` (
   `id_feriado` INT NOT NULL AUTO_INCREMENT,
   `data_feriado` DATE NOT NULL UNIQUE,
   `descricao` VARCHAR(255) NOT NULL,
-  `fk_id_tipo_feriado` INT NOT NULL, 
+  `id_tipo_feriado` INT NOT NULL, 
   PRIMARY KEY (`id_feriado`),
   CONSTRAINT `fk_feriado_tipo`
-    FOREIGN KEY (`fk_id_tipo_feriado`) REFERENCES `tipo_feriado` (`id_tipo_feriado`)
+    FOREIGN KEY (`id_tipo_feriado`) REFERENCES `tipo_feriado` (`id_tipo_feriado`)
     ON DELETE RESTRICT
     ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 
 -- Usando 1=feriado, 2=recesso do INSERT INTO tipo_feriado
-INSERT INTO feriados_recessos (data_feriado, descricao, fk_id_tipo_feriado) VALUES
+INSERT INTO feriados_recessos (data_feriado, descricao, id_tipo_feriado) VALUES
 -- === FERIADOS OFICIAIS (1) ===
 ('2025-01-01', 'Confraternização Universal', 1),
 ('2025-02-25', 'Carnaval', 1),
@@ -569,7 +569,7 @@ INSERT INTO feriados_recessos (data_feriado, descricao, fk_id_tipo_feriado) VALU
 ('2026-12-25', 'Natal', 1);
 
 -- === PONTES (RECESSO - 2) ===
-INSERT INTO feriados_recessos (data_feriado, descricao, fk_id_tipo_feriado) VALUES
+INSERT INTO feriados_recessos (data_feriado, descricao, id_tipo_feriado) VALUES
 ('2025-02-28', 'Ponte de Carnaval', 2),
 ('2025-04-19', 'Ponte Páscoa/Tiradentes', 2),
 ('2025-06-20', 'Ponte Corpus Christi', 2),
@@ -584,7 +584,7 @@ INSERT INTO feriados_recessos (data_feriado, descricao, fk_id_tipo_feriado) VALU
 ('2026-06-05', 'Ponte Corpus Christi', 2);
 
 -- === DIAS NÃO LETIVOS (RECESSO - 2) ===
-INSERT INTO feriados_recessos (data_feriado, descricao, fk_id_tipo_feriado) VALUES
+INSERT INTO feriados_recessos (data_feriado, descricao, id_tipo_feriado) VALUES
 ('2025-01-02', 'Recesso Escolar', 2),
 ('2025-01-03', 'Recesso Escolar', 2),
 ('2025-01-06', 'Recesso Escolar', 2),

@@ -36,8 +36,8 @@ const renderFeriadosList = (feriados) => {
         
         // 1. Determina o nome do tipo (Feriado=1, Recesso=2)
         // O backend agora retorna `nome_tipo` (do JOIN), mas a lógica de ID para nome ainda é usada aqui.
-        // O `fk_id_tipo_feriado` é o que vem do banco de dados (1 ou 2).
-        const tipoNome = feriado.fk_id_tipo_feriado == 1 ? 'Feriado' : 'Recesso'; 
+        // O `id_tipo_feriado` é o que vem do banco de dados (1 ou 2).
+        const tipoNome = feriado.id_tipo_feriado == 1 ? 'Feriado' : 'Recesso'; 
         const badgeClass = tipoNome.toLowerCase();
 
         item.innerHTML = `
@@ -98,7 +98,7 @@ const editFeriado = (feriado) => {
     document.getElementById('feriado-descricao').value = feriado.descricao;
     
     // Adaptação de volta para o nome para preencher o <select>
-    const tipoNome = feriado.fk_id_tipo_feriado == 1 ? 'Feriado' : 'Recesso';
+    const tipoNome = feriado.id_tipo_feriado == 1 ? 'Feriado' : 'Recesso';
     document.getElementById('feriado-tipo').value = tipoNome;
 
     // Altera o texto do formulário para Edição

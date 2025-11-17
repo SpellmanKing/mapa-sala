@@ -18,8 +18,7 @@ class TurmaModel {
 
     /**
      * Calcula a data de término de uma turma, descontando feriados.
-     * 
-     */
+     * */
     public function calcularDataTermino(int $carga_horaria, string $data_inicio, array $dias_semana) {
         $dias_aula_necessarios = (int)ceil($carga_horaria / self::HORAS_POR_DIA);
         $datas_nao_letivas = $this->calendarioModel->getDatasNaoLetivas();
@@ -48,15 +47,14 @@ class TurmaModel {
     
     /**
      * Busca agendamentos para o Painel Visual.
-     * 
-     */
+     * */
     public function getAgendamentosParaPainel() {
         $sql = "SELECT 
                     a.id_agendamentos AS id, 
                     t.codigo_turma, 
                     c.nome_curso, 
-                    a.data_aula AS start,          
-                    a.data_aula AS end,            
+                    a.data_aula AS start,           
+                    a.data_aula AS end,             
                     a.id_salas, 
                     ts.nome_status, 
                     '#1b7987' AS color,
@@ -96,8 +94,6 @@ class TurmaModel {
         ];
         $this->db->query($sql_turma, $params_turma);
         $id_turma = $this->db->lastInsertId();
-
-        // --- LÓGICA COMPLETA DE ITERAÇÃO DE DIAS DE AULA (Corpo do Agendamento) ---
         
         // Converte a string de dias da semana em um array de números inteiros
         $dias_semana = array_map('intval', explode(',', $dias_semana_raw));
@@ -107,21 +103,29 @@ class TurmaModel {
         $carga_horaria = $cursoData['carga_horaria'] ?? 0;
         
         if ($carga_horaria === 0) {
-             throw new Exception("Carga horária do curso não encontrada. Agendamento interrompido.");
+            // Rollback seria ideal aqui, mas vamos apenas lançar a exceção.
+            throw new Exception("Carga horária do curso não encontrada. Agendamento interrompido.");
         }
         
+        // Recalcular dias necessários e buscar feriados (aqui reutilizamos a lógica da calculadora)
         $dias_aula_necessarios = (int)ceil($carga_horaria / self::HORAS_POR_DIA);
         $datas_nao_letivas = $this->calendarioModel->getDatasNaoLetivas();
 
         $dias_letivos_contados = 0;
         $data_atual = new DateTime($data_inicio);
-        $data_final = new DateTime($data_termino); 
+        $data_final = new DateTime($data_termino); // Usamos a data de término calculada
         $datas_agendadas = [];
 
         // Itera até que o número de dias necessários tenha sido atingido E a data atual não ultrapasse a data de término
-        while ($dias_letivos_contados < $dias_aula_necessarios && $data_atual <= $data_final) {
+        while ($dias_letivos_contados < $dias_aula_necessarios) {
             $dia_semana = (int)$data_atual->format('N'); // 1=Segunda, 7=Domingo
             $data_string = $data_atual->format('Y-m-d');
+            
+            // Condição de Segurança: Se a data atual for maior que a data de término calculada, algo está errado no cálculo.
+            if ($data_atual > $data_final) {
+                // Se a iteração exceder o limite, algo está errado. Parar e lançar um erro.
+                throw new Exception("Erro de cálculo: O número de dias letivos excedeu a data de término calculada. Turma agendada no cabeçalho, mas sem detalhes.");
+            }
             
             // Se for um dia de aula programado E não for feriado
             if (in_array($dia_semana, $dias_semana) && !in_array($data_string, $datas_nao_letivas)) {

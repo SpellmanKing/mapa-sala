@@ -31,16 +31,29 @@ try {
             $agendamentos = $turmaModel->getAgendamentosParaPainel();
             $response = ['status' => 'success', 'data' => $agendamentos]; 
             break;
-        case 'agendarTurma':
-            if ($_SERVER['REQUEST_METHOD'] !== 'POST' || empty($input)) {
-                throw new Exception("Requisição inválida para agendar turma.");
+        case 'agendarTurma': 
+            if ($_SERVER['REQUEST_METHOD'] !== 'POST' || empty($input['id_curso']) || empty($input['id_sala']) || empty($input['data_termino'])) { 
+                throw new Exception("Dados obrigatórios da turma e da alocação estão faltando."); 
             }
-            $id_turma = $turmaModel->agendarNovaTurma(
-                $input['id_curso'], $input['id_instrutor'], $input['codigo_turma'], 
-                $input['data_inicio'], $input['data_termino'], $input['turno'], 
-                $input['total_alunos'], $input['id_sala'], $input['dias_semana'] 
+            
+            // 1. A string de dias da semana é passada (ex: "1,3,5")
+            $dias_semana_raw = $input['dias_semana']; 
+
+            // 2. Chamar o Modelo para agendar
+            // Usa agendarNovaTurma que contém a lógica de inserção na tabela 'agendamentos'
+            $turmaId = $turmaModel->agendarNovaTurma(
+                (int)$input['id_curso'],
+                (int)$input['id_instrutor'],
+                $input['codigo_turma'],
+                $input['data_inicio'],
+                $input['data_termino'], // Data de término calculada pela alocação
+                $input['turno'],
+                (int)$input['total_alunos'],
+                (int)$input['id_sala'],
+                $dias_semana_raw // Passamos a string para o Model
             );
-            $response = ['status' => 'success', 'message' => 'Turma agendada com sucesso! ID: ' . $id_turma];
+
+            $response = ['status' => 'success', 'message' => "Turma agendada com sucesso! ID: {$turmaId}"];
             break;
 
         // --- ROTAS DA CALCULADORA INTELIGENTE ---
@@ -80,7 +93,7 @@ try {
         // --- ROTAS CRUD FERIADOS ---
         case 'getFeriados': $response = ['status' => 'success', 'data' => $calendarioModel->getAllFeriados()];
             break;
-            // Assumindo que a coluna na tabela é 'fk_id_tipo_feriado' (1=Feriado, 2=Recesso). O JS envia 'tipo' como ID.
+            // Assumindo que a coluna na tabela é 'id_tipo_feriado' (1=Feriado, 2=Recesso). O JS envia 'tipo' como ID.
         case 'saveFeriado':
             if ($_SERVER['REQUEST_METHOD'] !== 'POST' || empty($input)) { throw new Exception("Requisição inválida para salvar feriado."); }
             // O Model espera (data, descricao, tipo_id, id)

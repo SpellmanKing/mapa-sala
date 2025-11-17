@@ -47,8 +47,24 @@ const closeModal = (modalId) => {
         }
         
         // Limpar ID de edição
-        document.getElementById('feriado-id').value = '';
-        document.getElementById('feriado-form-title').textContent = 'Adicionar';
-        document.getElementById('feriado-form-submit-btn').textContent = 'Salvar';
+        const feriadoId = document.getElementById('feriado-id');
+        if (feriadoId) {
+            feriadoId.value = '';
+            document.getElementById('feriado-form-title').textContent = 'Adicionar';
+            document.getElementById('feriado-form-submit-btn').textContent = 'Salvar';
+        }
+        
+        // Limpar campos hidden do Agendamento / Alocação para evitar dados sujos
+        const alocacaoSalaId = document.getElementById('alocacao-salas-id');
+        if (alocacaoSalaId) {
+            alocacaoSalaId.value = '';
+            document.getElementById('agendamento-salas-display').textContent = 'N/A';
+        }
+
+        // Limpa o campo de Instrutor no modal de Agendamento 
+        const agendamentoInstrutorSelect = document.getElementById('agendamento-instrutor');
+        if (agendamentoInstrutorSelect) {
+            agendamentoInstrutorSelect.innerHTML = '<option value="">Selecione um(a)...</option>';
+        }
     }
 };

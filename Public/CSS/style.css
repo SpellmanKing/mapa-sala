@@ -318,7 +318,8 @@ body {
   border: 1px dashed var(--primary-color);
 }
 
-/* Estilos para badges de Status (removidos da seção 4 para não causar redundância) */
+/* Estilos para badges de Status */
+
 .badge {
   padding: 4px 8px;
   border-radius: 12px;
@@ -330,11 +331,43 @@ body {
   right: 5px;
 }
 
+/* Cores dos Status de Turma */
 .badge-planejada { background-color: var(--blue-dark); }
 .badge-confirmada { background-color: var(--orange-dark); }
 .badge-em-andamento { background-color: var(--green-dark); }
 .badge-concluida { background-color: var(--gray-dark); }
 .badge-cancelada { background-color: var(--red-dark); }
+
+.badge.feriado { 
+  background-color: var(--red-dark); /* Feriado oficial: Vermelho */
+  color: var(--white);
+}
+
+.badge.recesso { 
+  background-color: var(--blue-dark); /* Recesso: Azul (Info/Aviso) */
+  color: var(--white);
+}
+
+/* Adicionar essa classe para destacar informações de sucesso (sala encontrada) */
+.highlight-success {
+  color: var(--green-dark); /* Verde escuro (já definido) */
+  font-weight: bold;
+  font-size: 1.1em;
+}
+
+.highlight-danger {
+  color: var(--red-dark);
+  font-weight: bold;
+}
+
+/* Ajustar a exibição do bloco de info de alocação */
+.alocacao-info {
+  margin-top: 15px;
+  padding: 10px;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  background-color: var(--light-gray);
+}
 
 /* ------------------------------------------------------------------- */
 /* --- 5. MODAL E FORMULÁRIOS --- */
