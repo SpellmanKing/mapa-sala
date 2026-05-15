@@ -119,6 +119,12 @@ const setupCursoListeners = () => {
 const handleSaveCurso = async (e) => {
     e.preventDefault();
 
+    // Validação de Formulário Visual
+    if (!Utils.validateForm('curso-form')) return;
+
+    const submitBtn = document.querySelector('#curso-form button[type="submit"]');
+    Utils.toggleButtonLoading(submitBtn, true);
+
     const data = {
         id: cursoIdField.value || null,
         nome: document.getElementById('curso-nome').value,
@@ -130,18 +136,22 @@ const handleSaveCurso = async (e) => {
     // Validação de CH
     if (isNaN(data.ch) || data.ch <= 0) {
         Utils.showMessage("Carga Horária deve ser um número positivo.", 'error');
+        document.getElementById('curso-carga-horaria').classList.add('input-error');
+        Utils.toggleButtonLoading(submitBtn, false);
         return;
     }
     
     const result = await Api.saveCurso(data);
 
     if (result.status === 'success') {
-        Utils.showMessage(result.message);
+        Utils.showMessage(result.message, 'success');
         closeModal('curso-modal');
         loadCursosList(); // Recarrega a lista
     } else {
         Utils.showMessage(result.message, 'error');
     }
+    
+    Utils.toggleButtonLoading(submitBtn, false);
 };
 
 /**

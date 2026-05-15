@@ -64,6 +64,11 @@ const renderFeriadosList = (feriados) => {
 feriadoForm?.addEventListener('submit', async (e) => {
     e.preventDefault();
 
+    if (!Utils.validateForm('feriado-form')) return;
+    
+    const submitBtn = document.getElementById('feriado-form-submit-btn');
+    Utils.toggleButtonLoading(submitBtn, true);
+
     const data = {
         id: document.getElementById('feriado-id').value || null,
         data: document.getElementById('feriado-data').value,
@@ -75,16 +80,18 @@ feriadoForm?.addEventListener('submit', async (e) => {
     const result = await Api.saveFeriado(data);
 
     if (result.status === 'success') {
-        Utils.showMessage(result.message);
+        Utils.showMessage(result.message, 'success');
         feriadoForm.reset();
         loadFeriadosList(); // Recarrega a lista
         // Resetar o modo de edição
         document.getElementById('feriado-id').value = '';
         document.getElementById('feriado-form-title').textContent = 'Adicionar';
-        document.getElementById('feriado-form-submit-btn').textContent = 'Salvar';
+        submitBtn.textContent = 'Salvar';
     } else {
         Utils.showMessage(result.message, 'error');
     }
+
+    Utils.toggleButtonLoading(submitBtn, false);
 });
 
 /**

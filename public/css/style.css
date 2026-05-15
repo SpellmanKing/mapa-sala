@@ -915,6 +915,117 @@ display: flex; align-items: center; justify-content: space-between; margin-botto
     box-shadow: 0 1px 1px rgba(0,0,0,0.05);
 }
 
+/* --- 6. TOAST NOTIFICATIONS --- */
+#toast-container {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.toast {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 15px 20px;
+    border-radius: 8px;
+    background: var(--surface-color);
+    box-shadow: var(--shadow-lg);
+    color: var(--text-dark);
+    font-weight: 500;
+    min-width: 300px;
+    max-width: 400px;
+    animation: slideInRight 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    border-left: 5px solid;
+}
+
+.toast.fade-out {
+    animation: fadeOutRight 0.3s forwards;
+}
+
+.toast-success { border-color: #198754; }
+.toast-success i { color: #198754; font-size: 1.2rem; }
+
+.toast-error { border-color: #dc3545; }
+.toast-error i { color: #dc3545; font-size: 1.2rem; }
+
+.toast-info { border-color: #0dcaf0; }
+.toast-info i { color: #0dcaf0; font-size: 1.2rem; }
+
+.toast-message { flex-grow: 1; }
+
+.toast-close {
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    font-size: 1rem;
+    transition: color 0.2s;
+}
+
+.toast-close:hover { color: var(--text-dark); }
+
+@keyframes slideInRight {
+    from { transform: translateX(100%); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+}
+
+@keyframes fadeOutRight {
+    from { transform: translateX(0); opacity: 1; }
+    to { transform: translateX(100%); opacity: 0; }
+}
+
+/* --- 7. LOADERS E SPINNERS --- */
+.btn-loading {
+    position: relative;
+    pointer-events: none;
+    opacity: 0.8;
+}
+
+.btn-loading span {
+    visibility: hidden;
+}
+
+.btn-loading::after {
+    content: '\\f110'; /* FontAwesome Spinner */
+    font-family: 'Font Awesome 5 Free';
+    font-weight: 900;
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    animation: fa-spin 1s infinite linear;
+}
+
+.loading-message {
+    text-align: center;
+    padding: 30px;
+    color: var(--text-muted);
+    font-weight: 500;
+    font-size: 1.1rem;
+}
+
+.loading-message i {
+    margin-right: 10px;
+    color: var(--primary-color);
+}
+
+/* --- 8. VALIDAÇÕES VISUAIS --- */
+.input-error {
+    border-color: #dc3545 !important;
+    background-color: #fff8f8 !important;
+    animation: shake 0.4s;
+}
+
+@keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-5px); }
+    75% { transform: translateX(5px); }
+}
+
 /* --- MEDIA QUERIES PARA TELAS GIGANTES (TVs) --- */
 @media (min-width: 1920px) {
   html {

@@ -99,24 +99,28 @@ const setupInstrutorListeners = () => {
 const handleSaveInstrutor = async (e) => {
     e.preventDefault();
 
+    if (!Utils.validateForm('instrutor-form')) return;
+
+    const submitBtn = document.querySelector('#instrutor-form button[type="submit"]');
+    Utils.toggleButtonLoading(submitBtn, true);
+
     const data = {
         id: instrutorIdField.value || null,
         nome: document.getElementById('instrutor-nome').value,
-        // Simplificação: para o beta, o segmento principal é um campo de texto no modal
         segmento: 'Não Informado' 
     };
-    
-    // Futuramente, você adicionaria lógica para Segmento Principal e Habilidades Específicas
     
     const result = await Api.saveInstrutor(data);
 
     if (result.status === 'success') {
-        Utils.showMessage(result.message);
+        Utils.showMessage(result.message, 'success');
         closeModal('instrutor-modal');
         loadInstrutoresList(); // Recarrega a lista
     } else {
         Utils.showMessage(result.message, 'error');
     }
+
+    Utils.toggleButtonLoading(submitBtn, false);
 };
 
 /**

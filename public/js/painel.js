@@ -24,7 +24,9 @@ const initPainelVisual = async () => {
  * Carrega salas e tipos de sala, cacheando os dados base.
  */
 const loadBaseData = async () => {
-    const salasResult = await Api.fetchData('getAllSalas');
+    const salasResult = await Api.getAllSalas();
+    const tiposSalaResult = await Api.getTiposSala();
+
     if (salasResult.status === 'success') {
         allSalas = salasResult.data || [];
     } else {
@@ -36,7 +38,9 @@ const loadBaseData = async () => {
         // Popula o filtro de Tipo de Sala (RF07)
         const data = [{ idTipo_sala: 'todos', nome_tipo: 'Todos os Tipos' }, ...tiposSalaResult.data];
         const filterSelect = document.getElementById('tipo-sala-filter');
-        Utils.populateSelect(filterSelect, data, 'idTipo_sala', 'nome_tipo', false);
+        if (filterSelect) {
+            Utils.populateSelect(filterSelect, data, 'idTipo_sala', 'nome_tipo', false);
+        }
     }
 };
 

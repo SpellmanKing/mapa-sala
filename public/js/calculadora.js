@@ -160,9 +160,13 @@ const renderCalculationResult = (dataTermino) => {
 
     // 3. Exibir Métricas
     const metricsPanel = document.getElementById('metrics-panel');
-    metricsPanel.classList.remove('hidden');
-    document.getElementById('total-hours-value').textContent = cursoSelecionado.carga_horaria;
-    document.getElementById('duration-value').textContent = diffDays;
+    if (metricsPanel) metricsPanel.classList.remove('hidden');
+    
+    const thv = document.getElementById('total-hours-value');
+    if (thv) thv.textContent = cursoSelecionado.carga_horaria;
+    
+    const dv = document.getElementById('duration-value');
+    if (dv) dv.textContent = diffDays;
     
     // 4. Exibir Cronograma Gerado
     resultsContent.innerHTML = `
@@ -175,10 +179,17 @@ const renderCalculationResult = (dataTermino) => {
     
     // O painel calendário visual (calendar-visual) e a barra de progresso (progress-bar-container)
     // são mais complexos e seriam implementados em fases avançadas. Por enquanto, focamos nas métricas RF02.
-    document.getElementById('calendar-visual').classList.add('hidden');
-    document.getElementById('progress-bar-container').classList.add('hidden');
-    document.getElementById('progress-legend').classList.add('hidden');
-    document.getElementById('export-pdf-button').classList.add('hidden');
+    const calVis = document.getElementById('calendar-visual');
+    if (calVis) calVis.classList.add('hidden');
+    
+    const pbc = document.getElementById('progress-bar-container');
+    if (pbc) pbc.classList.add('hidden');
+    
+    const pl = document.getElementById('progress-legend');
+    if (pl) pl.classList.add('hidden');
+    
+    const epb = document.getElementById('export-pdf-button');
+    if (epb) epb.classList.add('hidden');
 };
 
 // Exporta a função de inicialização para ser usada pelo script.js
