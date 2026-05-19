@@ -1,0 +1,10 @@
+/* Base styles for the React frontend */
+
+:root {
+  color-scheme: light;
+}
+
+body {
+  margin: 0;
+}
+
