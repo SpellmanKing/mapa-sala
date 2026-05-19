@@ -17,7 +17,7 @@ export class AuthService {
     if (!ok) throw new UnauthorizedError('Credenciais inválidas');
 
     const token = jwt.sign({ sub: String(user.id), role: user.role }, JWT_SECRET, {
-      expiresIn: JWT_EXPIRES_IN
+      expiresIn: JWT_EXPIRES_IN as any
     });
 
     return {

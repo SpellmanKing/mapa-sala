@@ -16,3 +16,122 @@ model User {
   updatedAt DateTime @updatedAt
 }
 
+model StatusTurma {
+  id_status    Int      @id @default(autoincrement())
+  nome_status  String   @unique
+  turmas        Turma[]
+}
+
+model Turno {
+  id_turno     Int      @id @default(autoincrement())
+  nome_turno   String   @unique
+  turmas       Turma[]
+}
+
+model TipoFeriado {
+  id_tipo_feriado Int             @id @default(autoincrement())
+  nome_tipo       String          @unique
+  feriados_recessos FeriadosRecessos[]
+}
+
+model TipoSala {
+  idTipo_sala   Int      @id @default(autoincrement())
+  nome_tipo     String   @unique
+  salas         Sala[]
+  cursos         Curso[]
+}
+
+model Sala {
+  id_salas           Int       @id @default(autoincrement())
+  nome_sala          String
+  capacidade_maxima  Int
+  idTipo_sala        Int?
+  local              String?
+  recursos_especiais String?
+
+  tipoSala           TipoSala? @relation(fields: [idTipo_sala], references: [idTipo_sala])
+  agendamentos       Agendamento[]
+}
+
+model Curso {
+  id_cursos     Int      @id @default(autoincrement())
+  nome_curso    String   @unique
+  segmento      String
+  modalidade    String
+  carga_horaria Int
+  valor         Decimal  @db.Decimal(10, 2)
+  curso_tem     Boolean  @default(false)
+  bolsa_compativel Boolean @default(true)
+  idTipo_sala    Int?
+
+  tipoSala      TipoSala? @relation(fields: [idTipo_sala], references: [idTipo_sala])
+  turmas        Turma[]
+  instrutoresCursos InstrutoresCurso[]
+}
+
+
+model Instrutor {
+  id_instrutores      Int                 @id @default(autoincrement())
+  nome_instrutor      String             @unique
+  segmento_principal  String?
+  habilidades_extras  String?
+
+  turmas             Turma[]
+  instrutoresCursos InstrutoresCurso[]
+}
+
+model InstrutoresCurso {
+  id_instrutores_cursos Int @id @default(autoincrement())
+  id_instrutores        Int
+  id_cursos             Int
+
+  instrutor            Instrutor @relation(fields: [id_instrutores], references: [id_instrutores], onDelete: Cascade, onUpdate: Cascade)
+  curso                Curso     @relation(fields: [id_cursos], references: [id_cursos], onDelete: Cascade, onUpdate: Cascade)
+
+  @@unique([id_instrutores, id_cursos])
+}
+
+model Turma {
+  id_turmas       Int      @id @default(autoincrement())
+  id_cursos       Int
+  id_instrutores  Int?
+  codigo_turma   String   @unique
+  fk_id_status    Int      @default(1)
+  fk_id_turno     Int
+  data_inicio     DateTime
+  data_termino    DateTime?
+  total_alunos    Int
+  alunos_pagantes Int      @default(0)
+  alunos_bolsistas Int     @default(0)
+  observacoes     String?
+  eh_hibrida       Boolean  @default(false)
+
+  curso           Curso          @relation(fields: [id_cursos], references: [id_cursos], onDelete: Cascade, onUpdate: Cascade)
+  instrutor       Instrutor?    @relation(fields: [id_instrutores], references: [id_instrutores], onDelete: SetNull, onUpdate: Cascade)
+  statusTurma     StatusTurma   @relation(fields: [fk_id_status], references: [id_status])
+  turno           Turno          @relation(fields: [fk_id_turno], references: [id_turno])
+  agendamentos    Agendamento[]
+}
+
+model Agendamento {
+  id_agendamento Int      @id @default(autoincrement())
+  id_turmas       Int
+  id_salas        Int
+  data_aula       DateTime
+
+  turma           Turma   @relation(fields: [id_turmas], references: [id_turmas], onDelete: Cascade, onUpdate: Cascade)
+  sala            Sala    @relation(fields: [id_salas], references: [id_salas], onDelete: Restrict, onUpdate: Cascade)
+
+  @@unique([id_salas, data_aula])
+  @@unique([id_turmas, data_aula])
+}
+
+model FeriadosRecessos {
+  id_feriado        Int      @id @default(autoincrement())
+  data_feriado      DateTime @unique
+  descricao        String
+  fk_id_tipo_feriado Int
+
+  tipoFeriado      TipoFeriado @relation(fields: [fk_id_tipo_feriado], references: [id_tipo_feriado], onDelete: Restrict, onUpdate: Cascade)
+}
+

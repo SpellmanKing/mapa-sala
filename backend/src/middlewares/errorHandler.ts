@@ -13,14 +13,12 @@ export function errorHandler(err: unknown, req: Request, res: Response, _next: N
 
   const status =
     typeof err === 'object' && err !== null && 'statusCode' in err
-      ? // @ts-expect-error - runtime check
-        Number(err.statusCode)
+      ? Number(err.statusCode)
       : 500;
 
   const message =
     typeof err === 'object' && err !== null && 'message' in err
-      ? // @ts-expect-error - runtime check
-        String(err.message)
+      ? String(err.message)
       : 'Internal Server Error';
 
   const payload: ApiErrorPayload = {
@@ -32,4 +30,3 @@ export function errorHandler(err: unknown, req: Request, res: Response, _next: N
 
   res.status(status).json(payload);
 }
-
