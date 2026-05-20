@@ -283,4 +283,3 @@ const btnDanger: React.CSSProperties = {
   borderRadius: 10,
   cursor: 'pointer'
 };
-
