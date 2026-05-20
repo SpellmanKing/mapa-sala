@@ -19,7 +19,10 @@ type CursoPayload = {
   nome: string;
   instrutorId: string;
   ambienteId: string;
+  diasSemanaLetiva: string[]; // ['1'..'5']
+  modalidade: 'Presencial' | 'Semi-Presencial' | 'Remoto';
 };
+
 
 type Curso = CursoPayload;
 
@@ -102,14 +105,18 @@ export function ManageSystemPage() {
   const allAmbientes = useMemo(() => [...SALAS, ...LABS_INFO, ...LABS_IMAGE, ...AUDITORIO], []);
 
   const [cursos, setCursos] = useState<Curso[]>(() => readCursos());
+
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState<Curso | null>(null);
 
   const [form, setForm] = useState<CursoPayload>({
     nome: '',
     instrutorId: INSTRUTORES[0]?.id ?? '',
-    ambienteId: allAmbientes[0]?.id ?? ''
+    ambienteId: allAmbientes[0]?.id ?? '',
+    diasSemanaLetiva: ['1', '3', '5'],
+    modalidade: 'Presencial'
   });
+
 
   const [error, setError] = useState<string | null>(null);
 
@@ -119,8 +126,11 @@ export function ManageSystemPage() {
     setForm({
       nome: '',
       instrutorId: INSTRUTORES[0]?.id ?? '',
-      ambienteId: allAmbientes[0]?.id ?? ''
+      ambienteId: allAmbientes[0]?.id ?? '',
+      diasSemanaLetiva: ['1', '3', '5'],
+      modalidade: 'Presencial'
     });
+
     setModalOpen(true);
   }
 
@@ -131,8 +141,11 @@ export function ManageSystemPage() {
       id: curso.id,
       nome: curso.nome,
       instrutorId: curso.instrutorId,
-      ambienteId: curso.ambienteId
+      ambienteId: curso.ambienteId,
+      diasSemanaLetiva: curso.diasSemanaLetiva,
+      modalidade: curso.modalidade
     });
+
     setModalOpen(true);
   }
 
@@ -140,10 +153,14 @@ export function ManageSystemPage() {
     if (!payload.nome.trim()) return 'Nome do curso é obrigatório.';
     if (!payload.instrutorId) return 'Instrutor é obrigatório.';
     if (!payload.ambienteId) return 'Ambiente é obrigatório.';
+    if (!payload.diasSemanaLetiva || payload.diasSemanaLetiva.length === 0) return 'Dias da semana letiva são obrigatórios.';
+    if (!payload.modalidade) return 'Modalidade é obrigatória.';
     return null;
   }
 
+
   function save() {
+
     const v = validate(form);
     if (v) {
       setError(v);
@@ -197,15 +214,18 @@ export function ManageSystemPage() {
       </div>
 
       <div style={{ marginTop: 18, overflowX: 'auto' }}>
-        <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 720 }}>
+        <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 980 }}>
           <thead>
             <tr style={{ background: '#f3f4f6' }}>
               <th style={thStyle}>Nome do Curso</th>
               <th style={thStyle}>Instrutor</th>
               <th style={thStyle}>Ambiente</th>
+              <th style={thStyle}>Dias da semana letiva</th>
+              <th style={thStyle}>Modalidade</th>
               <th style={thStyle}>Ações</th>
             </tr>
           </thead>
+
           <tbody>
             {cursos.length === 0 ? (
               <tr>
@@ -219,6 +239,8 @@ export function ManageSystemPage() {
                   <td style={tdStyle}>{c.nome}</td>
                   <td style={tdStyle}>{getNomeInstrutor(c.instrutorId)}</td>
                   <td style={tdStyle}>{getNomeAmbiente(c.ambienteId)}</td>
+                  <td style={tdStyle}>{c.diasSemanaLetiva?.join(', ')}</td>
+                  <td style={tdStyle}>{c.modalidade}</td>
                   <td style={tdStyle}>
                     <div style={{ display: 'flex', gap: 8 }}>
                       <button style={btnSecondary} onClick={() => openEdit(c)}>
@@ -231,6 +253,7 @@ export function ManageSystemPage() {
                   </td>
                 </tr>
               ))
+
             )}
           </tbody>
         </table>

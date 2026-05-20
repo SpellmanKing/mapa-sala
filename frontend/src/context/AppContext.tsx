@@ -39,11 +39,12 @@ interface AppContextData {
 const AppContext = createContext<AppContextData | undefined>(undefined);
 
 export function AppProvider({ children }: { children: ReactNode }) {
-  // Mock Initial Data
+  // Seed inicial (pode ser sobrescrito via localStorage no Manage)
   const [cursos, setCursos] = useState<Curso[]>([
     { id: 'c-1', nome: 'Técnico em Administração', cargaHoraria: 800, diasSemana: ['1', '3', '5'], modalidade: 'Presencial' },
     { id: 'c-2', nome: 'Lógica de Programação', cargaHoraria: 40, diasSemana: ['2', '4'], modalidade: 'Remoto' },
   ]);
+
 
   const [salas, setSalas] = useState<Sala[]>([
     { id: 's-1', nome: 'Sala Inovadora S-1', capacidade: 28, tipo: 'Inovadora' },

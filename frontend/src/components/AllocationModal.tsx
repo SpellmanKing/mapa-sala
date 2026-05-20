@@ -18,7 +18,10 @@ export type CursoPayload = {
   nome: string;
   instrutorId: string;
   ambienteId: string;
+  diasSemanaLetiva: string[];
+  modalidade: 'Presencial' | 'Semi-Presencial' | 'Remoto';
 };
+
 
 type Props = {
   open: boolean;
@@ -156,7 +159,73 @@ export function AllocationModal({
               ))}
             </select>
           </div>
+
+          <div style={{ gridColumn: 'span 2' }}>
+            <label style={{ display: 'block', fontSize: 13, fontWeight: 600, marginBottom: 6 }}>
+              Dias da semana letiva
+            </label>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+              {[
+                { id: '1', label: 'Segunda' },
+                { id: '2', label: 'Terça' },
+                { id: '3', label: 'Quarta' },
+                { id: '4', label: 'Quinta' },
+                { id: '5', label: 'Sexta' }
+              ].map((dia) => {
+                const checked = form.diasSemanaLetiva.includes(dia.id);
+                return (
+                  <label
+                    key={dia.id}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 6,
+                      padding: '8px 12px',
+                      border: checked ? '2px solid #2563eb' : '1px solid #e5e7eb',
+                      borderRadius: 8,
+                      cursor: 'pointer',
+                      background: checked ? '#eff6ff' : 'white',
+                      fontSize: 13,
+                      fontWeight: 500,
+                      userSelect: 'none'
+                    }}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={checked}
+                      onChange={() => {
+                        setForm((prev) => {
+                          const prevSet = new Set(prev.diasSemanaLetiva);
+                          if (prevSet.has(dia.id)) prevSet.delete(dia.id);
+                          else prevSet.add(dia.id);
+                          return { ...prev, diasSemanaLetiva: Array.from(prevSet) };
+                        });
+                      }}
+                      style={{ accentColor: '#2563eb' }}
+                    />
+                    {dia.label}
+                  </label>
+                );
+              })}
+            </div>
+          </div>
+
+          <div style={{ gridColumn: 'span 2' }}>
+            <label style={{ display: 'block', fontSize: 13, fontWeight: 600, marginBottom: 6 }}>
+              Modalidade
+            </label>
+            <select
+              value={form.modalidade}
+              onChange={(e) => setForm((prev) => ({ ...prev, modalidade: e.target.value as CursoPayload['modalidade'] }))}
+              style={inputStyle}
+            >
+              <option value="Presencial">Presencial</option>
+              <option value="Semi-Presencial">Semi-Presencial</option>
+              <option value="Remoto">Remoto</option>
+            </select>
+          </div>
         </div>
+
 
         {error ? (
           <div style={{ marginTop: 12, background: '#fef2f2', border: '1px solid #fecaca', padding: 10, borderRadius: 12 }}>

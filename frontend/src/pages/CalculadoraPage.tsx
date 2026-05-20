@@ -11,7 +11,8 @@ const DIAS = [
 
 export function CalculadoraPage() {
   const [cargaHoraria, setCargaHoraria] = useState('');
-  const [modalidade, setModalidade] = useState('Presencial');
+
+
   const [diasSelecionados, setDiasSelecionados] = useState<string[]>([]);
   const [dataInicio, setDataInicio] = useState('');
   const [resultado, setResultado] = useState<{
@@ -95,17 +96,7 @@ export function CalculadoraPage() {
             />
           </div>
 
-          <div style={{ marginBottom: 16 }}>
-            <label style={labelStyle}>Modalidade</label>
-            <select
-              value={modalidade}
-              onChange={e => setModalidade(e.target.value)}
-              style={inputStyle}
-            >
-              <option value="Presencial">Presencial</option>
-              <option value="Remoto">Remoto</option>
-            </select>
-          </div>
+
 
           <div style={{ marginBottom: 16 }}>
             <label style={labelStyle}>Dias da Semana Letivos</label>
@@ -212,10 +203,7 @@ export function CalculadoraPage() {
                   <div style={cardLabelStyle}>Carga Horária</div>
                   <div style={cardValueStyle}>{cargaHoraria}h</div>
                 </div>
-                <div style={cardStyle}>
-                  <div style={cardLabelStyle}>Modalidade</div>
-                  <div style={{ ...cardValueStyle, color: modalidade === 'Remoto' ? '#f59e0b' : '#2563eb' }}>{modalidade}</div>
-                </div>
+
               </div>
             </div>
           ) : (

@@ -5,7 +5,9 @@ import { useAppContext } from '../context/AppContext';
 export function PainelPage() {
   const { salas, agendamentos, cursos, setAgendamentos } = useAppContext();
 
-  const [currentDate, setCurrentDate] = useState(new Date(2026, 4, 1));
+  const [currentDate, setCurrentDate] = useState(() => new Date());
+
+
   const [filtroTurno, setFiltroTurno] = useState('Todos');
   const [filtroTipo, setFiltroTipo] = useState('Todos');
 
@@ -13,7 +15,8 @@ export function PainelPage() {
   const prevWeek = () => setCurrentDate(new Date(currentDate.getTime() - 7 * 24 * 60 * 60 * 1000));
 
   const getWeekDays = (startDate: Date) => {
-    const days = [];
+    const days: Date[] = [];
+
     const date = new Date(startDate);
     const day = date.getDay();
     const diff = date.getDate() - day + (day === 0 ? -6 : 1);
@@ -75,14 +78,16 @@ export function PainelPage() {
     const hours = cursoSelecionado.cargaHoraria;
     const classesNeeded = Math.ceil(hours / 4); 
     
-    let currentDateObj = new Date(novoAgendamento.dataInicio);
-    currentDateObj.setMinutes(currentDateObj.getMinutes() + currentDateObj.getTimezoneOffset());
-    
+    const [yyyyS, mmS, ddS] = novoAgendamento.dataInicio.split('-').map(Number);
+    let currentDateObj = new Date(yyyyS, mmS - 1, ddS);
+
     let classesScheduled = 0;
-    const novosBlocos = [];
-    
+    const novosBlocos: typeof agendamentos[number][] = [];
+
+
     while (classesScheduled < classesNeeded) {
       const dayOfWeek = currentDateObj.getDay().toString();
+
       if (cursoSelecionado.diasSemana.includes(dayOfWeek)) {
         classesScheduled++;
         const yyyy = currentDateObj.getFullYear();
@@ -213,7 +218,10 @@ export function PainelPage() {
 
                 {days.map((day, i) => {
                   const dateStr = `${day.getFullYear()}-${String(day.getMonth() + 1).padStart(2, '0')}-${String(day.getDate()).padStart(2, '0')}`;
-                  const agendamentosSala = agendamentos.filter(a => a.salaId === sala.id && a.date === dateStr && (filtroTurno === 'Todos' || a.turno === filtroTurno));
+                  const agendamentosSala = agendamentos.filter(
+                    a => a.salaId === sala.id && a.date === dateStr && (filtroTurno === 'Todos' || a.turno === filtroTurno)
+                  );
+
 
                   return (
                     <div 
