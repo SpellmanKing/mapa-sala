@@ -41,6 +41,7 @@ export const CalculadoraService = {
 };
 
 export const TurmaService = {
+  getAll: () => api.get('/turmas').then(res => res.data),
   alocar: (data: { id_cursos: number, id_salas: number, data_inicio: string, fk_id_turno: number, total_alunos: number, codigo_turma: string }) => 
     api.post('/turmas/alocar', data).then(res => res.data),
   

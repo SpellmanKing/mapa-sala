@@ -25,14 +25,16 @@ export interface Instrutor {
   nome: string;
 }
 
-export interface Agendamento {
+export interface TurmaDetalhada {
   id: string;
   salaId: string;
-  date: string; // YYYY-MM-DD
-  cursoId: string;
+  cursoNome: string;
+  instrutorNome: string;
   turno: string;
-  cor: string;
-  modalidade: Modality;
+  dataInicio: string;
+  dataFim: string;
+  codigo: string;
+  modalidade: string;
 }
 
 interface AppContextData {
@@ -44,9 +46,9 @@ interface AppContextData {
   instrutores: Instrutor[];
   setInstrutores: React.Dispatch<React.SetStateAction<Instrutor[]>>;
   refreshInstrutores: () => void;
-  agendamentos: Agendamento[];
-  setAgendamentos: React.Dispatch<React.SetStateAction<Agendamento[]>>;
-  refreshAgendamentos: () => void;
+  turmas: TurmaDetalhada[];
+  setTurmas: React.Dispatch<React.SetStateAction<TurmaDetalhada[]>>;
+  refreshTurmas: () => void;
 }
 
 const AppContext = createContext<AppContextData | undefined>(undefined);
@@ -55,7 +57,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [cursos, setCursos] = useState<Curso[]>([]);
   const [salas, setSalas] = useState<Sala[]>([]);
   const [instrutores, setInstrutores] = useState<Instrutor[]>([]);
-  const [agendamentos, setAgendamentos] = useState<Agendamento[]>([]);
+  const [turmas, setTurmas] = useState<TurmaDetalhada[]>([]);
 
   const refreshInstrutores = useCallback(() => {
     InstrutorService.getAll().then((data: any) => {
@@ -82,18 +84,24 @@ export function AppProvider({ children }: { children: ReactNode }) {
     });
   }, []);
 
-  const refreshAgendamentos = useCallback(() => {
-    TurmaService.getAgendamentos().then((data: any) => {
-      const mappedAgendamentos = data.map((ag: any) => ({
-        id: ag.id_agendamento.toString(),
-        salaId: ag.id_salas.toString(),
-        date: ag.data_aula.split('T')[0],
-        cursoId: ag.turma.id_cursos.toString(),
-        turno: 'Manhã', 
-        cor: '#0511F2',
-        modalidade: ag.turma.curso?.modalidade as Modality || 'Presencial'
-      }));
-      setAgendamentos(mappedAgendamentos);
+  const refreshTurmas = useCallback(() => {
+    TurmaService.getAll().then((data: any) => {
+      const mapped = data.map((t: any) => {
+        // Encontrar a sala a partir do primeiro agendamento, se houver
+        const salaId = t.agendamentos && t.agendamentos.length > 0 ? t.agendamentos[0].id_salas.toString() : '';
+        return {
+          id: t.id_turmas.toString(),
+          salaId: salaId,
+          cursoNome: t.curso?.nome_curso || 'Curso Desconhecido',
+          instrutorNome: t.instrutor?.nome_instrutor || 'Sem Instrutor',
+          turno: t.turno?.nome_turno || 'Manhã',
+          dataInicio: t.data_inicio ? t.data_inicio.split('T')[0] : '',
+          dataFim: t.data_termino ? t.data_termino.split('T')[0] : '',
+          codigo: t.codigo_turma,
+          modalidade: t.curso?.modalidade || 'Presencial'
+        };
+      });
+      setTurmas(mapped);
     });
   }, []);
 
@@ -112,11 +120,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
     });
 
     refreshInstrutores();
-    refreshAgendamentos();
-  }, [refreshCursos, refreshInstrutores, refreshAgendamentos]);
+    refreshTurmas();
+  }, [refreshCursos, refreshInstrutores, refreshTurmas]);
 
   return (
-    <AppContext.Provider value={{ cursos, setCursos, refreshCursos, salas, setSalas, instrutores, setInstrutores, refreshInstrutores, agendamentos, setAgendamentos, refreshAgendamentos }}>
+    <AppContext.Provider value={{ cursos, setCursos, refreshCursos, salas, setSalas, instrutores, setInstrutores, refreshInstrutores, turmas, setTurmas, refreshTurmas }}>
       {children}
     </AppContext.Provider>
   );

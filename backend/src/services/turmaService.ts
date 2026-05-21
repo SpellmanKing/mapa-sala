@@ -9,7 +9,13 @@ export class TurmaService {
     return prisma.turma.findMany({
       include: {
         curso: true,
-        agendamentos: true
+        instrutor: true,
+        turno: true,
+        agendamentos: {
+          include: {
+            sala: true
+          }
+        }
       }
     });
   }
