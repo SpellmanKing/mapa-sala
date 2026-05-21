@@ -7,7 +7,12 @@ import { errorHandler } from './middlewares/errorHandler.js';
 import { notFoundHandler } from './middlewares/notFoundHandler.js';
 
 import { authRouter } from './controllers/authController.js';
-
+import { cursoRouter } from './controllers/cursoController.js';
+import { salaRouter } from './controllers/salaController.js';
+import { instrutorRouter } from './controllers/instrutorController.js';
+import { feriadoRouter } from './controllers/feriadoController.js';
+import { calculadoraRouter } from './controllers/calculadoraController.js';
+import { turmaRouter } from './controllers/turmaController.js';
 export function createApp() {
   const app = express();
 
@@ -28,7 +33,12 @@ export function createApp() {
   app.get('/health', (_req, res) => res.status(200).json({ ok: true }));
 
   app.use('/auth', authRouter);
-
+  app.use('/cursos', cursoRouter);
+  app.use('/salas', salaRouter);
+  app.use('/instrutores', instrutorRouter);
+  app.use('/feriados', feriadoRouter);
+  app.use('/calcular_cronograma', calculadoraRouter);
+  app.use('/turmas', turmaRouter);
   app.use(notFoundHandler);
   app.use(errorHandler);
 
