@@ -63,6 +63,9 @@ model Curso {
   curso_tem     Boolean  @default(false)
   bolsa_compativel Boolean @default(true)
   idTipo_sala    Int?
+  codigo_turma_padrao String?
+  turno_padrao        String?
+  dias_letivos_padrao String?
 
   tipoSala      TipoSala? @relation(fields: [idTipo_sala], references: [idTipo_sala])
   turmas        Turma[]

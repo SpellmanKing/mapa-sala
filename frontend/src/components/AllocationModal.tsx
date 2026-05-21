@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo } from 'react';
-import { Sala, Instrutor, Modality } from '../context/AppContext';
+import { TipoSala, Instrutor, Modality } from '../context/AppContext';
 
 export type CursoPayload = {
   id?: string;
@@ -7,6 +7,8 @@ export type CursoPayload = {
   instrutorId: string;
   ambienteId: string;
   diasSemanaLetiva: string[];
+  codigoTurmaPadrao: string;
+  turnoPadrao: string;
   modalidade: Modality;
 };
 
@@ -18,7 +20,7 @@ type Props = {
   onSave: () => void;
   form: CursoPayload;
   setForm: React.Dispatch<React.SetStateAction<CursoPayload>>;
-  ambientes: Sala[];
+  ambientes: TipoSala[];
   instrutores: Instrutor[];
 };
 
@@ -142,7 +144,7 @@ export function AllocationModal({
               <option value="" disabled>Selecione</option>
               {ambientesSorted.map((a) => (
                 <option key={a.id} value={a.id}>
-                  {a.nome} ({a.tipo})
+                  {a.nome}
                 </option>
               ))}
             </select>
@@ -199,6 +201,33 @@ export function AllocationModal({
           </div>
 
           <div style={{ gridColumn: 'span 2' }}>
+            <label style={{ display: 'block', fontSize: 13, fontWeight: 600, marginBottom: 6 }}>
+              Código da Turma (Padrão)
+            </label>
+            <input
+              value={form.codigoTurmaPadrao}
+              onChange={(e) => setForm((prev) => ({ ...prev, codigoTurmaPadrao: e.target.value }))}
+              placeholder="Ex: 2025.09.75"
+              style={inputStyle}
+            />
+          </div>
+
+          <div>
+            <label style={{ display: 'block', fontSize: 13, fontWeight: 600, marginBottom: 6 }}>
+              Turno Padrão
+            </label>
+            <select
+              value={form.turnoPadrao}
+              onChange={(e) => setForm((prev) => ({ ...prev, turnoPadrao: e.target.value }))}
+              style={inputStyle}
+            >
+              <option value="Manhã">Manhã</option>
+              <option value="Tarde">Tarde</option>
+              <option value="Noite">Noite</option>
+            </select>
+          </div>
+
+          <div>
             <label style={{ display: 'block', fontSize: 13, fontWeight: 600, marginBottom: 6 }}>
               Modalidade
             </label>

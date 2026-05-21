@@ -3,7 +3,9 @@ import { HttpError } from '../utils/errors.js';
 
 export class InstrutorService {
   async getAll() {
-    return prisma.instrutor.findMany();
+    return prisma.instrutor.findMany({
+      orderBy: { nome_instrutor: 'asc' }
+    });
   }
 
   async getById(id: number) {

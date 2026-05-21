@@ -14,6 +14,7 @@ export const CursoService = {
 
 export const SalaService = {
   getAll: () => api.get('/salas').then(res => res.data),
+  getTipos: () => api.get('/salas/tipos').then(res => res.data),
 };
 
 export const InstrutorService = {

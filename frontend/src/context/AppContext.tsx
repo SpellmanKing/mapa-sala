@@ -8,6 +8,8 @@ export interface Curso {
   nome: string;
   cargaHoraria: number;
   diasSemana: string[]; // ['1', '2', '3'] = Mon, Tue, Wed
+  codigoTurmaPadrao?: string;
+  turnoPadrao?: string;
   modalidade: Modality;
   instrutorId?: string;
   ambienteId?: string;
@@ -37,6 +39,11 @@ export interface TurmaDetalhada {
   modalidade: string;
 }
 
+export interface TipoSala {
+  id: string;
+  nome: string;
+}
+
 interface AppContextData {
   cursos: Curso[];
   setCursos: React.Dispatch<React.SetStateAction<Curso[]>>;
@@ -49,6 +56,8 @@ interface AppContextData {
   turmas: TurmaDetalhada[];
   setTurmas: React.Dispatch<React.SetStateAction<TurmaDetalhada[]>>;
   refreshTurmas: () => void;
+  tipoSalas: TipoSala[];
+  refreshTipoSalas: () => void;
 }
 
 const AppContext = createContext<AppContextData | undefined>(undefined);
@@ -58,6 +67,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [salas, setSalas] = useState<Sala[]>([]);
   const [instrutores, setInstrutores] = useState<Instrutor[]>([]);
   const [turmas, setTurmas] = useState<TurmaDetalhada[]>([]);
+  const [tipoSalas, setTipoSalas] = useState<TipoSala[]>([]);
 
   const refreshInstrutores = useCallback(() => {
     InstrutorService.getAll().then((data: any) => {
@@ -69,13 +79,25 @@ export function AppProvider({ children }: { children: ReactNode }) {
     });
   }, []);
 
+  const refreshTipoSalas = useCallback(() => {
+    SalaService.getTipos().then((data: any) => {
+      const mapped = data.map((t: any) => ({
+        id: t.idTipo_sala.toString(),
+        nome: t.nome_tipo
+      }));
+      setTipoSalas(mapped);
+    });
+  }, []);
+
   const refreshCursos = useCallback(() => {
     CursoService.getAll().then((data: any) => {
       const mappedCursos = data.map((c: any) => ({
         id: c.id_cursos.toString(),
         nome: c.nome_curso,
         cargaHoraria: c.carga_horaria,
-        diasSemana: ['1','2','3','4','5'], 
+        diasSemana: c.dias_letivos_padrao ? c.dias_letivos_padrao.split(',') : ['1','2','3','4','5'], 
+        codigoTurmaPadrao: c.codigo_turma_padrao,
+        turnoPadrao: c.turno_padrao,
         modalidade: c.modalidade as Modality,
         instrutorId: '', 
         ambienteId: c.idTipo_sala ? c.idTipo_sala.toString() : ''
@@ -107,6 +129,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     refreshCursos();
+    refreshTipoSalas();
 
     // Carregar Salas
     SalaService.getAll().then((data: any) => {
@@ -121,10 +144,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
     refreshInstrutores();
     refreshTurmas();
-  }, [refreshCursos, refreshInstrutores, refreshTurmas]);
+  }, [refreshCursos, refreshInstrutores, refreshTurmas, refreshTipoSalas]);
 
   return (
-    <AppContext.Provider value={{ cursos, setCursos, refreshCursos, salas, setSalas, instrutores, setInstrutores, refreshInstrutores, turmas, setTurmas, refreshTurmas }}>
+    <AppContext.Provider value={{ cursos, setCursos, refreshCursos, salas, setSalas, instrutores, setInstrutores, refreshInstrutores, turmas, setTurmas, refreshTurmas, tipoSalas, refreshTipoSalas }}>
       {children}
     </AppContext.Provider>
   );

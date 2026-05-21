@@ -7,14 +7,14 @@ import { CursoService, InstrutorService } from '../api/client';
 type Tab = 'cursos' | 'instrutores' | 'salas';
 
 export function ManageSystemPage() {
-  const { cursos, instrutores, salas, refreshCursos, refreshInstrutores } = useAppContext();
+  const { cursos, instrutores, salas, tipoSalas, refreshCursos, refreshInstrutores } = useAppContext();
   const [activeTab, setActiveTab] = useState<Tab>('cursos');
 
   // --- Estados do Curso ---
   const [cursoModalOpen, setCursoModalOpen] = useState(false);
   const [editingCurso, setEditingCurso] = useState<Curso | null>(null);
   const [cursoForm, setCursoForm] = useState<CursoPayload>({
-    nome: '', instrutorId: '', ambienteId: '', diasSemanaLetiva: ['1', '3', '5'], modalidade: 'Presencial'
+    nome: '', instrutorId: '', ambienteId: '', diasSemanaLetiva: ['1', '3', '5'], codigoTurmaPadrao: '', turnoPadrao: 'Manhã', modalidade: 'Presencial'
   });
   const [cursoError, setCursoError] = useState<string | null>(null);
 
@@ -28,14 +28,14 @@ export function ManageSystemPage() {
   function openCursoCreate() {
     setEditingCurso(null);
     setCursoError(null);
-    setCursoForm({ nome: '', instrutorId: instrutores[0]?.id ?? '', ambienteId: salas[0]?.id ?? '', diasSemanaLetiva: ['1', '3', '5'], modalidade: 'Presencial' });
+    setCursoForm({ nome: '', instrutorId: instrutores[0]?.id ?? '', ambienteId: tipoSalas[0]?.id ?? '', diasSemanaLetiva: ['1', '3', '5'], codigoTurmaPadrao: '', turnoPadrao: 'Manhã', modalidade: 'Presencial' });
     setCursoModalOpen(true);
   }
 
   function openCursoEdit(curso: Curso) {
     setEditingCurso(curso);
     setCursoError(null);
-    setCursoForm({ id: curso.id, nome: curso.nome, instrutorId: curso.instrutorId ?? '', ambienteId: curso.ambienteId ?? '', diasSemanaLetiva: curso.diasSemanaLetiva, modalidade: curso.modalidade });
+    setCursoForm({ id: curso.id, nome: curso.nome, instrutorId: curso.instrutorId ?? '', ambienteId: curso.ambienteId ?? '', diasSemanaLetiva: curso.diasSemana ?? ['1', '3', '5'], codigoTurmaPadrao: curso.codigoTurmaPadrao ?? '', turnoPadrao: curso.turnoPadrao ?? 'Manhã', modalidade: curso.modalidade });
     setCursoModalOpen(true);
   }
 
@@ -53,7 +53,10 @@ export function ManageSystemPage() {
         valor: 0,
         curso_tem: false,
         bolsa_compativel: true,
-        idTipo_sala: Number(cursoForm.ambienteId) || undefined
+        idTipo_sala: Number(cursoForm.ambienteId) || undefined,
+        codigo_turma_padrao: cursoForm.codigoTurmaPadrao,
+        turno_padrao: cursoForm.turnoPadrao,
+        dias_letivos_padrao: cursoForm.diasSemanaLetiva.join(',')
       };
 
       if (editingCurso?.id) {
@@ -112,7 +115,7 @@ export function ManageSystemPage() {
 
   // Helpers
   function getNomeInstrutor(id?: string) { return instrutores.find(i => i.id === id)?.nome ?? id ?? '-'; }
-  function getNomeAmbiente(id?: string) { return salas.find(a => a.id === id)?.nome ?? id ?? '-'; }
+  function getNomeAmbiente(id?: string) { return tipoSalas.find(a => a.id === id)?.nome ?? id ?? '-'; }
 
   return (
     <div style={{ padding: 24, fontFamily: 'system-ui, -apple-system, Segoe UI, Roboto, Arial' }}>
@@ -225,7 +228,7 @@ export function ManageSystemPage() {
         onSave={saveCurso}
         form={cursoForm}
         setForm={setCursoForm}
-        ambientes={salas}
+        ambientes={tipoSalas}
         instrutores={instrutores}
       />
 

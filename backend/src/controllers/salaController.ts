@@ -11,6 +11,11 @@ salaRouter.get('/', asyncHandler(async (req: Request, res: Response) => {
   res.json(salas);
 }));
 
+salaRouter.get('/tipos', asyncHandler(async (req: Request, res: Response) => {
+  const tipos = await salaService.getTiposSala();
+  res.json(tipos);
+}));
+
 salaRouter.get('/:id', asyncHandler(async (req: Request, res: Response) => {
   const sala = await salaService.getById(Number(req.params.id));
   res.json(sala);

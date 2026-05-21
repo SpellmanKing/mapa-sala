@@ -10,6 +10,12 @@ export class SalaService {
     });
   }
 
+  async getTiposSala() {
+    return prisma.tipoSala.findMany({
+      orderBy: { nome_tipo: 'asc' }
+    });
+  }
+
   async getById(id: number) {
     const sala = await prisma.sala.findUnique({
       where: { id_salas: id },

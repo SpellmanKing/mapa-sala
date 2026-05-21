@@ -64,6 +64,22 @@ export function PainelPage() {
     diasSemana: [] as string[]
   });
 
+  const handleCursoChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const cid = e.target.value;
+    const curso = cursos.find(c => c.id === cid);
+    if (curso) {
+      setNovoAgendamento(prev => ({
+        ...prev,
+        cursoId: cid,
+        codigoTurma: curso.codigoTurmaPadrao || '',
+        turno: curso.turnoPadrao || 'Manhã',
+        diasSemana: curso.diasSemana && curso.diasSemana.length > 0 ? curso.diasSemana : ['1', '2', '3', '4', '5']
+      }));
+    } else {
+      setNovoAgendamento(prev => ({ ...prev, cursoId: cid }));
+    }
+  };
+
   const DIAS_SEMANA_OPCOES = [
     { value: '1', label: 'Seg' },
     { value: '2', label: 'Ter' },
@@ -292,7 +308,7 @@ export function PainelPage() {
                   <label className="block text-sm font-semibold text-gray-700 mb-1">Curso</label>
                   <select 
                     value={novoAgendamento.cursoId}
-                    onChange={e => setNovoAgendamento({...novoAgendamento, cursoId: e.target.value})}
+                    onChange={handleCursoChange}
                     className="w-full border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-[var(--color-primary)]/20 outline-none"
                     required
                   >
