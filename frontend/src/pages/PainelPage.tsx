@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import { Calendar as CalendarIcon, ChevronLeft, ChevronRight, Filter, Search, Plus, X } from 'lucide-react';
 import { useAppContext } from '../context/AppContext';
+import { TurmaService } from '../api/client';
 
 export function PainelPage() {
-  const { salas, agendamentos, cursos, setAgendamentos } = useAppContext();
+  const { salas, agendamentos, cursos, setAgendamentos, refreshAgendamentos } = useAppContext();
 
   const [currentDate, setCurrentDate] = useState(() => new Date());
 
@@ -69,49 +70,28 @@ export function PainelPage() {
   const [modalOpen, setModalOpen] = useState(false);
   const [novoAgendamento, setNovoAgendamento] = useState({ cursoId: '', salaId: '', dataInicio: '', turno: 'Manhã' });
 
-  const handleCriarAgendamento = (e: React.FormEvent) => {
+  const handleCriarAgendamento = async (e: React.FormEvent) => {
     e.preventDefault();
     const cursoSelecionado = cursos.find(c => c.id === novoAgendamento.cursoId);
     if (!cursoSelecionado || !novoAgendamento.dataInicio || !novoAgendamento.salaId) return;
 
-    // Lógica da Calculadora invocada nos bastidores
-    const hours = cursoSelecionado.cargaHoraria;
-    const classesNeeded = Math.ceil(hours / 4); 
-    
-    const [yyyyS, mmS, ddS] = novoAgendamento.dataInicio.split('-').map(Number);
-    let currentDateObj = new Date(yyyyS, mmS - 1, ddS);
+    try {
+      await TurmaService.alocar({
+        id_cursos: Number(cursoSelecionado.id),
+        id_salas: Number(novoAgendamento.salaId),
+        data_inicio: novoAgendamento.dataInicio,
+        fk_id_turno: novoAgendamento.turno === 'Manhã' ? 1 : novoAgendamento.turno === 'Tarde' ? 2 : 3,
+        total_alunos: 30, // Padrão temporário
+        codigo_turma: `T-${Math.floor(Math.random() * 10000)}`
+      });
 
-    let classesScheduled = 0;
-    const novosBlocos: typeof agendamentos[number][] = [];
-
-
-    while (classesScheduled < classesNeeded) {
-      const dayOfWeek = currentDateObj.getDay().toString();
-
-      if (cursoSelecionado.diasSemana.includes(dayOfWeek)) {
-        classesScheduled++;
-        const yyyy = currentDateObj.getFullYear();
-        const mm = String(currentDateObj.getMonth() + 1).padStart(2, '0');
-        const dd = String(currentDateObj.getDate()).padStart(2, '0');
-        
-        novosBlocos.push({
-          id: `ag-${Date.now()}-${classesScheduled}`,
-          salaId: novoAgendamento.salaId,
-          date: `${yyyy}-${mm}-${dd}`,
-          cursoId: cursoSelecionado.id,
-          turno: novoAgendamento.turno,
-          cor: cursoSelecionado.modalidade === 'Remoto' ? 'var(--color-accent)' : 'var(--color-primary)',
-          modalidade: cursoSelecionado.modalidade
-        });
-      }
-      if (classesScheduled < classesNeeded) {
-        currentDateObj.setDate(currentDateObj.getDate() + 1);
-      }
+      refreshAgendamentos();
+      setModalOpen(false);
+      setNovoAgendamento({ cursoId: '', salaId: '', dataInicio: '', turno: 'Manhã' });
+    } catch (err) {
+      console.error(err);
+      alert('Erro ao alocar turma. Verifique o console.');
     }
-
-    setAgendamentos(prev => [...prev, ...novosBlocos]);
-    setModalOpen(false);
-    setNovoAgendamento({ cursoId: '', salaId: '', dataInicio: '', turno: 'Manhã' });
   };
 
   return (

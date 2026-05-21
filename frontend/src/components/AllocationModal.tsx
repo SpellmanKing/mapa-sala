@@ -1,17 +1,5 @@
 import React, { useEffect, useMemo } from 'react';
-
-type EnvironmentType = 'SALA' | 'LAB_INFO' | 'LAB_IMAGE' | 'AUDITORIO';
-
-export type EnvironmentItem = {
-  id: string;
-  nome: string;
-  tipo: EnvironmentType;
-};
-
-export type Instrutor = {
-  id: string;
-  nome: string;
-};
+import { Sala, Instrutor, Modality } from '../context/AppContext';
 
 export type CursoPayload = {
   id?: string;
@@ -19,9 +7,8 @@ export type CursoPayload = {
   instrutorId: string;
   ambienteId: string;
   diasSemanaLetiva: string[];
-  modalidade: 'Presencial' | 'Semi-Presencial' | 'Remoto';
+  modalidade: Modality;
 };
-
 
 type Props = {
   open: boolean;
@@ -31,7 +18,7 @@ type Props = {
   onSave: () => void;
   form: CursoPayload;
   setForm: React.Dispatch<React.SetStateAction<CursoPayload>>;
-  ambientes: EnvironmentItem[];
+  ambientes: Sala[];
   instrutores: Instrutor[];
 };
 
@@ -107,7 +94,6 @@ export function AllocationModal({
               lineHeight: '22px',
               padding: '0 6px'
             }}
-            aria-label="Fechar"
           >
             ×
           </button>
@@ -135,6 +121,7 @@ export function AllocationModal({
               onChange={(e) => setForm((prev) => ({ ...prev, instrutorId: e.target.value }))}
               style={inputStyle}
             >
+              <option value="" disabled>Selecione</option>
               {instrutores.map((i) => (
                 <option key={i.id} value={i.id}>
                   {i.nome}
@@ -152,9 +139,10 @@ export function AllocationModal({
               onChange={(e) => setForm((prev) => ({ ...prev, ambienteId: e.target.value }))}
               style={inputStyle}
             >
+              <option value="" disabled>Selecione</option>
               {ambientesSorted.map((a) => (
                 <option key={a.id} value={a.id}>
-                  {a.nome}
+                  {a.nome} ({a.tipo})
                 </option>
               ))}
             </select>
@@ -226,50 +214,21 @@ export function AllocationModal({
           </div>
         </div>
 
-
-        {error ? (
+        {error && (
           <div style={{ marginTop: 12, background: '#fef2f2', border: '1px solid #fecaca', padding: 10, borderRadius: 12 }}>
             <p style={{ margin: 0, color: '#991b1b', fontWeight: 600, fontSize: 13 }}>{error}</p>
           </div>
-        ) : null}
+        )}
 
         <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, marginTop: 16 }}>
-          <button type="button" onClick={onClose} style={secondaryButtonStyle}>
-            Cancelar
-          </button>
-          <button type="button" onClick={onSave} style={primaryButtonStyle}>
-            Salvar
-          </button>
+          <button type="button" onClick={onClose} style={secondaryButtonStyle}>Cancelar</button>
+          <button type="button" onClick={onSave} style={primaryButtonStyle}>Salvar</button>
         </div>
       </div>
     </div>
   );
 }
 
-const inputStyle: React.CSSProperties = {
-  width: '100%',
-  padding: '10px 12px',
-  borderRadius: 12,
-  border: '1px solid #e5e7eb',
-  outline: 'none',
-  fontSize: 14
-};
-
-const primaryButtonStyle: React.CSSProperties = {
-  border: 'none',
-  background: '#2563eb',
-  color: 'white',
-  padding: '10px 14px',
-  borderRadius: 12,
-  cursor: 'pointer',
-  fontWeight: 700
-};
-
-const secondaryButtonStyle: React.CSSProperties = {
-  border: '1px solid #d1d5db',
-  background: 'white',
-  padding: '10px 14px',
-  borderRadius: 12,
-  cursor: 'pointer',
-  fontWeight: 700
-};
+const inputStyle: React.CSSProperties = { width: '100%', padding: '10px 12px', borderRadius: 12, border: '1px solid #e5e7eb', outline: 'none', fontSize: 14 };
+const primaryButtonStyle: React.CSSProperties = { border: 'none', background: '#2563eb', color: 'white', padding: '10px 14px', borderRadius: 12, cursor: 'pointer', fontWeight: 700 };
+const secondaryButtonStyle: React.CSSProperties = { border: '1px solid #d1d5db', background: 'white', padding: '10px 14px', borderRadius: 12, cursor: 'pointer', fontWeight: 700 };

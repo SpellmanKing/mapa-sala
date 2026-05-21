@@ -1,6 +1,7 @@
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useState, ReactNode, useEffect, useCallback } from 'react';
+import { CursoService, SalaService, TurmaService, InstrutorService } from '../api/client';
 
-export type Modality = 'Presencial' | 'Remoto';
+export type Modality = 'Presencial' | 'Semi-Presencial' | 'Remoto';
 
 export interface Curso {
   id: string;
@@ -8,6 +9,8 @@ export interface Curso {
   cargaHoraria: number;
   diasSemana: string[]; // ['1', '2', '3'] = Mon, Tue, Wed
   modalidade: Modality;
+  instrutorId?: string;
+  ambienteId?: string;
 }
 
 export interface Sala {
@@ -15,6 +18,11 @@ export interface Sala {
   nome: string;
   capacidade: number;
   tipo: string;
+}
+
+export interface Instrutor {
+  id: string;
+  nome: string;
 }
 
 export interface Agendamento {
@@ -30,35 +38,56 @@ export interface Agendamento {
 interface AppContextData {
   cursos: Curso[];
   setCursos: React.Dispatch<React.SetStateAction<Curso[]>>;
+  refreshCursos: () => void;
   salas: Sala[];
   setSalas: React.Dispatch<React.SetStateAction<Sala[]>>;
+  instrutores: Instrutor[];
+  setInstrutores: React.Dispatch<React.SetStateAction<Instrutor[]>>;
   agendamentos: Agendamento[];
   setAgendamentos: React.Dispatch<React.SetStateAction<Agendamento[]>>;
+  refreshAgendamentos: () => void;
 }
 
 const AppContext = createContext<AppContextData | undefined>(undefined);
 
-import { CursoService, SalaService, TurmaService } from '../api/client';
-import { useEffect } from 'react';
-
 export function AppProvider({ children }: { children: ReactNode }) {
-  // Seed inicial substituído por dados dinâmicos
   const [cursos, setCursos] = useState<Curso[]>([]);
   const [salas, setSalas] = useState<Sala[]>([]);
+  const [instrutores, setInstrutores] = useState<Instrutor[]>([]);
   const [agendamentos, setAgendamentos] = useState<Agendamento[]>([]);
 
-  useEffect(() => {
-    // Carregar Cursos
+  const refreshCursos = useCallback(() => {
     CursoService.getAll().then((data: any) => {
       const mappedCursos = data.map((c: any) => ({
         id: c.id_cursos.toString(),
         nome: c.nome_curso,
         cargaHoraria: c.carga_horaria,
-        diasSemana: ['1','2','3','4','5'], // TODO: adicionar lógica
-        modalidade: c.modalidade
+        diasSemana: ['1','2','3','4','5'], 
+        modalidade: c.modalidade as Modality,
+        instrutorId: '', 
+        ambienteId: c.idTipo_sala ? c.idTipo_sala.toString() : ''
       }));
       setCursos(mappedCursos);
     });
+  }, []);
+
+  const refreshAgendamentos = useCallback(() => {
+    TurmaService.getAgendamentos().then((data: any) => {
+      const mappedAgendamentos = data.map((ag: any) => ({
+        id: ag.id_agendamento.toString(),
+        salaId: ag.id_salas.toString(),
+        date: ag.data_aula.split('T')[0],
+        cursoId: ag.turma.id_cursos.toString(),
+        turno: 'Manhã', 
+        cor: '#0511F2',
+        modalidade: ag.turma.curso?.modalidade as Modality || 'Presencial'
+      }));
+      setAgendamentos(mappedAgendamentos);
+    });
+  }, []);
+
+  useEffect(() => {
+    refreshCursos();
 
     // Carregar Salas
     SalaService.getAll().then((data: any) => {
@@ -71,23 +100,20 @@ export function AppProvider({ children }: { children: ReactNode }) {
       setSalas(mappedSalas);
     });
 
-    // Carregar Agendamentos (Turmas e Salas)
-    TurmaService.getAgendamentos().then((data: any) => {
-      const mappedAgendamentos = data.map((ag: any) => ({
-        id: ag.id_agendamento.toString(),
-        salaId: ag.id_salas.toString(),
-        date: ag.data_aula.split('T')[0],
-        cursoId: ag.turma.id_cursos.toString(),
-        turno: 'Manhã', // TODO: Mapear turnos
-        cor: '#0511F2',
-        modalidade: ag.turma.curso?.modalidade || 'Presencial'
+    // Carregar Instrutores
+    InstrutorService.getAll().then((data: any) => {
+      const mapped = data.map((i: any) => ({
+        id: i.id_instrutores.toString(),
+        nome: i.nome_instrutor
       }));
-      setAgendamentos(mappedAgendamentos);
+      setInstrutores(mapped);
     });
-  }, []);
+
+    refreshAgendamentos();
+  }, [refreshCursos, refreshAgendamentos]);
 
   return (
-    <AppContext.Provider value={{ cursos, setCursos, salas, setSalas, agendamentos, setAgendamentos }}>
+    <AppContext.Provider value={{ cursos, setCursos, refreshCursos, salas, setSalas, instrutores, setInstrutores, agendamentos, setAgendamentos, refreshAgendamentos }}>
       {children}
     </AppContext.Provider>
   );
