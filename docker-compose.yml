@@ -17,7 +17,7 @@ services:
     image: mysql:8
     restart: unless-stopped
     environment:
-      - MYSQL_ROOT_PASSWORD=
+      - MYSQL_ROOT_PASSWORD=root
       - MYSQL_DATABASE=sgst_bd
     ports:
       - "3306:3306"

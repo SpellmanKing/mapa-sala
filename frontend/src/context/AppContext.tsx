@@ -38,22 +38,53 @@ interface AppContextData {
 
 const AppContext = createContext<AppContextData | undefined>(undefined);
 
+import { CursoService, SalaService, TurmaService } from '../api/client';
+import { useEffect } from 'react';
+
 export function AppProvider({ children }: { children: ReactNode }) {
-  // Seed inicial (pode ser sobrescrito via localStorage no Manage)
-  const [cursos, setCursos] = useState<Curso[]>([
-    { id: 'c-1', nome: 'Técnico em Administração', cargaHoraria: 800, diasSemana: ['1', '3', '5'], modalidade: 'Presencial' },
-    { id: 'c-2', nome: 'Lógica de Programação', cargaHoraria: 40, diasSemana: ['2', '4'], modalidade: 'Remoto' },
-  ]);
+  // Seed inicial substituído por dados dinâmicos
+  const [cursos, setCursos] = useState<Curso[]>([]);
+  const [salas, setSalas] = useState<Sala[]>([]);
+  const [agendamentos, setAgendamentos] = useState<Agendamento[]>([]);
 
+  useEffect(() => {
+    // Carregar Cursos
+    CursoService.getAll().then((data: any) => {
+      const mappedCursos = data.map((c: any) => ({
+        id: c.id_cursos.toString(),
+        nome: c.nome_curso,
+        cargaHoraria: c.carga_horaria,
+        diasSemana: ['1','2','3','4','5'], // TODO: adicionar lógica
+        modalidade: c.modalidade
+      }));
+      setCursos(mappedCursos);
+    });
 
-  const [salas, setSalas] = useState<Sala[]>([
-    { id: 's-1', nome: 'Sala Inovadora S-1', capacidade: 28, tipo: 'Inovadora' },
-    { id: 'i-1', nome: 'Lab. Informática I-1', capacidade: 28, tipo: 'TI' },
-  ]);
+    // Carregar Salas
+    SalaService.getAll().then((data: any) => {
+      const mappedSalas = data.map((s: any) => ({
+        id: s.id_salas.toString(),
+        nome: s.nome_sala,
+        capacidade: s.capacidade_maxima,
+        tipo: s.tipoSala?.nome_tipo || 'Comum'
+      }));
+      setSalas(mappedSalas);
+    });
 
-  const [agendamentos, setAgendamentos] = useState<Agendamento[]>([
-    { id: 'ag-1', salaId: 's-1', date: '2026-05-20', cursoId: 'c-1', turno: 'Manhã', cor: '#0511F2', modalidade: 'Presencial' },
-  ]);
+    // Carregar Agendamentos (Turmas e Salas)
+    TurmaService.getAgendamentos().then((data: any) => {
+      const mappedAgendamentos = data.map((ag: any) => ({
+        id: ag.id_agendamento.toString(),
+        salaId: ag.id_salas.toString(),
+        date: ag.data_aula.split('T')[0],
+        cursoId: ag.turma.id_cursos.toString(),
+        turno: 'Manhã', // TODO: Mapear turnos
+        cor: '#0511F2',
+        modalidade: ag.turma.curso?.modalidade || 'Presencial'
+      }));
+      setAgendamentos(mappedAgendamentos);
+    });
+  }, []);
 
   return (
     <AppContext.Provider value={{ cursos, setCursos, salas, setSalas, agendamentos, setAgendamentos }}>
