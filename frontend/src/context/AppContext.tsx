@@ -43,6 +43,7 @@ interface AppContextData {
   setSalas: React.Dispatch<React.SetStateAction<Sala[]>>;
   instrutores: Instrutor[];
   setInstrutores: React.Dispatch<React.SetStateAction<Instrutor[]>>;
+  refreshInstrutores: () => void;
   agendamentos: Agendamento[];
   setAgendamentos: React.Dispatch<React.SetStateAction<Agendamento[]>>;
   refreshAgendamentos: () => void;
@@ -55,6 +56,16 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [salas, setSalas] = useState<Sala[]>([]);
   const [instrutores, setInstrutores] = useState<Instrutor[]>([]);
   const [agendamentos, setAgendamentos] = useState<Agendamento[]>([]);
+
+  const refreshInstrutores = useCallback(() => {
+    InstrutorService.getAll().then((data: any) => {
+      const mapped = data.map((i: any) => ({
+        id: i.id_instrutores.toString(),
+        nome: i.nome_instrutor
+      }));
+      setInstrutores(mapped);
+    });
+  }, []);
 
   const refreshCursos = useCallback(() => {
     CursoService.getAll().then((data: any) => {
@@ -100,20 +111,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
       setSalas(mappedSalas);
     });
 
-    // Carregar Instrutores
-    InstrutorService.getAll().then((data: any) => {
-      const mapped = data.map((i: any) => ({
-        id: i.id_instrutores.toString(),
-        nome: i.nome_instrutor
-      }));
-      setInstrutores(mapped);
-    });
-
+    refreshInstrutores();
     refreshAgendamentos();
-  }, [refreshCursos, refreshAgendamentos]);
+  }, [refreshCursos, refreshInstrutores, refreshAgendamentos]);
 
   return (
-    <AppContext.Provider value={{ cursos, setCursos, refreshCursos, salas, setSalas, instrutores, setInstrutores, agendamentos, setAgendamentos, refreshAgendamentos }}>
+    <AppContext.Provider value={{ cursos, setCursos, refreshCursos, salas, setSalas, instrutores, setInstrutores, refreshInstrutores, agendamentos, setAgendamentos, refreshAgendamentos }}>
       {children}
     </AppContext.Provider>
   );

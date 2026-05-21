@@ -17,7 +17,22 @@ export const SalaService = {
 };
 
 export const InstrutorService = {
-  getAll: () => api.get('/instrutores').then(res => res.data),
+  getAll: async () => {
+    const res = await api.get('/instrutores');
+    return res.data;
+  },
+  create: async (data: any) => {
+    const res = await api.post('/instrutores', data);
+    return res.data;
+  },
+  update: async (id: number, data: any) => {
+    const res = await api.put(`/instrutores/${id}`, data);
+    return res.data;
+  },
+  delete: async (id: number) => {
+    const res = await api.delete(`/instrutores/${id}`);
+    return res.data;
+  }
 };
 
 export const CalculadoraService = {

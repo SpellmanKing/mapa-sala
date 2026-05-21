@@ -1,4 +1,6 @@
 import { PrismaClient } from '@prisma/client';
+import xlsx from 'xlsx';
+import path from 'path';
 
 const prisma = new PrismaClient();
 
@@ -27,9 +29,12 @@ async function main() {
   });
 
   // TipoFeriado
-  const tipoNacional = await prisma.tipoFeriado.create({
-    data: { nome_tipo: 'Nacional' }
-  });
+  let tipoNacional = await prisma.tipoFeriado.findFirst({ where: { nome_tipo: 'Nacional' } });
+  if (!tipoNacional) {
+    tipoNacional = await prisma.tipoFeriado.create({
+      data: { nome_tipo: 'Nacional' }
+    });
+  }
 
   // Feriados (Exemplos de 2026 para testar)
   await prisma.feriadosRecessos.createMany({
@@ -48,15 +53,64 @@ async function main() {
     skipDuplicates: true,
   });
 
-  // Salas
-  await prisma.sala.createMany({
-    data: [
-      { nome_sala: 'S-1', capacidade_maxima: 30, local: 'Bloco A' },
-      { nome_sala: 'S-2', capacidade_maxima: 30, local: 'Bloco A' },
-      { nome_sala: 'Lab Info 1', capacidade_maxima: 20, local: 'Bloco B' },
-    ],
-    skipDuplicates: true,
-  });
+  // Tipos de Salas (criar pelo menos um genérico se não tiver)
+  let tipoComum = await prisma.tipoSala.findFirst({ where: { nome_tipo: 'Comum' } });
+  if (!tipoComum) {
+    tipoComum = await prisma.tipoSala.create({ data: { nome_tipo: 'Comum' } });
+  }
+
+  // --- LER ARQUIVO DE INSTRUTORES ---
+  try {
+    const instrutoresPath = path.resolve('../docs/instrutores_tabela.xlsx');
+    const workbookInstrutores = xlsx.readFile(instrutoresPath);
+    const sheetNameInstrutores = workbookInstrutores.SheetNames[0];
+    const dataInstrutores = xlsx.utils.sheet_to_json(workbookInstrutores.Sheets[sheetNameInstrutores]) as any[];
+
+    const instrutoresData = dataInstrutores.map((row) => ({
+      nome_instrutor: row.Nome,
+      // O banco não tem 'segmento' mapeado diretamente no Instrutor, 
+      // precisaria ajustar o schema se quiser salvar. 
+      // Por ora, vamos apenas inserir o nome.
+    }));
+
+    // Inserir os instrutores um a um usando skipDuplicates ou createMany
+    await prisma.instrutor.createMany({
+      data: instrutoresData,
+      skipDuplicates: true,
+    });
+    console.log(`Injetados ${instrutoresData.length} instrutores com sucesso!`);
+  } catch (error) {
+    console.warn('Não foi possível ler/injetar instrutores_tabela.xlsx', error);
+  }
+
+  // --- LER ARQUIVO DE SALAS ---
+  try {
+    const salasPath = path.resolve('../docs/descricao_das_salas_talal.xlsx');
+    const workbookSalas = xlsx.readFile(salasPath);
+    const sheetNameSalas = workbookSalas.SheetNames[0];
+    const dataSalas = xlsx.utils.sheet_to_json(workbookSalas.Sheets[sheetNameSalas]) as any[];
+
+    // Garantir os tipos de sala listados
+    for (const row of dataSalas) {
+      const tipo = row.Tipo_de_sala || 'Comum';
+      let tipoDb = await prisma.tipoSala.findFirst({ where: { nome_tipo: tipo } });
+      if (!tipoDb) {
+        tipoDb = await prisma.tipoSala.create({ data: { nome_tipo: tipo } });
+      }
+
+      await prisma.sala.create({
+        data: {
+          nome_sala: String(row.Nome_da_sala),
+          capacidade_maxima: Number(row.Capacidade_maxima) || 30,
+          local: row.Local || 'Desconhecido',
+          fk_id_tipo_sala: tipoDb.id_tipo_sala,
+        }
+      });
+    }
+    console.log(`Injetadas ${dataSalas.length} salas com sucesso!`);
+  } catch (error) {
+    console.warn('Não foi possível ler/injetar descricao_das_salas_talal.xlsx', error);
+  }
 
   // Cursos base
   await prisma.curso.createMany({
