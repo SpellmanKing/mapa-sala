@@ -42,7 +42,7 @@ export const CalculadoraService = {
 
 export const TurmaService = {
   getAll: () => api.get('/turmas').then(res => res.data),
-  alocar: (data: { id_cursos: number, id_salas: number, data_inicio: string, fk_id_turno: number, total_alunos: number, codigo_turma: string }) => 
+  alocar: (data: { id_cursos: number, id_salas: number, data_inicio: string, fk_id_turno: number, total_alunos: number, codigo_turma: string, dias_semana: string[] }) => 
     api.post('/turmas/alocar', data).then(res => res.data),
   
   getAgendamentos: () => api.get('/turmas/agendamentos').then(res => res.data)

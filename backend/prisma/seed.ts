@@ -61,7 +61,7 @@ async function main() {
 
   // --- LER ARQUIVO DE INSTRUTORES ---
   try {
-    const instrutoresPath = path.resolve('../docs/instrutores_tabela.xlsx');
+    const instrutoresPath = path.join(process.cwd(), '../docs/instrutores_tabela.xlsx');
     const workbookInstrutores = xlsx.readFile(instrutoresPath);
     const sheetNameInstrutores = workbookInstrutores.SheetNames[0];
     const dataInstrutores = xlsx.utils.sheet_to_json(workbookInstrutores.Sheets[sheetNameInstrutores]) as any[];
@@ -85,7 +85,7 @@ async function main() {
 
   // --- LER ARQUIVO DE SALAS ---
   try {
-    const salasPath = path.resolve('../docs/descricao_das_salas_talal.xlsx');
+    const salasPath = path.join(process.cwd(), '../docs/descricao_das_salas_talal.xlsx');
     const workbookSalas = xlsx.readFile(salasPath);
     const sheetNameSalas = workbookSalas.SheetNames[0];
     const dataSalas = xlsx.utils.sheet_to_json(workbookSalas.Sheets[sheetNameSalas]) as any[];
@@ -103,7 +103,7 @@ async function main() {
           nome_sala: String(row.Nome_da_sala),
           capacidade_maxima: Number(row.Capacidade_maxima) || 30,
           local: row.Local || 'Desconhecido',
-          fk_id_tipo_sala: tipoDb.id_tipo_sala,
+          idTipo_sala: tipoDb.idTipo_sala,
         }
       });
     }

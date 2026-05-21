@@ -1,14 +1,17 @@
 import React, { useState } from 'react';
-import { Calendar as CalendarIcon, ChevronLeft, ChevronRight, Filter, Search, Plus, X, Users, BookOpen } from 'lucide-react';
+import { Calendar as CalendarIcon, ChevronLeft, ChevronRight, Filter, Plus, X, Users, BookOpen } from 'lucide-react';
 import { useAppContext } from '../context/AppContext';
 import { TurmaService } from '../api/client';
 
 export function PainelPage() {
   const { salas, turmas, cursos, refreshTurmas } = useAppContext();
 
-  // Filtros
+  // Filtros Globais
   const [currentDate, setCurrentDate] = useState(() => new Date());
   const [filtroTipo, setFiltroTipo] = useState('Todos');
+  
+  // Filtro Customizado de Datas
+  const [customFilter, setCustomFilter] = useState({ active: false, start: '', end: '' });
 
   // Lógica de tempo (Semana atual)
   const nextWeek = () => setCurrentDate(new Date(currentDate.getTime() + 7 * 24 * 60 * 60 * 1000));
@@ -29,30 +32,65 @@ export function PainelPage() {
   };
 
   const days = getWeekDays(currentDate);
-  const startOfWeek = new Date(days[0]);
-  startOfWeek.setHours(0, 0, 0, 0);
-  const endOfWeek = new Date(days[4]);
-  endOfWeek.setHours(23, 59, 59, 999);
+  let periodStart = new Date(days[0]);
+  periodStart.setHours(0, 0, 0, 0);
+  let periodEnd = new Date(days[4]);
+  periodEnd.setHours(23, 59, 59, 999);
 
-  // Helper para verificar se a turma está ativa na semana
+  // Se o filtro customizado estiver ativo, subscreve o período visualizado
+  if (customFilter.active && customFilter.start && customFilter.end) {
+    periodStart = new Date(customFilter.start + 'T00:00:00');
+    periodEnd = new Date(customFilter.end + 'T23:59:59');
+  }
+
+  // Helper para verificar se a turma está ativa no período
   const isTurmaActive = (dataInicioStr: string, dataFimStr: string) => {
-    if (!dataInicioStr || !dataFimStr) return true; // Se não tiver data, mostra (fallback)
+    if (!dataInicioStr || !dataFimStr) return true;
     const inicio = new Date(dataInicioStr + 'T00:00:00');
     const fim = new Date(dataFimStr + 'T23:59:59');
-    return (inicio <= endOfWeek && fim >= startOfWeek);
+    return (inicio <= periodEnd && fim >= periodStart);
   };
 
-  // Turnos fixos para as linhas
   const TURNOS = ['Manhã', 'Tarde', 'Noite'];
 
   // --- LÓGICA DO MODAL DE AGENDAMENTO ---
   const [modalOpen, setModalOpen] = useState(false);
-  const [novoAgendamento, setNovoAgendamento] = useState({ cursoId: '', salaId: '', dataInicio: '', turno: 'Manhã' });
+  const [novoAgendamento, setNovoAgendamento] = useState({ 
+    cursoId: '', 
+    salaId: '', 
+    dataInicio: '', 
+    turno: 'Manhã',
+    codigoTurma: '',
+    diasSemana: [] as string[]
+  });
+
+  const DIAS_SEMANA_OPCOES = [
+    { value: '1', label: 'Seg' },
+    { value: '2', label: 'Ter' },
+    { value: '3', label: 'Qua' },
+    { value: '4', label: 'Qui' },
+    { value: '5', label: 'Sex' },
+  ];
+
+  const handleToggleDia = (valor: string) => {
+    setNovoAgendamento(prev => {
+      const isSelected = prev.diasSemana.includes(valor);
+      const newDias = isSelected 
+        ? prev.diasSemana.filter(d => d !== valor)
+        : [...prev.diasSemana, valor];
+      return { ...prev, diasSemana: newDias };
+    });
+  };
 
   const handleCriarAgendamento = async (e: React.FormEvent) => {
     e.preventDefault();
     const cursoSelecionado = cursos.find(c => c.id === novoAgendamento.cursoId);
-    if (!cursoSelecionado || !novoAgendamento.dataInicio || !novoAgendamento.salaId) return;
+    if (!cursoSelecionado || !novoAgendamento.dataInicio || !novoAgendamento.salaId || !novoAgendamento.codigoTurma) return;
+
+    if (novoAgendamento.diasSemana.length === 0) {
+      alert("Selecione ao menos um dia da semana para o curso.");
+      return;
+    }
 
     try {
       await TurmaService.alocar({
@@ -61,19 +99,19 @@ export function PainelPage() {
         data_inicio: novoAgendamento.dataInicio,
         fk_id_turno: novoAgendamento.turno === 'Manhã' ? 1 : novoAgendamento.turno === 'Tarde' ? 2 : 3,
         total_alunos: 30,
-        codigo_turma: `T-${Math.floor(Math.random() * 10000)}`
+        codigo_turma: novoAgendamento.codigoTurma,
+        dias_semana: novoAgendamento.diasSemana
       });
 
       refreshTurmas();
       setModalOpen(false);
-      setNovoAgendamento({ cursoId: '', salaId: '', dataInicio: '', turno: 'Manhã' });
+      setNovoAgendamento({ cursoId: '', salaId: '', dataInicio: '', turno: 'Manhã', codigoTurma: '', diasSemana: [] });
     } catch (err) {
       console.error(err);
       alert('Erro ao alocar turma. Verifique o console.');
     }
   };
 
-  // Helper de formatação de data
   const formatDateBR = (dateStr: string) => {
     if (!dateStr) return '';
     const [y, m, d] = dateStr.split('-');
@@ -104,8 +142,8 @@ export function PainelPage() {
         </div>
         
         {/* FILTROS E CONTROLES */}
-        <div className="flex items-center gap-4 bg-gray-50 p-2 rounded-xl border border-gray-200">
-          <div className="flex items-center gap-2 px-2">
+        <div className="flex flex-wrap items-center gap-4 bg-gray-50 p-2 rounded-xl border border-gray-200">
+          <div className="flex items-center gap-2 px-2 border-r border-gray-300">
             <Filter className="text-gray-400 w-5 h-5" />
             <select 
               value={filtroTipo} 
@@ -118,15 +156,29 @@ export function PainelPage() {
             </select>
           </div>
 
-          <div className="h-8 w-px bg-gray-300 mx-1"></div>
+          <div className="flex items-center gap-2 px-2 border-r border-gray-300">
+            <label className="text-xs font-semibold text-gray-500 flex items-center gap-1">
+              <input type="checkbox" checked={customFilter.active} onChange={e => setCustomFilter({...customFilter, active: e.target.checked})} className="rounded text-[var(--color-primary)] focus:ring-[var(--color-primary)]" />
+              Filtrar por Período
+            </label>
+            {customFilter.active && (
+              <div className="flex items-center gap-1">
+                <input type="date" value={customFilter.start} onChange={e => setCustomFilter({...customFilter, start: e.target.value})} className="bg-white border border-gray-200 rounded px-2 py-1 text-xs outline-none" />
+                <span className="text-gray-400 text-xs">até</span>
+                <input type="date" value={customFilter.end} onChange={e => setCustomFilter({...customFilter, end: e.target.value})} className="bg-white border border-gray-200 rounded px-2 py-1 text-xs outline-none" />
+              </div>
+            )}
+          </div>
 
-          <div className="flex items-center gap-2 pr-2">
+          <div className={`flex items-center gap-2 pr-2 ${customFilter.active ? 'opacity-50 pointer-events-none' : ''}`}>
             <button onClick={prevWeek} className="p-2 bg-white border border-gray-200 rounded-lg hover:bg-gray-100 text-[var(--color-secondary)] transition-all shadow-sm">
               <ChevronLeft className="w-5 h-5" />
             </button>
-            <div className="font-bold text-sm min-w-[200px] text-center text-[var(--color-secondary)] capitalize tracking-wide flex flex-col">
-              <span className="text-xs text-gray-400">Semana Visualizada</span>
-              {days[0].toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' })} a {days[4].toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', year: 'numeric' })}
+            <div className="font-bold text-sm min-w-[180px] text-center text-[var(--color-secondary)] capitalize tracking-wide flex flex-col">
+              <span className="text-xs text-gray-400">{customFilter.active ? 'Desabilitado' : 'Semana Visualizada'}</span>
+              {!customFilter.active && (
+                 <>{days[0].toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' })} a {days[4].toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', year: 'numeric' })}</>
+              )}
             </div>
             <button onClick={nextWeek} className="p-2 bg-white border border-gray-200 rounded-lg hover:bg-gray-100 text-[var(--color-secondary)] transition-all shadow-sm">
               <ChevronRight className="w-5 h-5" />
@@ -139,14 +191,11 @@ export function PainelPage() {
       <div className="flex-1 overflow-auto bg-gray-50/30 custom-scrollbar p-4">
         <div className="min-w-max border border-gray-200 bg-white rounded-xl shadow-sm overflow-hidden flex flex-col">
           
-          {/* HEADER (COLUNAS = SALAS) */}
+          {/* HEADER COLUNAS */}
           <div className="flex border-b border-gray-200 bg-gray-50/80 sticky top-0 z-20 backdrop-blur-md">
-            {/* Célula do canto superior esquerdo (Vazia / Título) */}
             <div className="w-24 shrink-0 border-r border-gray-200 p-4 flex items-center justify-center font-black text-[var(--color-secondary)] uppercase tracking-widest text-xs bg-white shadow-[2px_0_5px_rgba(0,0,0,0.02)] sticky left-0 z-30">
               TURNOS
             </div>
-            
-            {/* Cabeçalho das Salas */}
             {salasFiltradas.map((sala) => (
               <div key={sala.id} className="w-64 shrink-0 border-r border-gray-200 p-3 flex flex-col items-center justify-center gap-1 bg-white">
                 <div className="font-extrabold text-[var(--color-secondary)] text-sm uppercase tracking-wider bg-blue-50/50 px-3 py-1 rounded-md border border-blue-100">
@@ -166,16 +215,13 @@ export function PainelPage() {
             {TURNOS.map((turno) => (
               <div key={turno} className="flex border-b border-gray-200 last:border-b-0 group min-h-[140px]">
                 
-                {/* Cabeçalho da Linha (Turno) */}
                 <div className="w-24 shrink-0 border-r border-gray-200 p-2 flex items-center justify-center bg-gray-50 group-hover:bg-blue-50/30 transition-colors sticky left-0 z-10 shadow-[2px_0_5px_rgba(0,0,0,0.02)]">
                   <div className="font-black text-[var(--color-secondary)] uppercase tracking-widest" style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)', letterSpacing: '0.2em' }}>
                     {turno}
                   </div>
                 </div>
 
-                {/* Células de Cruzamento (Sala x Turno) */}
                 {salasFiltradas.map((sala) => {
-                  // Filtra turmas ativas nesta sala, neste turno, nesta semana
                   const turmasNestaCelula = turmas.filter(t => 
                     t.salaId === sala.id && 
                     t.turno === turno && 
@@ -189,7 +235,6 @@ export function PainelPage() {
                           key={turma.id}
                           className={`relative w-full rounded-xl p-3 border-l-4 shadow-sm hover:shadow-md transition-shadow overflow-hidden flex flex-col gap-2 ${turma.modalidade === 'Remoto' ? 'bg-orange-50/50 border-[var(--color-accent)]' : 'bg-blue-50/30 border-[var(--color-primary)]'}`}
                         >
-                          {/* Top row: Código & Modalidade */}
                           <div className="flex justify-between items-start">
                             <span className="text-[10px] font-black bg-white px-2 py-0.5 rounded shadow-sm text-[var(--color-secondary)] border border-gray-100">
                               {turma.codigo}
@@ -199,20 +244,17 @@ export function PainelPage() {
                             )}
                           </div>
 
-                          {/* Middle: Curso Nome */}
                           <div className="font-bold text-sm leading-tight text-gray-800 break-words line-clamp-2" title={turma.cursoNome}>
                             <BookOpen className="w-3.5 h-3.5 inline-block mr-1.5 text-[var(--color-primary)] opacity-70" />
                             {turma.cursoNome}
                           </div>
 
-                          {/* Bottom: Professor e Data */}
                           <div className="mt-auto flex flex-col gap-1.5 pt-2 border-t border-gray-200/60">
                             <div className="flex items-center gap-1.5 text-xs font-semibold text-gray-600 truncate" title={turma.instrutorNome}>
                               <Users className="w-3.5 h-3.5 text-gray-400" />
                               {turma.instrutorNome}
                             </div>
                             
-                            {/* Sugestão de design p/ as datas: Um progress bar minimalista ou texto limpo */}
                             <div className="flex justify-between items-center text-[10px] text-gray-500 font-medium">
                               <span>{formatDateBR(turma.dataInicio)}</span>
                               <div className="flex-1 mx-2 h-px bg-gray-300 relative">
@@ -229,32 +271,46 @@ export function PainelPage() {
               </div>
             ))}
           </div>
-
         </div>
       </div>
 
-      {/* MODAL DE AGENDAMENTO (Calculadora Invisível) */}
+      {/* MODAL DE AGENDAMENTO */}
       {modalOpen && (
         <div className="absolute inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden animate-in fade-in zoom-in-95 duration-200">
-            <div className="p-6 border-b border-gray-100 flex justify-between items-center bg-gray-50">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200 flex flex-col max-h-[90vh]">
+            <div className="p-6 border-b border-gray-100 flex justify-between items-center bg-gray-50 shrink-0">
               <h2 className="text-xl font-bold text-[var(--color-secondary)]">Formulário de Agendamento</h2>
               <button onClick={() => setModalOpen(false)} className="text-gray-400 hover:text-gray-600 transition-colors">
                 <X size={24} />
               </button>
             </div>
-            <form onSubmit={handleCriarAgendamento} className="p-6 flex flex-col gap-5">
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-1">Curso</label>
-                <select 
-                  value={novoAgendamento.cursoId}
-                  onChange={e => setNovoAgendamento({...novoAgendamento, cursoId: e.target.value})}
-                  className="w-full border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-[var(--color-primary)]/20 outline-none"
-                  required
-                >
-                  <option value="" disabled>Selecione um curso...</option>
-                  {cursos.map(c => <option key={c.id} value={c.id}>{c.nome}</option>)}
-                </select>
+            
+            <form onSubmit={handleCriarAgendamento} className="p-6 flex flex-col gap-5 overflow-y-auto">
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-1">Curso</label>
+                  <select 
+                    value={novoAgendamento.cursoId}
+                    onChange={e => setNovoAgendamento({...novoAgendamento, cursoId: e.target.value})}
+                    className="w-full border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-[var(--color-primary)]/20 outline-none"
+                    required
+                  >
+                    <option value="" disabled>Selecione um curso...</option>
+                    {cursos.map(c => <option key={c.id} value={c.id}>{c.nome}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-1">Código da Turma</label>
+                  <input 
+                    type="text"
+                    placeholder="Ex: 2025.09.75"
+                    value={novoAgendamento.codigoTurma}
+                    onChange={e => setNovoAgendamento({...novoAgendamento, codigoTurma: e.target.value})}
+                    className="w-full border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-[var(--color-primary)]/20 outline-none"
+                    required
+                  />
+                </div>
               </div>
 
               <div>
@@ -270,8 +326,8 @@ export function PainelPage() {
                 </select>
               </div>
 
-              <div className="flex gap-4">
-                <div className="flex-1">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-1">Data de Início</label>
                   <input 
                     type="date" 
@@ -281,7 +337,7 @@ export function PainelPage() {
                     required
                   />
                 </div>
-                <div className="flex-1">
+                <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-1">Turno</label>
                   <select 
                     value={novoAgendamento.turno}
@@ -295,11 +351,33 @@ export function PainelPage() {
                 </div>
               </div>
 
-              <div className="bg-blue-50/50 p-4 rounded-xl border border-blue-100 text-sm text-blue-800">
-                A data de término será calculada automaticamente pelo nosso Motor com base na carga horária configurada.
+              {/* DIAS DA SEMANA */}
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">Dias da Semana Letiva</label>
+                <div className="flex flex-wrap gap-3">
+                  {DIAS_SEMANA_OPCOES.map(dia => (
+                    <label key={dia.value} className="flex items-center gap-2 bg-gray-50 border border-gray-200 px-3 py-2 rounded-lg cursor-pointer hover:bg-gray-100 transition-colors">
+                      <input 
+                        type="checkbox" 
+                        value={dia.value}
+                        checked={novoAgendamento.diasSemana.includes(dia.value)}
+                        onChange={() => handleToggleDia(dia.value)}
+                        className="rounded text-[var(--color-primary)] focus:ring-[var(--color-primary)]"
+                      />
+                      <span className="text-sm font-medium text-gray-700">{dia.label}</span>
+                    </label>
+                  ))}
+                </div>
               </div>
 
-              <div className="flex justify-end gap-3 mt-2">
+              <div className="bg-blue-50/50 p-4 rounded-xl border border-blue-100 text-sm text-blue-800 flex items-start gap-2">
+                <CalendarIcon className="w-5 h-5 shrink-0 text-blue-600 mt-0.5" />
+                <p>
+                  A data de término será projetada automaticamente pelo nosso Motor com base na carga horária (4h/dia), dias selecionados e feriados.
+                </p>
+              </div>
+
+              <div className="flex justify-end gap-3 mt-4 pt-4 border-t border-gray-100">
                 <button type="button" onClick={() => setModalOpen(false)} className="px-4 py-2 font-semibold text-gray-500 hover:text-gray-700">
                   Cancelar
                 </button>

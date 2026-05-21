@@ -33,7 +33,7 @@ export class TurmaService {
     });
   }
 
-  async alocarTurma(data: { id_cursos: number, id_salas: number, data_inicio: Date, fk_id_turno: number, total_alunos: number, codigo_turma: string }) {
+  async alocarTurma(data: { id_cursos: number, id_salas: number, data_inicio: Date, fk_id_turno: number, total_alunos: number, codigo_turma: string, dias_semana: string[] }) {
     // Busca o curso para ver os detalhes
     const curso = await prisma.curso.findUnique({
       where: { id_cursos: data.id_cursos }
@@ -41,10 +41,7 @@ export class TurmaService {
 
     if (!curso) throw new HttpError(404, 'Curso não encontrado');
 
-    // Aqui simulamos a busca dos dias da semana (no modelo real, precisaria de uma tabela ou campo, 
-    // mas vamos assumir um array padrão se não houver, ou que vem no request).
-    // Para simplificar, vou considerar que a alocação requer os 'diasSemana' ou usa [1,2,3,4,5]
-    const diasSemana = ['1', '2', '3', '4', '5']; // Default temporário
+    const diasSemana = data.dias_semana && data.dias_semana.length > 0 ? data.dias_semana : ['1', '2', '3', '4', '5']; 
 
     const cronograma = await this.calculadoraService.calcularCronograma(
       curso.carga_horaria,
