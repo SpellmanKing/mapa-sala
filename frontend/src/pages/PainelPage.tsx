@@ -1,54 +1,31 @@
 import React, { useState } from 'react';
-import { Calendar as CalendarIcon, ChevronLeft, ChevronRight, Filter, Plus, X, Users, BookOpen } from 'lucide-react';
+import { Calendar as CalendarIcon, Filter, Plus, X, Users, BookOpen } from 'lucide-react';
 import { useAppContext } from '../context/AppContext';
 import { TurmaService } from '../api/client';
 
 export function PainelPage() {
   const { salas, turmas, cursos, refreshTurmas } = useAppContext();
 
-  // Filtros Globais
-  const [currentDate, setCurrentDate] = useState(() => new Date());
+  // Filtro Global
   const [filtroTipo, setFiltroTipo] = useState('Todos');
-  
-  // Filtro Customizado de Datas
-  const [customFilter, setCustomFilter] = useState({ active: false, start: '', end: '' });
 
-  // Lógica de tempo (Semana atual)
-  const nextWeek = () => setCurrentDate(new Date(currentDate.getTime() + 7 * 24 * 60 * 60 * 1000));
-  const prevWeek = () => setCurrentDate(new Date(currentDate.getTime() - 7 * 24 * 60 * 60 * 1000));
-
-  const getWeekDays = (startDate: Date) => {
-    const days: Date[] = [];
-    const date = new Date(startDate);
-    const day = date.getDay();
-    const diff = date.getDate() - day + (day === 0 ? -6 : 1);
-    date.setDate(diff);
-
-    for (let i = 0; i < 5; i++) {
-      days.push(new Date(date));
-      date.setDate(date.getDate() + 1);
-    }
-    return days;
-  };
-
-  const days = getWeekDays(currentDate);
-  let periodStart = new Date(days[0]);
-  periodStart.setHours(0, 0, 0, 0);
-  let periodEnd = new Date(days[4]);
-  periodEnd.setHours(23, 59, 59, 999);
-
-  // Se o filtro customizado estiver ativo, subscreve o período visualizado
-  if (customFilter.active && customFilter.start && customFilter.end) {
-    periodStart = new Date(customFilter.start + 'T00:00:00');
-    periodEnd = new Date(customFilter.end + 'T23:59:59');
-  }
-
-  // Helper para verificar se a turma está ativa no período
+  // Helper para verificar se a turma está ativa HOJE
   const isTurmaActive = (dataInicioStr: string, dataFimStr: string) => {
     if (!dataInicioStr || !dataFimStr) return true;
     const inicio = new Date(dataInicioStr + 'T00:00:00');
     const fim = new Date(dataFimStr + 'T23:59:59');
-    return (inicio <= periodEnd && fim >= periodStart);
+    const hoje = new Date();
+    return (inicio <= hoje && fim >= hoje);
+  };
+
+  const getProgress = (dataInicioStr: string, dataFimStr: string) => {
+    if (!dataInicioStr || !dataFimStr) return 0;
+    const inicio = new Date(dataInicioStr + 'T00:00:00').getTime();
+    const fim = new Date(dataFimStr + 'T23:59:59').getTime();
+    const hoje = new Date().getTime();
+    if (hoje < inicio) return 0;
+    if (hoje > fim) return 100;
+    return Math.round(((hoje - inicio) / (fim - inicio)) * 100);
   };
 
   const TURNOS = ['Manhã', 'Tarde', 'Noite'];
@@ -101,7 +78,7 @@ export function PainelPage() {
   const handleCriarAgendamento = async (e: React.FormEvent) => {
     e.preventDefault();
     const cursoSelecionado = cursos.find(c => c.id === novoAgendamento.cursoId);
-    if (!cursoSelecionado || !novoAgendamento.dataInicio || !novoAgendamento.salaId || !novoAgendamento.codigoTurma) return;
+    if (!cursoSelecionado || !novoAgendamento.dataInicio || !novoAgendamento.salaId) return;
 
     if (novoAgendamento.diasSemana.length === 0) {
       alert("Selecione ao menos um dia da semana para o curso.");
@@ -210,33 +187,11 @@ export function PainelPage() {
             </select>
           </div>
 
-          <div className="flex items-center gap-2 px-2 border-r border-gray-300">
-            <label className="text-xs font-semibold text-gray-500 flex items-center gap-1">
-              <input type="checkbox" checked={customFilter.active} onChange={e => setCustomFilter({...customFilter, active: e.target.checked})} className="rounded text-[var(--color-primary)] focus:ring-[var(--color-primary)]" />
-              Filtrar por Período
-            </label>
-            {customFilter.active && (
-              <div className="flex items-center gap-1">
-                <input type="date" value={customFilter.start} onChange={e => setCustomFilter({...customFilter, start: e.target.value})} className="bg-white border border-gray-200 rounded px-2 py-1 text-xs outline-none" />
-                <span className="text-gray-400 text-xs">até</span>
-                <input type="date" value={customFilter.end} onChange={e => setCustomFilter({...customFilter, end: e.target.value})} className="bg-white border border-gray-200 rounded px-2 py-1 text-xs outline-none" />
-              </div>
-            )}
-          </div>
-
-          <div className={`flex items-center gap-2 pr-2 ${customFilter.active ? 'opacity-50 pointer-events-none' : ''}`}>
-            <button onClick={prevWeek} className="p-2 bg-white border border-gray-200 rounded-lg hover:bg-gray-100 text-[var(--color-secondary)] transition-all shadow-sm">
-              <ChevronLeft className="w-5 h-5" />
-            </button>
-            <div className="font-bold text-sm min-w-[180px] text-center text-[var(--color-secondary)] capitalize tracking-wide flex flex-col">
-              <span className="text-xs text-gray-400">{customFilter.active ? 'Desabilitado' : 'Semana Visualizada'}</span>
-              {!customFilter.active && (
-                 <>{days[0].toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' })} a {days[4].toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', year: 'numeric' })}</>
-              )}
+          <div className="flex items-center gap-2 pr-2">
+            <div className="font-bold text-sm text-center text-[var(--color-secondary)] capitalize tracking-wide flex flex-col">
+              <span className="text-xs text-gray-400">Exibindo ocupações de</span>
+              Hoje, {new Date().toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', year: 'numeric' })}
             </div>
-            <button onClick={nextWeek} className="p-2 bg-white border border-gray-200 rounded-lg hover:bg-gray-100 text-[var(--color-secondary)] transition-all shadow-sm">
-              <ChevronRight className="w-5 h-5" />
-            </button>
           </div>
         </div>
       </div>
@@ -310,10 +265,11 @@ export function PainelPage() {
                               {turma.instrutorNome}
                             </div>
                             
-                            <div className="flex justify-between items-center text-[10px] text-gray-500 font-medium">
+                            <div className="flex justify-between items-center text-[10px] text-gray-500 font-medium relative mt-1">
                               <span>{formatDateBR(turma.dataInicio)}</span>
-                              <div className="flex-1 mx-2 h-px bg-gray-300 relative">
-                                <div className="absolute inset-y-0 left-0 bg-[var(--color-primary)] opacity-30 w-1/2"></div>
+                              <div className="flex-1 mx-2 h-2.5 bg-gray-200/80 rounded-full relative overflow-hidden flex items-center justify-center">
+                                <div className="absolute inset-y-0 left-0 bg-[var(--color-primary)] opacity-70 transition-all duration-500" style={{ width: `${getProgress(turma.dataInicio, turma.dataFim)}%` }}></div>
+                                <span className="absolute text-[8px] font-bold text-gray-800 z-10">{getProgress(turma.dataInicio, turma.dataFim)}%</span>
                               </div>
                               <span>{formatDateBR(turma.dataFim)}</span>
                             </div>

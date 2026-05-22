@@ -63,9 +63,11 @@ model Curso {
   curso_tem     Boolean  @default(false)
   bolsa_compativel Boolean @default(true)
   idTipo_sala    Int?
+  unidade             String?
   codigo_turma_padrao String?
   turno_padrao        String?
   dias_letivos_padrao String?
+  dias_remotos_padrao String?
   id_instrutor_padrao Int?
 
   tipoSala        TipoSala? @relation(fields: [idTipo_sala], references: [idTipo_sala])
@@ -101,7 +103,7 @@ model Turma {
   id_turmas       Int      @id @default(autoincrement())
   id_cursos       Int
   id_instrutores  Int?
-  codigo_turma   String   @unique
+  codigo_turma   String   
   fk_id_status    Int      @default(1)
   fk_id_turno     Int
   data_inicio     DateTime

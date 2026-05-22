@@ -14,7 +14,7 @@ export function ManageSystemPage() {
   const [cursoModalOpen, setCursoModalOpen] = useState(false);
   const [editingCurso, setEditingCurso] = useState<Curso | null>(null);
   const [cursoForm, setCursoForm] = useState<CursoPayload>({
-    nome: '', instrutorId: '', ambienteId: '', diasSemanaLetiva: ['1', '3', '5'], codigoTurmaPadrao: '', turnoPadrao: 'Manhã', modalidade: 'Presencial'
+    nome: '', instrutorId: '', unidade: '', diasSemanaLetiva: ['1', '3', '5'], diasRemotos: [], codigoTurmaPadrao: '', turnoPadrao: 'Manhã', modalidade: 'Presencial'
   });
   const [cursoError, setCursoError] = useState<string | null>(null);
 
@@ -28,21 +28,21 @@ export function ManageSystemPage() {
   function openCursoCreate() {
     setEditingCurso(null);
     setCursoError(null);
-    setCursoForm({ nome: '', instrutorId: instrutores[0]?.id ?? '', ambienteId: tipoSalas[0]?.id ?? '', diasSemanaLetiva: ['1', '3', '5'], codigoTurmaPadrao: '', turnoPadrao: 'Manhã', modalidade: 'Presencial' });
+    setCursoForm({ nome: '', instrutorId: instrutores[0]?.id ?? '', unidade: '', diasSemanaLetiva: ['1', '3', '5'], diasRemotos: [], codigoTurmaPadrao: '', turnoPadrao: 'Manhã', modalidade: 'Presencial' });
     setCursoModalOpen(true);
   }
 
   function openCursoEdit(curso: Curso) {
     setEditingCurso(curso);
     setCursoError(null);
-    setCursoForm({ id: curso.id, nome: curso.nome, instrutorId: curso.instrutorId ?? '', ambienteId: curso.ambienteId ?? '', diasSemanaLetiva: curso.diasSemana ?? ['1', '3', '5'], codigoTurmaPadrao: curso.codigoTurmaPadrao ?? '', turnoPadrao: curso.turnoPadrao ?? 'Manhã', modalidade: curso.modalidade });
+    setCursoForm({ id: curso.id, nome: curso.nome, instrutorId: curso.instrutorId ?? '', unidade: curso.unidade ?? '', diasSemanaLetiva: curso.diasSemana ?? ['1', '3', '5'], diasRemotos: curso.diasRemotos ?? [], codigoTurmaPadrao: curso.codigoTurmaPadrao ?? '', turnoPadrao: curso.turnoPadrao ?? 'Manhã', modalidade: curso.modalidade });
     setCursoModalOpen(true);
   }
 
   async function saveCurso() {
     if (!cursoForm.nome.trim()) return setCursoError('Nome é obrigatório.');
     if (!cursoForm.instrutorId) return setCursoError('Instrutor é obrigatório.');
-    if (!cursoForm.ambienteId) return setCursoError('Ambiente é obrigatório.');
+    if (!cursoForm.unidade) return setCursoError('Unidade é obrigatória.');
 
     try {
       const apiPayload = {
@@ -53,11 +53,12 @@ export function ManageSystemPage() {
         valor: 0,
         curso_tem: false,
         bolsa_compativel: true,
-        idTipo_sala: Number(cursoForm.ambienteId) || undefined,
+        unidade: cursoForm.unidade,
         id_instrutor_padrao: Number(cursoForm.instrutorId) || undefined,
         codigo_turma_padrao: cursoForm.codigoTurmaPadrao,
         turno_padrao: cursoForm.turnoPadrao,
-        dias_letivos_padrao: cursoForm.diasSemanaLetiva.join(',')
+        dias_letivos_padrao: cursoForm.diasSemanaLetiva.join(','),
+        dias_remotos_padrao: cursoForm.diasRemotos.join(',')
       };
 
       if (editingCurso?.id) {
@@ -147,7 +148,7 @@ export function ManageSystemPage() {
               <tr style={{ background: '#f3f4f6' }}>
                 <th style={thStyle}>Nome do Curso</th>
                 <th style={thStyle}>Instrutor Principal</th>
-                <th style={thStyle}>Ambiente Sugerido</th>
+                <th style={thStyle}>Unidade</th>
                 <th style={thStyle}>Modalidade</th>
                 <th style={thStyle}>Ações</th>
               </tr>
@@ -157,7 +158,7 @@ export function ManageSystemPage() {
                 <tr key={c.id} style={{ borderBottom: '1px solid #eee' }}>
                   <td style={tdStyle}>{c.nome}</td>
                   <td style={tdStyle}>{getNomeInstrutor(c.instrutorId)}</td>
-                  <td style={tdStyle}>{getNomeAmbiente(c.ambienteId)}</td>
+                  <td style={tdStyle}>{c.unidade || '-'}</td>
                   <td style={tdStyle}>{c.modalidade}</td>
                   <td style={tdStyle}>
                     <div style={{ display: 'flex', gap: 8 }}>

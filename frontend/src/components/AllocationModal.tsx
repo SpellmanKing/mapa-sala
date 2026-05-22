@@ -7,8 +7,9 @@ export type CursoPayload = {
   id?: string;
   nome: string;
   instrutorId: string;
-  ambienteId: string;
+  unidade: string;
   diasSemanaLetiva: string[];
+  diasRemotos: string[];
   codigoTurmaPadrao: string;
   turnoPadrao: string;
   modalidade: Modality;
@@ -145,25 +146,23 @@ export function AllocationModal({
 
           <div>
             <label style={{ display: 'block', fontSize: 13, fontWeight: 600, marginBottom: 6 }}>
-              Ambiente
+              Unidade
             </label>
             <select
-              value={form.ambienteId}
-              onChange={(e) => setForm((prev) => ({ ...prev, ambienteId: e.target.value }))}
+              value={form.unidade}
+              onChange={(e) => setForm((prev) => ({ ...prev, unidade: e.target.value }))}
               style={inputStyle}
             >
               <option value="" disabled>Selecione</option>
-              {ambientesSorted.map((a) => (
-                <option key={a.id} value={a.id}>
-                  {a.nome}
-                </option>
+              {['CEP Tala', 'Polo', 'CED 308', 'CEM 111', 'CEM 12', 'CED 11', 'CED 7'].map(u => (
+                <option key={u} value={u}>{u}</option>
               ))}
             </select>
           </div>
 
           <div style={{ gridColumn: 'span 2' }}>
             <label style={{ display: 'block', fontSize: 13, fontWeight: 600, marginBottom: 6 }}>
-              Dias da semana letiva
+              Dias da semana letiva (Presenciais)
             </label>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
               {[
@@ -203,6 +202,57 @@ export function AllocationModal({
                         });
                       }}
                       style={{ accentColor: '#2563eb' }}
+                    />
+                    {dia.label}
+                  </label>
+                );
+              })}
+            </div>
+          </div>
+
+          <div style={{ gridColumn: 'span 2' }}>
+            <label style={{ display: 'block', fontSize: 13, fontWeight: 600, marginBottom: 6 }}>
+              Dias da semana letiva (Remotos)
+            </label>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+              {[
+                { id: '1', label: 'Segunda' },
+                { id: '2', label: 'Terça' },
+                { id: '3', label: 'Quarta' },
+                { id: '4', label: 'Quinta' },
+                { id: '5', label: 'Sexta' }
+              ].map((dia) => {
+                const checked = form.diasRemotos.includes(dia.id);
+                return (
+                  <label
+                    key={dia.id}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 6,
+                      padding: '8px 12px',
+                      border: checked ? '2px solid #ea580c' : '1px solid #e5e7eb',
+                      borderRadius: 8,
+                      cursor: 'pointer',
+                      background: checked ? '#fff7ed' : 'white',
+                      fontSize: 13,
+                      fontWeight: 500,
+                      userSelect: 'none',
+                      color: checked ? '#ea580c' : 'inherit'
+                    }}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={checked}
+                      onChange={() => {
+                        setForm((prev) => {
+                          const prevSet = new Set(prev.diasRemotos);
+                          if (prevSet.has(dia.id)) prevSet.delete(dia.id);
+                          else prevSet.add(dia.id);
+                          return { ...prev, diasRemotos: Array.from(prevSet) };
+                        });
+                      }}
+                      style={{ accentColor: '#ea580c' }}
                     />
                     {dia.label}
                   </label>

@@ -7,12 +7,13 @@ export interface Curso {
   id: string;
   nome: string;
   cargaHoraria: number;
-  diasSemana: string[]; // ['1', '2', '3'] = Mon, Tue, Wed
+  diasSemana: string[]; // Presenciais
+  diasRemotos: string[]; // Remotos
   codigoTurmaPadrao?: string;
   turnoPadrao?: string;
   modalidade: Modality;
   instrutorId?: string;
-  ambienteId?: string;
+  unidade?: string;
 }
 
 export interface Sala {
@@ -95,12 +96,13 @@ export function AppProvider({ children }: { children: ReactNode }) {
         id: c.id_cursos.toString(),
         nome: c.nome_curso,
         cargaHoraria: c.carga_horaria,
-        diasSemana: c.dias_letivos_padrao ? c.dias_letivos_padrao.split(',') : ['1','2','3','4','5'], 
+        diasSemana: c.dias_letivos_padrao ? c.dias_letivos_padrao.split(',') : [], 
+        diasRemotos: c.dias_remotos_padrao ? c.dias_remotos_padrao.split(',') : [],
         codigoTurmaPadrao: c.codigo_turma_padrao,
         turnoPadrao: c.turno_padrao,
         modalidade: c.modalidade as Modality,
         instrutorId: c.id_instrutor_padrao ? c.id_instrutor_padrao.toString() : '', 
-        ambienteId: c.idTipo_sala ? c.idTipo_sala.toString() : ''
+        unidade: c.unidade || ''
       }));
       setCursos(mappedCursos);
     });
