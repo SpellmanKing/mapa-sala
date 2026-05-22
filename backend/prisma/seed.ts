@@ -85,14 +85,34 @@ async function main() {
 
   // --- LER ARQUIVO DE SALAS ---
   try {
-    const salasPath = path.join(process.cwd(), '../docs/descricao_das_salas_talal.xlsx');
-    const workbookSalas = xlsx.readFile(salasPath);
-    const sheetNameSalas = workbookSalas.SheetNames[0];
-    const dataSalas = xlsx.utils.sheet_to_json(workbookSalas.Sheets[sheetNameSalas]) as any[];
+    const novasSalas = [
+      { nome_sala: 'Sala Inovadora 1', capacidade_maxima: 30, tipo: 'Sala de aula Inovadora' },
+      { nome_sala: 'Sala Inovadora 2', capacidade_maxima: 20, tipo: 'Sala de aula Inovadora' },
+      { nome_sala: 'Sala Inovadora 3', capacidade_maxima: 35, tipo: 'Sala de aula Inovadora' },
+      { nome_sala: 'Sala Inovadora 4', capacidade_maxima: 33, tipo: 'Sala de aula Inovadora' },
+      { nome_sala: 'Sala Inovadora 5', capacidade_maxima: 20, tipo: 'Sala de aula Inovadora' },
+      { nome_sala: 'Sala Inovadora 6', capacidade_maxima: 32, tipo: 'Sala de aula Inovadora' },
+      
+      { nome_sala: 'Laboratório de Informática 1', capacidade_maxima: 28, tipo: 'Laboratório de TI' },
+      { nome_sala: 'Laboratório de Informática 2', capacidade_maxima: 28, tipo: 'Laboratório de TI' },
+      { nome_sala: 'Laboratório de Informática 3', capacidade_maxima: 33, tipo: 'Laboratório de TI' },
+      
+      { nome_sala: 'Laboratório de Moda', capacidade_maxima: 20, tipo: 'Laboratório de Moda' },
+      
+      { nome_sala: 'Laboratório de Imagem Pessoal 1 (Cabelo)', capacidade_maxima: 18, tipo: 'Laboratório de Imagem Pessoal' },
+      { nome_sala: 'Laboratório de Imagem Pessoal 2 (Estética e Unhas)', capacidade_maxima: 16, tipo: 'Laboratório de Imagem Pessoal' },
+      { nome_sala: 'Laboratório de Imagem Pessoal 3 (Maquiagem e Produção)', capacidade_maxima: 14, tipo: 'Laboratório de Imagem Pessoal' },
+      
+      { nome_sala: 'Auditório', capacidade_maxima: 70, tipo: 'Auditório' },
+      
+      { nome_sala: 'Laboratório de Informática 1 (Recanto)', capacidade_maxima: 30, tipo: 'Laboratório de TI' },
+      { nome_sala: 'Laboratório de Informática 2 (Recanto)', capacidade_maxima: 30, tipo: 'Laboratório de TI' },
+      
+      { nome_sala: 'Laboratório Multiuso (Recanto)', capacidade_maxima: 16, tipo: 'Laboratório Multiuso' },
+    ];
 
-    // Garantir os tipos de sala listados
-    for (const row of dataSalas) {
-      const tipo = row.Tipo_de_sala || 'Comum';
+    for (const row of novasSalas) {
+      const tipo = row.tipo || 'Comum';
       let tipoDb = await prisma.tipoSala.findFirst({ where: { nome_tipo: tipo } });
       if (!tipoDb) {
         tipoDb = await prisma.tipoSala.create({ data: { nome_tipo: tipo } });
@@ -100,16 +120,16 @@ async function main() {
 
       await prisma.sala.create({
         data: {
-          nome_sala: String(row.Nome_da_sala),
-          capacidade_maxima: Number(row.Capacidade_maxima) || 30,
-          local: row.Local || 'Desconhecido',
+          nome_sala: row.nome_sala,
+          capacidade_maxima: row.capacidade_maxima,
+          local: row.nome_sala.includes('Recanto') ? 'Polo Recanto das Emas' : 'Cep Talal Abu Allan',
           idTipo_sala: tipoDb.idTipo_sala,
         }
       });
     }
-    console.log(`Injetadas ${dataSalas.length} salas com sucesso!`);
+    console.log(`Injetadas ${novasSalas.length} salas com sucesso!`);
   } catch (error) {
-    console.warn('Não foi possível ler/injetar descricao_das_salas_talal.xlsx', error);
+    console.warn('Não foi possível injetar as novas salas', error);
   }
 
   // Cursos base
