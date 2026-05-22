@@ -3,7 +3,7 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
-const PORT = process.env.PORT ? Number(process.env.PORT) : 4000;
+const PORT = 3333;
 
 const app = createApp();
 app.listen(PORT, () => {
