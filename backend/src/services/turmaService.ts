@@ -49,10 +49,26 @@ export class TurmaService {
       diasSemana
     );
 
+    const datas = cronograma.datasAulas.map(d => new Date(d));
+    const conflito = await prisma.agendamento.findFirst({
+      where: {
+        id_salas: data.id_salas,
+        data_aula: { in: datas },
+        turma: { fk_id_turno: data.fk_id_turno }
+      },
+      include: { sala: true }
+    });
+
+    if (conflito) {
+      const dataFormatada = conflito.data_aula.toLocaleDateString('pt-BR');
+      throw new HttpError(409, `Conflito: O ambiente ${conflito.sala.nome_sala} já está ocupado neste turno no dia ${dataFormatada}.`);
+    }
+
     // Cria a Turma
     const turma = await prisma.turma.create({
       data: {
         id_cursos: data.id_cursos,
+        id_instrutores: curso.id_instrutor_padrao,
         codigo_turma: data.codigo_turma,
         fk_id_turno: data.fk_id_turno,
         data_inicio: new Date(data.data_inicio),
@@ -78,6 +94,59 @@ export class TurmaService {
       include: {
         agendamentos: true
       }
+    });
+  }
+
+  async reallocarTurma(id_turmas: number, data: { id_salas: number, data_inicio: Date, fk_id_turno: number, dias_semana: string[] }) {
+    const turma = await prisma.turma.findUnique({ where: { id_turmas }, include: { curso: true } });
+    if (!turma) throw new HttpError(404, 'Turma não encontrada');
+
+    const diasSemana = data.dias_semana && data.dias_semana.length > 0 ? data.dias_semana : ['1', '2', '3', '4', '5'];
+    
+    const cronograma = await this.calculadoraService.calcularCronograma(
+      turma.curso.carga_horaria,
+      data.data_inicio,
+      diasSemana
+    );
+
+    const datas = cronograma.datasAulas.map(d => new Date(d));
+    const conflito = await prisma.agendamento.findFirst({
+      where: {
+        id_salas: data.id_salas,
+        data_aula: { in: datas },
+        id_turmas: { not: id_turmas },
+        turma: { fk_id_turno: data.fk_id_turno }
+      },
+      include: { sala: true }
+    });
+
+    if (conflito) {
+      const dataFormatada = conflito.data_aula.toLocaleDateString('pt-BR');
+      throw new HttpError(409, `Conflito: O ambiente ${conflito.sala.nome_sala} já está ocupado neste turno no dia ${dataFormatada}.`);
+    }
+
+    await prisma.agendamento.deleteMany({ where: { id_turmas } });
+    
+    await prisma.turma.update({
+      where: { id_turmas },
+      data: {
+        fk_id_turno: data.fk_id_turno,
+        data_inicio: new Date(data.data_inicio),
+        data_termino: new Date(cronograma.dataTermino)
+      }
+    });
+
+    const agendamentosParaCriar = datas.map(dataAula => ({
+      id_turmas,
+      id_salas: data.id_salas,
+      data_aula: dataAula,
+    }));
+
+    await prisma.agendamento.createMany({ data: agendamentosParaCriar });
+
+    return prisma.turma.findUnique({
+      where: { id_turmas },
+      include: { agendamentos: true }
     });
   }
 }

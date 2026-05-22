@@ -1,6 +1,8 @@
 import React, { useEffect, useMemo } from 'react';
 import { TipoSala, Instrutor, Modality } from '../context/AppContext';
 
+import Select from 'react-select';
+
 export type CursoPayload = {
   id?: string;
   nome: string;
@@ -36,6 +38,10 @@ export function AllocationModal({
   instrutores
 }: Props) {
   const ambientesSorted = useMemo(() => [...ambientes].sort((a, b) => a.nome.localeCompare(b.nome)), [ambientes]);
+
+  const instrutorOptions = useMemo(() => {
+    return instrutores.map(i => ({ value: i.id, label: i.nome }));
+  }, [instrutores]);
 
   useEffect(() => {
     if (!open) return;
@@ -118,18 +124,23 @@ export function AllocationModal({
             <label style={{ display: 'block', fontSize: 13, fontWeight: 600, marginBottom: 6 }}>
               Instrutor
             </label>
-            <select
-              value={form.instrutorId}
-              onChange={(e) => setForm((prev) => ({ ...prev, instrutorId: e.target.value }))}
-              style={inputStyle}
-            >
-              <option value="" disabled>Selecione</option>
-              {instrutores.map((i) => (
-                <option key={i.id} value={i.id}>
-                  {i.nome}
-                </option>
-              ))}
-            </select>
+            <Select
+              options={instrutorOptions}
+              value={instrutorOptions.find(opt => opt.value === form.instrutorId) || null}
+              onChange={(selected) => setForm(prev => ({ ...prev, instrutorId: selected?.value || '' }))}
+              placeholder="Selecione ou pesquise..."
+              noOptionsMessage={() => "Nenhum instrutor encontrado"}
+              styles={{
+                control: (base) => ({
+                  ...base,
+                  borderRadius: '12px',
+                  borderColor: '#e5e7eb',
+                  boxShadow: 'none',
+                  padding: '2px',
+                  '&:hover': { borderColor: '#d1d5db' }
+                })
+              }}
+            />
           </div>
 
           <div>

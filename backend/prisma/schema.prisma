@@ -66,9 +66,11 @@ model Curso {
   codigo_turma_padrao String?
   turno_padrao        String?
   dias_letivos_padrao String?
+  id_instrutor_padrao Int?
 
-  tipoSala      TipoSala? @relation(fields: [idTipo_sala], references: [idTipo_sala])
-  turmas        Turma[]
+  tipoSala        TipoSala? @relation(fields: [idTipo_sala], references: [idTipo_sala])
+  instrutorPadrao Instrutor? @relation(fields: [id_instrutor_padrao], references: [id_instrutores])
+  turmas          Turma[]
   instrutoresCursos InstrutoresCurso[]
 }
 
@@ -81,6 +83,7 @@ model Instrutor {
 
   turmas             Turma[]
   instrutoresCursos InstrutoresCurso[]
+  cursosPadrao      Curso[]
 }
 
 model InstrutoresCurso {

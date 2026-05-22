@@ -20,3 +20,8 @@ turmaRouter.post('/alocar', asyncHandler(async (req: Request, res: Response) => 
   const turma = await turmaService.alocarTurma(req.body);
   res.status(201).json(turma);
 }));
+
+turmaRouter.put('/:id/reallocar', asyncHandler(async (req: Request, res: Response) => {
+  const turma = await turmaService.reallocarTurma(Number(req.params.id), req.body);
+  res.json(turma);
+}));

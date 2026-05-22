@@ -99,7 +99,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         codigoTurmaPadrao: c.codigo_turma_padrao,
         turnoPadrao: c.turno_padrao,
         modalidade: c.modalidade as Modality,
-        instrutorId: '', 
+        instrutorId: c.id_instrutor_padrao ? c.id_instrutor_padrao.toString() : '', 
         ambienteId: c.idTipo_sala ? c.idTipo_sala.toString() : ''
       }));
       setCursos(mappedCursos);

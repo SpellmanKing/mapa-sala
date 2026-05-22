@@ -6,6 +6,7 @@ export class CursoService {
     return prisma.curso.findMany({
       include: {
         tipoSala: true,
+        instrutorPadrao: true,
       }
     });
   }
@@ -15,19 +16,20 @@ export class CursoService {
       where: { id_cursos: id },
       include: {
         tipoSala: true,
+        instrutorPadrao: true,
       }
     });
     if (!curso) throw new HttpError(404, 'Curso não encontrado');
     return curso;
   }
 
-  async create(data: { nome_curso: string, segmento: string, modalidade: string, carga_horaria: number, valor: number, curso_tem: boolean, bolsa_compativel: boolean, idTipo_sala?: number, codigo_turma_padrao?: string, turno_padrao?: string, dias_letivos_padrao?: string }) {
+  async create(data: { nome_curso: string, segmento: string, modalidade: string, carga_horaria: number, valor: number, curso_tem: boolean, bolsa_compativel: boolean, idTipo_sala?: number, codigo_turma_padrao?: string, turno_padrao?: string, dias_letivos_padrao?: string, id_instrutor_padrao?: number }) {
     return prisma.curso.create({
       data
     });
   }
 
-  async update(id: number, data: Partial<{ nome_curso: string, segmento: string, modalidade: string, carga_horaria: number, valor: number, curso_tem: boolean, bolsa_compativel: boolean, idTipo_sala: number, codigo_turma_padrao: string, turno_padrao: string, dias_letivos_padrao: string }>) {
+  async update(id: number, data: Partial<{ nome_curso: string, segmento: string, modalidade: string, carga_horaria: number, valor: number, curso_tem: boolean, bolsa_compativel: boolean, idTipo_sala: number, codigo_turma_padrao: string, turno_padrao: string, dias_letivos_padrao: string, id_instrutor_padrao: number }>) {
     await this.getById(id);
     return prisma.curso.update({
       where: { id_cursos: id },

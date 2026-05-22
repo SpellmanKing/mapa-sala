@@ -54,6 +54,7 @@ export function ManageSystemPage() {
         curso_tem: false,
         bolsa_compativel: true,
         idTipo_sala: Number(cursoForm.ambienteId) || undefined,
+        id_instrutor_padrao: Number(cursoForm.instrutorId) || undefined,
         codigo_turma_padrao: cursoForm.codigoTurmaPadrao,
         turno_padrao: cursoForm.turnoPadrao,
         dias_letivos_padrao: cursoForm.diasSemanaLetiva.join(',')

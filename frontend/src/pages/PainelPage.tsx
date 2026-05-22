@@ -136,6 +136,44 @@ export function PainelPage() {
 
   const salasFiltradas = salas.filter(s => filtroTipo === 'Todos' || s.tipo === filtroTipo);
 
+  const [editTurmaModalOpen, setEditTurmaModalOpen] = useState(false);
+  const [turmaEditando, setTurmaEditando] = useState<any>(null);
+  const [dadosEdicao, setDadosEdicao] = useState({
+    salaId: '',
+    dataInicio: '',
+    turno: 'Manhã',
+    diasSemana: [] as string[]
+  });
+
+  const handleEditClick = (turma: any) => {
+    setTurmaEditando(turma);
+    setDadosEdicao({
+      salaId: turma.salaId,
+      dataInicio: turma.dataInicio,
+      turno: turma.turno,
+      diasSemana: ['1', '2', '3', '4', '5'] // Simplificação inicial
+    });
+    setEditTurmaModalOpen(true);
+  };
+
+  const handleSalvarEdicao = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!turmaEditando) return;
+    
+    try {
+      await TurmaService.reallocar(Number(turmaEditando.id), {
+        id_salas: Number(dadosEdicao.salaId),
+        data_inicio: dadosEdicao.dataInicio,
+        fk_id_turno: dadosEdicao.turno === 'Manhã' ? 1 : dadosEdicao.turno === 'Tarde' ? 2 : 3,
+        dias_semana: dadosEdicao.diasSemana
+      });
+      refreshTurmas();
+      setEditTurmaModalOpen(false);
+    } catch (err: any) {
+      alert(err.response?.data?.message || 'Erro ao reallocar turma.');
+    }
+  };
+
   return (
     <div className="flex flex-col h-full bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden relative">
       
@@ -249,7 +287,8 @@ export function PainelPage() {
                       {turmasNestaCelula.map(turma => (
                         <div 
                           key={turma.id}
-                          className={`relative w-full rounded-xl p-3 border-l-4 shadow-sm hover:shadow-md transition-shadow overflow-hidden flex flex-col gap-2 ${turma.modalidade === 'Remoto' ? 'bg-orange-50/50 border-[var(--color-accent)]' : 'bg-blue-50/30 border-[var(--color-primary)]'}`}
+                          onClick={() => handleEditClick(turma)}
+                          className={`cursor-pointer relative w-full rounded-xl p-3 border-l-4 shadow-sm hover:shadow-md transition-shadow overflow-hidden flex flex-col gap-2 ${turma.modalidade === 'Remoto' ? 'bg-orange-50/50 border-[var(--color-accent)]' : 'bg-blue-50/30 border-[var(--color-primary)]'}`}
                         >
                           <div className="flex justify-between items-start">
                             <span className="text-[10px] font-black bg-white px-2 py-0.5 rounded shadow-sm text-[var(--color-secondary)] border border-gray-100">
@@ -303,7 +342,7 @@ export function PainelPage() {
             
             <form onSubmit={handleCriarAgendamento} className="p-6 flex flex-col gap-5 overflow-y-auto">
               
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 gap-4">
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-1">Curso</label>
                   <select 
@@ -315,17 +354,6 @@ export function PainelPage() {
                     <option value="" disabled>Selecione um curso...</option>
                     {cursos.map(c => <option key={c.id} value={c.id}>{c.nome}</option>)}
                   </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-1">Código da Turma</label>
-                  <input 
-                    type="text"
-                    placeholder="Ex: 2025.09.75"
-                    value={novoAgendamento.codigoTurma}
-                    onChange={e => setNovoAgendamento({...novoAgendamento, codigoTurma: e.target.value})}
-                    className="w-full border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-[var(--color-primary)]/20 outline-none"
-                    required
-                  />
                 </div>
               </div>
 
@@ -399,6 +427,69 @@ export function PainelPage() {
                 </button>
                 <button type="submit" className="bg-[var(--color-primary)] text-white font-bold py-2 px-6 rounded-lg shadow-md hover:opacity-90">
                   Alocar Turma
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL DE EDIÇÃO */}
+      {editTurmaModalOpen && turmaEditando && (
+        <div className="absolute inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden animate-in fade-in zoom-in-95 duration-200 flex flex-col">
+            <div className="p-6 border-b border-gray-100 flex justify-between items-center bg-gray-50 shrink-0">
+              <h2 className="text-xl font-bold text-[var(--color-secondary)]">Editar Alocação: {turmaEditando.codigo}</h2>
+              <button onClick={() => setEditTurmaModalOpen(false)} className="text-gray-400 hover:text-gray-600 transition-colors">
+                <X size={24} />
+              </button>
+            </div>
+            
+            <form onSubmit={handleSalvarEdicao} className="p-6 flex flex-col gap-5 overflow-y-auto">
+              
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-1">Nova Sala / Ambiente</label>
+                <select 
+                  value={dadosEdicao.salaId}
+                  onChange={e => setDadosEdicao({...dadosEdicao, salaId: e.target.value})}
+                  className="w-full border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-[var(--color-primary)]/20 outline-none"
+                  required
+                >
+                  {salas.map(s => <option key={s.id} value={s.id}>{s.nome}</option>)}
+                </select>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-1">Nova Data Início</label>
+                  <input 
+                    type="date" 
+                    value={dadosEdicao.dataInicio}
+                    onChange={e => setDadosEdicao({...dadosEdicao, dataInicio: e.target.value})}
+                    className="w-full border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-[var(--color-primary)]/20 outline-none"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-1">Novo Turno</label>
+                  <select 
+                    value={dadosEdicao.turno}
+                    onChange={e => setDadosEdicao({...dadosEdicao, turno: e.target.value})}
+                    className="w-full border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-[var(--color-primary)]/20 outline-none"
+                  >
+                    <option value="Manhã">Manhã</option>
+                    <option value="Tarde">Tarde</option>
+                    <option value="Noite">Noite</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="flex justify-end gap-3 mt-4 pt-4 border-t border-gray-100">
+                <button type="button" onClick={() => setEditTurmaModalOpen(false)} className="px-4 py-2 font-semibold text-gray-500 hover:text-gray-700">
+                  Cancelar
+                </button>
+                <button type="submit" className="bg-[var(--color-primary)] text-white font-bold py-2 px-6 rounded-lg shadow-md hover:opacity-90">
+                  Salvar Alterações
                 </button>
               </div>
             </form>
