@@ -47,6 +47,7 @@ export const TurmaService = {
     api.post('/turmas/alocar', data).then(res => res.data),
   reallocar: (id: number, data: { id_salas: number, data_inicio: string, fk_id_turno: number, dias_semana: string[] }) =>
     api.put(`/turmas/${id}/reallocar`, data).then(res => res.data),
+  delete: (id: number) => api.delete(`/turmas/${id}`).then(res => res.data),
   
   getAgendamentos: () => api.get('/turmas/agendamentos').then(res => res.data)
 };

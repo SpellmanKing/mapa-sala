@@ -37,75 +37,66 @@ export function InstrutorModal({ open, title, error, onClose, onSave, form, setF
       onMouseDown={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}
-      style={{
-        position: 'fixed',
-        inset: 0,
-        background: 'rgba(15, 23, 42, 0.55)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: 16,
-        zIndex: 50
-      }}
+      className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4 z-[999] overflow-hidden"
     >
-      <div
-        style={{
-          width: 'min(500px, 100%)',
-          background: 'white',
-          borderRadius: 14,
-          boxShadow: '0 20px 70px rgba(0,0,0,0.28)',
-          padding: 18
-        }}
-      >
-        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12 }}>
+      <div className="bg-card rounded-2xl border border-border shadow-2xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in-95 duration-200 flex flex-col transition-colors duration-300">
+        
+        {/* Cabeçalho do Modal */}
+        <div className="p-5 border-b border-border flex justify-between items-start bg-surface shrink-0">
           <div>
-            <h2 style={{ margin: 0, fontSize: 18 }}>{title}</h2>
+            <h2 className="text-lg font-black text-text-main tracking-tight">{title}</h2>
           </div>
           <button
             type="button"
             onClick={onClose}
-            style={{
-              border: 'none',
-              background: 'transparent',
-              cursor: 'pointer',
-              fontSize: 22,
-              lineHeight: '22px',
-              padding: '0 6px'
-            }}
+            className="text-text-muted hover:text-text-main hover:bg-surface p-2 rounded-xl transition-all font-black text-lg leading-none"
           >
             ×
           </button>
         </div>
 
-        <div style={{ marginTop: 14, display: 'flex', flexDirection: 'column', gap: 12 }}>
+        {/* Corpo do Modal */}
+        <form onSubmit={(e) => { e.preventDefault(); onSave(); }} className="p-6 flex flex-col gap-5">
+          
           <div>
-            <label style={{ display: 'block', fontSize: 13, fontWeight: 600, marginBottom: 6 }}>
+            <label className="block text-xs font-black text-text-muted uppercase tracking-widest mb-1.5">
               Nome do Instrutor
             </label>
             <input
               value={form.nome}
               onChange={(e) => setForm((prev) => ({ ...prev, nome: e.target.value }))}
-              placeholder="Ex: João da Silva"
-              style={inputStyle}
+              placeholder="Ex: Carlos Alberto"
+              className="w-full border border-border rounded-xl p-3 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none text-sm font-semibold transition-all bg-input text-text-main"
+              required
             />
           </div>
-        </div>
 
-        {error && (
-          <div style={{ marginTop: 12, background: '#fef2f2', border: '1px solid #fecaca', padding: 10, borderRadius: 12 }}>
-            <p style={{ margin: 0, color: '#991b1b', fontWeight: 600, fontSize: 13 }}>{error}</p>
+          {/* Tratamento de Erros */}
+          {error && (
+            <div className="bg-red-50 dark:bg-red-950/10 border border-red-150 dark:border-red-900/30 p-4 rounded-xl">
+              <p className="text-xs font-bold text-red-750 dark:text-red-400 leading-normal">{error}</p>
+            </div>
+          )}
+
+          {/* Ações do Modal */}
+          <div className="flex justify-end gap-3 mt-4 pt-4 border-t border-border shrink-0">
+            <button 
+              type="button" 
+              onClick={onClose} 
+              className="px-5 py-2.5 text-sm font-bold text-text-muted hover:text-text-main hover:bg-surface rounded-xl transition-all"
+            >
+              Cancelar
+            </button>
+            <button 
+              type="submit" 
+              className="bg-primary text-white font-black py-2.5 px-6 rounded-xl shadow-md hover:scale-[1.02] active:scale-[0.98] transition-all text-sm"
+            >
+              Salvar Instrutor
+            </button>
           </div>
-        )}
 
-        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, marginTop: 16 }}>
-          <button type="button" onClick={onClose} style={secondaryButtonStyle}>Cancelar</button>
-          <button type="button" onClick={onSave} style={primaryButtonStyle}>Salvar</button>
-        </div>
+        </form>
       </div>
     </div>
   );
 }
-
-const inputStyle: React.CSSProperties = { width: '100%', padding: '10px 12px', borderRadius: 12, border: '1px solid #e5e7eb', outline: 'none', fontSize: 14 };
-const primaryButtonStyle: React.CSSProperties = { border: 'none', background: '#2563eb', color: 'white', padding: '10px 14px', borderRadius: 12, cursor: 'pointer', fontWeight: 700 };
-const secondaryButtonStyle: React.CSSProperties = { border: '1px solid #d1d5db', background: 'white', padding: '10px 14px', borderRadius: 12, cursor: 'pointer', fontWeight: 700 };

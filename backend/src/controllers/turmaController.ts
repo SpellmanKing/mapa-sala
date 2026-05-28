@@ -25,3 +25,8 @@ turmaRouter.put('/:id/reallocar', asyncHandler(async (req: Request, res: Respons
   const turma = await turmaService.reallocarTurma(Number(req.params.id), req.body);
   res.json(turma);
 }));
+
+turmaRouter.delete('/:id', asyncHandler(async (req: Request, res: Response) => {
+  const result = await turmaService.deletarTurma(Number(req.params.id));
+  res.json(result);
+}));

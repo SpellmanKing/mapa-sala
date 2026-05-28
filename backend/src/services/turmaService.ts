@@ -149,4 +149,11 @@ export class TurmaService {
       include: { agendamentos: true }
     });
   }
+
+  async deletarTurma(id_turmas: number) {
+    const turma = await prisma.turma.findUnique({ where: { id_turmas } });
+    if (!turma) throw new HttpError(404, 'Turma não encontrada');
+    await prisma.turma.delete({ where: { id_turmas } });
+    return { message: 'Alocação removida com sucesso' };
+  }
 }

@@ -1,6 +1,5 @@
 import React, { useEffect, useMemo } from 'react';
 import { TipoSala, Instrutor, Modality } from '../context/AppContext';
-
 import Select from 'react-select';
 
 export type CursoPayload = {
@@ -38,7 +37,6 @@ export function AllocationModal({
   ambientes,
   instrutores
 }: Props) {
-  const ambientesSorted = useMemo(() => [...ambientes].sort((a, b) => a.nome.localeCompare(b.nome)), [ambientes]);
 
   const instrutorOptions = useMemo(() => {
     return instrutores.map(i => ({ value: i.id, label: i.nome }));
@@ -65,135 +63,137 @@ export function AllocationModal({
       onMouseDown={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}
-      style={{
-        position: 'fixed',
-        inset: 0,
-        background: 'rgba(15, 23, 42, 0.55)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: 16,
-        zIndex: 50
-      }}
+      className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4 z-[999] overflow-hidden"
     >
-      <div
-        style={{
-          width: 'min(720px, 100%)',
-          background: 'white',
-          borderRadius: 14,
-          boxShadow: '0 20px 70px rgba(0,0,0,0.28)',
-          padding: 18
-        }}
-      >
-        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12 }}>
+      <div className="bg-card rounded-2xl border border-border shadow-2xl w-full max-w-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200 flex flex-col max-h-[90vh] transition-colors duration-300">
+        
+        {/* Cabeçalho do Modal */}
+        <div className="p-5 border-b border-border flex justify-between items-start bg-surface shrink-0">
           <div>
-            <h2 style={{ margin: 0, fontSize: 18 }}>{title}</h2>
-            <p style={{ margin: '6px 0 0', opacity: 0.7, fontSize: 13 }}>
-              Campos obrigatórios: nome do curso, instrutor e ambiente.
+            <h2 className="text-lg font-black text-text-main tracking-tight">{title}</h2>
+            <p className="text-xs text-text-muted mt-1 font-medium">
+              Todos os campos são obrigatórios para a criação do curso.
             </p>
           </div>
           <button
             type="button"
             onClick={onClose}
-            style={{
-              border: 'none',
-              background: 'transparent',
-              cursor: 'pointer',
-              fontSize: 22,
-              lineHeight: '22px',
-              padding: '0 6px'
-            }}
+            className="text-text-muted hover:text-text-main hover:bg-surface p-2 rounded-xl transition-all font-black text-lg leading-none"
           >
             ×
           </button>
         </div>
 
-        <div style={{ marginTop: 14, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-          <div style={{ gridColumn: 'span 2' }}>
-            <label style={{ display: 'block', fontSize: 13, fontWeight: 600, marginBottom: 6 }}>
-              Nome do Curso
-            </label>
-            <input
-              value={form.nome}
-              onChange={(e) => setForm((prev) => ({ ...prev, nome: e.target.value }))}
-              placeholder="Ex: Desenvolvimento Web"
-              style={inputStyle}
-            />
-          </div>
+        {/* Corpo do Modal com Scroll Interno */}
+        <form onSubmit={(e) => { e.preventDefault(); onSave(); }} className="p-6 flex flex-col gap-5 overflow-y-auto custom-scrollbar">
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            
+            {/* Nome do Curso */}
+            <div className="md:col-span-2">
+              <label className="block text-xs font-black text-text-muted uppercase tracking-widest mb-1.5">
+                Nome do Curso
+              </label>
+              <input
+                value={form.nome}
+                onChange={(e) => setForm((prev) => ({ ...prev, nome: e.target.value }))}
+                placeholder="Ex: Desenvolvimento de Sistemas"
+                className="w-full border border-border rounded-xl p-3 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none text-sm font-semibold transition-all bg-input text-text-main"
+                required
+              />
+            </div>
 
-          <div>
-            <label style={{ display: 'block', fontSize: 13, fontWeight: 600, marginBottom: 6 }}>
-              Instrutor
-            </label>
-            <Select
-              options={instrutorOptions}
-              value={instrutorOptions.find(opt => opt.value === form.instrutorId) || null}
-              onChange={(selected) => setForm(prev => ({ ...prev, instrutorId: selected?.value || '' }))}
-              placeholder="Selecione ou pesquise..."
-              noOptionsMessage={() => "Nenhum instrutor encontrado"}
-              styles={{
-                control: (base) => ({
-                  ...base,
-                  borderRadius: '12px',
-                  borderColor: '#e5e7eb',
-                  boxShadow: 'none',
-                  padding: '2px',
-                  '&:hover': { borderColor: '#d1d5db' }
-                })
-              }}
-            />
-          </div>
+            {/* Instrutor */}
+            <div>
+              <label className="block text-xs font-black text-text-muted uppercase tracking-widest mb-1.5">
+                Instrutor Principal
+              </label>
+              <Select
+                options={instrutorOptions}
+                value={instrutorOptions.find(opt => opt.value === form.instrutorId) || null}
+                onChange={(selected) => setForm(prev => ({ ...prev, instrutorId: selected?.value || '' }))}
+                placeholder="Selecione ou pesquise..."
+                noOptionsMessage={() => "Nenhum instrutor encontrado"}
+                className="text-sm cursor-pointer"
+                styles={{
+                  control: (base) => ({
+                    ...base,
+                    borderRadius: '12px',
+                    borderColor: 'var(--color-border)',
+                    backgroundColor: 'var(--color-input)',
+                    color: 'var(--color-text-main)',
+                    padding: '2px',
+                    boxShadow: 'none',
+                    fontWeight: 600,
+                    '&:hover': { borderColor: 'var(--color-border)' }
+                  }),
+                  singleValue: (base) => ({
+                    ...base,
+                    color: 'var(--color-text-main)',
+                  }),
+                  placeholder: (base) => ({
+                    ...base,
+                    color: 'var(--color-text-muted)',
+                  }),
+                  menu: (base) => ({
+                    ...base,
+                    backgroundColor: 'var(--color-card)',
+                    border: '1px solid var(--color-border)',
+                    zIndex: 50
+                  }),
+                  option: (base, state) => ({
+                    ...base,
+                    backgroundColor: state.isSelected 
+                      ? 'var(--color-primary)' 
+                      : state.isFocused 
+                        ? 'var(--color-surface)' 
+                        : 'transparent',
+                    color: state.isSelected 
+                      ? 'white' 
+                      : 'var(--color-text-main)',
+                    fontWeight: state.isSelected ? 700 : 500
+                  })
+                }}
+              />
+            </div>
 
-          <div>
-            <label style={{ display: 'block', fontSize: 13, fontWeight: 600, marginBottom: 6 }}>
-              Unidade
-            </label>
-            <select
-              value={form.unidade}
-              onChange={(e) => setForm((prev) => ({ ...prev, unidade: e.target.value }))}
-              style={inputStyle}
-            >
-              <option value="" disabled>Selecione</option>
-              {['CEP Tala', 'Polo', 'CED 308', 'CEM 111', 'CEM 12', 'CED 11', 'CED 7'].map(u => (
-                <option key={u} value={u}>{u}</option>
-              ))}
-            </select>
-          </div>
+            {/* Unidade */}
+            <div>
+              <label className="block text-xs font-black text-text-muted uppercase tracking-widest mb-1.5">
+                Unidade
+              </label>
+              <select
+                value={form.unidade}
+                onChange={(e) => setForm((prev) => ({ ...prev, unidade: e.target.value }))}
+                className="w-full border border-border rounded-xl p-3 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none text-sm font-semibold transition-all bg-input text-text-main cursor-pointer"
+                required
+              >
+                <option value="" disabled className="bg-card text-text-main">Selecione a unidade...</option>
+                {['Cep Talal', 'Polo Recanto', 'Colégio CED 308', 'Colégio CEM 111', 'Colégio CEM 12', 'Colégio CED 11', 'Colégio CED 7'].map(u => (
+                  <option key={u} value={u} className="bg-card text-text-main">{u}</option>
+                ))}
+              </select>
+            </div>
 
-          <div style={{ gridColumn: 'span 2' }}>
-            <label style={{ display: 'block', fontSize: 13, fontWeight: 600, marginBottom: 6 }}>
-              Dias da semana letiva (Presenciais)
-            </label>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-              {[
-                { id: '1', label: 'Segunda' },
-                { id: '2', label: 'Terça' },
-                { id: '3', label: 'Quarta' },
-                { id: '4', label: 'Quinta' },
-                { id: '5', label: 'Sexta' }
-              ].map((dia) => {
-                const checked = form.diasSemanaLetiva.includes(dia.id);
-                return (
-                  <label
-                    key={dia.id}
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: 6,
-                      padding: '8px 12px',
-                      border: checked ? '2px solid #2563eb' : '1px solid #e5e7eb',
-                      borderRadius: 8,
-                      cursor: 'pointer',
-                      background: checked ? '#eff6ff' : 'white',
-                      fontSize: 13,
-                      fontWeight: 500,
-                      userSelect: 'none'
-                    }}
-                  >
-                    <input
-                      type="checkbox"
-                      checked={checked}
-                      onChange={() => {
+            {/* Dias da semana letiva (Presenciais) */}
+            <div className="md:col-span-2">
+              <label className="block text-xs font-black text-text-muted uppercase tracking-widest mb-2">
+                Dias da Semana Letiva (Presenciais)
+              </label>
+              <div className="flex flex-wrap gap-2">
+                {[
+                  { id: '1', label: 'Segunda' },
+                  { id: '2', label: 'Terça' },
+                  { id: '3', label: 'Quarta' },
+                  { id: '4', label: 'Quinta' },
+                  { id: '5', label: 'Sexta' }
+                ].map((dia) => {
+                  const checked = form.diasSemanaLetiva.includes(dia.id);
+                  return (
+                    <button
+                      type="button"
+                      key={dia.id}
+                      onClick={() => {
                         setForm((prev) => {
                           const prevSet = new Set(prev.diasSemanaLetiva);
                           if (prevSet.has(dia.id)) prevSet.delete(dia.id);
@@ -201,50 +201,38 @@ export function AllocationModal({
                           return { ...prev, diasSemanaLetiva: Array.from(prevSet) };
                         });
                       }}
-                      style={{ accentColor: '#2563eb' }}
-                    />
-                    {dia.label}
-                  </label>
-                );
-              })}
+                      className={`px-4 py-2.5 text-xs font-bold rounded-xl border-2 active:scale-95 transition-all ${
+                        checked 
+                          ? 'bg-primary/5 border-primary text-primary shadow-sm font-black' 
+                          : 'bg-input border-border text-text-muted hover:bg-surface'
+                      }`}
+                    >
+                      {dia.label}
+                    </button>
+                  );
+                })}
+              </div>
             </div>
-          </div>
 
-          <div style={{ gridColumn: 'span 2' }}>
-            <label style={{ display: 'block', fontSize: 13, fontWeight: 600, marginBottom: 6 }}>
-              Dias da semana letiva (Remotos)
-            </label>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-              {[
-                { id: '1', label: 'Segunda' },
-                { id: '2', label: 'Terça' },
-                { id: '3', label: 'Quarta' },
-                { id: '4', label: 'Quinta' },
-                { id: '5', label: 'Sexta' }
-              ].map((dia) => {
-                const checked = form.diasRemotos.includes(dia.id);
-                return (
-                  <label
-                    key={dia.id}
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: 6,
-                      padding: '8px 12px',
-                      border: checked ? '2px solid #ea580c' : '1px solid #e5e7eb',
-                      borderRadius: 8,
-                      cursor: 'pointer',
-                      background: checked ? '#fff7ed' : 'white',
-                      fontSize: 13,
-                      fontWeight: 500,
-                      userSelect: 'none',
-                      color: checked ? '#ea580c' : 'inherit'
-                    }}
-                  >
-                    <input
-                      type="checkbox"
-                      checked={checked}
-                      onChange={() => {
+            {/* Dias da semana letiva (Remotos) */}
+            <div className="md:col-span-2">
+              <label className="block text-xs font-black text-text-muted uppercase tracking-widest mb-2">
+                Dias da Semana Letiva (Remotos)
+              </label>
+              <div className="flex flex-wrap gap-2">
+                {[
+                  { id: '1', label: 'Segunda' },
+                  { id: '2', label: 'Terça' },
+                  { id: '3', label: 'Quarta' },
+                  { id: '4', label: 'Quinta' },
+                  { id: '5', label: 'Sexta' }
+                ].map((dia) => {
+                  const checked = form.diasRemotos.includes(dia.id);
+                  return (
+                    <button
+                      type="button"
+                      key={dia.id}
+                      onClick={() => {
                         setForm((prev) => {
                           const prevSet = new Set(prev.diasRemotos);
                           if (prevSet.has(dia.id)) prevSet.delete(dia.id);
@@ -252,73 +240,91 @@ export function AllocationModal({
                           return { ...prev, diasRemotos: Array.from(prevSet) };
                         });
                       }}
-                      style={{ accentColor: '#ea580c' }}
-                    />
-                    {dia.label}
-                  </label>
-                );
-              })}
+                      className={`px-4 py-2.5 text-xs font-bold rounded-xl border-2 active:scale-95 transition-all ${
+                        checked 
+                          ? 'bg-accent/10 border-accent text-accent dark:text-light-accent shadow-sm font-black' 
+                          : 'bg-input border-border text-text-muted hover:bg-surface'
+                      }`}
+                    >
+                      {dia.label}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Código da Turma */}
+            <div className="md:col-span-2">
+              <label className="block text-xs font-black text-text-muted uppercase tracking-widest mb-1.5">
+                Código da Turma (Padrão)
+              </label>
+              <input
+                value={form.codigoTurmaPadrao}
+                onChange={(e) => setForm((prev) => ({ ...prev, codigoTurmaPadrao: e.target.value }))}
+                placeholder="Ex: 2026.29.10"
+                className="w-full border border-border rounded-xl p-3 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none text-sm font-semibold transition-all bg-input text-text-main"
+              />
+            </div>
+
+            {/* Turno Padrão */}
+            <div>
+              <label className="block text-xs font-black text-text-muted uppercase tracking-widest mb-1.5">
+                Turno Padrão
+              </label>
+              <select
+                value={form.turnoPadrao}
+                onChange={(e) => setForm((prev) => ({ ...prev, turnoPadrao: e.target.value }))}
+                className="w-full border border-border rounded-xl p-3 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none text-sm font-semibold transition-all bg-input text-text-main cursor-pointer"
+              >
+                <option value="Manhã" className="bg-card text-text-main">Manhã</option>
+                <option value="Tarde" className="bg-card text-text-main">Tarde</option>
+                <option value="Noite" className="bg-card text-text-main">Noite</option>
+              </select>
+            </div>
+
+            {/* Modalidade */}
+            <div>
+              <label className="block text-xs font-black text-text-muted uppercase tracking-widest mb-1.5">
+                Modalidade
+              </label>
+              <select
+                value={form.modalidade}
+                onChange={(e) => setForm((prev) => ({ ...prev, modalidade: e.target.value as Modality }))}
+                className="w-full border border-border rounded-xl p-3 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none text-sm font-semibold transition-all bg-input text-text-main cursor-pointer"
+              >
+                <option value="Presencial" className="bg-card text-text-main">Presencial</option>
+                <option value="Semi-Presencial" className="bg-card text-text-main">Semi-Presencial</option>
+                <option value="Remoto" className="bg-card text-text-main">Remoto</option>
+              </select>
             </div>
           </div>
 
-          <div style={{ gridColumn: 'span 2' }}>
-            <label style={{ display: 'block', fontSize: 13, fontWeight: 600, marginBottom: 6 }}>
-              Código da Turma (Padrão)
-            </label>
-            <input
-              value={form.codigoTurmaPadrao}
-              onChange={(e) => setForm((prev) => ({ ...prev, codigoTurmaPadrao: e.target.value }))}
-              placeholder="Ex: 2025.09.75"
-              style={inputStyle}
-            />
-          </div>
+          {/* Tratamento de Erros */}
+          {error && (
+            <div className="bg-red-50 dark:bg-red-950/10 border border-red-150 dark:border-red-900/30 p-4 rounded-xl shrink-0">
+              <p className="text-xs font-bold text-red-750 dark:text-red-400 leading-normal">{error}</p>
+            </div>
+          )}
 
-          <div>
-            <label style={{ display: 'block', fontSize: 13, fontWeight: 600, marginBottom: 6 }}>
-              Turno Padrão
-            </label>
-            <select
-              value={form.turnoPadrao}
-              onChange={(e) => setForm((prev) => ({ ...prev, turnoPadrao: e.target.value }))}
-              style={inputStyle}
+          {/* Ações do Modal */}
+          <div className="flex justify-end gap-3 mt-4 pt-4 border-t border-border shrink-0">
+            <button 
+              type="button" 
+              onClick={onClose} 
+              className="px-5 py-2.5 text-sm font-bold text-text-muted hover:text-text-main hover:bg-surface rounded-xl transition-all"
             >
-              <option value="Manhã">Manhã</option>
-              <option value="Tarde">Tarde</option>
-              <option value="Noite">Noite</option>
-            </select>
-          </div>
-
-          <div>
-            <label style={{ display: 'block', fontSize: 13, fontWeight: 600, marginBottom: 6 }}>
-              Modalidade
-            </label>
-            <select
-              value={form.modalidade}
-              onChange={(e) => setForm((prev) => ({ ...prev, modalidade: e.target.value as CursoPayload['modalidade'] }))}
-              style={inputStyle}
+              Cancelar
+            </button>
+            <button 
+              type="submit" 
+              className="bg-primary text-white font-black py-2.5 px-6 rounded-xl shadow-md hover:scale-[1.02] active:scale-[0.98] transition-all text-sm"
             >
-              <option value="Presencial">Presencial</option>
-              <option value="Semi-Presencial">Semi-Presencial</option>
-              <option value="Remoto">Remoto</option>
-            </select>
+              Salvar Curso
+            </button>
           </div>
-        </div>
 
-        {error && (
-          <div style={{ marginTop: 12, background: '#fef2f2', border: '1px solid #fecaca', padding: 10, borderRadius: 12 }}>
-            <p style={{ margin: 0, color: '#991b1b', fontWeight: 600, fontSize: 13 }}>{error}</p>
-          </div>
-        )}
-
-        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, marginTop: 16 }}>
-          <button type="button" onClick={onClose} style={secondaryButtonStyle}>Cancelar</button>
-          <button type="button" onClick={onSave} style={primaryButtonStyle}>Salvar</button>
-        </div>
+        </form>
       </div>
     </div>
   );
 }
-
-const inputStyle: React.CSSProperties = { width: '100%', padding: '10px 12px', borderRadius: 12, border: '1px solid #e5e7eb', outline: 'none', fontSize: 14 };
-const primaryButtonStyle: React.CSSProperties = { border: 'none', background: '#2563eb', color: 'white', padding: '10px 14px', borderRadius: 12, cursor: 'pointer', fontWeight: 700 };
-const secondaryButtonStyle: React.CSSProperties = { border: '1px solid #d1d5db', background: 'white', padding: '10px 14px', borderRadius: 12, cursor: 'pointer', fontWeight: 700 };

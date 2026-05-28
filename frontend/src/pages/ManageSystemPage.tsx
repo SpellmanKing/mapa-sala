@@ -3,6 +3,7 @@ import { AllocationModal, CursoPayload } from '../components/AllocationModal';
 import { InstrutorModal, InstrutorPayload } from '../components/InstrutorModal';
 import { useAppContext, Curso, Instrutor } from '../context/AppContext';
 import { CursoService, InstrutorService } from '../api/client';
+import { Plus, Edit, Trash2, BookOpen, Users, School } from 'lucide-react';
 
 type Tab = 'cursos' | 'instrutores' | 'salas';
 
@@ -74,7 +75,7 @@ export function ManageSystemPage() {
   }
 
   async function removeCurso(id?: string) {
-    if (!id || !window.confirm('Excluir este curso?')) return;
+    if (!id || !window.confirm('Deseja excluir permanentemente este curso?')) return;
     try { await CursoService.delete(Number(id)); refreshCursos(); } catch { alert('Erro ao excluir.'); }
   }
 
@@ -89,6 +90,10 @@ export function ManageSystemPage() {
   function openInstrutorEdit(instrutor: Instrutor) {
     setEditingInstrutor(instrutor);
     setInstrutorError(null);
+    setFormValues(instrutor);
+  }
+
+  function setFormValues(instrutor: Instrutor) {
     setInstrutorForm({ id: instrutor.id, nome: instrutor.nome });
     setInstrutorModalOpen(true);
   }
@@ -111,115 +116,215 @@ export function ManageSystemPage() {
   }
 
   async function removeInstrutor(id?: string) {
-    if (!id || !window.confirm('Excluir este instrutor?')) return;
+    if (!id || !window.confirm('Deseja excluir permanentemente este instrutor?')) return;
     try { await InstrutorService.delete(Number(id)); refreshInstrutores(); } catch { alert('Erro ao excluir.'); }
   }
 
   // Helpers
   function getNomeInstrutor(id?: string) { return instrutores.find(i => i.id === id)?.nome ?? id ?? '-'; }
-  function getNomeAmbiente(id?: string) { return tipoSalas.find(a => a.id === id)?.nome ?? id ?? '-'; }
 
   return (
-    <div style={{ padding: 24, fontFamily: 'system-ui, -apple-system, Segoe UI, Roboto, Arial' }}>
-      <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: 16 }}>
+    <div className="flex flex-col gap-6">
+      
+      {/* Título e Ação */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-card p-6 rounded-2xl border border-border shadow-sm transition-colors duration-300">
         <div>
-          <h1 style={{ margin: 0, fontSize: 22 }}>Gerenciamento Educacional</h1>
-          <p style={{ margin: '6px 0 0', opacity: 0.8 }}>Gestão unificada de Cursos, Instrutores e Salas.</p>
+          <h1 className="text-2xl font-black text-secondary dark:text-primary tracking-tight">Gerenciamento Educacional</h1>
+          <p className="text-text-muted text-sm mt-1 font-medium">Gestão unificada de Cursos, Instrutores e Ambientes.</p>
         </div>
         
-        {activeTab === 'cursos' && (
-          <button onClick={openCursoCreate} style={primaryButton}>Adicionar Curso</button>
-        )}
-        {activeTab === 'instrutores' && (
-          <button onClick={openInstrutorCreate} style={primaryButton}>Adicionar Instrutor</button>
-        )}
+        <div className="shrink-0">
+          {activeTab === 'cursos' && (
+            <button 
+              onClick={openCursoCreate} 
+              className="w-full sm:w-auto bg-primary text-white font-black py-2.5 px-5 rounded-xl shadow-md hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-2 text-sm cursor-pointer"
+            >
+              <Plus size={16} /> Adicionar Curso
+            </button>
+          )}
+          {activeTab === 'instrutores' && (
+            <button 
+              onClick={openInstrutorCreate} 
+              className="w-full sm:w-auto bg-primary text-white font-black py-2.5 px-5 rounded-xl shadow-md hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-2 text-sm cursor-pointer"
+            >
+              <Plus size={16} /> Adicionar Instrutor
+            </button>
+          )}
+        </div>
       </div>
 
-      <div style={{ marginTop: 24, display: 'flex', gap: 10, borderBottom: '1px solid #e5e7eb', paddingBottom: 0 }}>
-        <button onClick={() => setActiveTab('cursos')} style={activeTab === 'cursos' ? activeTabStyle : inactiveTabStyle}>Cursos</button>
-        <button onClick={() => setActiveTab('instrutores')} style={activeTab === 'instrutores' ? activeTabStyle : inactiveTabStyle}>Instrutores</button>
-        <button onClick={() => setActiveTab('salas')} style={activeTab === 'salas' ? activeTabStyle : inactiveTabStyle}>Salas e Ambientes</button>
+      {/* Navegação de Abas */}
+      <div className="bg-card rounded-2xl border border-border p-2 shadow-sm flex flex-wrap gap-2 overflow-x-auto scrollbar-none transition-colors duration-300">
+        <button 
+          onClick={() => setActiveTab('cursos')} 
+          className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-sm transition-all cursor-pointer ${
+            activeTab === 'cursos' 
+              ? 'bg-primary/5 text-primary shadow-sm border border-primary/10' 
+              : 'text-text-muted hover:text-text-main hover:bg-surface'
+          }`}
+        >
+          <BookOpen className="w-4 h-4" /> Cursos
+        </button>
+        <button 
+          onClick={() => setActiveTab('instrutores')} 
+          className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-sm transition-all cursor-pointer ${
+            activeTab === 'instrutores' 
+              ? 'bg-primary/5 text-primary shadow-sm border border-primary/10' 
+              : 'text-text-muted hover:text-text-main hover:bg-surface'
+          }`}
+        >
+          <Users className="w-4 h-4" /> Instrutores
+        </button>
+        <button 
+          onClick={() => setActiveTab('salas')} 
+          className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-sm transition-all cursor-pointer ${
+            activeTab === 'salas' 
+              ? 'bg-primary/5 text-primary shadow-sm border border-primary/10' 
+              : 'text-text-muted hover:text-text-main hover:bg-surface'
+          }`}
+        >
+          <School className="w-4 h-4" /> Salas e Ambientes
+        </button>
       </div>
 
-      <div style={{ marginTop: 18, overflowX: 'auto' }}>
-        {activeTab === 'cursos' && (
-          <table style={tableStyle}>
-            <thead>
-              <tr style={{ background: '#f3f4f6' }}>
-                <th style={thStyle}>Nome do Curso</th>
-                <th style={thStyle}>Instrutor Principal</th>
-                <th style={thStyle}>Unidade</th>
-                <th style={thStyle}>Modalidade</th>
-                <th style={thStyle}>Ações</th>
-              </tr>
-            </thead>
-            <tbody>
-              {cursos.map(c => (
-                <tr key={c.id} style={{ borderBottom: '1px solid #eee' }}>
-                  <td style={tdStyle}>{c.nome}</td>
-                  <td style={tdStyle}>{getNomeInstrutor(c.instrutorId)}</td>
-                  <td style={tdStyle}>{c.unidade || '-'}</td>
-                  <td style={tdStyle}>{c.modalidade}</td>
-                  <td style={tdStyle}>
-                    <div style={{ display: 'flex', gap: 8 }}>
-                      <button style={btnSecondary} onClick={() => openCursoEdit(c)}>Editar</button>
-                      <button style={btnDanger} onClick={() => removeCurso(c.id)}>Excluir</button>
-                    </div>
-                  </td>
+      {/* Tabela de Dados */}
+      <div className="bg-card rounded-2xl border border-border shadow-sm overflow-hidden transition-colors duration-300">
+        <div className="overflow-x-auto custom-scrollbar">
+          
+          {activeTab === 'cursos' && (
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr className="bg-surface border-b border-border">
+                  <th className="px-6 py-4 text-xs font-black uppercase tracking-wider text-text-muted">Nome do Curso</th>
+                  <th className="px-6 py-4 text-xs font-black uppercase tracking-wider text-text-muted">Instrutor Principal</th>
+                  <th className="px-6 py-4 text-xs font-black uppercase tracking-wider text-text-muted">Unidade</th>
+                  <th className="px-6 py-4 text-xs font-black uppercase tracking-wider text-text-muted">Modalidade</th>
+                  <th className="px-6 py-4 text-xs font-black uppercase tracking-wider text-text-muted text-right">Ações</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
+              </thead>
+              <tbody className="divide-y divide-border">
+                {cursos.length === 0 ? (
+                  <tr>
+                    <td colSpan={5} className="px-6 py-8 text-center text-sm text-text-muted font-medium">Nenhum curso cadastrado.</td>
+                  </tr>
+                ) : (
+                  cursos.map(c => (
+                    <tr key={c.id} className="hover:bg-surface/50 transition-colors">
+                      <td className="px-6 py-4 text-sm font-bold text-text-main">{c.nome}</td>
+                      <td className="px-6 py-4 text-sm text-text-muted font-semibold">{getNomeInstrutor(c.instrutorId)}</td>
+                      <td className="px-6 py-4 text-sm">
+                        <span className="bg-surface border border-border text-text-muted font-bold px-2.5 py-1 rounded-lg text-xs">
+                          {c.unidade || '-'}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 text-sm">
+                        <span className={`px-2.5 py-1 rounded-lg text-xs font-bold border ${
+                          c.modalidade === 'Presencial' 
+                            ? 'bg-primary/5 text-primary border-primary/20'
+                            : c.modalidade === 'Remoto'
+                              ? 'bg-accent/10 text-accent border-accent/20 dark:text-light-accent'
+                              : 'bg-green-50 dark:bg-green-950/20 text-green-705 dark:text-green-400 border-green-100 dark:border-green-900/30'
+                        }`}>
+                          {c.modalidade}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 text-right">
+                        <div className="flex justify-end gap-2">
+                          <button 
+                            onClick={() => openCursoEdit(c)}
+                            className="bg-card border border-border text-text-muted hover:bg-surface hover:text-text-main font-bold px-3 py-1.5 rounded-xl text-xs flex items-center gap-1 active:scale-95 transition-all shadow-sm cursor-pointer"
+                          >
+                            <Edit size={12} /> Editar
+                          </button>
+                          <button 
+                            onClick={() => removeCurso(c.id)}
+                            className="bg-red-50 dark:bg-red-950/10 hover:bg-red-100 dark:hover:bg-red-900/20 border border-red-200/40 text-red-600 dark:text-red-400 font-bold px-3 py-1.5 rounded-xl text-xs flex items-center gap-1 active:scale-95 transition-all shadow-sm cursor-pointer"
+                          >
+                            <Trash2 size={12} /> Excluir
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          )}
 
-        {activeTab === 'instrutores' && (
-          <table style={tableStyle}>
-            <thead>
-              <tr style={{ background: '#f3f4f6' }}>
-                <th style={thStyle}>ID</th>
-                <th style={thStyle}>Nome do Instrutor</th>
-                <th style={thStyle}>Ações</th>
-              </tr>
-            </thead>
-            <tbody>
-              {instrutores.map(i => (
-                <tr key={i.id} style={{ borderBottom: '1px solid #eee' }}>
-                  <td style={tdStyle}>#{i.id}</td>
-                  <td style={tdStyle}>{i.nome}</td>
-                  <td style={tdStyle}>
-                    <div style={{ display: 'flex', gap: 8 }}>
-                      <button style={btnSecondary} onClick={() => openInstrutorEdit(i)}>Editar</button>
-                      <button style={btnDanger} onClick={() => removeInstrutor(i.id)}>Excluir</button>
-                    </div>
-                  </td>
+          {activeTab === 'instrutores' && (
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr className="bg-surface border-b border-border">
+                  <th className="px-6 py-4 text-xs font-black uppercase tracking-wider text-text-muted">ID</th>
+                  <th className="px-6 py-4 text-xs font-black uppercase tracking-wider text-text-muted">Nome do Instrutor</th>
+                  <th className="px-6 py-4 text-xs font-black uppercase tracking-wider text-text-muted text-right">Ações</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
+              </thead>
+              <tbody className="divide-y divide-border">
+                {instrutores.length === 0 ? (
+                  <tr>
+                    <td colSpan={3} className="px-6 py-8 text-center text-sm text-text-muted font-medium">Nenhum instrutor cadastrado.</td>
+                  </tr>
+                ) : (
+                  instrutores.map(i => (
+                    <tr key={i.id} className="hover:bg-surface/50 transition-colors">
+                      <td className="px-6 py-4 text-sm text-text-muted font-mono">#{i.id}</td>
+                      <td className="px-6 py-4 text-sm font-bold text-text-main">{i.nome}</td>
+                      <td className="px-6 py-4 text-right">
+                        <div className="flex justify-end gap-2">
+                          <button 
+                            onClick={() => openInstrutorEdit(i)}
+                            className="bg-card border border-border text-text-muted hover:bg-surface hover:text-text-main font-bold px-3 py-1.5 rounded-xl text-xs flex items-center gap-1 active:scale-95 transition-all shadow-sm cursor-pointer"
+                          >
+                            <Edit size={12} /> Editar
+                          </button>
+                          <button 
+                            onClick={() => removeInstrutor(i.id)}
+                            className="bg-red-50 dark:bg-red-950/10 hover:bg-red-100 dark:hover:bg-red-900/20 border border-red-200/40 text-red-600 dark:text-red-400 font-bold px-3 py-1.5 rounded-xl text-xs flex items-center gap-1 active:scale-95 transition-all shadow-sm cursor-pointer"
+                          >
+                            <Trash2 size={12} /> Excluir
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          )}
 
-        {activeTab === 'salas' && (
-          <table style={tableStyle}>
-            <thead>
-              <tr style={{ background: '#f3f4f6' }}>
-                <th style={thStyle}>ID</th>
-                <th style={thStyle}>Nome do Ambiente</th>
-                <th style={thStyle}>Tipo</th>
-                <th style={thStyle}>Capacidade</th>
-              </tr>
-            </thead>
-            <tbody>
-              {salas.map(s => (
-                <tr key={s.id} style={{ borderBottom: '1px solid #eee' }}>
-                  <td style={tdStyle}>#{s.id}</td>
-                  <td style={tdStyle}><b>{s.nome}</b></td>
-                  <td style={tdStyle}>{s.tipo}</td>
-                  <td style={tdStyle}>{s.capacidade} alunos</td>
+          {activeTab === 'salas' && (
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr className="bg-surface border-b border-border">
+                  <th className="px-6 py-4 text-xs font-black uppercase tracking-wider text-text-muted">ID</th>
+                  <th className="px-6 py-4 text-xs font-black uppercase tracking-wider text-text-muted">Nome do Ambiente</th>
+                  <th className="px-6 py-4 text-xs font-black uppercase tracking-wider text-text-muted">Tipo</th>
+                  <th className="px-6 py-4 text-xs font-black uppercase tracking-wider text-text-muted">Capacidade Máxima</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
+              </thead>
+              <tbody className="divide-y divide-border">
+                {salas.length === 0 ? (
+                  <tr>
+                    <td colSpan={4} className="px-6 py-8 text-center text-sm text-text-muted font-medium">Nenhuma sala cadastrada.</td>
+                  </tr>
+                ) : (
+                  salas.map(s => (
+                    <tr key={s.id} className="hover:bg-surface/50 transition-colors">
+                      <td className="px-6 py-4 text-sm text-text-muted font-mono">#{s.id}</td>
+                      <td className="px-6 py-4 text-sm font-bold text-text-main">{s.nome}</td>
+                      <td className="px-6 py-4 text-sm font-semibold text-text-muted">
+                        <span className="bg-surface px-2 py-0.5 rounded border border-border text-xs text-text-main">{s.tipo}</span>
+                      </td>
+                      <td className="px-6 py-4 text-sm text-text-main font-bold">{s.capacidade} alunos</td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          )}
+
+        </div>
       </div>
 
       <AllocationModal
@@ -246,13 +351,3 @@ export function ManageSystemPage() {
     </div>
   );
 }
-
-const primaryButton: React.CSSProperties = { background: '#2563eb', color: 'white', border: 'none', padding: '10px 14px', borderRadius: 10, cursor: 'pointer', fontWeight: 600 };
-const tableStyle: React.CSSProperties = { width: '100%', borderCollapse: 'collapse', minWidth: 600 };
-const thStyle: React.CSSProperties = { padding: '12px 10px', textAlign: 'left', fontWeight: 600, fontSize: 14 };
-const tdStyle: React.CSSProperties = { padding: '12px 10px', fontSize: 14 };
-const btnSecondary: React.CSSProperties = { background: '#fff', border: '1px solid #d1d5db', padding: '8px 10px', borderRadius: 10, cursor: 'pointer' };
-const btnDanger: React.CSSProperties = { background: '#ef4444', color: 'white', border: 'none', padding: '8px 10px', borderRadius: 10, cursor: 'pointer' };
-
-const activeTabStyle: React.CSSProperties = { padding: '10px 16px', background: 'transparent', border: 'none', borderBottom: '2px solid #2563eb', color: '#2563eb', fontWeight: 600, cursor: 'pointer', fontSize: 15 };
-const inactiveTabStyle: React.CSSProperties = { padding: '10px 16px', background: 'transparent', border: 'none', borderBottom: '2px solid transparent', color: '#6b7280', fontWeight: 500, cursor: 'pointer', fontSize: 15 };

@@ -38,6 +38,10 @@ export interface TurmaDetalhada {
   dataFim: string;
   codigo: string;
   modalidade: string;
+  unidade?: string;
+  diasSemana: string[];
+  diasRemotos: string[];
+  cursoTem?: boolean;
 }
 
 export interface TipoSala {
@@ -59,6 +63,8 @@ interface AppContextData {
   refreshTurmas: () => void;
   tipoSalas: TipoSala[];
   refreshTipoSalas: () => void;
+  theme: 'light' | 'dark';
+  toggleTheme: () => void;
 }
 
 const AppContext = createContext<AppContextData | undefined>(undefined);
@@ -69,6 +75,28 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [instrutores, setInstrutores] = useState<Instrutor[]>([]);
   const [turmas, setTurmas] = useState<TurmaDetalhada[]>([]);
   const [tipoSalas, setTipoSalas] = useState<TipoSala[]>([]);
+
+  // Tema Claro/Escuro
+  const [theme, setTheme] = useState<'light' | 'dark'>(() => {
+    return (localStorage.getItem('theme') as 'light' | 'dark') || 'light';
+  });
+
+  const toggleTheme = () => {
+    setTheme((prev) => {
+      const newTheme = prev === 'light' ? 'dark' : 'light';
+      localStorage.setItem('theme', newTheme);
+      return newTheme;
+    });
+  };
+
+  useEffect(() => {
+    const root = window.document.documentElement;
+    if (theme === 'dark') {
+      root.classList.add('dark');
+    } else {
+      root.classList.remove('dark');
+    }
+  }, [theme]);
 
   const refreshInstrutores = useCallback(() => {
     InstrutorService.getAll().then((data: any) => {
@@ -122,7 +150,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
           dataInicio: t.data_inicio ? t.data_inicio.split('T')[0] : '',
           dataFim: t.data_termino ? t.data_termino.split('T')[0] : '',
           codigo: t.codigo_turma,
-          modalidade: t.curso?.modalidade || 'Presencial'
+          modalidade: t.curso?.modalidade || 'Presencial',
+          unidade: t.curso?.unidade || '',
+          diasSemana: t.curso?.dias_letivos_padrao ? t.curso.dias_letivos_padrao.split(',') : [],
+          diasRemotos: t.curso?.dias_remotos_padrao ? t.curso.dias_remotos_padrao.split(',') : [],
+          cursoTem: t.curso?.curso_tem || false
         };
       });
       setTurmas(mapped);
@@ -149,7 +181,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }, [refreshCursos, refreshInstrutores, refreshTurmas, refreshTipoSalas]);
 
   return (
-    <AppContext.Provider value={{ cursos, setCursos, refreshCursos, salas, setSalas, instrutores, setInstrutores, refreshInstrutores, turmas, setTurmas, refreshTurmas, tipoSalas, refreshTipoSalas }}>
+    <AppContext.Provider value={{ cursos, setCursos, refreshCursos, salas, setSalas, instrutores, setInstrutores, refreshInstrutores, turmas, setTurmas, refreshTurmas, tipoSalas, refreshTipoSalas, theme, toggleTheme }}>
       {children}
     </AppContext.Provider>
   );

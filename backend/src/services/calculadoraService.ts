@@ -15,7 +15,7 @@ export class CalculadoraService {
 
     while (classesScheduled < classesNeeded) {
       const currentDateStr = currentDate.toISOString().split('T')[0] as string;
-      const dayOfWeek = currentDate.getDay().toString();
+      const dayOfWeek = currentDate.getUTCDay().toString();
 
       const isFeriado = feriados.includes(currentDateStr);
       const isDiaDeAula = diasSemana.includes(dayOfWeek);
@@ -26,7 +26,7 @@ export class CalculadoraService {
       }
 
       if (classesScheduled < classesNeeded) {
-        currentDate.setDate(currentDate.getDate() + 1);
+        currentDate.setUTCDate(currentDate.getUTCDate() + 1);
       }
     }
 
