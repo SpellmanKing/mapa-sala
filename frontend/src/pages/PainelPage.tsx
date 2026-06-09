@@ -26,55 +26,7 @@ export function PainelPage() {
     });
   };
 
-  // Controle de Auto-Zoom no Modo TV para fazer a tabela inteira caber na tela
-  const tableRef = useRef<HTMLDivElement>(null);
-  const [autoZoom, setAutoZoom] = useState(100);
 
-  useEffect(() => {
-    if (!modoTV) {
-      setAutoZoom(100);
-      return;
-    }
-
-    const calcularZoom = () => {
-      const container = scrollContainerRef.current as HTMLDivElement | null;
-      const table = tableRef.current;
-      if (!container || !table) return;
-
-      // Reseta temporariamente o zoom do CSS para medir o tamanho nativo original
-      const originalZoom = table.style.zoom;
-      table.style.zoom = '1';
-
-      const wContainer = container.clientWidth;
-      const hContainer = container.clientHeight;
-      const wTable = table.scrollWidth;
-      const hTable = table.scrollHeight;
-
-      table.style.zoom = originalZoom; // restaura
-
-      if (wTable === 0 || hTable === 0) return;
-
-      const zoomX = (wContainer / wTable) * 100;
-      const zoomY = (hContainer / hTable) * 100;
-
-      // Escolhemos o menor fator para caber largura e altura, com 2% de folga
-      let zoomCalculado = Math.min(zoomX, zoomY) - 2;
-
-      // Limitamos o zoom mínimo a 35% e máximo a 100%
-      const zoomFinal = Math.max(Math.min(zoomCalculado, 100), 35);
-
-      setAutoZoom(Math.floor(zoomFinal));
-    };
-
-    calcularZoom();
-    const timer = setTimeout(calcularZoom, 150);
-
-    window.addEventListener('resize', calcularZoom);
-    return () => {
-      clearTimeout(timer);
-      window.removeEventListener('resize', calcularZoom);
-    };
-  }, [modoTV, salasFiltradas, turmas, modoVisualizacao, dataFiltro]);
 
   // Estados de Visualização e Filtro
   const [filtroTipo, setFiltroTipo] = useState('Todos');
@@ -249,6 +201,56 @@ export function PainelPage() {
 
   // Contadores para o filtro Pill de Salas
   const countTodas = salas.length;
+
+  // Controle de Auto-Zoom no Modo TV para fazer a tabela inteira caber na tela
+  const tableRef = useRef<HTMLDivElement>(null);
+  const [autoZoom, setAutoZoom] = useState(100);
+
+  useEffect(() => {
+    if (!modoTV) {
+      setAutoZoom(100);
+      return;
+    }
+
+    const calcularZoom = () => {
+      const container = scrollContainerRef.current as HTMLDivElement | null;
+      const table = tableRef.current;
+      if (!container || !table) return;
+
+      // Reseta temporariamente o zoom do CSS para medir o tamanho nativo original
+      const originalZoom = table.style.zoom;
+      table.style.zoom = '1';
+
+      const wContainer = container.clientWidth;
+      const hContainer = container.clientHeight;
+      const wTable = table.scrollWidth;
+      const hTable = table.scrollHeight;
+
+      table.style.zoom = originalZoom; // restaura
+
+      if (wTable === 0 || hTable === 0) return;
+
+      const zoomX = (wContainer / wTable) * 100;
+      const zoomY = (hContainer / hTable) * 100;
+
+      // Escolhemos o menor fator para caber largura e altura, com 2% de folga
+      let zoomCalculado = Math.min(zoomX, zoomY) - 2;
+
+      // Limitamos o zoom mínimo a 35% e máximo a 100%
+      const zoomFinal = Math.max(Math.min(zoomCalculado, 100), 35);
+
+      setAutoZoom(Math.floor(zoomFinal));
+    };
+
+    calcularZoom();
+    const timer = setTimeout(calcularZoom, 150);
+
+    window.addEventListener('resize', calcularZoom);
+    return () => {
+      clearTimeout(timer);
+      window.removeEventListener('resize', calcularZoom);
+    };
+  }, [modoTV, salasFiltradas, turmas, modoVisualizacao, dataFiltro]);
 
   const obterSubLinhasDoTurno = (turno: string) => {
     // Filtra as turmas do turno que estão ativas na visualização atual
