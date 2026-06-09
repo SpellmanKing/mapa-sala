@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
-import { Calendar as CalendarIcon, Filter, Plus, X, Users, BookOpen, Tv, Minimize2, Trash2 } from 'lucide-react';
+import { Calendar as CalendarIcon, Filter, Plus, X, Users, BookOpen, Tv, Minimize2, Trash2, ZoomIn, ZoomOut } from 'lucide-react';
 import { useAppContext } from '../context/AppContext';
 import { TurmaService } from '../api/client';
 
@@ -24,6 +24,28 @@ export function PainelPage() {
       minute: '2-digit',
       second: '2-digit'
     });
+  };
+
+  // Controle de Zoom no Modo TV
+  const [zoomTV, setZoomTV] = useState(() => {
+    return Number(localStorage.getItem('zoomTV')) || 100;
+  });
+
+  const handleZoomIn = () => setZoomTV(prev => {
+    const newVal = Math.min(prev + 10, 150);
+    localStorage.setItem('zoomTV', String(newVal));
+    return newVal;
+  });
+
+  const handleZoomOut = () => setZoomTV(prev => {
+    const newVal = Math.max(prev - 10, 60);
+    localStorage.setItem('zoomTV', String(newVal));
+    return newVal;
+  });
+
+  const handleResetZoom = () => {
+    setZoomTV(100);
+    localStorage.setItem('zoomTV', '100');
   };
 
   // Estados de Visualização e Filtro
@@ -186,6 +208,10 @@ export function PainelPage() {
   };
 
   const TURNOS = ['Manhã', 'Tarde', 'Noite'];
+  const salaColClass = modoTV 
+    ? "flex-1 min-w-[240px] max-w-[400px]" 
+    : "w-72 shrink-0";
+
   const salasFiltradas = salas.filter(s => {
     if (filtroTipo === 'Todos') return true;
     if (filtroTipo === 'Inovadora') return s.tipo.toLowerCase().includes('inovadora');
@@ -384,12 +410,40 @@ export function PainelPage() {
               </button>
             )}
 
+            {modoTV && (
+              <div className="flex items-center gap-1 bg-surface border border-border p-1 rounded-xl shadow-sm mr-2 shrink-0">
+                <button
+                  type="button"
+                  onClick={handleZoomOut}
+                  title="Diminuir Zoom/Letra (TV)"
+                  className="p-1.5 rounded-lg text-text-muted hover:text-text-main hover:bg-border/30 active:scale-95 transition-all cursor-pointer flex items-center justify-center shrink-0"
+                >
+                  <ZoomOut size={14} />
+                </button>
+                <span 
+                  onClick={handleResetZoom} 
+                  title="Resetar Zoom (100%)" 
+                  className="text-xs font-mono font-black px-1.5 cursor-pointer text-text-main select-none hover:text-primary transition-colors shrink-0"
+                >
+                  {zoomTV}%
+                </span>
+                <button
+                  type="button"
+                  onClick={handleZoomIn}
+                  title="Aumentar Zoom/Letra (TV)"
+                  className="p-1.5 rounded-lg text-text-muted hover:text-text-main hover:bg-border/30 active:scale-95 transition-all cursor-pointer flex items-center justify-center shrink-0"
+                >
+                  <ZoomIn size={14} />
+                </button>
+              </div>
+            )}
+
             <button
               onClick={handleToggleModoTV}
               title={modoTV ? "Sair do Modo TV" : "Entrar no Modo TV (Tela Cheia)"}
               className={`p-2.5 rounded-xl border flex items-center gap-1.5 text-sm font-bold active:scale-95 transition-all shadow-sm cursor-pointer ${
                 modoTV 
-                  ? 'bg-primary text-white border-primary/20 hover:bg-primary/95' 
+                  ? 'bg-input border-border text-text-main hover:bg-surface' 
                   : 'bg-surface border-border text-text-muted hover:bg-border/30 hover:text-text-main'
               }`}
             >
@@ -526,7 +580,12 @@ export function PainelPage() {
         onMouseLeave={() => setIsPaused(false)}
         className="flex-1 overflow-auto custom-scrollbar p-4 relative z-10"
       >
-        <div className="min-w-max glass-panel rounded-3xl shadow-xs overflow-hidden flex flex-col transition-all duration-300 border border-border/80">
+        <div 
+          className={`glass-panel rounded-3xl shadow-xs overflow-hidden flex flex-col transition-all duration-300 border border-border/80 ${
+            modoTV ? 'min-w-full' : 'min-w-max'
+          }`}
+          style={modoTV ? { zoom: `${zoomTV}%` } : undefined}
+        >
           
           {/* COLUNAS (SALAS) */}
           <div className="flex sticky top-0 z-20 backdrop-blur-lg border-b border-border/50 bg-surface/30">
@@ -541,7 +600,7 @@ export function PainelPage() {
             
             {/* Headers das Salas */}
             {salasFiltradas.map((sala) => (
-              <div key={sala.id} className="w-72 shrink-0 border-r border-border/50 p-4.5 flex flex-col items-center justify-center gap-2 bg-transparent transition-all">
+              <div key={sala.id} className={`border-r border-border/50 p-4.5 flex flex-col items-center justify-center gap-2 bg-transparent transition-all ${salaColClass}`}>
                 <div className="font-black text-sm uppercase tracking-wider px-3.5 py-1.5 rounded-xl border border-primary/20 bg-primary/10 text-primary shadow-xs font-display">
                   {sala.nome}
                 </div>
@@ -594,7 +653,7 @@ export function PainelPage() {
                           const turma = subLinha.find(t => t.salaId === sala.id);
                           
                           return (
-                            <div key={sala.id} className="w-72 shrink-0 border-r border-border/50 p-4 transition-colors relative flex flex-col justify-center bg-transparent">
+                            <div key={sala.id} className={`border-r border-border/50 p-4 transition-colors relative flex flex-col justify-center bg-transparent ${salaColClass}`}>
                               {turma ? (
                                 (() => {
                                   const progress = getProgress(turma.dataInicio, turma.dataFim);
