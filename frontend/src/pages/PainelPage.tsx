@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { Calendar as CalendarIcon, Filter, Plus, X, Users, BookOpen, Tv, Minimize2, Trash2 } from 'lucide-react';
 import { useAppContext } from '../context/AppContext';
 import { TurmaService } from '../api/client';
@@ -30,6 +31,79 @@ export function PainelPage() {
   const [modoVisualizacao, setModoVisualizacao] = useState<'semanal' | 'diario'>('semanal');
   const [dataFiltro, setDataFiltro] = useState(() => new Date().toISOString().split('T')[0]);
   const [modoTV, setModoTV] = useState(false);
+  const scrollContainerRef = useRef(null);
+  const [isPaused, setIsPaused] = useState(false);
+
+  // Sincronizar o estado modoTV com o estado de fullscreen do navegador (Esc)
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      const isFullscreen = document.fullscreenElement !== null;
+      setModoTV(isFullscreen);
+    };
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    return () => {
+      document.removeEventListener('fullscreenchange', handleFullscreenChange);
+    };
+  }, []);
+
+  // Efeito de Auto-Scroll horizontal no Modo TV
+  useEffect(() => {
+    if (!modoTV) return;
+
+    let intervalId;
+    let scrollDirection = 1; // 1 = direita, -1 = esquerda
+    const scrollSpeed = 1;   // pixels por passo
+    const stepTime = 30;     // ms entre passos
+
+    intervalId = setInterval(() => {
+      if (isPaused) return;
+
+      const container = scrollContainerRef.current;
+      if (!container) return;
+
+      const maxScrollLeft = container.scrollWidth - container.clientWidth;
+      if (maxScrollLeft <= 0) return;
+
+      let newScrollLeft = container.scrollLeft + (scrollDirection * scrollSpeed);
+
+      if (newScrollLeft >= maxScrollLeft) {
+        newScrollLeft = maxScrollLeft;
+        scrollDirection = -1;
+      } else if (newScrollLeft <= 0) {
+        newScrollLeft = 0;
+        scrollDirection = 1;
+      }
+
+      container.scrollLeft = newScrollLeft;
+    }, stepTime);
+
+    return () => {
+      clearInterval(intervalId);
+    };
+  }, [modoTV, isPaused]);
+
+  // Função para alternar modo TV e Fullscreen
+  const handleToggleModoTV = async () => {
+    if (!modoTV) {
+      try {
+        if (document.documentElement.requestFullscreen) {
+          await document.documentElement.requestFullscreen();
+        }
+      } catch (err) {
+        console.error("Erro ao entrar em tela cheia:", err);
+        setModoTV(true);
+      }
+    } else {
+      try {
+        if (document.exitFullscreen) {
+          await document.exitFullscreen();
+        }
+      } catch (err) {
+        console.error("Erro ao sair da tela cheia:", err);
+        setModoTV(false);
+      }
+    }
+  };
 
   // Helper para verificar se a turma está em andamento no geral (Quadro Semanal)
   const isTurmaActive = (dataInicioStr: string, dataFimStr: string) => {
@@ -276,11 +350,11 @@ export function PainelPage() {
     }
   };
 
-  return (
-    <div className={`flex flex-col h-full overflow-hidden transition-all duration-300 relative ${
+  const content = (
+    <div className={`flex flex-col h-full overflow-hidden transition-all duration-300 ${
       modoTV 
         ? 'fixed inset-0 z-50 bg-bg text-text-main p-6 md:p-8 2xl:p-10' 
-        : 'bg-card border border-border rounded-2xl shadow-sm'
+        : 'relative bg-card border border-border rounded-2xl shadow-sm'
     }`}>
       
       <div className={`p-6 border-b flex flex-col xl:flex-row xl:items-center justify-between gap-4 shrink-0 transition-colors ${
@@ -311,11 +385,11 @@ export function PainelPage() {
             )}
 
             <button
-              onClick={() => setModoTV(!modoTV)}
+              onClick={handleToggleModoTV}
               title={modoTV ? "Sair do Modo TV" : "Entrar no Modo TV (Tela Cheia)"}
               className={`p-2.5 rounded-xl border flex items-center gap-1.5 text-sm font-bold active:scale-95 transition-all shadow-sm cursor-pointer ${
                 modoTV 
-                  ? 'bg-input border-border text-text-main hover:bg-surface' 
+                  ? 'bg-primary text-white border-primary/20 hover:bg-primary/95' 
                   : 'bg-surface border-border text-text-muted hover:bg-border/30 hover:text-text-main'
               }`}
             >
@@ -446,7 +520,12 @@ export function PainelPage() {
       </div>
 
       {/* GRID / MATRIZ DE ALOCAÇÃO */}
-      <div className="flex-1 overflow-auto custom-scrollbar p-4 relative z-10">
+      <div 
+        ref={scrollContainerRef}
+        onMouseEnter={() => setIsPaused(true)}
+        onMouseLeave={() => setIsPaused(false)}
+        className="flex-1 overflow-auto custom-scrollbar p-4 relative z-10"
+      >
         <div className="min-w-max glass-panel rounded-3xl shadow-xs overflow-hidden flex flex-col transition-all duration-300 border border-border/80">
           
           {/* COLUNAS (SALAS) */}
@@ -791,4 +870,10 @@ export function PainelPage() {
       )}
     </div>
   );
+
+  if (modoTV) {
+    return createPortal(content, document.body);
+  }
+
+  return content;
 }
