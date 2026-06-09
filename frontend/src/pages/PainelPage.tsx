@@ -26,27 +26,55 @@ export function PainelPage() {
     });
   };
 
-  // Controle de Zoom no Modo TV
-  const [zoomTV, setZoomTV] = useState(() => {
-    return Number(localStorage.getItem('zoomTV')) || 100;
-  });
+  // Controle de Auto-Zoom no Modo TV para fazer a tabela inteira caber na tela
+  const tableRef = useRef<HTMLDivElement>(null);
+  const [autoZoom, setAutoZoom] = useState(100);
 
-  const handleZoomIn = () => setZoomTV(prev => {
-    const newVal = Math.min(prev + 10, 150);
-    localStorage.setItem('zoomTV', String(newVal));
-    return newVal;
-  });
+  useEffect(() => {
+    if (!modoTV) {
+      setAutoZoom(100);
+      return;
+    }
 
-  const handleZoomOut = () => setZoomTV(prev => {
-    const newVal = Math.max(prev - 10, 60);
-    localStorage.setItem('zoomTV', String(newVal));
-    return newVal;
-  });
+    const calcularZoom = () => {
+      const container = scrollContainerRef.current as HTMLDivElement | null;
+      const table = tableRef.current;
+      if (!container || !table) return;
 
-  const handleResetZoom = () => {
-    setZoomTV(100);
-    localStorage.setItem('zoomTV', '100');
-  };
+      // Reseta temporariamente o zoom do CSS para medir o tamanho nativo original
+      const originalZoom = table.style.zoom;
+      table.style.zoom = '1';
+
+      const wContainer = container.clientWidth;
+      const hContainer = container.clientHeight;
+      const wTable = table.scrollWidth;
+      const hTable = table.scrollHeight;
+
+      table.style.zoom = originalZoom; // restaura
+
+      if (wTable === 0 || hTable === 0) return;
+
+      const zoomX = (wContainer / wTable) * 100;
+      const zoomY = (hContainer / hTable) * 100;
+
+      // Escolhemos o menor fator para caber largura e altura, com 2% de folga
+      let zoomCalculado = Math.min(zoomX, zoomY) - 2;
+
+      // Limitamos o zoom mínimo a 35% e máximo a 100%
+      const zoomFinal = Math.max(Math.min(zoomCalculado, 100), 35);
+
+      setAutoZoom(Math.floor(zoomFinal));
+    };
+
+    calcularZoom();
+    const timer = setTimeout(calcularZoom, 150);
+
+    window.addEventListener('resize', calcularZoom);
+    return () => {
+      clearTimeout(timer);
+      window.removeEventListener('resize', calcularZoom);
+    };
+  }, [modoTV, salasFiltradas, turmas, modoVisualizacao, dataFiltro]);
 
   // Estados de Visualização e Filtro
   const [filtroTipo, setFiltroTipo] = useState('Todos');
@@ -411,30 +439,10 @@ export function PainelPage() {
             )}
 
             {modoTV && (
-              <div className="flex items-center gap-1 bg-surface border border-border p-1 rounded-xl shadow-sm mr-2 shrink-0">
-                <button
-                  type="button"
-                  onClick={handleZoomOut}
-                  title="Diminuir Zoom/Letra (TV)"
-                  className="p-1.5 rounded-lg text-text-muted hover:text-text-main hover:bg-border/30 active:scale-95 transition-all cursor-pointer flex items-center justify-center shrink-0"
-                >
-                  <ZoomOut size={14} />
-                </button>
-                <span 
-                  onClick={handleResetZoom} 
-                  title="Resetar Zoom (100%)" 
-                  className="text-xs font-mono font-black px-1.5 cursor-pointer text-text-main select-none hover:text-primary transition-colors shrink-0"
-                >
-                  {zoomTV}%
+              <div className="flex items-center gap-1.5 bg-primary/5 dark:bg-primary/10 border border-primary/15 px-3 py-1.5 rounded-xl text-primary shadow-xs mr-2 select-none shrink-0">
+                <span className="text-xs font-black uppercase tracking-wider">
+                  Escala TV: {autoZoom}%
                 </span>
-                <button
-                  type="button"
-                  onClick={handleZoomIn}
-                  title="Aumentar Zoom/Letra (TV)"
-                  className="p-1.5 rounded-lg text-text-muted hover:text-text-main hover:bg-border/30 active:scale-95 transition-all cursor-pointer flex items-center justify-center shrink-0"
-                >
-                  <ZoomIn size={14} />
-                </button>
               </div>
             )}
 
@@ -581,10 +589,11 @@ export function PainelPage() {
         className="flex-1 overflow-auto custom-scrollbar p-4 relative z-10"
       >
         <div 
+          ref={tableRef}
           className={`glass-panel rounded-3xl shadow-xs overflow-hidden flex flex-col transition-all duration-300 border border-border/80 ${
             modoTV ? 'min-w-full' : 'min-w-max'
           }`}
-          style={modoTV ? { zoom: `${zoomTV}%` } : undefined}
+          style={modoTV ? { zoom: `${autoZoom}%` } : undefined}
         >
           
           {/* COLUNAS (SALAS) */}
