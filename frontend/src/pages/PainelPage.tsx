@@ -413,175 +413,167 @@ export function PainelPage() {
         : 'relative bg-card border border-border rounded-2xl shadow-sm'
     }`}>
       
-      <div className={`p-6 border-b flex flex-col xl:flex-row xl:items-center justify-between gap-4 shrink-0 transition-colors ${
-        modoTV ? 'bg-bg border-border' : 'bg-card border-border'
-      }`}>
-        <div className="flex flex-wrap items-center justify-between xl:justify-start gap-4">
-          <div>
-            <h1 className="text-2xl font-black flex items-center gap-2 tracking-tight text-secondary dark:text-primary transition-colors">
-              <CalendarIcon className="text-primary w-6 h-6 shrink-0" /> 
-              Quadro de Alocações
-            </h1>
-            <p className="text-sm mt-0.5 font-medium text-text-muted transition-colors">
-              {modoVisualizacao === 'semanal' 
-                ? 'Visualização Geral: Cursos ativos na semana útil' 
-                : `Filtro de Ocupação Diária para: ${new Date(dataFiltro + 'T00:00:00').toLocaleDateString('pt-BR')}`
-              }
-            </p>
+      {modoTV ? (
+        /* Cabeçalho Minimalista para Modo TV */
+        <div className="flex justify-end items-center p-4 shrink-0 bg-transparent relative z-20 gap-3">
+          <div className="flex items-center gap-1.5 bg-primary/5 dark:bg-primary/10 border border-primary/15 px-3 py-1.5 rounded-xl text-primary shadow-xs select-none shrink-0 text-xs font-black uppercase tracking-wider">
+            Escala TV: {autoZoom}%
           </div>
           
-          <div className="flex items-center gap-2">
-            {!modoTV && (
+          <button
+            onClick={handleToggleModoTV}
+            title="Sair do Modo TV"
+            className="p-2 px-4 rounded-xl border flex items-center gap-1.5 text-xs font-black active:scale-95 transition-all shadow-sm cursor-pointer bg-input border-border text-text-main hover:bg-surface"
+          >
+            <Minimize2 size={14} /> Sair TV
+          </button>
+        </div>
+      ) : (
+        /* Cabeçalho Completo para Modo Padrão */
+        <div className="p-6 border-b flex flex-col xl:flex-row xl:items-center justify-between gap-4 shrink-0 transition-colors bg-card border-border">
+          <div className="flex flex-wrap items-center justify-between xl:justify-start gap-4">
+            <div>
+              <h1 className="text-2xl font-black flex items-center gap-2 tracking-tight text-secondary dark:text-primary transition-colors">
+                <CalendarIcon className="text-primary w-6 h-6 shrink-0" /> 
+                Quadro de Alocações
+              </h1>
+              <p className="text-sm mt-0.5 font-medium text-text-muted transition-colors">
+                {modoVisualizacao === 'semanal' 
+                  ? 'Visualização Geral: Cursos ativos na semana útil' 
+                  : `Filtro de Ocupação Diária para: ${new Date(dataFiltro + 'T00:00:00').toLocaleDateString('pt-BR')}`
+                }
+              </p>
+            </div>
+            
+            <div className="flex items-center gap-2">
               <button 
                 onClick={() => setModalOpen(true)}
                 className="bg-primary text-white font-black py-2.5 px-4 rounded-xl shadow-md hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center gap-2 text-sm cursor-pointer"
               >
                 <Plus size={16} /> Alocar Turma
               </button>
-            )}
 
-            {modoTV && (
-              <div className="flex items-center gap-1.5 bg-primary/5 dark:bg-primary/10 border border-primary/15 px-3 py-1.5 rounded-xl text-primary shadow-xs mr-2 select-none shrink-0">
-                <span className="text-xs font-black uppercase tracking-wider">
-                  Escala TV: {autoZoom}%
+              <button
+                onClick={handleToggleModoTV}
+                title="Entrar no Modo TV (Tela Cheia)"
+                className="p-2.5 rounded-xl border flex items-center gap-1.5 text-sm font-bold active:scale-95 transition-all shadow-sm cursor-pointer bg-surface border-border text-text-muted hover:bg-border/30 hover:text-text-main"
+              >
+                <Tv size={16} /> Modo TV
+              </button>
+            </div>
+          </div>
+
+          {/* Relógio Digital (Horário de Brasília) */}
+          <div className="flex items-center justify-center shrink-0">
+            <div className="flex items-center gap-2.5 bg-primary/5 dark:bg-primary/10 border border-primary/15 px-4 py-2 rounded-xl text-primary shadow-xs">
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
+              </span>
+              <span className="font-mono text-xs font-black tracking-wider">
+                {formatHoraBrasilia(horaAtual)}
+              </span>
+              <span className="text-[9px] font-black uppercase bg-primary text-white px-1.5 py-0.5 rounded-md tracking-widest">
+                Brasília
+              </span>
+            </div>
+          </div>
+
+          {/* CONTROLES, FILTROS E SELETORES */}
+          <div className="flex flex-wrap items-center gap-4 p-2 rounded-2xl border transition-all bg-surface border-border">
+            {/* Seletor de visualização (Quadro Geral vs Diário) */}
+            <div className="flex bg-border/20 p-0.5 rounded-xl border border-border">
+              <button
+                onClick={() => setModoVisualizacao('semanal')}
+                className={`px-3 py-1.5 rounded-lg text-xs font-black transition-all cursor-pointer ${
+                  modoVisualizacao === 'semanal' 
+                    ? 'bg-card text-text-main shadow-sm' 
+                    : 'text-text-muted hover:text-text-main'
+                }`}
+              >
+                Semanal
+              </button>
+              <button
+                onClick={() => setModoVisualizacao('diario')}
+                className={`px-3 py-1.5 rounded-lg text-xs font-black transition-all cursor-pointer ${
+                  modoVisualizacao === 'diario' 
+                    ? 'bg-card text-text-main shadow-sm' 
+                    : 'text-text-muted hover:text-text-main'
+                }`}
+              >
+                Diário
+              </button>
+            </div>
+
+            {/* Filtro de Salas (Pills Premium com contagem) */}
+            <div className="flex bg-border/20 p-0.5 rounded-xl border border-border">
+              <button
+                onClick={() => setFiltroTipo('Todos')}
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
+                  filtroTipo === 'Todos'
+                    ? 'bg-card text-text-main shadow-sm font-black'
+                    : 'text-text-muted hover:text-text-main'
+                }`}
+              >
+                Todas
+                <span className={`text-[10px] px-1.5 py-0.5 rounded-md font-extrabold ${
+                  filtroTipo === 'Todos' ? 'bg-surface text-text-main' : 'bg-border/40 text-text-muted'
+                }`}>
+                  {countTodas}
                 </span>
+              </button>
+              <button
+                onClick={() => setFiltroTipo('Inovadora')}
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
+                  filtroTipo === 'Inovadora'
+                    ? 'bg-card text-text-main shadow-sm font-black'
+                    : 'text-text-muted hover:text-text-main'
+                }`}
+              >
+                Inovadoras
+                <span className={`text-[10px] px-1.5 py-0.5 rounded-md font-extrabold ${
+                  filtroTipo === 'Inovadora' ? 'bg-surface text-text-main' : 'bg-border/40 text-text-muted'
+                }`}>
+                  {countInovadoras}
+                </span>
+              </button>
+              <button
+                onClick={() => setFiltroTipo('TI')}
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
+                  filtroTipo === 'TI'
+                    ? 'bg-card text-text-main shadow-sm font-black'
+                    : 'text-text-muted hover:text-text-main'
+                }`}
+              >
+                Labs TI
+                <span className={`text-[10px] px-1.5 py-0.5 rounded-md font-extrabold ${
+                  filtroTipo === 'TI' ? 'bg-surface text-text-main' : 'bg-border/40 text-text-muted'
+                }`}>
+                  {countTI}
+                </span>
+              </button>
+            </div>
+
+            {/* Seletor de Data para Modo Diário */}
+            {modoVisualizacao === 'diario' && (
+              <div className="flex items-center gap-1.5 border-l border-border pl-3">
+                <input 
+                  type="date"
+                  value={dataFiltro}
+                  onChange={e => setDataFiltro(e.target.value)}
+                  className="text-xs font-black border border-border rounded-lg px-2.5 py-1 outline-none transition-all bg-input text-text-main focus:border-primary"
+                />
               </div>
             )}
 
-            <button
-              onClick={handleToggleModoTV}
-              title={modoTV ? "Sair do Modo TV" : "Entrar no Modo TV (Tela Cheia)"}
-              className={`p-2.5 rounded-xl border flex items-center gap-1.5 text-sm font-bold active:scale-95 transition-all shadow-sm cursor-pointer ${
-                modoTV 
-                  ? 'bg-input border-border text-text-main hover:bg-surface' 
-                  : 'bg-surface border-border text-text-muted hover:bg-border/30 hover:text-text-main'
-              }`}
-            >
-              {modoTV ? (
-                <>
-                  <Minimize2 size={16} /> Sair TV
-                </>
-              ) : (
-                <>
-                  <Tv size={16} /> Modo TV
-                </>
-              )}
-            </button>
+            {modoVisualizacao === 'semanal' && (
+              <div className="text-[10px] font-black uppercase tracking-wider px-2 border-l border-border pl-3 text-text-muted">
+                Em Andamento
+              </div>
+            )}
           </div>
         </div>
-
-        {/* Relógio Digital (Horário de Brasília) */}
-        <div className="flex items-center justify-center shrink-0">
-          <div className="flex items-center gap-2.5 bg-primary/5 dark:bg-primary/10 border border-primary/15 px-4 py-2 rounded-xl text-primary shadow-xs">
-            <span className="relative flex h-2 w-2">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
-            </span>
-            <span className="font-mono text-xs font-black tracking-wider">
-              {formatHoraBrasilia(horaAtual)}
-            </span>
-            <span className="text-[9px] font-black uppercase bg-primary text-white px-1.5 py-0.5 rounded-md tracking-widest">
-              Brasília
-            </span>
-          </div>
-        </div>
-
-        {/* CONTROLES, FILTROS E SELETORES */}
-        <div className={`flex flex-wrap items-center gap-4 p-2 rounded-2xl border transition-all ${
-          modoTV ? 'bg-card border-border' : 'bg-surface border-border'
-        }`}>
-          {/* Seletor de visualização (Quadro Geral vs Diário) */}
-          <div className="flex bg-border/20 p-0.5 rounded-xl border border-border">
-            <button
-              onClick={() => setModoVisualizacao('semanal')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-black transition-all cursor-pointer ${
-                modoVisualizacao === 'semanal' 
-                  ? 'bg-card text-text-main shadow-sm' 
-                  : 'text-text-muted hover:text-text-main'
-              }`}
-            >
-              Semanal
-            </button>
-            <button
-              onClick={() => setModoVisualizacao('diario')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-black transition-all cursor-pointer ${
-                modoVisualizacao === 'diario' 
-                  ? 'bg-card text-text-main shadow-sm' 
-                  : 'text-text-muted hover:text-text-main'
-              }`}
-            >
-              Diário
-            </button>
-          </div>
-
-          {/* Filtro de Salas (Pills Premium com contagem) */}
-          <div className="flex bg-border/20 p-0.5 rounded-xl border border-border">
-            <button
-              onClick={() => setFiltroTipo('Todos')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
-                filtroTipo === 'Todos'
-                  ? 'bg-card text-text-main shadow-sm font-black'
-                  : 'text-text-muted hover:text-text-main'
-              }`}
-            >
-              Todas
-              <span className={`text-[10px] px-1.5 py-0.5 rounded-md font-extrabold ${
-                filtroTipo === 'Todos' ? 'bg-surface text-text-main' : 'bg-border/40 text-text-muted'
-              }`}>
-                {countTodas}
-              </span>
-            </button>
-            <button
-              onClick={() => setFiltroTipo('Inovadora')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
-                filtroTipo === 'Inovadora'
-                  ? 'bg-card text-text-main shadow-sm font-black'
-                  : 'text-text-muted hover:text-text-main'
-              }`}
-            >
-              Inovadoras
-              <span className={`text-[10px] px-1.5 py-0.5 rounded-md font-extrabold ${
-                filtroTipo === 'Inovadora' ? 'bg-surface text-text-main' : 'bg-border/40 text-text-muted'
-              }`}>
-                {countInovadoras}
-              </span>
-            </button>
-            <button
-              onClick={() => setFiltroTipo('TI')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
-                filtroTipo === 'TI'
-                  ? 'bg-card text-text-main shadow-sm font-black'
-                  : 'text-text-muted hover:text-text-main'
-              }`}
-            >
-              Labs TI
-              <span className={`text-[10px] px-1.5 py-0.5 rounded-md font-extrabold ${
-                filtroTipo === 'TI' ? 'bg-surface text-text-main' : 'bg-border/40 text-text-muted'
-              }`}>
-                {countTI}
-              </span>
-            </button>
-          </div>
-
-          {/* Seletor de Data para Modo Diário */}
-          {modoVisualizacao === 'diario' && (
-            <div className="flex items-center gap-1.5 border-l border-border pl-3">
-              <input 
-                type="date"
-                value={dataFiltro}
-                onChange={e => setDataFiltro(e.target.value)}
-                className="text-xs font-black border border-border rounded-lg px-2.5 py-1 outline-none transition-all bg-input text-text-main focus:border-primary"
-              />
-            </div>
-          )}
-
-          {modoVisualizacao === 'semanal' && (
-            <div className="text-[10px] font-black uppercase tracking-wider px-2 border-l border-border pl-3 text-text-muted">
-              Em Andamento
-            </div>
-          )}
-        </div>
-      </div>
+      )}
 
       {/* GRID / MATRIZ DE ALOCAÇÃO */}
       <div 
