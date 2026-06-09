@@ -12,24 +12,34 @@
   --color-dark: #0D0D0D;         /* Preto base */
 
   /* Cores Semânticas Globais - LIGHT MODE (Fundo azul-cinza suave, sem branco papel cru) */
-  --color-bg: #f0f4f9;           /* Fundo principal azul-cinza suave */
+  --color-bg: #f2f5f9;           /* Fundo principal azul-cinza suave */
   --color-card: #ffffff;         /* Superfícies/Cards em branco para contraste */
-  --color-surface: #e4ecf5;      /* Tabelas e elementos de superfície secundária */
+  --color-surface: #e8eff6;      /* Tabelas e elementos de superfície secundária */
   --color-border: #cbdceb;       /* Bordas bem suaves e visíveis */
   --color-input: #ffffff;        /* Fundo de campos de texto/selects */
-  --color-text-main: #0d0d0d;    /* Texto principal */
-  --color-text-muted: #4b5563;   /* Texto secundário/mutado */
+  --color-text-main: #0b0f19;    /* Texto principal escuro elegante */
+  --color-text-muted: #5c6b84;   /* Texto secundário/mutado */
+
+  /* Estilos físicos */
+  --glass-bg: rgba(255, 255, 255, 0.45);
+  --glass-border: rgba(255, 255, 255, 0.5);
+  --glass-shadow: rgba(0, 0, 0, 0.03);
 }
 
 .dark {
   /* Cores Semânticas Globais - DARK MODE (Tons azulados da paleta Senac, sem preto cru) */
-  --color-bg: #080d16;           /* Fundo principal escuro azulado */
-  --color-card: #0f1626;         /* Superfícies/Cards azul escuro premium */
-  --color-surface: #121b2f;      /* Tabelas e elementos de superfície secundária */
-  --color-border: #1f2e4d;       /* Bordas azul escuro suave */
-  --color-input: #192239;        /* Fundo de campos de texto/selects */
-  --color-text-main: #f8fafc;    /* Texto principal claro */
-  --color-text-muted: #94a3b8;   /* Texto secundário/mutado claro */
+  --color-bg: #070b13;           /* Fundo principal escuro azulado */
+  --color-card: #0e1525;         /* Superfícies/Cards azul escuro premium */
+  --color-surface: #131b2e;      /* Tabelas e elementos de superfície secundária */
+  --color-border: #1e2d4a;       /* Bordas azul escuro suave */
+  --color-input: #172136;        /* Fundo de campos de texto/selects */
+  --color-text-main: #f3f7fa;    /* Texto principal claro */
+  --color-text-muted: #8b9bb4;   /* Texto secundário/mutado claro */
+
+  /* Estilos físicos dark */
+  --glass-bg: rgba(14, 21, 37, 0.55);
+  --glass-border: rgba(255, 255, 255, 0.05);
+  --glass-shadow: rgba(0, 0, 0, 0.2);
 }
 
 @theme {
@@ -46,6 +56,10 @@
   --color-input: var(--color-input);
   --color-text-main: var(--color-text-main);
   --color-text-muted: var(--color-text-muted);
+
+  /* Fontes Modernas */
+  --font-sans: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif;
+  --font-display: 'Outfit', ui-sans-serif, system-ui, sans-serif;
 }
 
 body {
@@ -53,8 +67,31 @@ body {
   background-color: var(--color-bg);
   color: var(--color-text-main);
   -webkit-font-smoothing: antialiased;
-  font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-family: var(--font-sans);
   transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+}
+
+/* Títulos display */
+h1, h2, h3, h4, .font-display {
+  font-family: var(--font-display);
+  letter-spacing: -0.02em;
+}
+
+/* Efeito de Vidro Fosco Premium (Glassmorphism) */
+.glass-panel {
+  background-color: var(--glass-bg);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--glass-border);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05), 0 4px 30px var(--glass-shadow);
+}
+
+/* Botões físicos e interações táteis */
+.btn-tactile {
+  transition: transform 0.15s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.15s ease, background-color 0.15s ease;
+}
+.btn-tactile:active {
+  transform: scale(0.97);
 }
 
 /* Personalização da barra de rolagem customizada */
@@ -73,7 +110,7 @@ body {
 }
 
 .dark .custom-scrollbar::-webkit-scrollbar-thumb {
-  background: #1f2e4d;
+  background: #1e2d4a;
 }
 
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
@@ -81,5 +118,64 @@ body {
 }
 
 .dark .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: #2a3e67;
+  background: #2b3e66;
 }
+
+/* Animações decorativas de Mesh Gradient no fundo */
+@keyframes float-slow-1 {
+  0%, 100% {
+    transform: translate(0px, 0px) scale(1);
+  }
+  33% {
+    transform: translate(40px, -60px) scale(1.15);
+  }
+  66% {
+    transform: translate(-30px, 30px) scale(0.9);
+  }
+}
+
+@keyframes float-slow-2 {
+  0%, 100% {
+    transform: translate(0px, 0px) scale(1.05);
+  }
+  50% {
+    transform: translate(-50px, 50px) scale(0.85);
+  }
+}
+
+.animate-mesh-1 {
+  animation: float-slow-1 25s infinite ease-in-out;
+}
+
+.animate-mesh-2 {
+  animation: float-slow-2 20s infinite ease-in-out;
+}
+
+/* Efeito de Glow para elementos ativos ou em hover */
+.glow-primary {
+  box-shadow: 0 0 20px rgba(5, 17, 242, 0.12);
+}
+
+.glow-accent {
+  box-shadow: 0 0 20px rgba(242, 127, 27, 0.12);
+}
+
+.hover-glow-primary:hover {
+  box-shadow: 0 0 25px rgba(5, 17, 242, 0.22);
+  border-color: rgba(5, 17, 242, 0.35);
+}
+
+.hover-glow-accent:hover {
+  box-shadow: 0 0 25px rgba(242, 127, 27, 0.22);
+  border-color: rgba(242, 127, 27, 0.35);
+}
+
+/* Evitar que formulários e modais fiquem transparentes (especialmente no modo claro) */
+.fixed.inset-0 .glass-panel,
+[role="dialog"] .glass-panel,
+form.glass-panel {
+  background-color: var(--color-card) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+

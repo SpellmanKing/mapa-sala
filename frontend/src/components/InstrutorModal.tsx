@@ -37,19 +37,19 @@ export function InstrutorModal({ open, title, error, onClose, onSave, form, setF
       onMouseDown={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}
-      className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4 z-[999] overflow-hidden"
+      className="fixed inset-0 bg-slate-950/60 backdrop-blur-md flex items-center justify-center p-4 z-[999] overflow-hidden"
     >
-      <div className="bg-card rounded-2xl border border-border shadow-2xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in-95 duration-200 flex flex-col transition-colors duration-300">
+      <div className="glass-panel rounded-2xl shadow-2xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in-95 duration-200 flex flex-col transition-all duration-300">
         
         {/* Cabeçalho do Modal */}
-        <div className="p-5 border-b border-border flex justify-between items-start bg-surface shrink-0">
+        <div className="p-5 border-b border-border/60 flex justify-between items-start bg-surface/40 shrink-0">
           <div>
-            <h2 className="text-lg font-black text-text-main tracking-tight">{title}</h2>
+            <h2 className="text-lg font-black text-text-main tracking-tight font-display">{title}</h2>
           </div>
           <button
             type="button"
             onClick={onClose}
-            className="text-text-muted hover:text-text-main hover:bg-surface p-2 rounded-xl transition-all font-black text-lg leading-none"
+            className="text-text-muted hover:text-text-main hover:bg-surface/60 p-2 rounded-xl transition-all font-black text-lg leading-none btn-tactile cursor-pointer"
           >
             ×
           </button>
@@ -79,17 +79,17 @@ export function InstrutorModal({ open, title, error, onClose, onSave, form, setF
           )}
 
           {/* Ações do Modal */}
-          <div className="flex justify-end gap-3 mt-4 pt-4 border-t border-border shrink-0">
+          <div className="flex justify-end gap-3 mt-4 pt-4 border-t border-border/60 shrink-0">
             <button 
               type="button" 
               onClick={onClose} 
-              className="px-5 py-2.5 text-sm font-bold text-text-muted hover:text-text-main hover:bg-surface rounded-xl transition-all"
+              className="px-5 py-2.5 text-sm font-bold text-text-muted hover:text-text-main hover:bg-surface/50 rounded-xl btn-tactile cursor-pointer"
             >
               Cancelar
             </button>
             <button 
               type="submit" 
-              className="bg-primary text-white font-black py-2.5 px-6 rounded-xl shadow-md hover:scale-[1.02] active:scale-[0.98] transition-all text-sm"
+              className="bg-primary text-white font-black py-2.5 px-6 rounded-xl shadow-md hover:shadow-lg hover:shadow-primary/20 btn-tactile cursor-pointer text-sm"
             >
               Salvar Instrutor
             </button>

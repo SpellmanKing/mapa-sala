@@ -6,6 +6,25 @@ import { TurmaService } from '../api/client';
 export function PainelPage() {
   const { salas, turmas, cursos, refreshTurmas } = useAppContext();
 
+  // Relógio Digital (Horário de Brasília)
+  const [horaAtual, setHoraAtual] = useState(() => new Date());
+
+  React.useEffect(() => {
+    const timer = setInterval(() => {
+      setHoraAtual(new Date());
+    }, 1000);
+    return () => clearInterval(timer);
+  }, []);
+
+  const formatHoraBrasilia = (date: Date) => {
+    return date.toLocaleTimeString('pt-BR', {
+      timeZone: 'America/Sao_Paulo',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit'
+    });
+  };
+
   // Estados de Visualização e Filtro
   const [filtroTipo, setFiltroTipo] = useState('Todos');
   const [modoVisualizacao, setModoVisualizacao] = useState<'semanal' | 'diario'>('semanal');
@@ -93,12 +112,59 @@ export function PainelPage() {
   };
 
   const TURNOS = ['Manhã', 'Tarde', 'Noite'];
-  const salasFiltradas = salas.filter(s => filtroTipo === 'Todos' || s.tipo === filtroTipo);
+  const salasFiltradas = salas.filter(s => {
+    if (filtroTipo === 'Todos') return true;
+    if (filtroTipo === 'Inovadora') return s.tipo.toLowerCase().includes('inovadora');
+    if (filtroTipo === 'TI') return s.tipo.toLowerCase().includes('ti') || s.tipo.toLowerCase().includes('t.i.');
+    return s.tipo === filtroTipo;
+  });
 
   // Contadores para o filtro Pill de Salas
   const countTodas = salas.length;
-  const countInovadoras = salas.filter(s => s.tipo === 'Inovadora').length;
-  const countTI = salas.filter(s => s.tipo === 'TI').length;
+
+  const obterSubLinhasDoTurno = (turno: string) => {
+    // Filtra as turmas do turno que estão ativas na visualização atual
+    const turmasDoTurno = turmas.filter(t => {
+      if (t.turno !== turno) return false;
+      return modoVisualizacao === 'semanal' 
+        ? isTurmaActive(t.dataInicio, t.dataFim)
+        : isTurmaActiveOnDate(t, dataFiltro);
+    });
+
+    // Distribui as turmas em sub-linhas virtuais sem conflito de salaId
+    const subLinhas: any[][] = [];
+
+    // Ordenamos as turmas para consistência no posicionamento das linhas
+    const turmasOrdenadas = [...turmasDoTurno].sort((a, b) => String(a.codigo).localeCompare(String(b.codigo)));
+
+    turmasOrdenadas.forEach(turma => {
+      let linhaIndex = 0;
+      let colocada = false;
+
+      while (!colocada) {
+        if (!subLinhas[linhaIndex]) {
+          subLinhas[linhaIndex] = [];
+        }
+
+        const salaOcupada = subLinhas[linhaIndex].some(t => t.salaId === turma.salaId);
+
+        if (!salaOcupada) {
+          subLinhas[linhaIndex].push(turma);
+          colocada = true;
+        } else {
+          linhaIndex++;
+        }
+      }
+    });
+
+    if (subLinhas.length === 0) {
+      subLinhas.push([]);
+    }
+
+    return subLinhas;
+  };
+  const countInovadoras = salas.filter(s => s.tipo.toLowerCase().includes('inovadora')).length;
+  const countTI = salas.filter(s => s.tipo.toLowerCase().includes('ti') || s.tipo.toLowerCase().includes('t.i.')).length;
 
   // --- LÓGICA DO MODAL DE NOVO AGENDAMENTO ---
   const [modalOpen, setModalOpen] = useState(false);
@@ -266,6 +332,22 @@ export function PainelPage() {
           </div>
         </div>
 
+        {/* Relógio Digital (Horário de Brasília) */}
+        <div className="flex items-center justify-center shrink-0">
+          <div className="flex items-center gap-2.5 bg-primary/5 dark:bg-primary/10 border border-primary/15 px-4 py-2 rounded-xl text-primary shadow-xs">
+            <span className="relative flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
+            </span>
+            <span className="font-mono text-xs font-black tracking-wider">
+              {formatHoraBrasilia(horaAtual)}
+            </span>
+            <span className="text-[9px] font-black uppercase bg-primary text-white px-1.5 py-0.5 rounded-md tracking-widest">
+              Brasília
+            </span>
+          </div>
+        </div>
+
         {/* CONTROLES, FILTROS E SELETORES */}
         <div className={`flex flex-wrap items-center gap-4 p-2 rounded-2xl border transition-all ${
           modoTV ? 'bg-card border-border' : 'bg-surface border-border'
@@ -364,172 +446,181 @@ export function PainelPage() {
       </div>
 
       {/* GRID / MATRIZ DE ALOCAÇÃO */}
-      <div className={`flex-1 overflow-auto custom-scrollbar p-4 transition-colors ${
-        modoTV ? 'bg-bg' : 'bg-bg/40'
-      }`}>
-        <div className={`min-w-max border rounded-2xl shadow-sm overflow-hidden flex flex-col transition-colors ${
-          modoTV ? 'border-border bg-bg' : 'border-border bg-card'
-        }`}>
+      <div className="flex-1 overflow-auto custom-scrollbar p-4 relative z-10">
+        <div className="min-w-max glass-panel rounded-3xl shadow-xs overflow-hidden flex flex-col transition-all duration-300 border border-border/80">
           
           {/* COLUNAS (SALAS) */}
-          <div className={`flex sticky top-0 z-20 backdrop-blur-md border-b transition-colors ${
-            modoTV ? 'bg-bg/90 border-border' : 'bg-surface/90 border-border'
-          }`}>
+          <div className="flex sticky top-0 z-20 backdrop-blur-lg border-b border-border/50 bg-surface/30">
             {/* Canto superior esquerdo */}
-            <div className={`w-28 shrink-0 border-r p-4 flex items-center justify-center font-black uppercase tracking-widest text-xs sticky left-0 z-30 transition-colors ${
+            <div className={`w-28 shrink-0 border-r border-border/50 p-4 flex items-center justify-center font-black uppercase tracking-widest text-xs sticky left-0 z-30 transition-colors ${
               modoTV 
-                ? 'bg-bg border-border text-text-muted shadow-sm' 
-                : 'bg-card border-border text-secondary dark:text-primary shadow-sm'
+                ? 'bg-card text-text-muted shadow-xs' 
+                : 'bg-card/80 text-secondary dark:text-primary shadow-xs'
             }`}>
               TURNOS
             </div>
             
             {/* Headers das Salas */}
             {salasFiltradas.map((sala) => (
-              <div key={sala.id} className={`w-72 shrink-0 border-r p-4 flex flex-col items-center justify-center gap-1.5 transition-colors ${
-                modoTV ? 'border-border bg-bg' : 'border-border bg-card'
-              }`}>
-                <div className="font-black text-sm uppercase tracking-wider px-3.5 py-1.5 rounded-lg border border-border bg-surface text-secondary dark:text-primary">
+              <div key={sala.id} className="w-72 shrink-0 border-r border-border/50 p-4.5 flex flex-col items-center justify-center gap-2 bg-transparent transition-all">
+                <div className="font-black text-sm uppercase tracking-wider px-3.5 py-1.5 rounded-xl border border-primary/20 bg-primary/10 text-primary shadow-xs font-display">
                   {sala.nome}
                 </div>
-                <div className="text-[10px] font-bold uppercase flex items-center gap-2 text-text-muted">
+                <div className="text-[10px] font-black uppercase flex items-center gap-2 text-text-muted">
                   <span>Cap: {sala.capacidade}</span>
                   <span>•</span>
-                  <span className="truncate max-w-[130px]" title={sala.tipo}>{sala.tipo}</span>
+                  <span className="truncate max-w-[130px] font-mono" title={sala.tipo}>{sala.tipo}</span>
                 </div>
               </div>
             ))}
           </div>
 
-          {/* LINHAS (TURNOS) */}
+          {/* LINHAS (TURNOS E SUB-LINHAS) */}
           <div className="flex-1 flex flex-col">
-            {TURNOS.map((turno) => (
-              <div key={turno} className="flex border-b border-border last:border-b-0 group min-h-[160px] transition-colors">
-                
-                {/* Indicador Lateral de Turno */}
-                <div className={`w-28 shrink-0 border-r p-3 flex items-center justify-center sticky left-0 z-10 transition-all ${
-                  modoTV 
-                    ? 'bg-input/20 border-border group-hover:bg-input/30 shadow-sm' 
-                    : 'bg-surface border-border group-hover:bg-primary/5 shadow-sm'
-                }`}>
-                  <div className="font-black uppercase tracking-widest text-sm text-secondary dark:text-primary" style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)', letterSpacing: '0.22em' }}>
-                    {turno}
-                  </div>
-                </div>
+            {TURNOS.map((turno) => {
+              const subLinhas = obterSubLinhasDoTurno(turno);
+              
+              // Determina as cores de cada bloco de turno
+              let borderClass = 'border-l-8 border-l-primary';
+              let bgClass = 'bg-primary/5 dark:bg-primary/10';
+              let textClass = 'text-primary';
+              
+              if (turno === 'Tarde') {
+                borderClass = 'border-l-8 border-l-accent';
+                bgClass = 'bg-accent/5 dark:bg-accent/10';
+                textClass = 'text-accent';
+              } else if (turno === 'Noite') {
+                borderClass = 'border-l-8 border-l-purple-600';
+                bgClass = 'bg-purple-600/5 dark:bg-purple-600/10';
+                textClass = 'text-purple-600 dark:text-purple-400';
+              }
 
-                {/* Células de alocações por Sala */}
-                {salasFiltradas.map((sala) => {
-                  const turmasNestaCelula = turmas.filter(t => {
-                    if (t.salaId !== sala.id || t.turno !== turno) return false;
-                    return modoVisualizacao === 'semanal' 
-                      ? isTurmaActive(t.dataInicio, t.dataFim)
-                      : isTurmaActiveOnDate(t, dataFiltro);
-                  });
-
-                  return (
-                    <div key={`${turno}-${sala.id}`} className={`w-72 shrink-0 border-r p-4 transition-colors relative flex flex-col gap-4 ${
-                      modoTV 
-                        ? 'border-border bg-input/5 group-hover:bg-input/10' 
-                        : 'border-border bg-card group-hover:bg-primary/5'
-                    }`}>
-                      {turmasNestaCelula.map(turma => {
-                        const progress = getProgress(turma.dataInicio, turma.dataFim);
-                        const diasFormatados = formatDiasSemana(turma.diasSemana, turma.diasRemotos);
-                        
-                        return (
-                          <div 
-                            key={turma.id}
-                            onClick={() => handleEditClick(turma)}
-                            className={`cursor-pointer group/card relative w-full rounded-2xl p-4 shadow-sm hover:shadow-lg hover:scale-[1.01] active:scale-[0.99] border transition-all flex flex-col gap-3 overflow-hidden ${
-                              modoTV
-                                ? 'bg-input border-border text-text-main'
-                                : turma.modalidade === 'Remoto'
-                                  ? 'bg-accent/5 border-accent/20 hover:border-accent text-text-main'
-                                  : 'bg-primary/5 border-primary/20 hover:border-primary text-text-main'
-                            }`}
-                          >
-                            {/* Linha 1: Código da Turma e Tags */}
-                            <div className="flex items-center justify-between gap-2 shrink-0">
-                              <span className="text-[10px] font-black tracking-wider px-2 py-0.5 rounded-lg border border-border bg-card text-text-muted shadow-sm">
-                                {turma.codigo}
-                              </span>
-                              
-                              <div className="flex gap-1.5">
-                                {turma.cursoTem && (
-                                  <span className="text-[9px] font-black bg-primary text-white px-2 py-0.5 rounded-md uppercase tracking-wider">
-                                    TEM
-                                  </span>
-                                )}
-                                {turma.modalidade === 'Remoto' && (
-                                  <span className="text-[9px] font-bold bg-accent text-white px-2 py-0.5 rounded-md uppercase tracking-wider">
-                                    Remoto
-                                  </span>
-                                )}
-                              </div>
-                            </div>
-
-                            {/* Linha 2: Nome do Curso (Destaque principal) */}
-                            <div className="font-extrabold text-sm leading-snug break-words tracking-tight group-hover/card:text-primary transition-colors text-text-main">
-                              {turma.cursoNome} {turma.unidade && <span className="text-xs font-semibold text-text-muted">- {turma.unidade}</span>}
-                            </div>
-
-                            {/* Linha 3: Período Letivo */}
-                            <div className="text-[11px] font-semibold flex items-center gap-1.5 text-text-muted">
-                              <CalendarIcon className="w-3.5 h-3.5 opacity-70" />
-                              <span>{formatDataCurta(turma.dataInicio)} - {formatDataCurta(turma.dataFim)}</span>
-                            </div>
-
-                            {/* Linha 4: Dias da Semana */}
-                            <div className={`text-xs font-bold border-l-2 pl-2 ${
-                              turma.modalidade === 'Remoto' 
-                                ? 'border-accent text-accent' 
-                                : 'border-primary text-primary'
-                            }`}>
-                              {diasFormatados}
-                            </div>
-
-                            {/* Linha 5: Instrutor + Progresso */}
-                            <div className="mt-1 pt-3 border-t border-dashed flex flex-col gap-2 transition-colors border-border">
-                              <div className="flex items-center gap-2 text-[11px] font-bold text-text-main">
-                                <Users className="w-3.5 h-3.5 text-text-muted" />
-                                <span className="truncate">{turma.instrutorNome}</span>
-                              </div>
-                              
-                              {/* Barra de Progresso */}
-                              <div className="flex items-center gap-2 text-[9px] font-black">
-                                <div className="flex-1 h-1.5 rounded-full overflow-hidden relative bg-border/40">
-                                  <div 
-                                    className="absolute inset-y-0 left-0 bg-primary transition-all duration-500" 
-                                    style={{ width: `${progress}%` }}
-                                  ></div>
-                                </div>
-                                <span className="text-text-muted">{progress}%</span>
-                              </div>
-                            </div>
-                          </div>
-                        );
-                      })}
+              return (
+                <div key={turno} className="flex border-b border-border/50 last:border-b-0 transition-colors">
+                  
+                  {/* Indicador Lateral do Turno (mesclado verticalmente) */}
+                  <div className={`w-28 shrink-0 border-r border-border/50 p-3 flex items-center justify-center sticky left-0 z-10 transition-all shadow-xs ${borderClass} ${bgClass}`}>
+                    <div className={`font-black uppercase tracking-widest text-sm ${textClass}`} style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)', letterSpacing: '0.22em' }}>
+                      {turno}
                     </div>
-                  );
-                })}
-              </div>
-            ))}
+                  </div>
+
+                  {/* Sub-linhas do Turno */}
+                  <div className="flex-1 flex flex-col divide-y divide-border/30 bg-card/10">
+                    {subLinhas.map((subLinha, subIndex) => (
+                      <div key={subIndex} className="flex min-h-[145px] hover:bg-surface/20 transition-colors">
+                        
+                        {/* Salas em Colunas */}
+                        {salasFiltradas.map((sala) => {
+                          const turma = subLinha.find(t => t.salaId === sala.id);
+                          
+                          return (
+                            <div key={sala.id} className="w-72 shrink-0 border-r border-border/50 p-4 transition-colors relative flex flex-col justify-center bg-transparent">
+                              {turma ? (
+                                (() => {
+                                  const progress = getProgress(turma.dataInicio, turma.dataFim);
+                                  const diasFormatados = formatDiasSemana(turma.diasSemana, turma.diasRemotos);
+                                  
+                                  const isRemoto = turma.modalidade === 'Remoto';
+                                  const cardBgClass = isRemoto 
+                                    ? 'bg-accent/10 border-accent/30 hover:border-accent hover-glow-accent text-text-main'
+                                    : 'bg-primary/10 border-primary/30 hover:border-primary hover-glow-primary text-text-main';
+                                  const borderSideClass = isRemoto ? 'border-accent' : 'border-primary';
+                                  
+                                  return (
+                                    <div 
+                                      onClick={() => handleEditClick(turma)}
+                                      className={`cursor-pointer group/card relative w-full rounded-2xl p-4 border btn-tactile hover:scale-[1.03] transition-all flex flex-col gap-3.5 overflow-hidden shadow-xs ${cardBgClass}`}
+                                    >
+                                      {/* Linha 1: Código da Turma e Tags */}
+                                      <div className="flex items-center justify-between gap-2 shrink-0">
+                                        <span className="text-[9px] font-black tracking-wider px-2 py-0.5 rounded-lg border border-border bg-card/65 text-text-muted shadow-xs">
+                                          {turma.codigo}
+                                        </span>
+                                        
+                                        <div className="flex gap-1.5">
+                                          {turma.cursoTem && (
+                                            <span className="text-[9px] font-black bg-primary text-white px-2 py-0.5 rounded-md uppercase tracking-wider">
+                                              TEM
+                                            </span>
+                                          )}
+                                          {isRemoto && (
+                                            <span className="text-[9px] font-bold bg-accent text-white px-2 py-0.5 rounded-md uppercase tracking-wider">
+                                              Remoto
+                                            </span>
+                                          )}
+                                        </div>
+                                      </div>
+
+                                      {/* Linha 2: Nome do Curso */}
+                                      <div className="font-black text-sm leading-snug break-words tracking-tight transition-colors text-text-main font-display">
+                                        {turma.cursoNome} {turma.unidade && <span className="text-xs font-semibold text-text-muted">- {turma.unidade}</span>}
+                                      </div>
+
+                                      {/* Linha 3: Período Letivo */}
+                                      <div className="text-[11px] font-bold flex items-center gap-1.5 text-text-muted">
+                                        <CalendarIcon className="w-3.5 h-3.5 opacity-70 text-text-muted" />
+                                        <span>{formatDataCurta(turma.dataInicio)} - {formatDataCurta(turma.dataFim)}</span>
+                                      </div>
+
+                                      {/* Linha 4: Dias da Semana */}
+                                      <div className={`text-xs font-black border-l-2 pl-2 ${borderSideClass}`}>
+                                        {diasFormatados}
+                                      </div>
+
+                                      {/* Linha 5: Instrutor + Progresso */}
+                                      <div className="mt-1 pt-3.5 border-t border-dashed flex flex-col gap-2.5 transition-colors border-border/60">
+                                        <div className="flex items-center gap-2 text-xs font-black text-text-main">
+                                          <Users className="w-3.5 h-3.5 text-text-muted shrink-0" />
+                                          <span className="truncate">{turma.instrutorNome}</span>
+                                        </div>
+                                        
+                                        {/* Barra de Progresso */}
+                                        <div className="flex items-center gap-2 text-[9px] font-black">
+                                          <div className="flex-1 h-1.5 rounded-full overflow-hidden relative bg-border/40">
+                                            <div 
+                                              className="absolute inset-y-0 left-0 bg-primary transition-all duration-500 rounded-full" 
+                                              style={{ width: `${progress}%` }}
+                                            ></div>
+                                          </div>
+                                          <span className="text-text-muted font-mono">{progress}%</span>
+                                        </div>
+                                      </div>
+                                    </div>
+                                  );
+                                })()
+                              ) : (
+                                // Célula Vazia
+                                <div className="h-full w-full min-h-[120px] flex items-center justify-center opacity-0 hover:opacity-10 transition-opacity">
+                                  <span className="text-[10px] text-text-muted font-bold font-mono">vazio</span>
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    ))}
+                  </div>
+
+                </div>
+              );
+            })}
           </div>
         </div>
       </div>
 
       {/* MODAL DE AGENDAMENTO (NOVO) */}
       {modalOpen && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[999] flex items-center justify-center p-4">
-          <div className="bg-card rounded-2xl shadow-2xl w-full max-w-xl overflow-hidden animate-in fade-in zoom-in-95 duration-200 flex flex-col max-h-[90vh] transition-colors border border-border">
-            <div className="p-6 border-b border-border flex justify-between items-center bg-surface shrink-0">
-              <h2 className="text-lg font-black text-secondary dark:text-white uppercase tracking-tight flex items-center gap-2">
+        <div className="fixed inset-0 bg-slate-950/60 backdrop-blur-md z-[999] flex items-center justify-center p-4">
+          <div className="glass-panel rounded-2xl shadow-2xl w-full max-w-xl overflow-hidden animate-in fade-in zoom-in-95 duration-200 flex flex-col max-h-[90vh] transition-all">
+            <div className="p-6 border-b border-border/60 flex justify-between items-center bg-surface/40 shrink-0">
+              <h2 className="text-lg font-black text-secondary dark:text-white uppercase tracking-tight flex items-center gap-2 font-display">
                 <CalendarIcon className="w-5 h-5 text-primary" />
                 Nova Alocação de Turma
               </h2>
               <button 
                 onClick={() => setModalOpen(false)} 
-                className="text-text-muted hover:text-text-main hover:bg-surface p-2 rounded-xl transition-all cursor-pointer"
+                className="text-text-muted hover:text-text-main hover:bg-surface/60 p-2 rounded-xl transition-all btn-tactile cursor-pointer"
               >
                 <X size={20} />
               </button>
@@ -594,17 +685,17 @@ export function PainelPage() {
                 </p>
               </div>
 
-              <div className="flex justify-end gap-3 mt-4 pt-4 border-t border-border shrink-0">
+              <div className="flex justify-end gap-3 mt-4 pt-4 border-t border-border/60 shrink-0">
                 <button 
                   type="button" 
                   onClick={() => setModalOpen(false)} 
-                  className="px-4 py-2 text-sm font-bold text-text-muted hover:text-text-main hover:bg-surface rounded-xl transition-all cursor-pointer"
+                  className="px-4 py-2 text-sm font-bold text-text-muted hover:text-text-main hover:bg-surface/50 rounded-xl btn-tactile cursor-pointer"
                 >
                   Cancelar
                 </button>
                 <button 
                   type="submit" 
-                  className="bg-primary text-white font-black py-2.5 px-6 rounded-xl shadow-md hover:scale-[1.02] active:scale-[0.98] transition-all text-sm cursor-pointer"
+                  className="bg-primary text-white font-black py-2.5 px-6 rounded-xl shadow-md hover:shadow-lg hover:shadow-primary/20 btn-tactile cursor-pointer text-sm"
                 >
                   Confirmar Alocação
                 </button>
@@ -616,16 +707,16 @@ export function PainelPage() {
 
       {/* MODAL DE EDIÇÃO E EXCLUSÃO */}
       {editTurmaModalOpen && turmaEditando && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[999] flex items-center justify-center p-4">
-          <div className="bg-card rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden animate-in fade-in zoom-in-95 duration-200 flex flex-col transition-colors border border-border">
-            <div className="p-6 border-b border-border flex justify-between items-center bg-surface shrink-0">
-              <h2 className="text-lg font-black text-secondary dark:text-white uppercase tracking-tight flex items-center gap-2">
+        <div className="fixed inset-0 bg-slate-950/60 backdrop-blur-md z-[999] flex items-center justify-center p-4">
+          <div className="glass-panel rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden animate-in fade-in zoom-in-95 duration-200 flex flex-col transition-all">
+            <div className="p-6 border-b border-border/60 flex justify-between items-center bg-surface/40 shrink-0">
+              <h2 className="text-lg font-black text-secondary dark:text-white uppercase tracking-tight flex items-center gap-2 font-display">
                 <BookOpen className="w-5 h-5 text-primary" />
                 Editar Alocação: {turmaEditando.codigo}
               </h2>
               <button 
                 onClick={() => setEditTurmaModalOpen(false)} 
-                className="text-text-muted hover:text-text-main hover:bg-surface p-2 rounded-xl transition-all cursor-pointer"
+                className="text-text-muted hover:text-text-main hover:bg-surface/60 p-2 rounded-xl transition-all btn-tactile cursor-pointer"
               >
                 <X size={20} />
               </button>
@@ -669,11 +760,11 @@ export function PainelPage() {
                 </div>
               </div>
 
-              <div className="flex flex-col md:flex-row justify-between items-center gap-3 mt-4 pt-4 border-t border-border shrink-0">
+              <div className="flex flex-col md:flex-row justify-between items-center gap-3 mt-4 pt-4 border-t border-border/60 shrink-0">
                 <button 
                   type="button" 
                   onClick={handleDeletarAlocacao}
-                  className="w-full md:w-auto bg-red-50 dark:bg-red-950/10 hover:bg-red-100 dark:hover:bg-red-900/20 border border-red-200/40 text-red-655 dark:text-red-400 font-bold px-4 py-2.5 rounded-xl flex items-center justify-center gap-1.5 text-xs transition-all active:scale-95 shadow-sm cursor-pointer"
+                  className="w-full md:w-auto bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 text-red-600 dark:text-red-450 font-bold px-4 py-2.5 rounded-xl flex items-center justify-center gap-1.5 text-xs transition-all btn-tactile cursor-pointer"
                 >
                   <Trash2 size={14} /> Excluir Alocação
                 </button>
@@ -682,13 +773,13 @@ export function PainelPage() {
                   <button 
                     type="button" 
                     onClick={() => setEditTurmaModalOpen(false)} 
-                    className="px-4 py-2 text-sm font-bold text-text-muted hover:text-text-main hover:bg-surface rounded-xl transition-all cursor-pointer"
+                    className="px-4 py-2 text-sm font-bold text-text-muted hover:text-text-main hover:bg-surface/50 rounded-xl btn-tactile cursor-pointer"
                   >
                     Cancelar
                   </button>
                   <button 
                     type="submit" 
-                    className="bg-primary text-white font-black py-2.5 px-6 rounded-xl shadow-md hover:scale-[1.02] active:scale-[0.98] transition-all text-sm cursor-pointer"
+                    className="bg-primary text-white font-black py-2.5 px-6 rounded-xl shadow-md hover:shadow-lg hover:shadow-primary/20 btn-tactile cursor-pointer text-sm"
                   >
                     Salvar Alterações
                   </button>

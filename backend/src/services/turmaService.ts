@@ -64,12 +64,24 @@ export class TurmaService {
       throw new HttpError(409, `Conflito: O ambiente ${conflito.sala.nome_sala} já está ocupado neste turno no dia ${dataFormatada}.`);
     }
 
+    // Determina o código da turma de forma robusta e única
+    let codigoTurmaFinal = data.codigo_turma || curso.codigo_turma_padrao || `TURMA-${data.id_cursos}`;
+    const turmaExistente = await prisma.turma.findFirst({
+      where: { codigo_turma: codigoTurmaFinal }
+    });
+    if (turmaExistente) {
+      const totalMesmoCodigo = await prisma.turma.count({
+        where: { codigo_turma: { startsWith: codigoTurmaFinal } }
+      });
+      codigoTurmaFinal = `${codigoTurmaFinal}-${totalMesmoCodigo + 1}`;
+    }
+
     // Cria a Turma
     const turma = await prisma.turma.create({
       data: {
         id_cursos: data.id_cursos,
         id_instrutores: curso.id_instrutor_padrao,
-        codigo_turma: data.codigo_turma,
+        codigo_turma: codigoTurmaFinal,
         fk_id_turno: data.fk_id_turno,
         data_inicio: new Date(data.data_inicio),
         data_termino: new Date(cronograma.dataTermino),

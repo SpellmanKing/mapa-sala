@@ -124,10 +124,10 @@ export function ManageSystemPage() {
   function getNomeInstrutor(id?: string) { return instrutores.find(i => i.id === id)?.nome ?? id ?? '-'; }
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-6 animate-in fade-in slide-in-from-bottom-6 duration-350">
       
       {/* Título e Ação */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-card p-6 rounded-2xl border border-border shadow-sm transition-colors duration-300">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 glass-panel p-6 rounded-3xl shadow-sm transition-colors duration-300">
         <div>
           <h1 className="text-2xl font-black text-secondary dark:text-primary tracking-tight">Gerenciamento Educacional</h1>
           <p className="text-text-muted text-sm mt-1 font-medium">Gestão unificada de Cursos, Instrutores e Ambientes.</p>
@@ -137,7 +137,7 @@ export function ManageSystemPage() {
           {activeTab === 'cursos' && (
             <button 
               onClick={openCursoCreate} 
-              className="w-full sm:w-auto bg-primary text-white font-black py-2.5 px-5 rounded-xl shadow-md hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-2 text-sm cursor-pointer"
+              className="w-full sm:w-auto bg-primary text-white font-black py-2.5 px-5 rounded-xl shadow-md btn-tactile hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-2 text-sm cursor-pointer"
             >
               <Plus size={16} /> Adicionar Curso
             </button>
@@ -145,7 +145,7 @@ export function ManageSystemPage() {
           {activeTab === 'instrutores' && (
             <button 
               onClick={openInstrutorCreate} 
-              className="w-full sm:w-auto bg-primary text-white font-black py-2.5 px-5 rounded-xl shadow-md hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-2 text-sm cursor-pointer"
+              className="w-full sm:w-auto bg-primary text-white font-black py-2.5 px-5 rounded-xl shadow-md btn-tactile hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-2 text-sm cursor-pointer"
             >
               <Plus size={16} /> Adicionar Instrutor
             </button>
@@ -154,177 +154,220 @@ export function ManageSystemPage() {
       </div>
 
       {/* Navegação de Abas */}
-      <div className="bg-card rounded-2xl border border-border p-2 shadow-sm flex flex-wrap gap-2 overflow-x-auto scrollbar-none transition-colors duration-300">
+      <div className="glass-panel rounded-2xl p-1.5 shadow-sm flex flex-wrap gap-1.5 overflow-x-auto scrollbar-none transition-colors duration-300">
         <button 
           onClick={() => setActiveTab('cursos')} 
-          className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-sm transition-all cursor-pointer ${
+          className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-sm transition-all btn-tactile cursor-pointer border ${
             activeTab === 'cursos' 
-              ? 'bg-primary/5 text-primary shadow-sm border border-primary/10' 
-              : 'text-text-muted hover:text-text-main hover:bg-surface'
+              ? 'bg-primary/10 text-primary border-primary/20 shadow-sm font-black' 
+              : 'text-text-muted hover:text-text-main hover:bg-surface border-transparent'
           }`}
         >
           <BookOpen className="w-4 h-4" /> Cursos
         </button>
         <button 
           onClick={() => setActiveTab('instrutores')} 
-          className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-sm transition-all cursor-pointer ${
+          className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-sm transition-all btn-tactile cursor-pointer border ${
             activeTab === 'instrutores' 
-              ? 'bg-primary/5 text-primary shadow-sm border border-primary/10' 
-              : 'text-text-muted hover:text-text-main hover:bg-surface'
+              ? 'bg-primary/10 text-primary border-primary/20 shadow-sm font-black' 
+              : 'text-text-muted hover:text-text-main hover:bg-surface border-transparent'
           }`}
         >
           <Users className="w-4 h-4" /> Instrutores
         </button>
         <button 
           onClick={() => setActiveTab('salas')} 
-          className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-sm transition-all cursor-pointer ${
+          className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-sm transition-all btn-tactile cursor-pointer border ${
             activeTab === 'salas' 
-              ? 'bg-primary/5 text-primary shadow-sm border border-primary/10' 
-              : 'text-text-muted hover:text-text-main hover:bg-surface'
+              ? 'bg-primary/10 text-primary border-primary/20 shadow-sm font-black' 
+              : 'text-text-muted hover:text-text-main hover:bg-surface border-transparent'
           }`}
         >
           <School className="w-4 h-4" /> Salas e Ambientes
         </button>
       </div>
 
-      {/* Tabela de Dados */}
-      <div className="bg-card rounded-2xl border border-border shadow-sm overflow-hidden transition-colors duration-300">
-        <div className="overflow-x-auto custom-scrollbar">
-          
-          {activeTab === 'cursos' && (
-            <table className="w-full text-left border-collapse">
-              <thead>
-                <tr className="bg-surface border-b border-border">
-                  <th className="px-6 py-4 text-xs font-black uppercase tracking-wider text-text-muted">Nome do Curso</th>
-                  <th className="px-6 py-4 text-xs font-black uppercase tracking-wider text-text-muted">Instrutor Principal</th>
-                  <th className="px-6 py-4 text-xs font-black uppercase tracking-wider text-text-muted">Unidade</th>
-                  <th className="px-6 py-4 text-xs font-black uppercase tracking-wider text-text-muted">Modalidade</th>
-                  <th className="px-6 py-4 text-xs font-black uppercase tracking-wider text-text-muted text-right">Ações</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-border">
-                {cursos.length === 0 ? (
-                  <tr>
-                    <td colSpan={5} className="px-6 py-8 text-center text-sm text-text-muted font-medium">Nenhum curso cadastrado.</td>
-                  </tr>
-                ) : (
-                  cursos.map(c => (
-                    <tr key={c.id} className="hover:bg-surface/50 transition-colors">
-                      <td className="px-6 py-4 text-sm font-bold text-text-main">{c.nome}</td>
-                      <td className="px-6 py-4 text-sm text-text-muted font-semibold">{getNomeInstrutor(c.instrutorId)}</td>
-                      <td className="px-6 py-4 text-sm">
-                        <span className="bg-surface border border-border text-text-muted font-bold px-2.5 py-1 rounded-lg text-xs">
-                          {c.unidade || '-'}
+      {/* Listagens em Grids de Cards Premium */}
+      <div className="relative z-10 transition-all duration-300">
+        
+        {activeTab === 'cursos' && (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {cursos.length === 0 ? (
+              <div className="col-span-full glass-panel rounded-3xl py-12 text-center text-sm text-text-muted font-medium border border-border/80">
+                Nenhum curso cadastrado.
+              </div>
+            ) : (
+              cursos.map(c => {
+                const instrutorNome = getNomeInstrutor(c.instrutorId);
+                const iniciais = instrutorNome.split(' ').slice(0, 2).map(n => n[0]).join('').toUpperCase();
+                
+                return (
+                  <div key={c.id} className="glass-panel rounded-3xl p-5 shadow-xs flex flex-col justify-between gap-5 border border-border/70 hover-glow-primary transition-all duration-300 group/card relative overflow-hidden">
+                    {/* Topo: Modalidade & Unidade */}
+                    <div className="flex justify-between items-start gap-2">
+                      <span className={`px-2.5 py-1 rounded-xl text-[10px] font-black border tracking-wider uppercase ${
+                        c.modalidade === 'Presencial' 
+                          ? 'bg-primary/10 text-primary border-primary/20'
+                          : c.modalidade === 'Remoto'
+                            ? 'bg-accent/10 text-accent border-accent/20 dark:text-light-accent'
+                            : 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20'
+                      }`}>
+                        {c.modalidade}
+                      </span>
+                      {c.unidade && (
+                        <span className="bg-surface/50 border border-border/80 text-text-muted font-bold px-2.5 py-0.5 rounded-lg text-[9px] tracking-wide uppercase">
+                          {c.unidade}
                         </span>
-                      </td>
-                      <td className="px-6 py-4 text-sm">
-                        <span className={`px-2.5 py-1 rounded-lg text-xs font-bold border ${
-                          c.modalidade === 'Presencial' 
-                            ? 'bg-primary/5 text-primary border-primary/20'
-                            : c.modalidade === 'Remoto'
-                              ? 'bg-accent/10 text-accent border-accent/20 dark:text-light-accent'
-                              : 'bg-green-50 dark:bg-green-950/20 text-green-705 dark:text-green-400 border-green-100 dark:border-green-900/30'
-                        }`}>
-                          {c.modalidade}
+                      )}
+                    </div>
+
+                    {/* Nome do Curso */}
+                    <div className="flex flex-col gap-1">
+                      <span className="text-[9px] font-black text-text-muted uppercase tracking-widest">Nome do Curso</span>
+                      <h3 className="text-base font-black text-text-main leading-snug tracking-tight font-display group-hover/card:text-primary transition-colors">
+                        {c.nome}
+                      </h3>
+                      {c.codigoTurmaPadrao && (
+                        <span className="text-[10px] font-bold text-text-muted font-mono mt-1">
+                          Cód. Padrão: {c.codigoTurmaPadrao}
                         </span>
-                      </td>
-                      <td className="px-6 py-4 text-right">
-                        <div className="flex justify-end gap-2">
-                          <button 
-                            onClick={() => openCursoEdit(c)}
-                            className="bg-card border border-border text-text-muted hover:bg-surface hover:text-text-main font-bold px-3 py-1.5 rounded-xl text-xs flex items-center gap-1 active:scale-95 transition-all shadow-sm cursor-pointer"
-                          >
-                            <Edit size={12} /> Editar
-                          </button>
-                          <button 
-                            onClick={() => removeCurso(c.id)}
-                            className="bg-red-50 dark:bg-red-950/10 hover:bg-red-100 dark:hover:bg-red-900/20 border border-red-200/40 text-red-600 dark:text-red-400 font-bold px-3 py-1.5 rounded-xl text-xs flex items-center gap-1 active:scale-95 transition-all shadow-sm cursor-pointer"
-                          >
-                            <Trash2 size={12} /> Excluir
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          )}
+                      )}
+                    </div>
 
-          {activeTab === 'instrutores' && (
-            <table className="w-full text-left border-collapse">
-              <thead>
-                <tr className="bg-surface border-b border-border">
-                  <th className="px-6 py-4 text-xs font-black uppercase tracking-wider text-text-muted">ID</th>
-                  <th className="px-6 py-4 text-xs font-black uppercase tracking-wider text-text-muted">Nome do Instrutor</th>
-                  <th className="px-6 py-4 text-xs font-black uppercase tracking-wider text-text-muted text-right">Ações</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-border">
-                {instrutores.length === 0 ? (
-                  <tr>
-                    <td colSpan={3} className="px-6 py-8 text-center text-sm text-text-muted font-medium">Nenhum instrutor cadastrado.</td>
-                  </tr>
-                ) : (
-                  instrutores.map(i => (
-                    <tr key={i.id} className="hover:bg-surface/50 transition-colors">
-                      <td className="px-6 py-4 text-sm text-text-muted font-mono">#{i.id}</td>
-                      <td className="px-6 py-4 text-sm font-bold text-text-main">{i.nome}</td>
-                      <td className="px-6 py-4 text-right">
-                        <div className="flex justify-end gap-2">
-                          <button 
-                            onClick={() => openInstrutorEdit(i)}
-                            className="bg-card border border-border text-text-muted hover:bg-surface hover:text-text-main font-bold px-3 py-1.5 rounded-xl text-xs flex items-center gap-1 active:scale-95 transition-all shadow-sm cursor-pointer"
-                          >
-                            <Edit size={12} /> Editar
-                          </button>
-                          <button 
-                            onClick={() => removeInstrutor(i.id)}
-                            className="bg-red-50 dark:bg-red-950/10 hover:bg-red-100 dark:hover:bg-red-900/20 border border-red-200/40 text-red-600 dark:text-red-400 font-bold px-3 py-1.5 rounded-xl text-xs flex items-center gap-1 active:scale-95 transition-all shadow-sm cursor-pointer"
-                          >
-                            <Trash2 size={12} /> Excluir
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          )}
+                    {/* Info Instrutor */}
+                    <div className="flex items-center gap-3 pt-3.5 border-t border-border/50">
+                      {/* Avatar */}
+                      <div className="w-9 h-9 rounded-full bg-primary/10 border border-primary/20 text-primary font-black text-xs flex items-center justify-center tracking-tight shadow-xs uppercase shrink-0">
+                        {iniciais || '?'}
+                      </div>
+                      <div className="flex flex-col min-w-0">
+                        <span className="text-[9px] font-bold text-text-muted uppercase leading-none">Instrutor Principal</span>
+                        <span className="text-xs font-black text-text-main truncate mt-0.5">{instrutorNome}</span>
+                      </div>
+                    </div>
 
-          {activeTab === 'salas' && (
-            <table className="w-full text-left border-collapse">
-              <thead>
-                <tr className="bg-surface border-b border-border">
-                  <th className="px-6 py-4 text-xs font-black uppercase tracking-wider text-text-muted">ID</th>
-                  <th className="px-6 py-4 text-xs font-black uppercase tracking-wider text-text-muted">Nome do Ambiente</th>
-                  <th className="px-6 py-4 text-xs font-black uppercase tracking-wider text-text-muted">Tipo</th>
-                  <th className="px-6 py-4 text-xs font-black uppercase tracking-wider text-text-muted">Capacidade Máxima</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-border">
-                {salas.length === 0 ? (
-                  <tr>
-                    <td colSpan={4} className="px-6 py-8 text-center text-sm text-text-muted font-medium">Nenhuma sala cadastrada.</td>
-                  </tr>
-                ) : (
-                  salas.map(s => (
-                    <tr key={s.id} className="hover:bg-surface/50 transition-colors">
-                      <td className="px-6 py-4 text-sm text-text-muted font-mono">#{s.id}</td>
-                      <td className="px-6 py-4 text-sm font-bold text-text-main">{s.nome}</td>
-                      <td className="px-6 py-4 text-sm font-semibold text-text-muted">
-                        <span className="bg-surface px-2 py-0.5 rounded border border-border text-xs text-text-main">{s.tipo}</span>
-                      </td>
-                      <td className="px-6 py-4 text-sm text-text-main font-bold">{s.capacidade} alunos</td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          )}
+                    {/* Ações do Card */}
+                    <div className="flex justify-end gap-2.5 mt-1 pt-3.5 border-t border-border/50">
+                      <button 
+                        onClick={() => openCursoEdit(c)}
+                        className="bg-card hover:bg-surface border border-border text-text-muted hover:text-text-main font-bold px-3 py-1.5 rounded-xl text-xs flex items-center gap-1 btn-tactile cursor-pointer shadow-xs"
+                      >
+                        <Edit size={12} /> Editar
+                      </button>
+                      <button 
+                        onClick={() => removeCurso(c.id)}
+                        className="bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 text-red-655 font-bold px-3 py-1.5 rounded-xl text-xs flex items-center gap-1 btn-tactile cursor-pointer shadow-xs"
+                      >
+                        <Trash2 size={12} /> Excluir
+                      </button>
+                    </div>
+                  </div>
+                );
+              })
+            )}
+          </div>
+        )}
 
-        </div>
+        {activeTab === 'instrutores' && (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {instrutores.length === 0 ? (
+              <div className="col-span-full glass-panel rounded-3xl py-12 text-center text-sm text-text-muted font-medium border border-border/80">
+                Nenhum instrutor cadastrado.
+              </div>
+            ) : (
+              instrutores.map(i => {
+                const nameParts = i.nome.split(' ');
+                const iniciais = nameParts.length > 1 
+                  ? `${nameParts[0][0]}${nameParts[nameParts.length - 1][0]}`.toUpperCase()
+                  : nameParts[0].slice(0, 2).toUpperCase();
+
+                return (
+                  <div key={i.id} className="glass-panel rounded-3xl p-5 shadow-xs flex flex-col justify-between gap-5 border border-border/70 hover-glow-primary transition-all duration-300 group/card">
+                    
+                    <div className="flex items-center gap-4">
+                      {/* Avatar Grande */}
+                      <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary/10 to-primary/20 border border-primary/20 text-primary font-black text-sm flex items-center justify-center shadow-xs shrink-0 uppercase font-display">
+                        {iniciais || '?'}
+                      </div>
+                      <div className="flex flex-col min-w-0">
+                        <span className="text-[9px] font-black text-text-muted uppercase tracking-widest font-mono">ID #{i.id}</span>
+                        <h3 className="text-base font-black text-text-main tracking-tight font-display truncate mt-0.5 group-hover/card:text-primary transition-colors">
+                          {i.nome}
+                        </h3>
+                      </div>
+                    </div>
+
+                    {/* Ações */}
+                    <div className="flex justify-end gap-2.5 pt-3.5 border-t border-border/50">
+                      <button 
+                        onClick={() => openInstrutorEdit(i)}
+                        className="bg-card hover:bg-surface border border-border text-text-muted hover:text-text-main font-bold px-3 py-1.5 rounded-xl text-xs flex items-center gap-1 btn-tactile cursor-pointer shadow-xs"
+                      >
+                        <Edit size={12} /> Editar
+                      </button>
+                      <button 
+                        onClick={() => removeInstrutor(i.id)}
+                        className="bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 text-red-655 font-bold px-3 py-1.5 rounded-xl text-xs flex items-center gap-1 btn-tactile cursor-pointer shadow-xs"
+                      >
+                        <Trash2 size={12} /> Excluir
+                      </button>
+                    </div>
+                  </div>
+                );
+              })
+            )}
+          </div>
+        )}
+
+        {activeTab === 'salas' && (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {salas.length === 0 ? (
+              <div className="col-span-full glass-panel rounded-3xl py-12 text-center text-sm text-text-muted font-medium border border-border/80">
+                Nenhuma sala cadastrada.
+              </div>
+            ) : (
+              salas.map(s => (
+                <div key={s.id} className="glass-panel rounded-3xl p-5 shadow-xs flex flex-col justify-between gap-5 border border-border/70 hover-glow-primary transition-all duration-300 group/card">
+                  
+                  <div className="flex flex-col gap-3.5">
+                    {/* Topo / Tipo de Sala */}
+                    <div className="flex justify-between items-center">
+                      <span className="bg-primary/10 text-primary border border-primary/20 px-3 py-1 rounded-xl text-[10px] font-black tracking-wider uppercase font-mono">
+                        {s.tipo}
+                      </span>
+                      <span className="text-[9px] font-black text-text-muted uppercase tracking-widest font-mono">ID #{s.id}</span>
+                    </div>
+
+                    {/* Nome do Ambiente */}
+                    <div>
+                      <span className="text-[9px] font-black text-text-muted uppercase tracking-widest leading-none">Nome do Ambiente</span>
+                      <h3 className="text-lg font-black text-text-main tracking-tight font-display mt-0.5 group-hover/card:text-primary transition-colors">
+                        {s.nome}
+                      </h3>
+                    </div>
+                  </div>
+
+                  {/* Capacidade */}
+                  <div className="pt-3.5 border-t border-border/50 flex flex-col gap-2">
+                    <div className="flex justify-between items-center text-xs font-bold">
+                      <span className="text-text-muted">Capacidade Máxima</span>
+                      <span className="text-text-main font-black">{s.capacidade} alunos</span>
+                    </div>
+                    
+                    {/* Barra de Progresso de Capacidade */}
+                    <div className="w-full h-1.5 rounded-full overflow-hidden bg-border/40 relative">
+                      <div 
+                        className="absolute inset-y-0 left-0 bg-primary/70 rounded-full" 
+                        style={{ width: `${Math.min(100, (s.capacidade / 45) * 100)}%` }}
+                      ></div>
+                    </div>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        )}
+
       </div>
 
       <AllocationModal

@@ -63,14 +63,14 @@ export function AllocationModal({
       onMouseDown={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}
-      className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4 z-[999] overflow-hidden"
+      className="fixed inset-0 bg-slate-950/60 backdrop-blur-md flex items-center justify-center p-4 z-[999] overflow-hidden"
     >
-      <div className="bg-card rounded-2xl border border-border shadow-2xl w-full max-w-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200 flex flex-col max-h-[90vh] transition-colors duration-300">
+      <div className="glass-panel rounded-2xl shadow-2xl w-full max-w-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200 flex flex-col max-h-[90vh] transition-all duration-300">
         
         {/* Cabeçalho do Modal */}
-        <div className="p-5 border-b border-border flex justify-between items-start bg-surface shrink-0">
+        <div className="p-5 border-b border-border/60 flex justify-between items-start bg-surface/40 shrink-0">
           <div>
-            <h2 className="text-lg font-black text-text-main tracking-tight">{title}</h2>
+            <h2 className="text-lg font-black text-text-main tracking-tight font-display">{title}</h2>
             <p className="text-xs text-text-muted mt-1 font-medium">
               Todos os campos são obrigatórios para a criação do curso.
             </p>
@@ -78,7 +78,7 @@ export function AllocationModal({
           <button
             type="button"
             onClick={onClose}
-            className="text-text-muted hover:text-text-main hover:bg-surface p-2 rounded-xl transition-all font-black text-lg leading-none"
+            className="text-text-muted hover:text-text-main hover:bg-surface/60 p-2 rounded-xl transition-all font-black text-lg leading-none btn-tactile cursor-pointer"
           >
             ×
           </button>
@@ -201,10 +201,10 @@ export function AllocationModal({
                           return { ...prev, diasSemanaLetiva: Array.from(prevSet) };
                         });
                       }}
-                      className={`px-4 py-2.5 text-xs font-bold rounded-xl border-2 active:scale-95 transition-all ${
+                      className={`px-4 py-2.5 text-xs font-bold rounded-xl border border-border/80 btn-tactile cursor-pointer ${
                         checked 
-                          ? 'bg-primary/5 border-primary text-primary shadow-sm font-black' 
-                          : 'bg-input border-border text-text-muted hover:bg-surface'
+                          ? 'bg-primary/10 border-primary text-primary shadow-xs font-black' 
+                          : 'bg-input text-text-muted hover:bg-surface/50 hover:text-text-main'
                       }`}
                     >
                       {dia.label}
@@ -240,10 +240,10 @@ export function AllocationModal({
                           return { ...prev, diasRemotos: Array.from(prevSet) };
                         });
                       }}
-                      className={`px-4 py-2.5 text-xs font-bold rounded-xl border-2 active:scale-95 transition-all ${
+                      className={`px-4 py-2.5 text-xs font-bold rounded-xl border border-border/80 btn-tactile cursor-pointer ${
                         checked 
-                          ? 'bg-accent/10 border-accent text-accent dark:text-light-accent shadow-sm font-black' 
-                          : 'bg-input border-border text-text-muted hover:bg-surface'
+                          ? 'bg-accent/10 border-accent text-accent dark:text-light-accent shadow-xs font-black' 
+                          : 'bg-input text-text-muted hover:bg-surface/50 hover:text-text-main'
                       }`}
                     >
                       {dia.label}
@@ -307,17 +307,17 @@ export function AllocationModal({
           )}
 
           {/* Ações do Modal */}
-          <div className="flex justify-end gap-3 mt-4 pt-4 border-t border-border shrink-0">
+          <div className="flex justify-end gap-3 mt-4 pt-4 border-t border-border/60 shrink-0">
             <button 
               type="button" 
               onClick={onClose} 
-              className="px-5 py-2.5 text-sm font-bold text-text-muted hover:text-text-main hover:bg-surface rounded-xl transition-all"
+              className="px-5 py-2.5 text-sm font-bold text-text-muted hover:text-text-main hover:bg-surface/50 rounded-xl btn-tactile cursor-pointer"
             >
               Cancelar
             </button>
             <button 
               type="submit" 
-              className="bg-primary text-white font-black py-2.5 px-6 rounded-xl shadow-md hover:scale-[1.02] active:scale-[0.98] transition-all text-sm"
+              className="bg-primary text-white font-black py-2.5 px-6 rounded-xl shadow-md hover:shadow-lg hover:shadow-primary/20 btn-tactile cursor-pointer text-sm"
             >
               Salvar Curso
             </button>
