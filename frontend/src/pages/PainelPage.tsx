@@ -231,55 +231,9 @@ export function PainelPage() {
       setAutoZoom(100);
       return;
     }
-
-    const calcularZoom = () => {
-      const container = scrollContainerRef.current as HTMLDivElement | null;
-      const table = tableRef.current;
-      if (!container || !table) return;
-
-      // Reseta temporariamente o zoom do CSS para medir o tamanho nativo original
-      const originalZoom = table.style.zoom;
-      const originalWidth = table.style.width;
-      const originalHeight = table.style.height;
-
-      table.style.zoom = '1';
-      table.style.width = 'max-content';
-      table.style.height = 'auto';
-
-      const wContainer = container.clientWidth;
-      const hContainer = container.clientHeight;
-      const wTable = table.scrollWidth;
-      const hTable = table.scrollHeight;
-
-      // Restaura
-      table.style.zoom = originalZoom;
-      table.style.width = originalWidth;
-      table.style.height = originalHeight;
-
-      if (wTable === 0 || hTable === 0) return;
-
-      const zoomX = (wContainer / wTable) * 100;
-      const zoomY = (hContainer / hTable) * 100;
-
-      // Tomamos o menor zoom para caber tanto largura quanto altura
-      // Damos uma pequena folga de 1.5% para não encostar na borda e evitar scrolls acidentais
-      let zoomCalculado = Math.min(zoomX, zoomY) - 1.5;
-
-      // Limitamos o zoom a um mínimo de 35% e máximo de 100%
-      const zoomFinal = Math.max(Math.min(zoomCalculado, 100), 35);
-
-      setAutoZoom(Math.floor(zoomFinal));
-    };
-
-    calcularZoom();
-    const timer = setTimeout(calcularZoom, 200);
-
-    window.addEventListener('resize', calcularZoom);
-    return () => {
-      clearTimeout(timer);
-      window.removeEventListener('resize', calcularZoom);
-    };
-  }, [modoTV, salasFiltradas, turmas, modoVisualizacao, dataFiltro]);
+    // Zoom travado em 35% fixo conforme solicitado pelo usuário
+    setAutoZoom(35);
+  }, [modoTV]);
 
   const obterTaxaOcupacao = () => {
     if (salasFiltradas.length === 0) return 0;
