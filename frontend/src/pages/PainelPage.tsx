@@ -202,6 +202,18 @@ export function PainelPage() {
 
   const tipoSalaMaxW = modoTV ? "max-w-[120px]" : "max-w-[130px]";
 
+  const turnoRowClass = modoTV
+    ? "flex-1 flex border-b border-border/50 last:border-b-0 transition-colors"
+    : "flex border-b border-border/50 last:border-b-0 transition-colors";
+
+  const subLinhaClass = modoTV
+    ? "flex flex-1 min-h-[160px] hover:bg-surface/20 transition-colors"
+    : "flex min-h-[145px] hover:bg-surface/20 transition-colors";
+
+  const salaCellPadding = modoTV ? "p-1.5" : "p-4";
+
+  const cardHeightClass = modoTV ? "h-full flex-1" : "";
+
   const salasFiltradas = salas.filter(s => {
     if (filtroTipo === 'Todos') return true;
     if (filtroTipo === 'Inovadora') return s.tipo.toLowerCase().includes('inovadora');
@@ -578,7 +590,7 @@ export function PainelPage() {
               ? 'rounded-none border-x-0 border-y border-border/80 min-w-full' 
               : 'rounded-3xl border border-border/80 min-w-max'
           }`}
-          style={modoTV ? { zoom: `${autoZoom}%`, width: `${100 / (autoZoom / 100)}%` } : undefined}
+          style={modoTV ? { zoom: `${autoZoom}%`, width: `${100 / (autoZoom / 100)}%`, minHeight: `${100 / (autoZoom / 100)}%` } : undefined}
         >
           
           {/* COLUNAS (SALAS) */}
@@ -628,7 +640,7 @@ export function PainelPage() {
               }
 
               return (
-                <div key={turno} className="flex border-b border-border/50 last:border-b-0 transition-colors">
+                <div key={turno} className={turnoRowClass}>
                   
                   {/* Indicador Lateral do Turno (mesclado verticalmente) */}
                   <div className={`w-28 shrink-0 border-r border-border/50 p-3 flex items-center justify-center sticky left-0 z-10 transition-all shadow-xs ${borderClass} ${bgClass}`}>
@@ -640,14 +652,14 @@ export function PainelPage() {
                   {/* Sub-linhas do Turno */}
                   <div className="flex-1 flex flex-col divide-y divide-border/30 bg-card/10">
                     {subLinhas.map((subLinha, subIndex) => (
-                      <div key={subIndex} className="flex min-h-[145px] hover:bg-surface/20 transition-colors">
+                      <div key={subIndex} className={subLinhaClass}>
                         
                         {/* Salas em Colunas */}
                         {salasFiltradas.map((sala) => {
                           const turma = subLinha.find(t => t.salaId === sala.id);
                           
                           return (
-                            <div key={sala.id} className={`border-r border-border/50 p-4 transition-colors relative flex flex-col justify-center bg-transparent ${salaColClass}`}>
+                            <div key={sala.id} className={`border-r border-border/50 transition-colors relative flex flex-col justify-center bg-transparent ${salaCellPadding} ${salaColClass}`}>
                               {turma ? (
                                 (() => {
                                   const progress = getProgress(turma.dataInicio, turma.dataFim);
@@ -668,7 +680,7 @@ export function PainelPage() {
                                   return (
                                     <div 
                                       onClick={() => handleEditClick(turma)}
-                                      className={`cursor-pointer group/card relative w-full border btn-tactile hover:scale-[1.03] transition-all flex flex-col overflow-hidden shadow-xs ${cardPadding} ${cardBgClass}`}
+                                      className={`cursor-pointer group/card relative w-full border btn-tactile hover:scale-[1.03] transition-all flex flex-col overflow-hidden shadow-xs ${cardHeightClass} ${cardPadding} ${cardBgClass}`}
                                     >
                                       {/* Linha 1: Código da Turma e Tags */}
                                       <div className="flex items-center justify-between gap-2 shrink-0">
@@ -707,7 +719,7 @@ export function PainelPage() {
                                       </div>
 
                                       {/* Linha 5: Instrutor + Progresso */}
-                                      <div className={`border-t border-dashed flex flex-col gap-2 transition-colors border-border/60 ${footerPadding}`}>
+                                      <div className={`mt-auto border-t border-dashed flex flex-col gap-2 transition-colors border-border/60 ${footerPadding}`}>
                                         <div className={`flex items-center gap-2 text-text-main font-black ${diasFont}`}>
                                           <Users className="w-3.5 h-3.5 text-text-muted shrink-0" />
                                           <span className="truncate">{turma.instrutorNome}</span>
