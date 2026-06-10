@@ -187,21 +187,6 @@ export function PainelPage() {
     return 'Não definido';
   };
 
-  const TURNOS = ['Manhã', 'Tarde', 'Noite'];
-  const salaColClass = modoTV 
-    ? "flex-1 min-w-[130px]" 
-    : "w-72 shrink-0";
-
-  const salaNomeClass = modoTV 
-    ? "font-bold text-xs uppercase tracking-wider px-2 py-1.5 rounded-lg border border-primary/20 bg-primary/10 text-primary shadow-xs font-display text-center leading-tight break-words"
-    : "font-black text-sm uppercase tracking-wider px-3.5 py-1.5 rounded-xl border border-primary/20 bg-primary/10 text-primary shadow-xs font-display";
-
-  const salaDetalhesClass = modoTV
-    ? "text-[10px] font-bold uppercase flex flex-col items-center gap-0.5 text-text-muted"
-    : "text-[10px] font-black uppercase flex items-center gap-2 text-text-muted";
-
-  const tipoSalaMaxW = modoTV ? "max-w-[120px]" : "max-w-[130px]";
-
   const salasFiltradas = salas.filter(s => {
     if (filtroTipo === 'Todos') return true;
     if (filtroTipo === 'Inovadora') return s.tipo.toLowerCase().includes('inovadora');
@@ -209,21 +194,112 @@ export function PainelPage() {
     return s.tipo === filtroTipo;
   });
 
-  // Contadores para o filtro Pill de Salas
   const countTodas = salas.length;
+  const countInovadoras = salas.filter(s => s.tipo.toLowerCase().includes('inovadora')).length;
+  const countTI = salas.filter(s => s.tipo.toLowerCase().includes('ti') || s.tipo.toLowerCase().includes('t.i.')).length;
 
-  // Controle de Auto-Zoom no Modo TV para fazer a tabela inteira caber na tela
-  const tableRef = useRef<HTMLDivElement>(null);
+  const totalSalas = salasFiltradas.length;
+  const TURNOS = ['Manhã', 'Tarde', 'Noite'];
+  
+  const minWidthSala = totalSalas <= 6 
+    ? "min-w-[200px]" 
+    : totalSalas <= 10 
+      ? "min-w-[150px]" 
+      : "min-w-[125px]";
+
+  const salaColClass = modoTV 
+    ? `flex-1 ${minWidthSala}` 
+    : "w-72 shrink-0";
+
+  const salaNomeClass = modoTV 
+    ? `font-bold ${totalSalas > 10 ? 'text-[10px] px-1.5 py-1' : 'text-xs px-2.5 py-1.5'} uppercase tracking-wider rounded-lg border border-primary/20 bg-primary/10 text-primary shadow-xs font-display text-center leading-tight break-words`
+    : "font-black text-sm uppercase tracking-wider px-3.5 py-1.5 rounded-xl border border-primary/20 bg-primary/10 text-primary shadow-xs font-display";
+
+  const salaDetalhesClass = modoTV
+    ? `font-black uppercase flex flex-col items-center gap-0.5 text-text-muted ${totalSalas > 10 ? 'text-[8px]' : 'text-[9px]'}`
+    : "text-[10px] font-black uppercase flex items-center gap-2 text-text-muted";
+
+  const tipoSalaMaxW = modoTV 
+    ? (totalSalas > 10 ? "max-w-[105px]" : "max-w-[125px]") 
+    : "max-w-[130px]";
+
   const [autoZoom, setAutoZoom] = useState(100);
+  const tableRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!modoTV) {
       setAutoZoom(100);
       return;
     }
-    // Zoom travado em 63% fixo conforme solicitado pelo usuário
-    setAutoZoom(63);
-  }, [modoTV]);
+
+    const calcularZoom = () => {
+      const container = scrollContainerRef.current as HTMLDivElement | null;
+      const table = tableRef.current;
+      if (!container || !table) return;
+
+      // Reseta temporariamente o zoom do CSS para medir o tamanho nativo original
+      const originalZoom = table.style.zoom;
+      const originalWidth = table.style.width;
+      const originalHeight = table.style.height;
+
+      table.style.zoom = '1';
+      table.style.width = 'max-content';
+      table.style.height = 'auto';
+
+      const wContainer = container.clientWidth;
+      const hContainer = container.clientHeight;
+      const wTable = table.scrollWidth;
+      const hTable = table.scrollHeight;
+
+      // Restaura
+      table.style.zoom = originalZoom;
+      table.style.width = originalWidth;
+      table.style.height = originalHeight;
+
+      if (wTable === 0 || hTable === 0) return;
+
+      const zoomX = (wContainer / wTable) * 100;
+      const zoomY = (hContainer / hTable) * 100;
+
+      // Tomamos o menor zoom para caber tanto largura quanto altura
+      // Damos uma pequena folga de 1.5% para não encostar na borda e evitar scrolls acidentais
+      let zoomCalculado = Math.min(zoomX, zoomY) - 1.5;
+
+      // Limitamos o zoom a um mínimo de 35% e máximo de 100%
+      const zoomFinal = Math.max(Math.min(zoomCalculado, 100), 35);
+
+      setAutoZoom(Math.floor(zoomFinal));
+    };
+
+    calcularZoom();
+    const timer = setTimeout(calcularZoom, 200);
+
+    window.addEventListener('resize', calcularZoom);
+    return () => {
+      clearTimeout(timer);
+      window.removeEventListener('resize', calcularZoom);
+    };
+  }, [modoTV, salasFiltradas, turmas, modoVisualizacao, dataFiltro]);
+
+  const obterTaxaOcupacao = () => {
+    if (salasFiltradas.length === 0) return 0;
+    const slotsTotais = salasFiltradas.length * 3;
+    
+    const turmasAtivas = turmas.filter(t => {
+      return modoVisualizacao === 'semanal' 
+        ? isTurmaActive(t.dataInicio, t.dataFim)
+        : isTurmaActiveOnDate(t, dataFiltro);
+    });
+
+    const slotsOcupados = new Set();
+    turmasAtivas.forEach(t => {
+      if (salasFiltradas.some(s => s.id === t.salaId)) {
+        slotsOcupados.add(`${t.salaId}-${t.turno}`);
+      }
+    });
+
+    return Math.round((slotsOcupados.size / slotsTotais) * 100);
+  };
 
   const obterSubLinhasDoTurno = (turno: string) => {
     // Filtra as turmas do turno que estão ativas na visualização atual
@@ -266,8 +342,7 @@ export function PainelPage() {
 
     return subLinhas;
   };
-  const countInovadoras = salas.filter(s => s.tipo.toLowerCase().includes('inovadora')).length;
-  const countTI = salas.filter(s => s.tipo.toLowerCase().includes('ti') || s.tipo.toLowerCase().includes('t.i.')).length;
+
 
   // --- LÓGICA DO MODAL DE NOVO AGENDAMENTO ---
   const [modalOpen, setModalOpen] = useState(false);
@@ -404,6 +479,11 @@ export function PainelPage() {
           </div>
 
           <div className="flex items-center gap-2">
+            {/* Indicador de Ocupação de Salas */}
+            <div className="flex items-center gap-1.5 bg-emerald-500/10 dark:bg-emerald-500/15 border border-emerald-500/20 px-3 py-1.5 rounded-xl text-emerald-600 dark:text-emerald-400 shadow-xs select-none shrink-0 text-xs font-black uppercase tracking-wider">
+              Ocupação: {obterTaxaOcupacao()}%
+            </div>
+
             <div className="flex items-center gap-1.5 bg-primary/5 dark:bg-primary/10 border border-primary/15 px-3 py-1.5 rounded-xl text-primary shadow-xs select-none shrink-0 text-xs font-black uppercase tracking-wider">
               Escala TV: {autoZoom}%
             </div>
@@ -569,14 +649,12 @@ export function PainelPage() {
         ref={scrollContainerRef}
         onMouseEnter={() => setIsPaused(true)}
         onMouseLeave={() => setIsPaused(false)}
-        className={`flex-1 overflow-auto custom-scrollbar relative z-10 ${modoTV ? 'p-0' : 'p-4'}`}
+        className={`flex-1 custom-scrollbar relative z-10 ${modoTV ? 'p-0 overflow-hidden flex items-center justify-center bg-bg' : 'p-4 overflow-auto'}`}
       >
         <div 
           ref={tableRef}
-          className={`glass-panel overflow-hidden flex flex-col transition-all duration-300 ${
-            modoTV 
-              ? 'rounded-none border-x-0 border-y border-border/80 min-w-full' 
-              : 'rounded-3xl border border-border/80 min-w-max'
+          className={`glass-panel rounded-3xl shadow-xs overflow-hidden flex flex-col transition-all duration-300 border border-border/80 ${
+            modoTV ? 'min-w-full' : 'min-w-max'
           }`}
           style={modoTV ? { zoom: `${autoZoom}%`, width: `${100 / (autoZoom / 100)}%` } : undefined}
         >
@@ -659,11 +737,22 @@ export function PainelPage() {
                                     : 'bg-primary/10 border-primary/30 hover:border-primary hover-glow-primary text-text-main';
                                   const borderSideClass = isRemoto ? 'border-accent' : 'border-primary';
                                   
-                                  const cardPadding = modoTV ? 'p-2.5 gap-2 rounded-xl' : 'p-4 gap-3.5 rounded-2xl';
-                                  const cursoFont = modoTV ? 'text-xs leading-tight' : 'text-sm leading-snug';
-                                  const textMutedFont = modoTV ? 'text-[10px]' : 'text-[11px]';
-                                  const diasFont = modoTV ? 'text-xs font-bold' : 'text-xs';
-                                  const footerPadding = modoTV ? 'mt-1 pt-2' : 'mt-1 pt-3.5';
+                                  const totalSalas = salasFiltradas.length;
+                                  const cardPadding = modoTV 
+                                    ? (totalSalas > 10 ? 'p-1.5 gap-1 rounded-lg' : 'p-2.5 gap-2 rounded-xl') 
+                                    : 'p-4 gap-3.5 rounded-2xl';
+                                  const cursoFont = modoTV 
+                                    ? (totalSalas > 10 ? 'text-[10px] leading-tight' : 'text-xs leading-tight') 
+                                    : 'text-sm leading-snug';
+                                  const textMutedFont = modoTV 
+                                    ? (totalSalas > 10 ? 'text-[8px]' : 'text-[10px]') 
+                                    : 'text-[11px]';
+                                  const diasFont = modoTV 
+                                    ? (totalSalas > 10 ? 'text-[9px] font-bold' : 'text-xs font-bold') 
+                                    : 'text-xs';
+                                  const footerPadding = modoTV 
+                                    ? (totalSalas > 10 ? 'mt-0.5 pt-1.5' : 'mt-1 pt-2') 
+                                    : 'mt-1 pt-3.5';
 
                                   return (
                                     <div 
