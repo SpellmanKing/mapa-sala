@@ -231,13 +231,13 @@ export function PainelPage() {
       if (wTable === 0 || hTable === 0) return;
 
       const zoomX = (wContainer / wTable) * 100;
-      const zoomY = (hContainer / hTable) * 100;
 
-      // Escolhemos o menor fator para caber largura e altura, com 2% de folga
-      let zoomCalculado = Math.min(zoomX, zoomY) - 2;
+      // Calculamos o zoom apenas com base na largura para evitar esmagamento vertical
+      // Damos 2% de folga nas laterais para que a largura caiba 100% sem scroll horizontal
+      let zoomCalculado = zoomX - 2;
 
-      // Limitamos o zoom mínimo a 35% e máximo a 100%
-      const zoomFinal = Math.max(Math.min(zoomCalculado, 100), 35);
+      // Limitamos o zoom mínimo a 50% e máximo a 100%
+      const zoomFinal = Math.max(Math.min(zoomCalculado, 100), 50);
 
       setAutoZoom(Math.floor(zoomFinal));
     };
@@ -415,18 +415,34 @@ export function PainelPage() {
       
       {modoTV ? (
         /* Cabeçalho Minimalista para Modo TV */
-        <div className="flex justify-end items-center p-4 shrink-0 bg-transparent relative z-20 gap-3">
-          <div className="flex items-center gap-1.5 bg-primary/5 dark:bg-primary/10 border border-primary/15 px-3 py-1.5 rounded-xl text-primary shadow-xs select-none shrink-0 text-xs font-black uppercase tracking-wider">
-            Escala TV: {autoZoom}%
+        <div className="flex justify-between items-center p-4 shrink-0 bg-transparent relative z-20 gap-3">
+          {/* Relógio Digital (Horário de Brasília) */}
+          <div className="flex items-center gap-2.5 bg-primary/5 dark:bg-primary/10 border border-primary/15 px-4 py-2 rounded-xl text-primary shadow-xs">
+            <span className="relative flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
+            </span>
+            <span className="font-mono text-xs font-black tracking-wider">
+              {formatHoraBrasilia(horaAtual)}
+            </span>
+            <span className="text-[9px] font-black uppercase bg-primary text-white px-1.5 py-0.5 rounded-md tracking-widest">
+              Brasília
+            </span>
           </div>
-          
-          <button
-            onClick={handleToggleModoTV}
-            title="Sair do Modo TV"
-            className="p-2 px-4 rounded-xl border flex items-center gap-1.5 text-xs font-black active:scale-95 transition-all shadow-sm cursor-pointer bg-input border-border text-text-main hover:bg-surface"
-          >
-            <Minimize2 size={14} /> Sair TV
-          </button>
+
+          <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1.5 bg-primary/5 dark:bg-primary/10 border border-primary/15 px-3 py-1.5 rounded-xl text-primary shadow-xs select-none shrink-0 text-xs font-black uppercase tracking-wider">
+              Escala TV: {autoZoom}%
+            </div>
+            
+            <button
+              onClick={handleToggleModoTV}
+              title="Sair do Modo TV"
+              className="p-2 px-4 rounded-xl border flex items-center gap-1.5 text-xs font-black active:scale-95 transition-all shadow-sm cursor-pointer bg-input border-border text-text-main hover:bg-surface"
+            >
+              <Minimize2 size={14} /> Sair TV
+            </button>
+          </div>
         </div>
       ) : (
         /* Cabeçalho Completo para Modo Padrão */
