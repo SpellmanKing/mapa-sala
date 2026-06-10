@@ -207,7 +207,7 @@ export function PainelPage() {
     : "flex border-b border-border/50 last:border-b-0 transition-colors";
 
   const subLinhaClass = modoTV
-    ? "flex flex-1 min-h-[160px] hover:bg-surface/20 transition-colors"
+    ? "flex flex-1 min-h-[90px] hover:bg-surface/20 transition-colors"
     : "flex min-h-[145px] hover:bg-surface/20 transition-colors";
 
   const salaCellPadding = modoTV ? "p-1.5" : "p-4";
@@ -233,8 +233,8 @@ export function PainelPage() {
       setAutoZoom(100);
       return;
     }
-    // Zoom travado em 63% fixo conforme solicitado pelo usuário
-    setAutoZoom(63);
+    // Zoom travado in 60% fixo conforme solicitado pelo usuário
+    setAutoZoom(60);
   }, [modoTV]);
 
   const obterSubLinhasDoTurno = (turno: string) => {
@@ -581,7 +581,7 @@ export function PainelPage() {
         ref={scrollContainerRef}
         onMouseEnter={() => setIsPaused(true)}
         onMouseLeave={() => setIsPaused(false)}
-        className={`flex-1 overflow-auto custom-scrollbar relative z-10 ${modoTV ? 'p-0' : 'p-4'}`}
+        className={`flex-1 custom-scrollbar relative z-10 ${modoTV ? 'p-0 overflow-hidden' : 'p-4 overflow-auto'}`}
       >
         <div 
           ref={tableRef}
@@ -590,7 +590,12 @@ export function PainelPage() {
               ? 'rounded-none border-x-0 border-y border-border/80 min-w-full' 
               : 'rounded-3xl border border-border/80 min-w-max'
           }`}
-          style={modoTV ? { zoom: `${autoZoom}%`, width: `${100 / (autoZoom / 100)}%`, minHeight: `${100 / (autoZoom / 100)}%` } : undefined}
+          style={modoTV ? { 
+            zoom: `${autoZoom}%`, 
+            width: `${100 / (autoZoom / 100)}%`, 
+            height: `${100 / (autoZoom / 100)}%`,
+            maxHeight: `${100 / (autoZoom / 100)}%`
+          } : undefined}
         >
           
           {/* COLUNAS (SALAS) */}
