@@ -189,8 +189,18 @@ export function PainelPage() {
 
   const TURNOS = ['Manhã', 'Tarde', 'Noite'];
   const salaColClass = modoTV 
-    ? "flex-1 min-w-[130px] max-w-[200px]" 
+    ? "flex-1 min-w-[130px]" 
     : "w-72 shrink-0";
+
+  const salaNomeClass = modoTV 
+    ? "font-bold text-xs uppercase tracking-wider px-2 py-1.5 rounded-lg border border-primary/20 bg-primary/10 text-primary shadow-xs font-display text-center leading-tight break-words"
+    : "font-black text-sm uppercase tracking-wider px-3.5 py-1.5 rounded-xl border border-primary/20 bg-primary/10 text-primary shadow-xs font-display";
+
+  const salaDetalhesClass = modoTV
+    ? "text-[10px] font-bold uppercase flex flex-col items-center gap-0.5 text-text-muted"
+    : "text-[10px] font-black uppercase flex items-center gap-2 text-text-muted";
+
+  const tipoSalaMaxW = modoTV ? "max-w-[120px]" : "max-w-[130px]";
 
   const salasFiltradas = salas.filter(s => {
     if (filtroTipo === 'Todos') return true;
@@ -211,46 +221,9 @@ export function PainelPage() {
       setAutoZoom(100);
       return;
     }
-
-    const calcularZoom = () => {
-      const container = scrollContainerRef.current as HTMLDivElement | null;
-      const table = tableRef.current;
-      if (!container || !table) return;
-
-      // Reseta temporariamente o zoom do CSS para medir o tamanho nativo original
-      const originalZoom = table.style.zoom;
-      table.style.zoom = '1';
-
-      const wContainer = container.clientWidth;
-      const hContainer = container.clientHeight;
-      const wTable = table.scrollWidth;
-      const hTable = table.scrollHeight;
-
-      table.style.zoom = originalZoom; // restaura
-
-      if (wTable === 0 || hTable === 0) return;
-
-      const zoomX = (wContainer / wTable) * 100;
-
-      // Calculamos o zoom apenas com base na largura para evitar esmagamento vertical
-      // Damos 2% de folga nas laterais para que a largura caiba 100% sem scroll horizontal
-      let zoomCalculado = zoomX - 2;
-
-      // Limitamos o zoom mínimo a 65% e máximo a 100% para garantir excelente legibilidade na TV
-      const zoomFinal = Math.max(Math.min(zoomCalculado, 100), 65);
-
-      setAutoZoom(Math.floor(zoomFinal));
-    };
-
-    calcularZoom();
-    const timer = setTimeout(calcularZoom, 150);
-
-    window.addEventListener('resize', calcularZoom);
-    return () => {
-      clearTimeout(timer);
-      window.removeEventListener('resize', calcularZoom);
-    };
-  }, [modoTV, salasFiltradas, turmas, modoVisualizacao, dataFiltro]);
+    // Zoom travado em 63% fixo conforme solicitado pelo usuário
+    setAutoZoom(63);
+  }, [modoTV]);
 
   const obterSubLinhasDoTurno = (turno: string) => {
     // Filtra as turmas do turno que estão ativas na visualização atual
@@ -409,7 +382,7 @@ export function PainelPage() {
   const content = (
     <div className={`flex flex-col h-full overflow-hidden transition-all duration-300 ${
       modoTV 
-        ? 'fixed inset-0 z-50 bg-bg text-text-main p-6 md:p-8 2xl:p-10' 
+        ? 'fixed inset-0 z-50 bg-bg text-text-main p-0' 
         : 'relative bg-card border border-border rounded-2xl shadow-sm'
     }`}>
       
@@ -596,14 +569,16 @@ export function PainelPage() {
         ref={scrollContainerRef}
         onMouseEnter={() => setIsPaused(true)}
         onMouseLeave={() => setIsPaused(false)}
-        className="flex-1 overflow-auto custom-scrollbar p-4 relative z-10"
+        className={`flex-1 overflow-auto custom-scrollbar relative z-10 ${modoTV ? 'p-0' : 'p-4'}`}
       >
         <div 
           ref={tableRef}
-          className={`glass-panel rounded-3xl shadow-xs overflow-hidden flex flex-col transition-all duration-300 border border-border/80 ${
-            modoTV ? 'min-w-full' : 'min-w-max'
+          className={`glass-panel overflow-hidden flex flex-col transition-all duration-300 ${
+            modoTV 
+              ? 'rounded-none border-x-0 border-y border-border/80 min-w-full' 
+              : 'rounded-3xl border border-border/80 min-w-max'
           }`}
-          style={modoTV ? { zoom: `${autoZoom}%` } : undefined}
+          style={modoTV ? { zoom: `${autoZoom}%`, width: `${100 / (autoZoom / 100)}%` } : undefined}
         >
           
           {/* COLUNAS (SALAS) */}
@@ -620,13 +595,13 @@ export function PainelPage() {
             {/* Headers das Salas */}
             {salasFiltradas.map((sala) => (
               <div key={sala.id} className={`border-r border-border/50 p-4.5 flex flex-col items-center justify-center gap-2 bg-transparent transition-all ${salaColClass}`}>
-                <div className="font-black text-sm uppercase tracking-wider px-3.5 py-1.5 rounded-xl border border-primary/20 bg-primary/10 text-primary shadow-xs font-display">
+                <div className={salaNomeClass}>
                   {sala.nome}
                 </div>
-                <div className="text-[10px] font-black uppercase flex items-center gap-2 text-text-muted">
+                <div className={salaDetalhesClass}>
                   <span>Cap: {sala.capacidade}</span>
-                  <span>•</span>
-                  <span className="truncate max-w-[130px] font-mono" title={sala.tipo}>{sala.tipo}</span>
+                  {!modoTV && <span>•</span>}
+                  <span className={`truncate font-mono ${tipoSalaMaxW}`} title={sala.tipo}>{sala.tipo}</span>
                 </div>
               </div>
             ))}
@@ -684,11 +659,11 @@ export function PainelPage() {
                                     : 'bg-primary/10 border-primary/30 hover:border-primary hover-glow-primary text-text-main';
                                   const borderSideClass = isRemoto ? 'border-accent' : 'border-primary';
                                   
-                                  const cardPadding = modoTV ? 'p-2 gap-1.5 rounded-xl' : 'p-4 gap-3.5 rounded-2xl';
-                                  const cursoFont = modoTV ? 'text-[11px] leading-tight' : 'text-sm leading-snug';
-                                  const textMutedFont = modoTV ? 'text-[9px]' : 'text-[11px]';
-                                  const diasFont = modoTV ? 'text-[10px]' : 'text-xs';
-                                  const footerPadding = modoTV ? 'mt-0.5 pt-2' : 'mt-1 pt-3.5';
+                                  const cardPadding = modoTV ? 'p-2.5 gap-2 rounded-xl' : 'p-4 gap-3.5 rounded-2xl';
+                                  const cursoFont = modoTV ? 'text-xs leading-tight' : 'text-sm leading-snug';
+                                  const textMutedFont = modoTV ? 'text-[10px]' : 'text-[11px]';
+                                  const diasFont = modoTV ? 'text-xs font-bold' : 'text-xs';
+                                  const footerPadding = modoTV ? 'mt-1 pt-2' : 'mt-1 pt-3.5';
 
                                   return (
                                     <div 
