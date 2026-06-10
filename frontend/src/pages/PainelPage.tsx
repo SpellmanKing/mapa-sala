@@ -205,10 +205,11 @@ export function PainelPage() {
         const t = s.tipo.toLowerCase();
         return (t.includes('ti') || t.includes('t.i.')) && !t.includes('multiuso');
       }
-      if (filtroTipo === 'Imagem') return s.tipo.toLowerCase().includes('imagem');
+      if (filtroTipo === 'Imagem') {
+        const t = s.tipo.toLowerCase();
+        return t.includes('imagem') || t.includes('moda') || t.includes('multiuso');
+      }
       if (filtroTipo === 'Auditorio') return s.tipo.toLowerCase().includes('auditório') || s.tipo.toLowerCase().includes('auditorio');
-      if (filtroTipo === 'Multiuso') return s.tipo.toLowerCase().includes('multiuso');
-      if (filtroTipo === 'Moda') return s.tipo.toLowerCase().includes('moda');
       return s.tipo === filtroTipo;
     })
     .sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR', { numeric: true, sensitivity: 'base' }));
@@ -219,10 +220,11 @@ export function PainelPage() {
     const t = s.tipo.toLowerCase();
     return (t.includes('ti') || t.includes('t.i.')) && !t.includes('multiuso');
   }).length;
-  const countImagem = salas.filter(s => s.tipo.toLowerCase().includes('imagem')).length;
+  const countImagem = salas.filter(s => {
+    const t = s.tipo.toLowerCase();
+    return t.includes('imagem') || t.includes('moda') || t.includes('multiuso');
+  }).length;
   const countAuditorio = salas.filter(s => s.tipo.toLowerCase().includes('auditório') || s.tipo.toLowerCase().includes('auditorio')).length;
-  const countMultiuso = salas.filter(s => s.tipo.toLowerCase().includes('multiuso')).length;
-  const countModa = salas.filter(s => s.tipo.toLowerCase().includes('moda')).length;
 
   const totalSalas = salasFiltradas.length;
   const TURNOS = ['Manhã', 'Tarde', 'Noite'];
@@ -638,36 +640,6 @@ export function PainelPage() {
                   filtroTipo === 'Auditorio' ? 'bg-surface text-text-main' : 'bg-border/40 text-text-muted'
                 }`}>
                   {countAuditorio}
-                </span>
-              </button>
-              <button
-                onClick={() => setFiltroTipo('Multiuso')}
-                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
-                  filtroTipo === 'Multiuso'
-                    ? 'bg-card text-text-main shadow-sm font-black'
-                    : 'text-text-muted hover:text-text-main'
-                }`}
-              >
-                Sala Multiuso
-                <span className={`text-[10px] px-1.5 py-0.5 rounded-md font-extrabold ${
-                  filtroTipo === 'Multiuso' ? 'bg-surface text-text-main' : 'bg-border/40 text-text-muted'
-                }`}>
-                  {countMultiuso}
-                </span>
-              </button>
-              <button
-                onClick={() => setFiltroTipo('Moda')}
-                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
-                  filtroTipo === 'Moda'
-                    ? 'bg-card text-text-main shadow-sm font-black'
-                    : 'text-text-muted hover:text-text-main'
-                }`}
-              >
-                Labs Moda
-                <span className={`text-[10px] px-1.5 py-0.5 rounded-md font-extrabold ${
-                  filtroTipo === 'Moda' ? 'bg-surface text-text-main' : 'bg-border/40 text-text-muted'
-                }`}>
-                  {countModa}
                 </span>
               </button>
             </div>
