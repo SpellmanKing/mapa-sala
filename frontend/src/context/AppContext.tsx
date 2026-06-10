@@ -207,8 +207,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
       {toast && (
         <div 
           key={toast.id}
-          className={`fixed top-6 right-6 z-[9999] max-w-sm w-full bg-card border border-border shadow-xl rounded-2xl flex p-4 animate-slide-in pointer-events-auto overflow-hidden relative ${
-            toast.type === 'success' ? 'border-l-4 border-l-emerald-500' : toast.type === 'error' ? 'border-l-4 border-l-red-500' : 'border-l-4 border-l-blue-500'
+          className={`fixed top-6 right-6 z-[9999] max-w-sm w-full bg-card border border-border rounded-2xl flex p-4 animate-slide-in pointer-events-auto overflow-hidden relative ${
+            toast.type === 'success' 
+              ? 'border-l-4 border-l-emerald-500 shadow-[0_0_25px_rgba(16,185,129,0.15)]' 
+              : toast.type === 'error' 
+                ? 'border-l-4 border-l-red-500 shadow-[0_0_25px_rgba(239,68,68,0.22)]' 
+                : 'border-l-4 border-l-blue-500 shadow-[0_0_25px_rgba(59,130,246,0.15)]'
           }`}
         >
           {/* Subtle background tint */}

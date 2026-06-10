@@ -400,7 +400,11 @@ export function PainelPage() {
       setNovoAgendamento({ cursoId: '', salaId: '', dataInicio: '', turno: 'Manhã', codigoTurma: '', diasSemana: [] });
     } catch (err: any) {
       console.error(err);
-      showToast(err.response?.data?.message || 'Erro ao alocar turma. Verifique se o ambiente já está ocupado neste dia/turno.', "error");
+      const isConflict = err.response?.status === 409 || String(err.response?.data?.message).toLowerCase().includes('conflito');
+      const msg = isConflict 
+        ? "Não foi possível realizar a alocação! Sala indisponível"
+        : (err.response?.data?.message || 'Erro ao alocar turma. Verifique se o ambiente já está ocupado neste dia/turno.');
+      showToast(msg, "error");
     }
   };
 
@@ -440,7 +444,11 @@ export function PainelPage() {
       showToast("Turma realocada com sucesso!", "success");
       setEditTurmaModalOpen(false);
     } catch (err: any) {
-      showToast(err.response?.data?.message || 'Erro ao reallocar turma. Verifique se há conflito de sala/turno.', "error");
+      const isConflict = err.response?.status === 409 || String(err.response?.data?.message).toLowerCase().includes('conflito');
+      const msg = isConflict 
+        ? "Não foi possível realizar a alocação! Sala indisponível"
+        : (err.response?.data?.message || 'Erro ao reallocar turma. Verifique se há conflito de sala/turno.');
+      showToast(msg, "error");
     }
   };
 
