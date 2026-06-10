@@ -187,48 +187,6 @@ export function PainelPage() {
     return 'Não definido';
   };
 
-  const obterCorCategoria = (t: any) => {
-    const nome = (t.cursoNome || '').toLowerCase();
-    
-    // APQS
-    if (nome.includes('apqs')) {
-      return {
-        bg: 'bg-[#e2f0d9] text-[#385723] dark:bg-[#1f3812] dark:text-[#c5e0b4]',
-        border: 'border-[#a9d18e] dark:border-[#385723]',
-        text: 'text-[#385723] dark:text-[#c5e0b4]',
-        line: 'border-[#548235]'
-      };
-    }
-    
-    // Técnico ou TEM
-    if (nome.includes('técnico') || nome.includes('tecnico') || t.cursoTem) {
-      return {
-        bg: 'bg-[#ddebf7] text-[#1f4e78] dark:bg-[#162a45] dark:text-[#9cc2e6]',
-        border: 'border-[#9cc2e6] dark:border-[#1f4e78]',
-        text: 'text-[#1f4e78] dark:text-[#9cc2e6]',
-        line: 'border-[#2f5597]'
-      };
-    }
-    
-    // Parceria / Aprendizagem
-    if (nome.includes('aprendizagem') || nome.includes('parceria') || nome.includes('jovem')) {
-      return {
-        bg: 'bg-[#fce4d6] text-[#c65911] dark:bg-[#3c200c] dark:text-[#f8cbad]',
-        border: 'border-[#f8cbad] dark:border-[#c65911]',
-        text: 'text-[#c65911] dark:text-[#f8cbad]',
-        line: 'border-[#c65911]'
-      };
-    }
-    
-    // IP / Moda / Outros
-    return {
-      bg: 'bg-[#ededed] text-[#3b3b3b] dark:bg-[#202020] dark:text-[#d9d9d9]',
-      border: 'border-[#d9d9d9] dark:border-[#3b3b3b]',
-      text: 'text-[#3b3b3b] dark:text-[#d9d9d9]',
-      line: 'border-[#7f7f7f]'
-    };
-  };
-
   const TURNOS = ['Manhã', 'Tarde', 'Noite'];
   const salaColClass = modoTV 
     ? "flex-1 min-w-[130px]" 
@@ -245,14 +203,14 @@ export function PainelPage() {
   const tipoSalaMaxW = modoTV ? "max-w-[120px]" : "max-w-[130px]";
 
   const turnoRowClass = modoTV
-    ? "flex-1 flex border-b border-slate-300 dark:border-slate-800 transition-colors"
+    ? "flex-1 flex border-b border-border/50 last:border-b-0 transition-colors"
     : "flex border-b border-border/50 last:border-b-0 transition-colors";
 
   const subLinhaClass = modoTV
     ? "flex flex-1 min-h-[90px] hover:bg-surface/20 transition-colors"
     : "flex min-h-[145px] hover:bg-surface/20 transition-colors";
 
-  const salaCellPadding = modoTV ? "p-0" : "p-4";
+  const salaCellPadding = modoTV ? "p-1.5" : "p-4";
 
   const cardHeightClass = modoTV ? "h-full flex-1" : "";
 
@@ -652,31 +610,18 @@ export function PainelPage() {
             </div>
             
             {/* Headers das Salas */}
-            {salasFiltradas.map((sala) => {
-              const headerCellClass = modoTV
-                ? `border-r border-slate-300 dark:border-slate-800 py-2.5 px-1 flex flex-col items-center justify-center bg-secondary dark:bg-[#0c1b30] text-white transition-all ${salaColClass}`
-                : `border-r border-border/50 p-4.5 flex flex-col items-center justify-center gap-2 bg-transparent transition-all ${salaColClass}`;
-
-              const headerNomeClass = modoTV
-                ? "font-bold text-[11px] uppercase tracking-wider text-center text-white"
-                : salaNomeClass;
-
-              const headerDetalhesClass = modoTV
-                ? "text-[9px] font-semibold flex flex-col items-center gap-0.5 text-blue-100 dark:text-blue-200"
-                : salaDetalhesClass;
-
-              return (
-                <div key={sala.id} className={headerCellClass}>
-                  <div className={headerNomeClass}>
-                    {sala.nome}
-                  </div>
-                  <div className={headerDetalhesClass}>
-                    <span>Cap: {sala.capacidade}</span>
-                    <span className={`truncate font-mono text-center ${tipoSalaMaxW}`} title={sala.tipo}>{sala.tipo}</span>
-                  </div>
+            {salasFiltradas.map((sala) => (
+              <div key={sala.id} className={`border-r border-border/50 p-4.5 flex flex-col items-center justify-center gap-2 bg-transparent transition-all ${salaColClass}`}>
+                <div className={salaNomeClass}>
+                  {sala.nome}
                 </div>
-              );
-            })}
+                <div className={salaDetalhesClass}>
+                  <span>Cap: {sala.capacidade}</span>
+                  {!modoTV && <span>•</span>}
+                  <span className={`truncate font-mono ${tipoSalaMaxW}`} title={sala.tipo}>{sala.tipo}</span>
+                </div>
+              </div>
+            ))}
           </div>
 
           {/* LINHAS (TURNOS E SUB-LINHAS) */}
@@ -703,18 +648,14 @@ export function PainelPage() {
                 <div key={turno} className={turnoRowClass}>
                   
                   {/* Indicador Lateral do Turno (mesclado verticalmente) */}
-                  <div className={`w-28 shrink-0 p-3 flex items-center justify-center sticky left-0 z-10 transition-all shadow-xs ${
-                    modoTV 
-                      ? `border-r border-slate-300 dark:border-slate-800 ${bgClass}` 
-                      : `border-r border-border/50 ${borderClass} ${bgClass}`
-                  }`}>
+                  <div className={`w-28 shrink-0 border-r border-border/50 p-3 flex items-center justify-center sticky left-0 z-10 transition-all shadow-xs ${borderClass} ${bgClass}`}>
                     <div className={`font-black uppercase tracking-widest text-sm ${textClass}`} style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)', letterSpacing: '0.22em' }}>
                       {turno}
                     </div>
                   </div>
 
                   {/* Sub-linhas do Turno */}
-                  <div className={`flex-1 flex flex-col bg-card/10 ${modoTV ? 'divide-y divide-slate-300 dark:divide-slate-800' : 'divide-y divide-border/30'}`}>
+                  <div className="flex-1 flex flex-col divide-y divide-border/30 bg-card/10">
                     {subLinhas.map((subLinha, subIndex) => (
                       <div key={subIndex} className={subLinhaClass}>
                         
@@ -723,60 +664,23 @@ export function PainelPage() {
                           const turma = subLinha.find(t => t.salaId === sala.id);
                           
                           return (
-                            <div key={sala.id} className={`${modoTV ? 'border-r border-b border-slate-300 dark:border-slate-800' : 'border-r border-border/50'} transition-colors relative flex flex-col justify-center bg-transparent ${salaCellPadding} ${salaColClass}`}>
+                            <div key={sala.id} className={`border-r border-border/50 transition-colors relative flex flex-col justify-center bg-transparent ${salaCellPadding} ${salaColClass}`}>
                               {turma ? (
                                 (() => {
                                   const progress = getProgress(turma.dataInicio, turma.dataFim);
                                   const diasFormatados = formatDiasSemana(turma.diasSemana, turma.diasRemotos);
                                   
                                   const isRemoto = turma.modalidade === 'Remoto';
-                                  const cor = obterCorCategoria(turma);
-                                  const cardBgClass = modoTV
-                                    ? `${cor.bg} ${cor.text} border-0`
-                                    : (isRemoto 
-                                        ? 'bg-accent/10 border-accent/30 hover:border-accent hover-glow-accent text-text-main'
-                                        : 'bg-primary/10 border-primary/30 hover:border-primary hover-glow-primary text-text-main');
-                                  const borderSideClass = modoTV ? cor.line : (isRemoto ? 'border-accent' : 'border-primary');
+                                  const cardBgClass = isRemoto 
+                                    ? 'bg-accent/10 border-accent/30 hover:border-accent hover-glow-accent text-text-main'
+                                    : 'bg-primary/10 border-primary/30 hover:border-primary hover-glow-primary text-text-main';
+                                  const borderSideClass = isRemoto ? 'border-accent' : 'border-primary';
                                   
-                                  const cardPadding = modoTV ? 'p-2 gap-1 rounded-none' : 'p-4 gap-3.5 rounded-2xl';
-                                  const cursoFont = modoTV ? 'text-[11px] leading-tight font-bold' : 'text-sm leading-snug font-black';
-                                  const textMutedFont = modoTV ? 'text-[9px]' : 'text-[11px]';
-                                  const diasFont = modoTV ? 'text-[9px] font-bold' : 'text-xs';
-                                  const footerPadding = modoTV ? 'mt-auto pt-1 border-t border-slate-300/40 dark:border-slate-700/30' : 'mt-1 pt-3.5 border-t border-dashed border-border/60';
-
-                                  if (modoTV) {
-                                    return (
-                                      <div 
-                                        onClick={() => handleEditClick(turma)}
-                                        className={`cursor-pointer w-full h-full flex flex-col overflow-hidden text-left ${cardPadding} ${cardBgClass}`}
-                                      >
-                                        {/* Linha 1: Nome do Curso + TEM */}
-                                        <div className={`${cursoFont} break-words`}>
-                                          {turma.cursoNome} {turma.cursoTem && <span className="text-[8px] bg-[#0511F2] text-white px-1 py-0.2 rounded font-black ml-1 inline-block align-middle">TEM</span>}
-                                        </div>
-
-                                        {/* Linha 2: Código da Turma */}
-                                        <div className="text-[9px] font-black opacity-85">
-                                          {turma.codigo}
-                                        </div>
-
-                                        {/* Linha 3: Período Letivo */}
-                                        <div className="text-[9px] opacity-75">
-                                          {formatDataCurta(turma.dataInicio)} - {formatDataCurta(turma.dataFim)}
-                                        </div>
-
-                                        {/* Linha 4: Dias da Semana */}
-                                        <div className={`text-[9px] font-bold border-l-2 pl-1 ${borderSideClass} leading-none`}>
-                                          {diasFormatados} {isRemoto && <span className="text-[8px] bg-accent text-white px-1 py-0.2 rounded font-black ml-1 inline-block align-middle">REMOTO</span>}
-                                        </div>
-
-                                        {/* Linha 5: Instrutor */}
-                                        <div className={`truncate ${footerPadding} ${diasFont} opacity-90`}>
-                                          👤 {turma.instrutorNome}
-                                        </div>
-                                      </div>
-                                    );
-                                  }
+                                  const cardPadding = modoTV ? 'p-2.5 gap-2 rounded-xl' : 'p-4 gap-3.5 rounded-2xl';
+                                  const cursoFont = modoTV ? 'text-xs leading-tight' : 'text-sm leading-snug';
+                                  const textMutedFont = modoTV ? 'text-[10px]' : 'text-[11px]';
+                                  const diasFont = modoTV ? 'text-xs font-bold' : 'text-xs';
+                                  const footerPadding = modoTV ? 'mt-1 pt-2' : 'mt-1 pt-3.5';
 
                                   return (
                                     <div 
@@ -842,13 +746,9 @@ export function PainelPage() {
                                 })()
                               ) : (
                                 // Célula Vazia
-                                modoTV ? (
-                                  <div className="h-full w-full bg-slate-50/10 dark:bg-slate-900/5 min-h-[90px]"></div>
-                                ) : (
-                                  <div className="h-full w-full min-h-[120px] flex items-center justify-center opacity-0 hover:opacity-10 transition-opacity">
-                                    <span className="text-[10px] text-text-muted font-bold font-mono">vazio</span>
-                                  </div>
-                                )
+                                <div className="h-full w-full min-h-[120px] flex items-center justify-center opacity-0 hover:opacity-10 transition-opacity">
+                                  <span className="text-[10px] text-text-muted font-bold font-mono">vazio</span>
+                                </div>
                               )}
                             </div>
                           );
@@ -863,29 +763,6 @@ export function PainelPage() {
           </div>
         </div>
       </div>
-
-      {/* Barra de legenda horizontal no Modo TV */}
-      {modoTV && (
-        <div className="bg-[#f2f5f9] dark:bg-[#070b13] border-t border-slate-300 dark:border-slate-800 py-2.5 px-6 flex flex-wrap justify-center items-center gap-6 shrink-0 text-[10px] font-black uppercase tracking-wider select-none relative z-20">
-          <span className="text-slate-500 dark:text-slate-400 mr-1">Legenda de Cursos (Planilha):</span>
-          <div className="flex items-center gap-1.5">
-            <span className="w-3.5 h-3.5 bg-[#ddebf7] border border-[#9cc2e6] rounded"></span>
-            <span className="text-[#1f4e78] dark:text-[#9cc2e6]">Técnico / TEM</span>
-          </div>
-          <div className="flex items-center gap-1.5">
-            <span className="w-3.5 h-3.5 bg-[#e2f0d9] border border-[#a9d18e] rounded"></span>
-            <span className="text-[#385723] dark:text-[#c5e0b4]">APQS</span>
-          </div>
-          <div className="flex items-center gap-1.5">
-            <span className="w-3.5 h-3.5 bg-[#fce4d6] border border-[#f8cbad] rounded"></span>
-            <span className="text-[#c65911] dark:text-[#f8cbad]">Parceria / Aprendizagem</span>
-          </div>
-          <div className="flex items-center gap-1.5">
-            <span className="w-3.5 h-3.5 bg-[#ededed] border border-[#d9d9d9] rounded"></span>
-            <span className="text-[#3b3b3b] dark:text-[#d9d9d9]">IP / Moda / Outros</span>
-          </div>
-        </div>
-      )}
 
       {/* MODAL DE AGENDAMENTO (NOVO) */}
       {modalOpen && (
