@@ -2,7 +2,16 @@ import React, { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { Calendar as CalendarIcon, Filter, Plus, X, Users, BookOpen, Tv, Minimize2, Trash2, ZoomIn, ZoomOut } from 'lucide-react';
 import { useAppContext } from '../context/AppContext';
-import { TurmaService } from '../api/client';
+function obterOrdemSala(nome: string): number {
+  const n = nome.toLowerCase();
+  if (n.includes('(recanto)')) return 6;
+  if (n.startsWith('sala ')) return 1;
+  if (n.startsWith('laboratório de ti ')) return 2;
+  if (n.startsWith('laboratório de imagem ')) return 3;
+  if (n.includes('moda')) return 4;
+  if (n.includes('auditório') || n.includes('auditorio')) return 5;
+  return 99;
+}
 
 export function PainelPage() {
   const { salas, turmas, cursos, refreshTurmas } = useAppContext();
@@ -212,7 +221,14 @@ export function PainelPage() {
       if (filtroTipo === 'Auditorio') return s.tipo.toLowerCase().includes('auditório') || s.tipo.toLowerCase().includes('auditorio');
       return s.tipo === filtroTipo;
     })
-    .sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR', { numeric: true, sensitivity: 'base' }));
+    .sort((a, b) => {
+      const ordemA = obterOrdemSala(a.nome);
+      const ordemB = obterOrdemSala(b.nome);
+      if (ordemA !== ordemB) {
+        return ordemA - ordemB;
+      }
+      return a.nome.localeCompare(b.nome, 'pt-BR', { numeric: true, sensitivity: 'base' });
+    });
 
   const countTodas = salas.length;
   const countInovadoras = salas.filter(s => s.tipo.toLowerCase().includes('inovadora')).length;
