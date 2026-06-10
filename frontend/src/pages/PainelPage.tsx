@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { Calendar as CalendarIcon, Filter, Plus, X, Users, BookOpen, Tv, Minimize2, Trash2, ZoomIn, ZoomOut } from 'lucide-react';
 import { useAppContext } from '../context/AppContext';
+import { TurmaService } from '../api/client';
 function obterOrdemSala(nome: string): number {
   const n = nome.toLowerCase();
   if (n.includes('(recanto)')) return 6;
