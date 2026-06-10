@@ -236,8 +236,8 @@ export function PainelPage() {
       // Damos 2% de folga nas laterais para que a largura caiba 100% sem scroll horizontal
       let zoomCalculado = zoomX - 2;
 
-      // Limitamos o zoom mínimo a 50% e máximo a 100%
-      const zoomFinal = Math.max(Math.min(zoomCalculado, 100), 50);
+      // Limitamos o zoom mínimo a 65% e máximo a 100% para garantir excelente legibilidade na TV
+      const zoomFinal = Math.max(Math.min(zoomCalculado, 100), 65);
 
       setAutoZoom(Math.floor(zoomFinal));
     };
