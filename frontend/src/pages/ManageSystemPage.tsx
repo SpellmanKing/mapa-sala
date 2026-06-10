@@ -8,7 +8,7 @@ import { Plus, Edit, Trash2, BookOpen, Users, School } from 'lucide-react';
 type Tab = 'cursos' | 'instrutores' | 'salas';
 
 export function ManageSystemPage() {
-  const { cursos, instrutores, salas, tipoSalas, refreshCursos, refreshInstrutores } = useAppContext();
+  const { cursos, instrutores, salas, tipoSalas, refreshCursos, refreshInstrutores, showToast } = useAppContext();
   const [activeTab, setActiveTab] = useState<Tab>('cursos');
 
   // --- Estados do Curso ---
@@ -64,19 +64,28 @@ export function ManageSystemPage() {
 
       if (editingCurso?.id) {
         await CursoService.update(Number(editingCurso.id), apiPayload);
+        showToast('Curso atualizado com sucesso!', 'success');
       } else {
         await CursoService.create(apiPayload);
+        showToast('Curso criado com sucesso!', 'success');
       }
       refreshCursos();
       setCursoModalOpen(false);
     } catch (err) {
       setCursoError('Erro ao salvar no backend.');
+      showToast('Erro ao salvar curso no servidor.', 'error');
     }
   }
 
   async function removeCurso(id?: string) {
     if (!id || !window.confirm('Deseja excluir permanentemente este curso?')) return;
-    try { await CursoService.delete(Number(id)); refreshCursos(); } catch { alert('Erro ao excluir.'); }
+    try { 
+      await CursoService.delete(Number(id)); 
+      refreshCursos(); 
+      showToast('Curso excluído com sucesso!', 'success');
+    } catch { 
+      showToast('Erro ao excluir curso.', 'error'); 
+    }
   }
 
   // === MÉTODOS DE INSTRUTOR ===
@@ -105,19 +114,28 @@ export function ManageSystemPage() {
       const payload = { nome_instrutor: instrutorForm.nome };
       if (editingInstrutor?.id) {
         await InstrutorService.update(Number(editingInstrutor.id), payload);
+        showToast('Instrutor atualizado com sucesso!', 'success');
       } else {
         await InstrutorService.create(payload);
+        showToast('Instrutor criado com sucesso!', 'success');
       }
       refreshInstrutores();
       setInstrutorModalOpen(false);
     } catch (err) {
       setInstrutorError('Erro ao salvar no backend.');
+      showToast('Erro ao salvar instrutor no servidor.', 'error');
     }
   }
 
   async function removeInstrutor(id?: string) {
     if (!id || !window.confirm('Deseja excluir permanentemente este instrutor?')) return;
-    try { await InstrutorService.delete(Number(id)); refreshInstrutores(); } catch { alert('Erro ao excluir.'); }
+    try { 
+      await InstrutorService.delete(Number(id)); 
+      refreshInstrutores(); 
+      showToast('Instrutor excluído com sucesso!', 'success');
+    } catch { 
+      showToast('Erro ao excluir instrutor.', 'error'); 
+    }
   }
 
   // Helpers

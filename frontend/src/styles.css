@@ -208,3 +208,18 @@ html.modo-tv-active body {
   height: 100vh !important;
   width: 100vw !important;
 }
+
+/* Animações e Classes para o Sistema de Toasts Customizados */
+@keyframes slide-in-right {
+  from {
+    transform: translateX(120%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+.animate-slide-in {
+  animation: slide-in-right 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}

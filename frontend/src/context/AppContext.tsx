@@ -65,6 +65,7 @@ interface AppContextData {
   refreshTipoSalas: () => void;
   theme: 'light' | 'dark';
   toggleTheme: () => void;
+  showToast: (message: string, type?: 'success' | 'error' | 'info') => void;
 }
 
 const AppContext = createContext<AppContextData | undefined>(undefined);
@@ -75,6 +76,26 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [instrutores, setInstrutores] = useState<Instrutor[]>([]);
   const [turmas, setTurmas] = useState<TurmaDetalhada[]>([]);
   const [tipoSalas, setTipoSalas] = useState<TipoSala[]>([]);
+  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' | 'info'; id: number } | null>(null);
+
+  const showToast = useCallback((message: string, type: 'success' | 'error' | 'info' = 'info') => {
+    setToast({ message, type, id: Date.now() });
+  }, []);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      (window as any).showToast = showToast;
+    }
+  }, [showToast]);
+
+  useEffect(() => {
+    if (toast) {
+      const timer = setTimeout(() => {
+        setToast(null);
+      }, 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [toast]);
 
   // Tema Claro/Escuro
   const [theme, setTheme] = useState<'light' | 'dark'>(() => {
@@ -181,8 +202,44 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }, [refreshCursos, refreshInstrutores, refreshTurmas, refreshTipoSalas]);
 
   return (
-    <AppContext.Provider value={{ cursos, setCursos, refreshCursos, salas, setSalas, instrutores, setInstrutores, refreshInstrutores, turmas, setTurmas, refreshTurmas, tipoSalas, refreshTipoSalas, theme, toggleTheme }}>
+    <AppContext.Provider value={{ cursos, setCursos, refreshCursos, salas, setSalas, instrutores, setInstrutores, refreshInstrutores, turmas, setTurmas, refreshTurmas, tipoSalas, refreshTipoSalas, theme, toggleTheme, showToast }}>
       {children}
+      {toast && (
+        <div 
+          key={toast.id}
+          className={`fixed top-6 right-6 z-[9999] max-w-sm w-full bg-card border border-border shadow-xl rounded-2xl flex p-4 animate-slide-in pointer-events-auto overflow-hidden relative ${
+            toast.type === 'success' ? 'border-l-4 border-l-emerald-500' : toast.type === 'error' ? 'border-l-4 border-l-red-500' : 'border-l-4 border-l-blue-500'
+          }`}
+        >
+          {/* Subtle background tint */}
+          <div className={`absolute inset-0 -z-10 opacity-[0.03] dark:opacity-[0.06] ${
+            toast.type === 'success' ? 'bg-emerald-500' : toast.type === 'error' ? 'bg-red-500' : 'bg-blue-500'
+          }`} />
+          <div className={`mr-3 flex items-start mt-0.5 ${
+            toast.type === 'success' ? 'text-emerald-500' : toast.type === 'error' ? 'text-red-500' : 'text-blue-500'
+          }`}>
+            {toast.type === 'success' ? (
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="9 11 12 14 22 4"/></svg>
+            ) : toast.type === 'error' ? (
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            ) : (
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+            )}
+          </div>
+          <div className="flex-1">
+            <h3 className="text-xs font-black text-text-muted uppercase tracking-wider mb-0.5">
+              {toast.type === 'error' ? 'Erro de Sistema' : toast.type === 'success' ? 'Sucesso' : 'Aviso'}
+            </h3>
+            <p className="text-sm font-semibold text-text-main leading-snug">{toast.message}</p>
+          </div>
+          <button 
+            onClick={() => setToast(null)}
+            className="ml-3 text-text-muted hover:text-text-main self-start transition-colors cursor-pointer"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
+        </div>
+      )}
     </AppContext.Provider>
   );
 }

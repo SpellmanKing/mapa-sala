@@ -14,7 +14,7 @@ function obterOrdemSala(nome: string): number {
 }
 
 export function PainelPage() {
-  const { salas, turmas, cursos, refreshTurmas } = useAppContext();
+  const { salas, turmas, cursos, refreshTurmas, showToast } = useAppContext();
 
   // Relógio Digital (Horário de Brasília)
   const [horaAtual, setHoraAtual] = useState(() => new Date());
@@ -378,7 +378,7 @@ export function PainelPage() {
     if (!cursoSelecionado || !novoAgendamento.dataInicio || !novoAgendamento.salaId) return;
 
     if (novoAgendamento.diasSemana.length === 0) {
-      alert("Este curso não possui dias letivos presenciais cadastrados. Por favor, edite o curso em Gerenciamento para definir os dias letivos.");
+      showToast("Este curso não possui dias letivos presenciais cadastrados. Por favor, edite o curso em Gerenciamento para definir os dias letivos.", "error");
       return;
     }
 
@@ -394,11 +394,12 @@ export function PainelPage() {
       });
 
       refreshTurmas();
+      showToast("Turma alocada com sucesso!", "success");
       setModalOpen(false);
       setNovoAgendamento({ cursoId: '', salaId: '', dataInicio: '', turno: 'Manhã', codigoTurma: '', diasSemana: [] });
     } catch (err: any) {
       console.error(err);
-      alert(err.response?.data?.message || 'Erro ao alocar turma. Verifique se o ambiente já está ocupado neste dia/turno.');
+      showToast(err.response?.data?.message || 'Erro ao alocar turma. Verifique se o ambiente já está ocupado neste dia/turno.', "error");
     }
   };
 
@@ -435,9 +436,10 @@ export function PainelPage() {
         dias_semana: dadosEdicao.diasSemana
       });
       refreshTurmas();
+      showToast("Turma realocada com sucesso!", "success");
       setEditTurmaModalOpen(false);
     } catch (err: any) {
-      alert(err.response?.data?.message || 'Erro ao reallocar turma. Verifique se há conflito de sala/turno.');
+      showToast(err.response?.data?.message || 'Erro ao reallocar turma. Verifique se há conflito de sala/turno.', "error");
     }
   };
 
@@ -448,9 +450,10 @@ export function PainelPage() {
     try {
       await TurmaService.delete(Number(turmaEditando.id));
       refreshTurmas();
+      showToast("Alocação excluída com sucesso!", "success");
       setEditTurmaModalOpen(false);
     } catch (err: any) {
-      alert(err.response?.data?.message || 'Erro ao excluir alocação.');
+      showToast(err.response?.data?.message || 'Erro ao excluir alocação.', "error");
     }
   };
 
