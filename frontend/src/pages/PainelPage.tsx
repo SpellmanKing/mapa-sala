@@ -41,10 +41,16 @@ export function PainelPage() {
     const handleFullscreenChange = () => {
       const isFullscreen = document.fullscreenElement !== null;
       setModoTV(isFullscreen);
+      if (isFullscreen) {
+        document.documentElement.classList.add('modo-tv-active');
+      } else {
+        document.documentElement.classList.remove('modo-tv-active');
+      }
     };
     document.addEventListener('fullscreenchange', handleFullscreenChange);
     return () => {
       document.removeEventListener('fullscreenchange', handleFullscreenChange);
+      document.documentElement.classList.remove('modo-tv-active');
     };
   }, []);
 
@@ -90,19 +96,23 @@ export function PainelPage() {
       try {
         if (document.documentElement.requestFullscreen) {
           await document.documentElement.requestFullscreen();
+          document.documentElement.classList.add('modo-tv-active');
         }
       } catch (err) {
         console.error("Erro ao entrar em tela cheia:", err);
         setModoTV(true);
+        document.documentElement.classList.add('modo-tv-active');
       }
     } else {
       try {
         if (document.exitFullscreen) {
           await document.exitFullscreen();
+          document.documentElement.classList.remove('modo-tv-active');
         }
       } catch (err) {
         console.error("Erro ao sair da tela cheia:", err);
         setModoTV(false);
+        document.documentElement.classList.remove('modo-tv-active');
       }
     }
   };
@@ -201,26 +211,24 @@ export function PainelPage() {
   const totalSalas = salasFiltradas.length;
   const TURNOS = ['Manhã', 'Tarde', 'Noite'];
   
-  const minWidthSala = totalSalas <= 6 
-    ? "min-w-[200px]" 
-    : totalSalas <= 10 
-      ? "min-w-[150px]" 
-      : "min-w-[125px]";
+  const minWidthSala = modoTV
+    ? "min-w-[320px]"
+    : totalSalas <= 6 
+      ? "min-w-[200px]" 
+      : totalSalas <= 10 
+        ? "min-w-[150px]" 
+        : "min-w-[125px]";
 
   const salaColClass = modoTV 
     ? `flex-1 ${minWidthSala}` 
     : "w-72 shrink-0";
 
-  const salaNomeClass = modoTV 
-    ? `font-bold ${totalSalas > 10 ? 'text-[10px] px-1.5 py-1' : 'text-xs px-2.5 py-1.5'} uppercase tracking-wider rounded-lg border border-primary/20 bg-primary/10 text-primary shadow-xs font-display text-center leading-tight break-words`
-    : "font-black text-sm uppercase tracking-wider px-3.5 py-1.5 rounded-xl border border-primary/20 bg-primary/10 text-primary shadow-xs font-display";
+  const salaNomeClass = "font-black text-sm uppercase tracking-wider px-3.5 py-1.5 rounded-xl border border-primary/20 bg-primary/10 text-primary shadow-xs font-display text-center leading-tight break-words";
 
-  const salaDetalhesClass = modoTV
-    ? `font-black uppercase flex flex-col items-center gap-0.5 text-text-muted ${totalSalas > 10 ? 'text-[8px]' : 'text-[9px]'}`
-    : "text-[10px] font-black uppercase flex items-center gap-2 text-text-muted";
+  const salaDetalhesClass = "text-[10px] font-black uppercase flex items-center gap-2 text-text-muted";
 
   const tipoSalaMaxW = modoTV 
-    ? (totalSalas > 10 ? "max-w-[105px]" : "max-w-[125px]") 
+    ? "max-w-[200px]" 
     : "max-w-[130px]";
 
   const [autoZoom, setAutoZoom] = useState(100);
@@ -417,18 +425,29 @@ export function PainelPage() {
       
       {modoTV ? (
         /* Cabeçalho Minimalista para Modo TV */
-        <div className="flex justify-between items-center p-4 shrink-0 bg-transparent relative z-20 gap-3">
-          {/* Relógio Digital (Horário de Brasília) */}
-          <div className="flex items-center gap-2.5 bg-primary/5 dark:bg-primary/10 border border-primary/15 px-4 py-2 rounded-xl text-primary shadow-xs">
+        <div className="flex justify-between items-center p-4 shrink-0 bg-card/40 border-b border-border/30 relative z-20 gap-3">
+          {/* Relógio Digital (Horário de Brasília) + Data */}
+          <div className="flex items-center gap-3 bg-primary/5 dark:bg-primary/10 border border-primary/15 px-4 py-2.5 rounded-xl text-primary shadow-xs">
             <span className="relative flex h-2 w-2">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
               <span className="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
             </span>
-            <span className="font-mono text-xs font-black tracking-wider">
+            <span className="font-mono text-sm font-black tracking-wider">
               {formatHoraBrasilia(horaAtual)}
             </span>
-            <span className="text-[9px] font-black uppercase bg-primary text-white px-1.5 py-0.5 rounded-md tracking-widest">
-              Brasília
+            <span className="text-[10px] font-black uppercase bg-primary text-white px-2 py-0.5 rounded-md tracking-wider">
+              {new Date().toLocaleDateString('pt-BR', { weekday: 'short', day: '2-digit', month: 'short' })}
+            </span>
+          </div>
+
+          {/* Título Central */}
+          <div className="hidden md:flex items-center gap-2">
+            <span className="font-display font-black text-sm uppercase tracking-widest text-secondary dark:text-primary">
+              Senac Ceilândia
+            </span>
+            <span className="text-text-muted text-xs font-bold">•</span>
+            <span className="font-display font-black text-sm uppercase tracking-widest text-text-main">
+              Quadro de Ocupação
             </span>
           </div>
 
@@ -436,10 +455,6 @@ export function PainelPage() {
             {/* Indicador de Ocupação de Salas */}
             <div className="flex items-center gap-1.5 bg-emerald-500/10 dark:bg-emerald-500/15 border border-emerald-500/20 px-3 py-1.5 rounded-xl text-emerald-600 dark:text-emerald-400 shadow-xs select-none shrink-0 text-xs font-black uppercase tracking-wider">
               Ocupação: {obterTaxaOcupacao()}%
-            </div>
-
-            <div className="flex items-center gap-1.5 bg-primary/5 dark:bg-primary/10 border border-primary/15 px-3 py-1.5 rounded-xl text-primary shadow-xs select-none shrink-0 text-xs font-black uppercase tracking-wider">
-              Escala TV: {autoZoom}%
             </div>
             
             <button
@@ -603,23 +618,19 @@ export function PainelPage() {
         ref={scrollContainerRef}
         onMouseEnter={() => setIsPaused(true)}
         onMouseLeave={() => setIsPaused(false)}
-        className={`flex-1 custom-scrollbar relative z-10 ${modoTV ? 'p-0 overflow-hidden flex items-center justify-center bg-bg' : 'p-4 overflow-auto'}`}
+        className={`flex-1 custom-scrollbar relative z-10 ${modoTV ? 'p-0 overflow-hidden bg-bg' : 'p-4 overflow-auto'}`}
       >
         <div 
           ref={tableRef}
           className={`glass-panel rounded-3xl shadow-xs overflow-hidden flex flex-col transition-all duration-300 border border-border/80 ${
-            modoTV ? 'min-w-full' : 'min-w-max'
+            modoTV ? 'h-full min-w-full' : 'min-w-max'
           }`}
-          style={modoTV ? { 
-            zoom: `${autoZoom}%`, 
-            width: `${100 / (autoZoom / 100)}%`
-          } : undefined}
         >
           
           {/* COLUNAS (SALAS) */}
           <div className="flex sticky top-0 z-20 backdrop-blur-lg border-b border-border/50 bg-surface/30">
             {/* Canto superior esquerdo */}
-            <div className={`w-28 shrink-0 border-r border-border/50 p-4 flex items-center justify-center font-black uppercase tracking-widest text-xs sticky left-0 z-30 transition-colors ${
+            <div className={`${modoTV ? 'w-32' : 'w-28'} shrink-0 border-r border-border/50 p-4 flex items-center justify-center font-black uppercase tracking-widest text-xs sticky left-0 z-30 transition-colors ${
               modoTV 
                 ? 'bg-card text-text-muted shadow-xs' 
                 : 'bg-card/80 text-secondary dark:text-primary shadow-xs'
@@ -662,14 +673,16 @@ export function PainelPage() {
                 textClass = 'text-purple-600 dark:text-purple-400';
               }
 
-              const rowClass = "flex border-b border-border/50 last:border-b-0 transition-colors";
+              const rowClass = modoTV
+                ? "flex-1 flex border-b border-border/50 last:border-b-0 transition-colors min-h-0"
+                : "flex border-b border-border/50 last:border-b-0 transition-colors";
 
               return (
                 <div key={turno} className={rowClass}>
                   
                   {/* Indicador Lateral do Turno (mesclado verticalmente) */}
-                  <div className={`w-28 shrink-0 border-r border-border/50 p-3 flex items-center justify-center sticky left-0 z-10 transition-all shadow-xs ${borderClass} ${bgClass}`}>
-                    <div className={`font-black uppercase tracking-widest text-sm ${textClass}`} style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)', letterSpacing: '0.22em' }}>
+                  <div className={`${modoTV ? 'w-32' : 'w-28'} shrink-0 border-r border-border/50 p-3 flex items-center justify-center sticky left-0 z-10 transition-all shadow-xs ${borderClass} ${bgClass}`}>
+                    <div className={`font-black uppercase tracking-widest ${modoTV ? 'text-base' : 'text-sm'} ${textClass}`} style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)', letterSpacing: '0.22em' }}>
                       {turno}
                     </div>
                   </div>
@@ -678,7 +691,7 @@ export function PainelPage() {
                   <div className="flex-1 flex flex-col divide-y divide-border/30 bg-card/10">
                     {subLinhas.map((subLinha, subIndex) => {
                       const subLinhaClass = modoTV
-                        ? "flex min-h-[110px] hover:bg-surface/20 transition-colors"
+                        ? "flex-1 flex min-h-0 hover:bg-surface/20 transition-colors"
                         : "flex min-h-[145px] hover:bg-surface/20 transition-colors";
                       return (
                       <div key={subIndex} className={subLinhaClass}>
@@ -687,7 +700,7 @@ export function PainelPage() {
                         {salasFiltradas.map((sala) => {
                           const turma = subLinha.find(t => t.salaId === sala.id);
                           
-                          const cellPadding = modoTV ? "p-1.5" : "p-4";
+                          const cellPadding = modoTV ? "p-2" : "p-4";
                           return (
                             <div key={sala.id} className={`border-r border-border/50 transition-colors relative flex flex-col justify-center bg-transparent ${cellPadding} ${salaColClass}`}>
                               {turma ? (
@@ -701,23 +714,22 @@ export function PainelPage() {
                                     : 'bg-primary/10 border-primary/30 hover:border-primary hover-glow-primary text-text-main';
                                   const borderSideClass = isRemoto ? 'border-accent' : 'border-primary';
                                   
-                                  const totalSalas = salasFiltradas.length;
                                   const cardPadding = modoTV 
-                                    ? (totalSalas > 10 ? 'p-1.5 gap-1 rounded-lg' : 'p-2.5 gap-2 rounded-xl') 
+                                    ? 'p-5 gap-4 rounded-2xl h-full flex flex-col' 
                                     : 'p-4 gap-3.5 rounded-2xl';
                                   const cursoFont = modoTV 
-                                    ? (totalSalas > 10 ? 'text-[10px] leading-tight' : 'text-xs leading-tight') 
+                                    ? 'text-base font-bold leading-snug' 
                                     : 'text-sm leading-snug';
                                   const textMutedFont = modoTV 
-                                    ? (totalSalas > 10 ? 'text-[8px]' : 'text-[10px]') 
+                                    ? 'text-xs' 
                                     : 'text-[11px]';
                                   const diasFont = modoTV 
-                                    ? (totalSalas > 10 ? 'text-[9px] font-bold' : 'text-xs font-bold') 
+                                    ? 'text-xs font-bold' 
                                     : 'text-xs';
                                   const footerPadding = modoTV 
-                                    ? (totalSalas > 10 ? 'mt-0.5 pt-1.5' : 'mt-1 pt-2') 
-                                    : 'mt-1 pt-3.5';
-                                    const cardHeightClass = modoTV ? "h-full flex-1" : "";
+                                    ? 'mt-auto pt-3 border-t border-dashed border-border/60' 
+                                    : 'mt-1 pt-3.5 border-t border-dashed border-border/60';
+                                  const cardHeightClass = modoTV ? "h-full flex-1" : "";
 
                                   return (
                                     <div 
@@ -726,18 +738,18 @@ export function PainelPage() {
                                     >
                                       {/* Linha 1: Código da Turma e Tags */}
                                       <div className="flex items-center justify-between gap-2 shrink-0">
-                                        <span className="text-[9px] font-black tracking-wider px-2 py-0.5 rounded-lg border border-border bg-card/65 text-text-muted shadow-xs">
+                                        <span className="text-[10px] font-black tracking-wider px-2 py-0.5 rounded-lg border border-border bg-card/65 text-text-muted shadow-xs">
                                           {turma.codigo}
                                         </span>
                                         
                                         <div className="flex gap-1.5">
                                           {turma.cursoTem && (
-                                            <span className="text-[9px] font-black bg-primary text-white px-2 py-0.5 rounded-md uppercase tracking-wider">
+                                            <span className="text-[10px] font-black bg-primary text-white px-2 py-0.5 rounded-md uppercase tracking-wider">
                                               TEM
                                             </span>
                                           )}
                                           {isRemoto && (
-                                            <span className="text-[9px] font-bold bg-accent text-white px-2 py-0.5 rounded-md uppercase tracking-wider">
+                                            <span className="text-[10px] font-bold bg-accent text-white px-2 py-0.5 rounded-md uppercase tracking-wider">
                                               Remoto
                                             </span>
                                           )}
@@ -746,12 +758,12 @@ export function PainelPage() {
 
                                       {/* Linha 2: Nome do Curso */}
                                       <div className={`font-black tracking-tight transition-colors text-text-main font-display ${cursoFont}`}>
-                                        {turma.cursoNome} {turma.unidade && <span className="text-[9px] font-semibold text-text-muted">- {turma.unidade}</span>}
+                                        {turma.cursoNome} {turma.unidade && <span className="text-[10px] font-semibold text-text-muted">- {turma.unidade}</span>}
                                       </div>
 
                                       {/* Linha 3: Período Letivo */}
                                       <div className={`font-bold flex items-center gap-1.5 text-text-muted ${textMutedFont}`}>
-                                        <CalendarIcon className="w-3.5 h-3.5 opacity-70 text-text-muted shrink-0" />
+                                        <CalendarIcon className="w-4 h-4 opacity-70 text-text-muted shrink-0" />
                                         <span>{formatDataCurta(turma.dataInicio)} - {formatDataCurta(turma.dataFim)}</span>
                                       </div>
 
@@ -761,14 +773,14 @@ export function PainelPage() {
                                       </div>
 
                                       {/* Linha 5: Instrutor + Progresso */}
-                                      <div className={`${modoTV ? 'mt-auto' : ''} border-t border-dashed flex flex-col gap-2 transition-colors border-border/60 ${footerPadding}`}>
+                                      <div className={`flex flex-col gap-2 transition-colors ${footerPadding}`}>
                                         <div className={`flex items-center gap-2 text-text-main font-black ${diasFont}`}>
-                                          <Users className="w-3.5 h-3.5 text-text-muted shrink-0" />
+                                          <Users className="w-4 h-4 text-text-muted shrink-0" />
                                           <span className="truncate">{turma.instrutorNome}</span>
                                         </div>
                                         
                                         {/* Barra de Progresso */}
-                                        <div className="flex items-center gap-2 text-[9px] font-black">
+                                        <div className="flex items-center gap-2 text-[10px] font-black">
                                           <div className="flex-1 h-1.5 rounded-full overflow-hidden relative bg-border/40">
                                             <div 
                                               className="absolute inset-y-0 left-0 bg-primary transition-all duration-500 rounded-full" 
@@ -782,9 +794,23 @@ export function PainelPage() {
                                   );
                                 })()
                               ) : (
-                                // Célula Vazia
-                                <div className={`h-full w-full flex items-center justify-center opacity-0 hover:opacity-10 transition-opacity ${modoTV ? 'min-h-[110px]' : 'min-h-[120px]'}`}>
-                                  <span className="text-[10px] text-text-muted font-bold font-mono">vazio</span>
+                                // Célula Vazia / Disponível
+                                <div className={`h-full w-full flex-1 flex flex-col items-center justify-center transition-all ${
+                                  modoTV ? 'p-1' : 'p-0'
+                                }`}>
+                                  <div className={`w-full h-full flex flex-col items-center justify-center rounded-2xl border border-dashed border-emerald-500/20 bg-emerald-500/5 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 gap-1.5 transition-all hover:bg-emerald-500/10 ${
+                                    modoTV ? 'p-3' : 'py-6 px-4'
+                                  }`}>
+                                    <span className="relative flex h-2 w-2">
+                                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-500 opacity-75"></span>
+                                      <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                                    </span>
+                                    <span className={`font-black uppercase tracking-wider ${
+                                      modoTV ? 'text-xs' : 'text-[11px]'
+                                    }`}>
+                                      Disponível
+                                    </span>
+                                  </div>
                                 </div>
                               )}
                             </div>

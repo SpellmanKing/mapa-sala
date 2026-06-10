@@ -179,3 +179,32 @@ form.glass-panel {
   -webkit-backdrop-filter: none !important;
 }
 
+/* Escala de texto e espaçamento proporcionais para o Modo TV */
+html.modo-tv-active {
+  font-size: 18px !important;
+}
+
+@media (min-width: 1200px) {
+  html.modo-tv-active {
+    font-size: 20px !important;
+  }
+}
+
+@media (min-width: 1600px) {
+  html.modo-tv-active {
+    font-size: 24px !important;
+  }
+}
+
+@media (min-width: 2500px) {
+  html.modo-tv-active {
+    font-size: 32px !important;
+  }
+}
+
+/* Evitar barra de rolagem na própria janela/body ao usar Modo TV */
+html.modo-tv-active body {
+  overflow: hidden !important;
+  height: 100vh !important;
+  width: 100vw !important;
+}
