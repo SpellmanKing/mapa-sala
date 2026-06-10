@@ -189,7 +189,7 @@ export function PainelPage() {
 
   const TURNOS = ['Manhã', 'Tarde', 'Noite'];
   const salaColClass = modoTV 
-    ? "flex-1 min-w-[240px] max-w-[400px]" 
+    ? "flex-1 min-w-[130px] max-w-[200px]" 
     : "w-72 shrink-0";
 
   const salasFiltradas = salas.filter(s => {
@@ -684,10 +684,16 @@ export function PainelPage() {
                                     : 'bg-primary/10 border-primary/30 hover:border-primary hover-glow-primary text-text-main';
                                   const borderSideClass = isRemoto ? 'border-accent' : 'border-primary';
                                   
+                                  const cardPadding = modoTV ? 'p-2 gap-1.5 rounded-xl' : 'p-4 gap-3.5 rounded-2xl';
+                                  const cursoFont = modoTV ? 'text-[11px] leading-tight' : 'text-sm leading-snug';
+                                  const textMutedFont = modoTV ? 'text-[9px]' : 'text-[11px]';
+                                  const diasFont = modoTV ? 'text-[10px]' : 'text-xs';
+                                  const footerPadding = modoTV ? 'mt-0.5 pt-2' : 'mt-1 pt-3.5';
+
                                   return (
                                     <div 
                                       onClick={() => handleEditClick(turma)}
-                                      className={`cursor-pointer group/card relative w-full rounded-2xl p-4 border btn-tactile hover:scale-[1.03] transition-all flex flex-col gap-3.5 overflow-hidden shadow-xs ${cardBgClass}`}
+                                      className={`cursor-pointer group/card relative w-full border btn-tactile hover:scale-[1.03] transition-all flex flex-col overflow-hidden shadow-xs ${cardPadding} ${cardBgClass}`}
                                     >
                                       {/* Linha 1: Código da Turma e Tags */}
                                       <div className="flex items-center justify-between gap-2 shrink-0">
@@ -710,24 +716,24 @@ export function PainelPage() {
                                       </div>
 
                                       {/* Linha 2: Nome do Curso */}
-                                      <div className="font-black text-sm leading-snug break-words tracking-tight transition-colors text-text-main font-display">
-                                        {turma.cursoNome} {turma.unidade && <span className="text-xs font-semibold text-text-muted">- {turma.unidade}</span>}
+                                      <div className={`font-black tracking-tight transition-colors text-text-main font-display ${cursoFont}`}>
+                                        {turma.cursoNome} {turma.unidade && <span className="text-[9px] font-semibold text-text-muted">- {turma.unidade}</span>}
                                       </div>
 
                                       {/* Linha 3: Período Letivo */}
-                                      <div className="text-[11px] font-bold flex items-center gap-1.5 text-text-muted">
-                                        <CalendarIcon className="w-3.5 h-3.5 opacity-70 text-text-muted" />
+                                      <div className={`font-bold flex items-center gap-1.5 text-text-muted ${textMutedFont}`}>
+                                        <CalendarIcon className="w-3.5 h-3.5 opacity-70 text-text-muted shrink-0" />
                                         <span>{formatDataCurta(turma.dataInicio)} - {formatDataCurta(turma.dataFim)}</span>
                                       </div>
 
                                       {/* Linha 4: Dias da Semana */}
-                                      <div className={`text-xs font-black border-l-2 pl-2 ${borderSideClass}`}>
+                                      <div className={`font-black border-l-2 pl-2 ${borderSideClass} ${diasFont}`}>
                                         {diasFormatados}
                                       </div>
 
                                       {/* Linha 5: Instrutor + Progresso */}
-                                      <div className="mt-1 pt-3.5 border-t border-dashed flex flex-col gap-2.5 transition-colors border-border/60">
-                                        <div className="flex items-center gap-2 text-xs font-black text-text-main">
+                                      <div className={`border-t border-dashed flex flex-col gap-2 transition-colors border-border/60 ${footerPadding}`}>
+                                        <div className={`flex items-center gap-2 text-text-main font-black ${diasFont}`}>
                                           <Users className="w-3.5 h-3.5 text-text-muted shrink-0" />
                                           <span className="truncate">{turma.instrutorNome}</span>
                                         </div>
