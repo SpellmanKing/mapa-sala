@@ -673,8 +673,12 @@ export function PainelPage() {
         <div 
           ref={tableRef}
           className={`glass-panel rounded-3xl shadow-xs overflow-hidden flex flex-col transition-all duration-300 border border-border/80 ${
-            modoTV ? 'h-full min-w-full' : 'min-w-max'
+            modoTV ? 'min-w-full' : 'min-w-max'
           }`}
+          style={modoTV ? { 
+            zoom: `${autoZoom}%`, 
+            width: `${100 / (autoZoom / 100)}%`
+          } : undefined}
         >
           
           {/* COLUNAS (SALAS) */}
