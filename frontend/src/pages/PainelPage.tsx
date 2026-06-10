@@ -658,8 +658,7 @@ export function PainelPage() {
           }`}
           style={modoTV ? { 
             zoom: `${autoZoom}%`, 
-            width: `${100 / (autoZoom / 100)}%`,
-            minHeight: `${100 / (autoZoom / 100)}%`
+            width: `${100 / (autoZoom / 100)}%`
           } : undefined}
         >
           
@@ -709,9 +708,7 @@ export function PainelPage() {
                 textClass = 'text-purple-600 dark:text-purple-400';
               }
 
-              const rowClass = modoTV
-                ? "flex-1 flex border-b border-border/50 last:border-b-0 transition-colors"
-                : "flex border-b border-border/50 last:border-b-0 transition-colors";
+              const rowClass = "flex border-b border-border/50 last:border-b-0 transition-colors";
 
               return (
                 <div key={turno} className={rowClass}>
@@ -722,12 +719,12 @@ export function PainelPage() {
                       {turno}
                     </div>
                   </div>
-
+ 
                   {/* Sub-linhas do Turno */}
                   <div className="flex-1 flex flex-col divide-y divide-border/30 bg-card/10">
                     {subLinhas.map((subLinha, subIndex) => {
                       const subLinhaClass = modoTV
-                        ? "flex flex-1 min-h-[110px] hover:bg-surface/20 transition-colors"
+                        ? "flex min-h-[110px] hover:bg-surface/20 transition-colors"
                         : "flex min-h-[145px] hover:bg-surface/20 transition-colors";
                       return (
                       <div key={subIndex} className={subLinhaClass}>
