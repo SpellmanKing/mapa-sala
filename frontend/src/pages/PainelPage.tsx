@@ -201,12 +201,16 @@ export function PainelPage() {
     if (filtroTipo === 'Todos') return true;
     if (filtroTipo === 'Inovadora') return s.tipo.toLowerCase().includes('inovadora');
     if (filtroTipo === 'TI') return s.tipo.toLowerCase().includes('ti') || s.tipo.toLowerCase().includes('t.i.');
+    if (filtroTipo === 'Imagem') return s.tipo.toLowerCase().includes('imagem');
+    if (filtroTipo === 'Auditorio') return s.tipo.toLowerCase().includes('auditório') || s.tipo.toLowerCase().includes('auditorio');
     return s.tipo === filtroTipo;
   });
 
   const countTodas = salas.length;
   const countInovadoras = salas.filter(s => s.tipo.toLowerCase().includes('inovadora')).length;
   const countTI = salas.filter(s => s.tipo.toLowerCase().includes('ti') || s.tipo.toLowerCase().includes('t.i.')).length;
+  const countImagem = salas.filter(s => s.tipo.toLowerCase().includes('imagem')).length;
+  const countAuditorio = salas.filter(s => s.tipo.toLowerCase().includes('auditório') || s.tipo.toLowerCase().includes('auditorio')).length;
 
   const totalSalas = salasFiltradas.length;
   const TURNOS = ['Manhã', 'Tarde', 'Noite'];
@@ -594,6 +598,36 @@ export function PainelPage() {
                   {countTI}
                 </span>
               </button>
+              <button
+                onClick={() => setFiltroTipo('Imagem')}
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
+                  filtroTipo === 'Imagem'
+                    ? 'bg-card text-text-main shadow-sm font-black'
+                    : 'text-text-muted hover:text-text-main'
+                }`}
+              >
+                Labs Imagem
+                <span className={`text-[10px] px-1.5 py-0.5 rounded-md font-extrabold ${
+                  filtroTipo === 'Imagem' ? 'bg-surface text-text-main' : 'bg-border/40 text-text-muted'
+                }`}>
+                  {countImagem}
+                </span>
+              </button>
+              <button
+                onClick={() => setFiltroTipo('Auditorio')}
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
+                  filtroTipo === 'Auditorio'
+                    ? 'bg-card text-text-main shadow-sm font-black'
+                    : 'text-text-muted hover:text-text-main'
+                }`}
+              >
+                Auditório
+                <span className={`text-[10px] px-1.5 py-0.5 rounded-md font-extrabold ${
+                  filtroTipo === 'Auditorio' ? 'bg-surface text-text-main' : 'bg-border/40 text-text-muted'
+                }`}>
+                  {countAuditorio}
+                </span>
+              </button>
             </div>
 
             {/* Seletor de Data para Modo Diário */}
@@ -766,8 +800,17 @@ export function PainelPage() {
 
                                       {/* Linha 2: Nome do Curso */}
                                       <div className={`font-black tracking-tight transition-colors text-text-main font-display ${cursoFont}`}>
-                                        {turma.cursoNome} {turma.unidade && <span className="text-[10px] font-semibold text-text-muted">- {turma.unidade}</span>}
+                                        {turma.cursoNome}
                                       </div>
+
+                                      {/* Linha 2.5: Unidade Badge */}
+                                      {turma.unidade && (
+                                        <div className="flex items-center gap-1.5 shrink-0">
+                                          <span className="text-[9px] md:text-[10px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-md bg-secondary/10 dark:bg-secondary/20 text-secondary dark:text-primary border border-secondary/20 shadow-3xs">
+                                            {turma.unidade}
+                                          </span>
+                                        </div>
+                                      )}
 
                                       {/* Linha 3: Período Letivo */}
                                       <div className={`font-bold flex items-center gap-1.5 text-text-muted ${textMutedFont}`}>
