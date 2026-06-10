@@ -197,20 +197,28 @@ export function PainelPage() {
     return 'Não definido';
   };
 
-  const salasFiltradas = salas.filter(s => {
-    if (filtroTipo === 'Todos') return true;
-    if (filtroTipo === 'Inovadora') return s.tipo.toLowerCase().includes('inovadora');
-    if (filtroTipo === 'TI') return s.tipo.toLowerCase().includes('ti') || s.tipo.toLowerCase().includes('t.i.');
-    if (filtroTipo === 'Imagem') return s.tipo.toLowerCase().includes('imagem');
-    if (filtroTipo === 'Auditorio') return s.tipo.toLowerCase().includes('auditório') || s.tipo.toLowerCase().includes('auditorio');
-    if (filtroTipo === 'Multiuso') return s.tipo.toLowerCase().includes('multiuso');
-    if (filtroTipo === 'Moda') return s.tipo.toLowerCase().includes('moda');
-    return s.tipo === filtroTipo;
-  });
+  const salasFiltradas = salas
+    .filter(s => {
+      if (filtroTipo === 'Todos') return true;
+      if (filtroTipo === 'Inovadora') return s.tipo.toLowerCase().includes('inovadora');
+      if (filtroTipo === 'TI') {
+        const t = s.tipo.toLowerCase();
+        return (t.includes('ti') || t.includes('t.i.')) && !t.includes('multiuso');
+      }
+      if (filtroTipo === 'Imagem') return s.tipo.toLowerCase().includes('imagem');
+      if (filtroTipo === 'Auditorio') return s.tipo.toLowerCase().includes('auditório') || s.tipo.toLowerCase().includes('auditorio');
+      if (filtroTipo === 'Multiuso') return s.tipo.toLowerCase().includes('multiuso');
+      if (filtroTipo === 'Moda') return s.tipo.toLowerCase().includes('moda');
+      return s.tipo === filtroTipo;
+    })
+    .sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR', { numeric: true, sensitivity: 'base' }));
 
   const countTodas = salas.length;
   const countInovadoras = salas.filter(s => s.tipo.toLowerCase().includes('inovadora')).length;
-  const countTI = salas.filter(s => s.tipo.toLowerCase().includes('ti') || s.tipo.toLowerCase().includes('t.i.')).length;
+  const countTI = salas.filter(s => {
+    const t = s.tipo.toLowerCase();
+    return (t.includes('ti') || t.includes('t.i.')) && !t.includes('multiuso');
+  }).length;
   const countImagem = salas.filter(s => s.tipo.toLowerCase().includes('imagem')).length;
   const countAuditorio = salas.filter(s => s.tipo.toLowerCase().includes('auditório') || s.tipo.toLowerCase().includes('auditorio')).length;
   const countMultiuso = salas.filter(s => s.tipo.toLowerCase().includes('multiuso')).length;
