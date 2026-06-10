@@ -231,8 +231,8 @@ export function PainelPage() {
       setAutoZoom(100);
       return;
     }
-    // Zoom travado em 35% fixo conforme solicitado pelo usuário
-    setAutoZoom(35);
+    // Zoom travado em 40% fixo conforme solicitado pelo usuário
+    setAutoZoom(40);
   }, [modoTV]);
 
   const obterTaxaOcupacao = () => {
