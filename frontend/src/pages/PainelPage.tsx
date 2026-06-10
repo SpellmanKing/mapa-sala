@@ -203,6 +203,7 @@ export function PainelPage() {
     if (filtroTipo === 'TI') return s.tipo.toLowerCase().includes('ti') || s.tipo.toLowerCase().includes('t.i.');
     if (filtroTipo === 'Imagem') return s.tipo.toLowerCase().includes('imagem');
     if (filtroTipo === 'Auditorio') return s.tipo.toLowerCase().includes('auditório') || s.tipo.toLowerCase().includes('auditorio');
+    if (filtroTipo === 'Multiuso') return s.tipo.toLowerCase().includes('multiuso');
     return s.tipo === filtroTipo;
   });
 
@@ -211,6 +212,7 @@ export function PainelPage() {
   const countTI = salas.filter(s => s.tipo.toLowerCase().includes('ti') || s.tipo.toLowerCase().includes('t.i.')).length;
   const countImagem = salas.filter(s => s.tipo.toLowerCase().includes('imagem')).length;
   const countAuditorio = salas.filter(s => s.tipo.toLowerCase().includes('auditório') || s.tipo.toLowerCase().includes('auditorio')).length;
+  const countMultiuso = salas.filter(s => s.tipo.toLowerCase().includes('multiuso')).length;
 
   const totalSalas = salasFiltradas.length;
   const TURNOS = ['Manhã', 'Tarde', 'Noite'];
@@ -626,6 +628,21 @@ export function PainelPage() {
                   filtroTipo === 'Auditorio' ? 'bg-surface text-text-main' : 'bg-border/40 text-text-muted'
                 }`}>
                   {countAuditorio}
+                </span>
+              </button>
+              <button
+                onClick={() => setFiltroTipo('Multiuso')}
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
+                  filtroTipo === 'Multiuso'
+                    ? 'bg-card text-text-main shadow-sm font-black'
+                    : 'text-text-muted hover:text-text-main'
+                }`}
+              >
+                Sala Multiuso
+                <span className={`text-[10px] px-1.5 py-0.5 rounded-md font-extrabold ${
+                  filtroTipo === 'Multiuso' ? 'bg-surface text-text-main' : 'bg-border/40 text-text-muted'
+                }`}>
+                  {countMultiuso}
                 </span>
               </button>
             </div>
