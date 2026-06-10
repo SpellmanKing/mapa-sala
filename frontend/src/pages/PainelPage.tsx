@@ -727,7 +727,7 @@ export function PainelPage() {
                   <div className="flex-1 flex flex-col divide-y divide-border/30 bg-card/10">
                     {subLinhas.map((subLinha, subIndex) => {
                       const subLinhaClass = modoTV
-                        ? "flex flex-1 min-h-[135px] hover:bg-surface/20 transition-colors"
+                        ? "flex flex-1 min-h-[110px] hover:bg-surface/20 transition-colors"
                         : "flex min-h-[145px] hover:bg-surface/20 transition-colors";
                       return (
                       <div key={subIndex} className={subLinhaClass}>
@@ -832,7 +832,7 @@ export function PainelPage() {
                                 })()
                               ) : (
                                 // Célula Vazia
-                                <div className={`h-full w-full flex items-center justify-center opacity-0 hover:opacity-10 transition-opacity ${modoTV ? 'min-h-[135px]' : 'min-h-[120px]'}`}>
+                                <div className={`h-full w-full flex items-center justify-center opacity-0 hover:opacity-10 transition-opacity ${modoTV ? 'min-h-[110px]' : 'min-h-[120px]'}`}>
                                   <span className="text-[10px] text-text-muted font-bold font-mono">vazio</span>
                                 </div>
                               )}
