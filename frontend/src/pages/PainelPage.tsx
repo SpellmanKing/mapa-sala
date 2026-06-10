@@ -243,8 +243,8 @@ export function PainelPage() {
       setAutoZoom(100);
       return;
     }
-    // Zoom travado em 60% conforme solicitado pelo usuário para TV de 55 polegadas
-    setAutoZoom(60);
+    // Zoom travado em 63% conforme solicitado pelo usuário para TV de 60 polegadas
+    setAutoZoom(63);
   }, [modoTV]);
 
   const obterTaxaOcupacao = () => {
