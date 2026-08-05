@@ -47,7 +47,7 @@ model Sala {
   capacidade_maxima  Int
   idTipo_sala        Int?
   local              String?
-  recursos_especiais String?
+  recursos_especiais String? @db.Text
 
   tipoSala           TipoSala? @relation(fields: [idTipo_sala], references: [idTipo_sala])
   agendamentos       Agendamento[]
@@ -113,6 +113,8 @@ model Turma {
   alunos_bolsistas Int     @default(0)
   observacoes     String?
   eh_hibrida       Boolean  @default(false)
+  dias_semana     String   @default("1,2,3,4,5")
+
 
   curso           Curso          @relation(fields: [id_cursos], references: [id_cursos], onDelete: Cascade, onUpdate: Cascade)
   instrutor       Instrutor?    @relation(fields: [id_instrutores], references: [id_instrutores], onDelete: SetNull, onUpdate: Cascade)

@@ -173,9 +173,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
           codigo: t.codigo_turma,
           modalidade: t.curso?.modalidade || 'Presencial',
           unidade: t.curso?.unidade || '',
-          diasSemana: t.curso?.dias_letivos_padrao ? t.curso.dias_letivos_padrao.split(',') : [],
+          diasSemana: t.dias_semana ? t.dias_semana.split(',') : (t.curso?.dias_letivos_padrao ? t.curso.dias_letivos_padrao.split(',') : []),
           diasRemotos: t.curso?.dias_remotos_padrao ? t.curso.dias_remotos_padrao.split(',') : [],
-          cursoTem: t.curso?.curso_tem || false
+          cursoTem: t.curso?.curso_tem || false,
+          instrutorId: t.id_instrutores ? t.id_instrutores.toString() : ''
         };
       });
       setTurmas(mapped);

@@ -33,7 +33,26 @@ export class TurmaService {
     });
   }
 
-  async alocarTurma(data: { id_cursos: number, id_salas: number, data_inicio: Date, fk_id_turno: number, total_alunos: number, codigo_turma: string, dias_semana: string[] }) {
+  private async obterIdTurnoReal(idOuNome: number | string): Promise<number> {
+    const nome = typeof idOuNome === 'string'
+      ? idOuNome
+      : idOuNome === 1 ? 'Manhã' : idOuNome === 2 ? 'Tarde' : idOuNome === 3 ? 'Noite' : null;
+
+    if (nome) {
+      const t = await prisma.turno.findFirst({ where: { nome_turno: nome } });
+      if (t) return t.id_turno;
+    }
+
+    if (typeof idOuNome === 'number') {
+      const t = await prisma.turno.findUnique({ where: { id_turno: idOuNome } });
+      if (t) return t.id_turno;
+    }
+
+    const primeiro = await prisma.turno.findFirst();
+    return primeiro ? primeiro.id_turno : 1;
+  }
+
+  async alocarTurma(data: { id_cursos: number, id_salas: number, data_inicio: Date, fk_id_turno: number, total_alunos: number, codigo_turma: string, dias_semana: string[], id_instrutores?: number }) {
     // Busca o curso para ver os detalhes
     const curso = await prisma.curso.findUnique({
       where: { id_cursos: data.id_cursos }
@@ -49,12 +68,14 @@ export class TurmaService {
       diasSemana
     );
 
+    const idTurnoReal = await this.obterIdTurnoReal(data.fk_id_turno);
+
     const datas = cronograma.datasAulas.map(d => new Date(d));
     const conflito = await prisma.agendamento.findFirst({
       where: {
         id_salas: data.id_salas,
         data_aula: { in: datas },
-        turma: { fk_id_turno: data.fk_id_turno }
+        turma: { fk_id_turno: idTurnoReal }
       },
       include: { sala: true }
     });
@@ -76,17 +97,23 @@ export class TurmaService {
       codigoTurmaFinal = `${codigoTurmaFinal}-${totalMesmoCodigo + 1}`;
     }
 
+    const statusPlanejada = await prisma.statusTurma.findFirst({
+      where: { nome_status: 'Planejada' }
+    });
+    const idStatusReal = statusPlanejada ? statusPlanejada.id_status : 7;
+
     // Cria a Turma
     const turma = await prisma.turma.create({
       data: {
         id_cursos: data.id_cursos,
-        id_instrutores: curso.id_instrutor_padrao,
+        id_instrutores: data.id_instrutores !== undefined ? data.id_instrutores : curso.id_instrutor_padrao,
         codigo_turma: codigoTurmaFinal,
-        fk_id_turno: data.fk_id_turno,
+        fk_id_turno: idTurnoReal,
         data_inicio: new Date(data.data_inicio),
         data_termino: new Date(cronograma.dataTermino),
         total_alunos: data.total_alunos,
-        fk_id_status: 1, // Ex: Planejada
+        fk_id_status: idStatusReal,
+        dias_semana: diasSemana.join(','),
       }
     });
 
@@ -109,7 +136,7 @@ export class TurmaService {
     });
   }
 
-  async reallocarTurma(id_turmas: number, data: { id_salas: number, data_inicio: Date, fk_id_turno: number, dias_semana: string[] }) {
+  async reallocarTurma(id_turmas: number, data: { id_salas: number, data_inicio: Date, fk_id_turno: number, dias_semana: string[], id_instrutores?: number }) {
     const turma = await prisma.turma.findUnique({ where: { id_turmas }, include: { curso: true } });
     if (!turma) throw new HttpError(404, 'Turma não encontrada');
 
@@ -121,13 +148,15 @@ export class TurmaService {
       diasSemana
     );
 
+    const idTurnoReal = await this.obterIdTurnoReal(data.fk_id_turno);
+
     const datas = cronograma.datasAulas.map(d => new Date(d));
     const conflito = await prisma.agendamento.findFirst({
       where: {
         id_salas: data.id_salas,
         data_aula: { in: datas },
         id_turmas: { not: id_turmas },
-        turma: { fk_id_turno: data.fk_id_turno }
+        turma: { fk_id_turno: idTurnoReal }
       },
       include: { sala: true }
     });
@@ -142,9 +171,11 @@ export class TurmaService {
     await prisma.turma.update({
       where: { id_turmas },
       data: {
-        fk_id_turno: data.fk_id_turno,
+        fk_id_turno: idTurnoReal,
         data_inicio: new Date(data.data_inicio),
-        data_termino: new Date(cronograma.dataTermino)
+        data_termino: new Date(cronograma.dataTermino),
+        dias_semana: diasSemana.join(','),
+        ...(data.id_instrutores !== undefined ? { id_instrutores: data.id_instrutores } : {})
       }
     });
 

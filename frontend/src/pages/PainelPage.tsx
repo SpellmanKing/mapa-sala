@@ -15,7 +15,7 @@ function obterOrdemSala(nome: string): number {
 }
 
 export function PainelPage() {
-  const { salas, turmas, cursos, refreshTurmas, showToast } = useAppContext();
+  const { salas, turmas, cursos, instrutores, refreshTurmas, showToast } = useAppContext();
 
   // Relógio Digital (Horário de Brasília)
   const [horaAtual, setHoraAtual] = useState(() => new Date());
@@ -28,15 +28,27 @@ export function PainelPage() {
   }, []);
 
   const formatHoraBrasilia = (date: Date) => {
-    return date.toLocaleTimeString('pt-BR', {
+    const options: Intl.DateTimeFormatOptions = {
       timeZone: 'America/Sao_Paulo',
       hour: '2-digit',
       minute: '2-digit',
-      second: '2-digit'
-    });
+      second: '2-digit',
+      hour12: false
+    };
+    return new Intl.DateTimeFormat('pt-BR', options).format(date);
   };
 
+  const getWeekRangeString = (dateStr: string) => {
+    const baseDate = new Date(dateStr + 'T12:00:00');
+    const day = baseDate.getDay();
+    const startOfWeek = new Date(baseDate);
+    startOfWeek.setDate(baseDate.getDate() - (day === 0 ? 6 : day - 1));
+    const endOfWeek = new Date(startOfWeek);
+    endOfWeek.setDate(startOfWeek.getDate() + 5);
 
+    const f = (d: Date) => d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
+    return `Semana de ${f(startOfWeek)} a ${f(endOfWeek)}`;
+  };
 
   // Estados de Visualização e Filtro
   const [filtroTipo, setFiltroTipo] = useState('Todos');
@@ -127,13 +139,23 @@ export function PainelPage() {
     }
   };
 
-  // Helper para verificar se a turma está em andamento no geral (Quadro Semanal)
+  // Helper para verificar se a turma está em andamento na semana da data base (Quadro Semanal)
   const isTurmaActive = (dataInicioStr: string, dataFimStr: string) => {
     if (!dataInicioStr || !dataFimStr) return true;
     const inicio = new Date(dataInicioStr + 'T00:00:00');
     const fim = new Date(dataFimStr + 'T23:59:59');
-    const hoje = new Date();
-    return (inicio <= hoje && fim >= hoje);
+    
+    const baseDate = new Date(dataFiltro + 'T12:00:00');
+    const day = baseDate.getDay();
+    const startOfWeek = new Date(baseDate);
+    startOfWeek.setDate(baseDate.getDate() - (day === 0 ? 6 : day - 1));
+    startOfWeek.setHours(0, 0, 0, 0);
+    
+    const endOfWeek = new Date(startOfWeek);
+    endOfWeek.setDate(startOfWeek.getDate() + 5);
+    endOfWeek.setHours(23, 59, 59, 999);
+    
+    return (inicio <= endOfWeek && fim >= startOfWeek);
   };
 
   // Helper para verificar se a turma está ativa presencialmente em uma data específica
@@ -353,7 +375,8 @@ export function PainelPage() {
     dataInicio: '', 
     turno: 'Manhã',
     codigoTurma: '',
-    diasSemana: [] as string[]
+    diasSemana: [] as string[],
+    instrutorId: ''
   });
 
   const handleCursoChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -365,7 +388,8 @@ export function PainelPage() {
         cursoId: cid,
         codigoTurma: curso.codigoTurmaPadrao || '',
         turno: curso.turnoPadrao || 'Manhã',
-        diasSemana: curso.diasSemana && curso.diasSemana.length > 0 ? curso.diasSemana : ['1', '2', '3', '4', '5']
+        diasSemana: curso.diasSemana && curso.diasSemana.length > 0 ? curso.diasSemana : ['1', '2', '3', '4', '5'],
+        instrutorId: curso.instrutorId || ''
       }));
     } else {
       setNovoAgendamento(prev => ({ ...prev, cursoId: cid }));
@@ -379,7 +403,7 @@ export function PainelPage() {
     if (!cursoSelecionado || !novoAgendamento.dataInicio || !novoAgendamento.salaId) return;
 
     if (novoAgendamento.diasSemana.length === 0) {
-      showToast("Este curso não possui dias letivos presenciais cadastrados. Por favor, edite o curso em Gerenciamento para definir os dias letivos.", "error");
+      showToast("Selecione pelo menos um dia letivo presencial para a turma.", "error");
       return;
     }
 
@@ -391,19 +415,20 @@ export function PainelPage() {
         fk_id_turno: novoAgendamento.turno === 'Manhã' ? 1 : novoAgendamento.turno === 'Tarde' ? 2 : 3,
         total_alunos: 30,
         codigo_turma: novoAgendamento.codigoTurma,
-        dias_semana: novoAgendamento.diasSemana
+        dias_semana: novoAgendamento.diasSemana,
+        id_instrutores: novoAgendamento.instrutorId ? Number(novoAgendamento.instrutorId) : undefined
       });
 
       refreshTurmas();
       showToast("Turma alocada com sucesso!", "success");
       setModalOpen(false);
-      setNovoAgendamento({ cursoId: '', salaId: '', dataInicio: '', turno: 'Manhã', codigoTurma: '', diasSemana: [] });
+      setNovoAgendamento({ cursoId: '', salaId: '', dataInicio: '', turno: 'Manhã', codigoTurma: '', diasSemana: [], instrutorId: '' });
     } catch (err: any) {
       console.error(err);
-      const isConflict = err.response?.status === 409 || String(err.response?.data?.message).toLowerCase().includes('conflito');
+      const isConflict = err.response?.status === 409 || String(err.response?.data?.message).toLowerCase().includes('conflito') || String(err.response?.data?.error).toLowerCase().includes('conflito');
       const msg = isConflict 
         ? "Não foi possível realizar a alocação! Sala indisponível"
-        : (err.response?.data?.message || 'Erro ao alocar turma. Verifique se o ambiente já está ocupado neste dia/turno.');
+        : (err.response?.data?.error || err.response?.data?.message || 'Erro ao alocar turma.');
       showToast(msg, "error");
     }
   };
@@ -415,7 +440,8 @@ export function PainelPage() {
     salaId: '',
     dataInicio: '',
     turno: 'Manhã',
-    diasSemana: [] as string[]
+    diasSemana: [] as string[],
+    instrutorId: ''
   });
 
   const handleEditClick = (turma: any) => {
@@ -424,7 +450,8 @@ export function PainelPage() {
       salaId: turma.salaId,
       dataInicio: turma.dataInicio,
       turno: turma.turno,
-      diasSemana: turma.diasSemana && turma.diasSemana.length > 0 ? turma.diasSemana : ['1', '2', '3', '4', '5']
+      diasSemana: turma.diasSemana && turma.diasSemana.length > 0 ? turma.diasSemana : ['1', '2', '3', '4', '5'],
+      instrutorId: turma.instrutorId || ''
     });
     setEditTurmaModalOpen(true);
   };
@@ -438,16 +465,17 @@ export function PainelPage() {
         id_salas: Number(dadosEdicao.salaId),
         data_inicio: dadosEdicao.dataInicio,
         fk_id_turno: dadosEdicao.turno === 'Manhã' ? 1 : dadosEdicao.turno === 'Tarde' ? 2 : 3,
-        dias_semana: dadosEdicao.diasSemana
+        dias_semana: dadosEdicao.diasSemana,
+        id_instrutores: dadosEdicao.instrutorId ? Number(dadosEdicao.instrutorId) : undefined
       });
       refreshTurmas();
       showToast("Turma realocada com sucesso!", "success");
       setEditTurmaModalOpen(false);
     } catch (err: any) {
-      const isConflict = err.response?.status === 409 || String(err.response?.data?.message).toLowerCase().includes('conflito');
+      const isConflict = err.response?.status === 409 || String(err.response?.data?.message).toLowerCase().includes('conflito') || String(err.response?.data?.error).toLowerCase().includes('conflito');
       const msg = isConflict 
         ? "Não foi possível realizar a alocação! Sala indisponível"
-        : (err.response?.data?.message || 'Erro ao reallocar turma. Verifique se há conflito de sala/turno.');
+        : (err.response?.data?.error || err.response?.data?.message || 'Erro ao reallocar turma.');
       showToast(msg, "error");
     }
   };
@@ -990,6 +1018,60 @@ export function PainelPage() {
                 </div>
               </div>
 
+              <div>
+                <label className="block text-xs font-black text-text-muted uppercase tracking-widest mb-1.5 flex justify-between items-center">
+                  <span>Instrutor da Turma</span>
+                  <span className="text-[10px] text-primary lowercase normal-case font-bold">
+                    💡 Turmas do mesmo curso podem ter instrutores diferentes
+                  </span>
+                </label>
+                <select 
+                  value={novoAgendamento.instrutorId}
+                  onChange={e => setNovoAgendamento({...novoAgendamento, instrutorId: e.target.value})}
+                  className="w-full border border-border rounded-xl p-3 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none text-sm font-semibold transition-all bg-input text-text-main cursor-pointer"
+                >
+                  <option value="" className="bg-card text-text-main">Sem Instrutor / Definir Depois</option>
+                  {instrutores.map(i => <option key={i.id} value={i.id} className="bg-card text-text-main">{i.nome}</option>)}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-xs font-black text-text-muted uppercase tracking-widest mb-2">Dias de Execução da Turma</label>
+                <div className="flex flex-wrap gap-2">
+                  {[
+                    { id: '1', label: 'Seg' },
+                    { id: '2', label: 'Ter' },
+                    { id: '3', label: 'Qua' },
+                    { id: '4', label: 'Qui' },
+                    { id: '5', label: 'Sex' },
+                    { id: '6', label: 'Sáb' }
+                  ].map((dia) => {
+                    const checked = novoAgendamento.diasSemana.includes(dia.id);
+                    return (
+                      <button
+                        type="button"
+                        key={dia.id}
+                        onClick={() => {
+                          setNovoAgendamento((prev) => {
+                            const prevSet = new Set(prev.diasSemana);
+                            if (prevSet.has(dia.id)) prevSet.delete(dia.id);
+                            else prevSet.add(dia.id);
+                            return { ...prev, diasSemana: Array.from(prevSet) };
+                          });
+                        }}
+                        className={`px-3 py-2.5 text-xs font-bold rounded-xl border border-border/80 btn-tactile cursor-pointer ${
+                          checked 
+                            ? 'bg-primary/10 border-primary text-primary shadow-xs font-black' 
+                            : 'bg-input text-text-muted hover:bg-surface/50'
+                        }`}
+                      >
+                        {dia.label}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
               <div className="bg-primary/5 p-4 rounded-2xl border border-primary/20 text-xs text-text-muted flex items-start gap-2.5">
                 <CalendarIcon className="w-5 h-5 shrink-0 text-primary mt-0.5" />
                 <p className="leading-relaxed">
@@ -1069,6 +1151,60 @@ export function PainelPage() {
                     <option value="Tarde" className="bg-card text-text-main">Tarde</option>
                     <option value="Noite" className="bg-card text-text-main">Noite</option>
                   </select>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-black text-text-muted uppercase tracking-widest mb-1.5 flex justify-between items-center">
+                  <span>Instrutor da Turma</span>
+                  <span className="text-[10px] text-primary lowercase normal-case font-bold">
+                    💡 Turmas do mesmo curso podem ter instrutores diferentes
+                  </span>
+                </label>
+                <select 
+                  value={dadosEdicao.instrutorId}
+                  onChange={e => setDadosEdicao({...dadosEdicao, instrutorId: e.target.value})}
+                  className="w-full border border-border rounded-xl p-3 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none text-sm font-semibold transition-all bg-input text-text-main cursor-pointer"
+                >
+                  <option value="" className="bg-card text-text-main">Sem Instrutor / Definir Depois</option>
+                  {instrutores.map(i => <option key={i.id} value={i.id} className="bg-card text-text-main">{i.nome}</option>)}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-xs font-black text-text-muted uppercase tracking-widest mb-2">Dias de Execução da Turma</label>
+                <div className="flex flex-wrap gap-2">
+                  {[
+                    { id: '1', label: 'Seg' },
+                    { id: '2', label: 'Ter' },
+                    { id: '3', label: 'Qua' },
+                    { id: '4', label: 'Qui' },
+                    { id: '5', label: 'Sex' },
+                    { id: '6', label: 'Sáb' }
+                  ].map((dia) => {
+                    const checked = dadosEdicao.diasSemana.includes(dia.id);
+                    return (
+                      <button
+                        type="button"
+                        key={dia.id}
+                        onClick={() => {
+                          setDadosEdicao((prev) => {
+                            const prevSet = new Set(prev.diasSemana);
+                            if (prevSet.has(dia.id)) prevSet.delete(dia.id);
+                            else prevSet.add(dia.id);
+                            return { ...prev, diasSemana: Array.from(prevSet) };
+                          });
+                        }}
+                        className={`px-3 py-2.5 text-xs font-bold rounded-xl border border-border/80 btn-tactile cursor-pointer ${
+                          checked 
+                            ? 'bg-primary/10 border-primary text-primary shadow-xs font-black' 
+                            : 'bg-input text-text-muted hover:bg-surface/50'
+                        }`}
+                      >
+                        {dia.label}
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
 

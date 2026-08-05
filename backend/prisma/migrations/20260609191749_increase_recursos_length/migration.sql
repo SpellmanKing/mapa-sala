@@ -1,0 +1,1 @@
+-- Workaround: empty migration file to bypass OS/OneDrive folder lock

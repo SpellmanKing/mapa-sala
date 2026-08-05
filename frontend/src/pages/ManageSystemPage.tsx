@@ -18,6 +18,8 @@ export function ManageSystemPage() {
     nome: '', instrutorId: '', unidade: '', diasSemanaLetiva: ['1', '3', '5'], diasRemotos: [], codigoTurmaPadrao: '', turnoPadrao: 'Manhã', modalidade: 'Presencial'
   });
   const [cursoError, setCursoError] = useState<string | null>(null);
+  const [searchCurso, setSearchCurso] = useState('');
+  const [searchInstrutor, setSearchInstrutor] = useState('');
 
   // --- Estados do Instrutor ---
   const [instrutorModalOpen, setInstrutorModalOpen] = useState(false);
@@ -71,9 +73,10 @@ export function ManageSystemPage() {
       }
       refreshCursos();
       setCursoModalOpen(false);
-    } catch (err) {
-      setCursoError('Erro ao salvar no backend.');
-      showToast('Erro ao salvar curso no servidor.', 'error');
+    } catch (err: any) {
+      const msg = err.response?.data?.error || err.response?.data?.message || 'Erro ao salvar no backend.';
+      setCursoError(msg);
+      showToast(msg, 'error');
     }
   }
 
@@ -121,9 +124,10 @@ export function ManageSystemPage() {
       }
       refreshInstrutores();
       setInstrutorModalOpen(false);
-    } catch (err) {
-      setInstrutorError('Erro ao salvar no backend.');
-      showToast('Erro ao salvar instrutor no servidor.', 'error');
+    } catch (err: any) {
+      const msg = err.response?.data?.error || err.response?.data?.message || 'Erro ao salvar no backend.';
+      setInstrutorError(msg);
+      showToast(msg, 'error');
     }
   }
 
@@ -208,134 +212,162 @@ export function ManageSystemPage() {
       {/* Listagens em Grids de Cards Premium */}
       <div className="relative z-10 transition-all duration-300">
         
-        {activeTab === 'cursos' && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {cursos.length === 0 ? (
-              <div className="col-span-full glass-panel rounded-3xl py-12 text-center text-sm text-text-muted font-medium border border-border/80">
-                Nenhum curso cadastrado.
+        {activeTab === 'cursos' && (() => {
+          const filteredCursos = cursos.filter(c => 
+            c.nome.toLowerCase().includes(searchCurso.toLowerCase()) || 
+            (c.codigoTurmaPadrao && c.codigoTurmaPadrao.toLowerCase().includes(searchCurso.toLowerCase())) ||
+            (c.unidade && c.unidade.toLowerCase().includes(searchCurso.toLowerCase()))
+          );
+          return (
+            <div className="flex flex-col gap-6 w-full">
+              <div className="glass-panel rounded-2xl p-4 border border-border/75 flex items-center gap-3">
+                <input
+                  type="text"
+                  placeholder="🔍 Pesquisar cursos por nome, código da turma ou unidade..."
+                  value={searchCurso}
+                  onChange={e => setSearchCurso(e.target.value)}
+                  className="w-full bg-input text-text-main text-sm font-semibold outline-none border border-border rounded-xl p-3 focus:border-primary transition-all"
+                />
               </div>
-            ) : (
-              cursos.map(c => {
-                const instrutorNome = getNomeInstrutor(c.instrutorId);
-                const iniciais = instrutorNome.split(' ').slice(0, 2).map(n => n[0]).join('').toUpperCase();
-                
-                return (
-                  <div key={c.id} className="glass-panel rounded-3xl p-5 shadow-xs flex flex-col justify-between gap-5 border border-border/70 hover-glow-primary transition-all duration-300 group/card relative overflow-hidden">
-                    {/* Topo: Modalidade & Unidade */}
-                    <div className="flex justify-between items-start gap-2">
-                      <span className={`px-2.5 py-1 rounded-xl text-[10px] font-black border tracking-wider uppercase ${
-                        c.modalidade === 'Presencial' 
-                          ? 'bg-primary/10 text-primary border-primary/20'
-                          : c.modalidade === 'Remoto'
-                            ? 'bg-accent/10 text-accent border-accent/20 dark:text-light-accent'
-                            : 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20'
-                      }`}>
-                        {c.modalidade}
-                      </span>
-                      {c.unidade && (
-                        <span className="bg-surface/50 border border-border/80 text-text-muted font-bold px-2.5 py-0.5 rounded-lg text-[9px] tracking-wide uppercase">
-                          {c.unidade}
-                        </span>
-                      )}
-                    </div>
 
-                    {/* Nome do Curso */}
-                    <div className="flex flex-col gap-1">
-                      <span className="text-[9px] font-black text-text-muted uppercase tracking-widest">Nome do Curso</span>
-                      <h3 className="text-base font-black text-text-main leading-snug tracking-tight font-display group-hover/card:text-primary transition-colors">
-                        {c.nome}
-                      </h3>
-                      {c.codigoTurmaPadrao && (
-                        <span className="text-[10px] font-bold text-text-muted font-mono mt-1">
-                          Cód. Padrão: {c.codigoTurmaPadrao}
-                        </span>
-                      )}
-                    </div>
-
-                    {/* Info Instrutor */}
-                    <div className="flex items-center gap-3 pt-3.5 border-t border-border/50">
-                      {/* Avatar */}
-                      <div className="w-9 h-9 rounded-full bg-primary/10 border border-primary/20 text-primary font-black text-xs flex items-center justify-center tracking-tight shadow-xs uppercase shrink-0">
-                        {iniciais || '?'}
-                      </div>
-                      <div className="flex flex-col min-w-0">
-                        <span className="text-[9px] font-bold text-text-muted uppercase leading-none">Instrutor Principal</span>
-                        <span className="text-xs font-black text-text-main truncate mt-0.5">{instrutorNome}</span>
-                      </div>
-                    </div>
-
-                    {/* Ações do Card */}
-                    <div className="flex justify-end gap-2.5 mt-1 pt-3.5 border-t border-border/50">
-                      <button 
-                        onClick={() => openCursoEdit(c)}
-                        className="bg-card hover:bg-surface border border-border text-text-muted hover:text-text-main font-bold px-3 py-1.5 rounded-xl text-xs flex items-center gap-1 btn-tactile cursor-pointer shadow-xs"
-                      >
-                        <Edit size={12} /> Editar
-                      </button>
-                      <button 
-                        onClick={() => removeCurso(c.id)}
-                        className="bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 text-red-655 font-bold px-3 py-1.5 rounded-xl text-xs flex items-center gap-1 btn-tactile cursor-pointer shadow-xs"
-                      >
-                        <Trash2 size={12} /> Excluir
-                      </button>
-                    </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {filteredCursos.length === 0 ? (
+                  <div className="col-span-full glass-panel rounded-3xl py-12 text-center text-sm text-text-muted font-medium border border-border/80">
+                    Nenhum curso encontrado.
                   </div>
-                );
-              })
-            )}
-          </div>
-        )}
-
-        {activeTab === 'instrutores' && (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {instrutores.length === 0 ? (
-              <div className="col-span-full glass-panel rounded-3xl py-12 text-center text-sm text-text-muted font-medium border border-border/80">
-                Nenhum instrutor cadastrado.
-              </div>
-            ) : (
-              instrutores.map(i => {
-                const nameParts = i.nome.split(' ');
-                const iniciais = nameParts.length > 1 
-                  ? `${nameParts[0][0]}${nameParts[nameParts.length - 1][0]}`.toUpperCase()
-                  : nameParts[0].slice(0, 2).toUpperCase();
-
-                return (
-                  <div key={i.id} className="glass-panel rounded-3xl p-5 shadow-xs flex flex-col justify-between gap-5 border border-border/70 hover-glow-primary transition-all duration-300 group/card">
+                ) : (
+                  filteredCursos.map(c => {
+                    const instrutorNome = getNomeInstrutor(c.instrutorId);
+                    const iniciais = instrutorNome.split(' ').slice(0, 2).map(n => n[0]).join('').toUpperCase();
                     
-                    <div className="flex items-center gap-4">
-                      {/* Avatar Grande */}
-                      <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary/10 to-primary/20 border border-primary/20 text-primary font-black text-sm flex items-center justify-center shadow-xs shrink-0 uppercase font-display">
-                        {iniciais || '?'}
-                      </div>
-                      <div className="flex flex-col min-w-0">
-                        <span className="text-[9px] font-black text-text-muted uppercase tracking-widest font-mono">ID #{i.id}</span>
-                        <h3 className="text-base font-black text-text-main tracking-tight font-display truncate mt-0.5 group-hover/card:text-primary transition-colors">
-                          {i.nome}
-                        </h3>
-                      </div>
-                    </div>
+                    return (
+                      <div key={c.id} className="glass-panel rounded-3xl p-5 shadow-xs flex flex-col justify-between gap-5 border border-border/70 hover-glow-primary transition-all duration-300 group/card relative overflow-hidden">
+                        <div className="flex justify-between items-start gap-2">
+                          <span className={`px-2.5 py-1 rounded-xl text-[10px] font-black border tracking-wider uppercase ${
+                            c.modalidade === 'Presencial' 
+                              ? 'bg-primary/10 text-primary border-primary/20'
+                              : c.modalidade === 'Remoto'
+                                ? 'bg-accent/10 text-accent border-accent/20 dark:text-light-accent'
+                                : 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20'
+                          }`}>
+                            {c.modalidade}
+                          </span>
+                          {c.unidade && (
+                            <span className="bg-surface/50 border border-border/80 text-text-muted font-bold px-2.5 py-0.5 rounded-lg text-[9px] tracking-wide uppercase">
+                              {c.unidade}
+                            </span>
+                          )}
+                        </div>
 
-                    {/* Ações */}
-                    <div className="flex justify-end gap-2.5 pt-3.5 border-t border-border/50">
-                      <button 
-                        onClick={() => openInstrutorEdit(i)}
-                        className="bg-card hover:bg-surface border border-border text-text-muted hover:text-text-main font-bold px-3 py-1.5 rounded-xl text-xs flex items-center gap-1 btn-tactile cursor-pointer shadow-xs"
-                      >
-                        <Edit size={12} /> Editar
-                      </button>
-                      <button 
-                        onClick={() => removeInstrutor(i.id)}
-                        className="bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 text-red-655 font-bold px-3 py-1.5 rounded-xl text-xs flex items-center gap-1 btn-tactile cursor-pointer shadow-xs"
-                      >
-                        <Trash2 size={12} /> Excluir
-                      </button>
-                    </div>
+                        <div className="flex flex-col gap-1">
+                          <span className="text-[9px] font-black text-text-muted uppercase tracking-widest">Nome do Curso</span>
+                          <h3 className="text-base font-black text-text-main leading-snug tracking-tight font-display group-hover/card:text-primary transition-colors">
+                            {c.nome}
+                          </h3>
+                          {c.codigoTurmaPadrao && (
+                            <span className="text-[10px] font-bold text-text-muted font-mono mt-1">
+                              Cód. Padrão: {c.codigoTurmaPadrao}
+                            </span>
+                          )}
+                        </div>
+
+                        <div className="flex items-center gap-3 pt-3.5 border-t border-border/50">
+                          <div className="w-9 h-9 rounded-full bg-primary/10 border border-primary/20 text-primary font-black text-xs flex items-center justify-center tracking-tight shadow-xs uppercase shrink-0">
+                            {iniciais || '?'}
+                          </div>
+                          <div className="flex flex-col min-w-0">
+                            <span className="text-[9px] font-bold text-text-muted uppercase leading-none">Instrutor Principal</span>
+                            <span className="text-xs font-black text-text-main truncate mt-0.5">{instrutorNome}</span>
+                          </div>
+                        </div>
+
+                        <div className="flex justify-end gap-2.5 mt-1 pt-3.5 border-t border-border/50">
+                          <button 
+                            onClick={() => openCursoEdit(c)}
+                            className="bg-card hover:bg-surface border border-border text-text-muted hover:text-text-main font-bold px-3 py-1.5 rounded-xl text-xs flex items-center gap-1 btn-tactile cursor-pointer shadow-xs"
+                          >
+                            <Edit size={12} /> Editar
+                          </button>
+                          <button 
+                            onClick={() => removeCurso(c.id)}
+                            className="bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 text-red-655 font-bold px-3 py-1.5 rounded-xl text-xs flex items-center gap-1 btn-tactile cursor-pointer shadow-xs"
+                          >
+                            <Trash2 size={12} /> Excluir
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })
+                )}
+              </div>
+            </div>
+          );
+        })()}
+
+        {activeTab === 'instrutores' && (() => {
+          const filteredInstrutores = instrutores.filter(i => 
+            i.nome.toLowerCase().includes(searchInstrutor.toLowerCase())
+          );
+          return (
+            <div className="flex flex-col gap-6 w-full">
+              <div className="glass-panel rounded-2xl p-4 border border-border/75 flex items-center gap-3">
+                <input
+                  type="text"
+                  placeholder="🔍 Pesquisar instrutores pelo nome..."
+                  value={searchInstrutor}
+                  onChange={e => setSearchInstrutor(e.target.value)}
+                  className="w-full bg-input text-text-main text-sm font-semibold outline-none border border-border rounded-xl p-3 focus:border-primary transition-all"
+                />
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                {filteredInstrutores.length === 0 ? (
+                  <div className="col-span-full glass-panel rounded-3xl py-12 text-center text-sm text-text-muted font-medium border border-border/80">
+                    Nenhum instrutor encontrado.
                   </div>
-                );
-              })
-            )}
-          </div>
-        )}
+                ) : (
+                  filteredInstrutores.map(i => {
+                    const nameParts = i.nome.split(' ');
+                    const iniciais = nameParts.length > 1 
+                      ? `${nameParts[0][0]}${nameParts[nameParts.length - 1][0]}`.toUpperCase()
+                      : nameParts[0].slice(0, 2).toUpperCase();
+
+                    return (
+                      <div key={i.id} className="glass-panel rounded-3xl p-5 shadow-xs flex flex-col justify-between gap-5 border border-border/70 hover-glow-primary transition-all duration-300 group/card">
+                        <div className="flex items-center gap-4">
+                          <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary/10 to-primary/20 border border-primary/20 text-primary font-black text-sm flex items-center justify-center shadow-xs shrink-0 uppercase font-display">
+                            {iniciais || '?'}
+                          </div>
+                          <div className="flex flex-col min-w-0">
+                            <span className="text-[9px] font-black text-text-muted uppercase tracking-widest font-mono">ID #{i.id}</span>
+                            <h3 className="text-base font-black text-text-main tracking-tight font-display truncate mt-0.5 group-hover/card:text-primary transition-colors">
+                              {i.nome}
+                            </h3>
+                          </div>
+                        </div>
+
+                        <div className="flex justify-end gap-2.5 pt-3.5 border-t border-border/50">
+                          <button 
+                            onClick={() => openInstrutorEdit(i)}
+                            className="bg-card hover:bg-surface border border-border text-text-muted hover:text-text-main font-bold px-3 py-1.5 rounded-xl text-xs flex items-center gap-1 btn-tactile cursor-pointer shadow-xs"
+                          >
+                            <Edit size={12} /> Editar
+                          </button>
+                          <button 
+                            onClick={() => removeInstrutor(i.id)}
+                            className="bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 text-red-655 font-bold px-3 py-1.5 rounded-xl text-xs flex items-center gap-1 btn-tactile cursor-pointer shadow-xs"
+                          >
+                            <Trash2 size={12} /> Excluir
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })
+                )}
+              </div>
+            </div>
+          );
+        })()}
 
         {activeTab === 'salas' && (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">

@@ -43,9 +43,9 @@ export const CalculadoraService = {
 
 export const TurmaService = {
   getAll: () => api.get('/turmas').then(res => res.data),
-  alocar: (data: { id_cursos: number, id_salas: number, data_inicio: string, fk_id_turno: number, total_alunos: number, codigo_turma: string, dias_semana: string[] }) => 
+  alocar: (data: { id_cursos: number, id_salas: number, data_inicio: string, fk_id_turno: number, total_alunos: number, codigo_turma: string, dias_semana: string[], id_instrutores?: number }) => 
     api.post('/turmas/alocar', data).then(res => res.data),
-  reallocar: (id: number, data: { id_salas: number, data_inicio: string, fk_id_turno: number, dias_semana: string[] }) =>
+  reallocar: (id: number, data: { id_salas: number, data_inicio: string, fk_id_turno: number, dias_semana: string[], id_instrutores?: number }) =>
     api.put(`/turmas/${id}/reallocar`, data).then(res => res.data),
   delete: (id: number) => api.delete(`/turmas/${id}`).then(res => res.data),
   
