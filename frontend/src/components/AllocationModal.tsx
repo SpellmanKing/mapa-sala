@@ -1,10 +1,13 @@
 import React, { useEffect, useMemo } from 'react';
 import { TipoSala, Instrutor, Modality } from '../context/AppContext';
+import { Loader2 } from 'lucide-react';
 import Select from 'react-select';
 
 export type CursoPayload = {
   id?: string;
   nome: string;
+  cargaHoraria: number;
+  segmento: string;
   instrutorId: string;
   unidade: string;
   diasSemanaLetiva: string[];
@@ -24,6 +27,7 @@ type Props = {
   setForm: React.Dispatch<React.SetStateAction<CursoPayload>>;
   ambientes: TipoSala[];
   instrutores: Instrutor[];
+  isSaving?: boolean;
 };
 
 export function AllocationModal({
@@ -35,7 +39,8 @@ export function AllocationModal({
   form,
   setForm,
   ambientes,
-  instrutores
+  instrutores,
+  isSaving = false
 }: Props) {
 
   const instrutorOptions = useMemo(() => {
@@ -46,13 +51,13 @@ export function AllocationModal({
     if (!open) return;
 
     function onKeyDown(e: KeyboardEvent) {
-      if (e.key === 'Escape') onClose();
-      if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) onSave();
+      if (e.key === 'Escape' && !isSaving) onClose();
+      if (e.key === 'Enter' && (e.ctrlKey || e.metaKey) && !isSaving) onSave();
     }
 
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
-  }, [open, onClose, onSave]);
+  }, [open, onClose, onSave, isSaving]);
 
   if (!open) return null;
 
@@ -60,9 +65,6 @@ export function AllocationModal({
     <div
       role="dialog"
       aria-modal="true"
-      onMouseDown={(e) => {
-        if (e.target === e.currentTarget) onClose();
-      }}
       className="fixed inset-0 bg-slate-950/60 backdrop-blur-md flex items-center justify-center p-4 z-[999] overflow-hidden"
     >
       <div className="glass-panel rounded-2xl shadow-2xl w-full max-w-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200 flex flex-col max-h-[90vh] transition-all duration-300">
@@ -171,6 +173,50 @@ export function AllocationModal({
                 <option value="" disabled className="bg-card text-text-main">Selecione a unidade...</option>
                 {['Cep Talal', 'Polo Recanto', 'Colégio CED 308', 'Colégio CEM 111', 'Colégio CEM 12', 'Colégio CED 11', 'Colégio CED 7'].map(u => (
                   <option key={u} value={u} className="bg-card text-text-main">{u}</option>
+                ))}
+              </select>
+            </div>
+
+            {/* Carga Horária */}
+            <div>
+              <label className="block text-xs font-black text-text-muted uppercase tracking-widest mb-1.5">
+                Carga Horária (Horas)
+              </label>
+              <input
+                type="number"
+                min="1"
+                step="1"
+                value={form.cargaHoraria || ''}
+                onChange={(e) => setForm((prev) => ({ ...prev, cargaHoraria: Math.max(1, Number(e.target.value)) }))}
+                placeholder="Ex: 160"
+                className="w-full border border-border rounded-xl p-3 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none text-sm font-semibold transition-all bg-input text-text-main"
+                required
+              />
+            </div>
+
+            {/* Segmento */}
+            <div>
+              <label className="block text-xs font-black text-text-muted uppercase tracking-widest mb-1.5">
+                Segmento / Área
+              </label>
+              <select
+                value={form.segmento || 'Tecnologia da Informação'}
+                onChange={(e) => setForm((prev) => ({ ...prev, segmento: e.target.value }))}
+                className="w-full border border-border rounded-xl p-3 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none text-sm font-semibold transition-all bg-input text-text-main cursor-pointer"
+                required
+              >
+                {[
+                  'Tecnologia da Informação',
+                  'Gestão e Negócios',
+                  'Saúde',
+                  'Beleza e Estética',
+                  'Gastronomia',
+                  'Moda',
+                  'Design e Artes',
+                  'Idiomas',
+                  'Educacional / Geral'
+                ].map(s => (
+                  <option key={s} value={s} className="bg-card text-text-main">{s}</option>
                 ))}
               </select>
             </div>
@@ -375,16 +421,24 @@ export function AllocationModal({
           <div className="flex justify-end gap-3 mt-4 pt-4 border-t border-border/60 shrink-0">
             <button 
               type="button" 
+              disabled={isSaving}
               onClick={onClose} 
-              className="px-5 py-2.5 text-sm font-bold text-text-muted hover:text-text-main hover:bg-surface/50 rounded-xl btn-tactile cursor-pointer"
+              className="px-5 py-2.5 text-sm font-bold text-text-muted hover:text-text-main hover:bg-surface/50 rounded-xl btn-tactile cursor-pointer disabled:opacity-50"
             >
               Cancelar
             </button>
             <button 
               type="submit" 
-              className="bg-primary text-white font-black py-2.5 px-6 rounded-xl shadow-md hover:shadow-lg hover:shadow-primary/20 btn-tactile cursor-pointer text-sm"
+              disabled={isSaving}
+              className="bg-primary text-white font-black py-2.5 px-6 rounded-xl shadow-md hover:shadow-lg hover:shadow-primary/20 btn-tactile cursor-pointer text-sm flex items-center gap-2 disabled:opacity-50"
             >
-              Salvar Curso
+              {isSaving ? (
+                <>
+                  <Loader2 size={16} className="animate-spin" /> Salvando...
+                </>
+              ) : (
+                'Salvar Curso'
+              )}
             </button>
           </div>
 
