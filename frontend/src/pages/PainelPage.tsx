@@ -292,16 +292,29 @@ export function PainelPage() {
     ? (totalSalas > 10 ? "max-w-[105px]" : "max-w-[125px]") 
     : "max-w-[130px]";
 
-  const [autoZoom, setAutoZoom] = useState(100);
+  const [autoZoom, setAutoZoom] = useState(() => {
+    const saved = localStorage.getItem('sgst_tv_zoom');
+    return saved ? Number(saved) : 63;
+  });
   const tableRef = useRef<HTMLDivElement>(null);
+
+  const handleSetTvZoom = (newZoom: number) => {
+    const clamped = Math.max(30, Math.min(100, newZoom));
+    setAutoZoom(clamped);
+    localStorage.setItem('sgst_tv_zoom', String(clamped));
+  };
 
   useEffect(() => {
     if (!modoTV) {
       setAutoZoom(100);
       return;
     }
-    // Zoom travado em 63% conforme solicitado pelo usuário para TV de 60 polegadas
-    setAutoZoom(63);
+    const saved = localStorage.getItem('sgst_tv_zoom');
+    if (saved) {
+      setAutoZoom(Number(saved));
+    } else {
+      setAutoZoom(63);
+    }
   }, [modoTV]);
 
   const obterTaxaOcupacao = () => {
@@ -533,6 +546,51 @@ export function PainelPage() {
             {/* Indicador de Ocupação de Salas */}
             <div className="flex items-center gap-1.5 bg-emerald-500/10 dark:bg-emerald-500/15 border border-emerald-500/20 px-3 py-1.5 rounded-xl text-emerald-600 dark:text-emerald-400 shadow-xs select-none shrink-0 text-xs font-black uppercase tracking-wider">
               Ocupação: {obterTaxaOcupacao()}%
+            </div>
+
+            {/* Seletor Rápido de Calibragem TV */}
+            <div className="flex items-center gap-1 bg-surface/80 border border-border px-2 py-1 rounded-xl shadow-xs text-xs font-bold">
+              <span className="text-text-muted text-[10px] uppercase font-black px-1">Escala TV:</span>
+              <button 
+                onClick={() => handleSetTvZoom(60)}
+                className={`px-2 py-0.5 rounded-lg text-[10px] font-black transition-all cursor-pointer ${autoZoom === 60 ? 'bg-primary text-white shadow-xs' : 'text-text-muted hover:text-text-main'}`}
+                title="Ideal para TV 55 polegadas"
+              >
+                55" (60%)
+              </button>
+              <button 
+                onClick={() => handleSetTvZoom(63)}
+                className={`px-2 py-0.5 rounded-lg text-[10px] font-black transition-all cursor-pointer ${autoZoom === 63 ? 'bg-primary text-white shadow-xs' : 'text-text-muted hover:text-text-main'}`}
+                title="Ideal para TV 60 polegadas"
+              >
+                60" (63%)
+              </button>
+              <button 
+                onClick={() => handleSetTvZoom(68)}
+                className={`px-2 py-0.5 rounded-lg text-[10px] font-black transition-all cursor-pointer ${autoZoom === 68 ? 'bg-primary text-white shadow-xs' : 'text-text-muted hover:text-text-main'}`}
+                title="Ideal para TV 65 polegadas"
+              >
+                65" (68%)
+              </button>
+              <div className="flex items-center border-l border-border/60 pl-1 ml-1 gap-0.5">
+                <button
+                  onClick={() => handleSetTvZoom(autoZoom - 2)}
+                  className="w-5 h-5 flex items-center justify-center rounded hover:bg-card text-text-muted hover:text-text-main font-black cursor-pointer"
+                  title="Diminuir Zoom (-2%)"
+                >
+                  -
+                </button>
+                <span className="text-[10px] font-mono font-black text-primary px-1 min-w-[28px] text-center">
+                  {autoZoom}%
+                </span>
+                <button
+                  onClick={() => handleSetTvZoom(autoZoom + 2)}
+                  className="w-5 h-5 flex items-center justify-center rounded hover:bg-card text-text-muted hover:text-text-main font-black cursor-pointer"
+                  title="Aumentar Zoom (+2%)"
+                >
+                  +
+                </button>
+              </div>
             </div>
             
             <button

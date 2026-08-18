@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "skills": {
+    "stitch::react-native": {
+      "source": "google-labs-code/stitch-skills",
+      "sourceType": "github",
+      "skillPath": "skills/react-native/SKILL.md",
+      "computedHash": "067609acd3702efe0869b3d561b22901d4bd93bec8510ac91538bda37546f205"
+    }
+  }
+}
