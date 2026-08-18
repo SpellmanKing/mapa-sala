@@ -7,15 +7,16 @@ const calculadoraService = new CalculadoraService();
 export const calculadoraRouter = Router();
 
 calculadoraRouter.post('/', asyncHandler(async (req: Request, res: Response) => {
-  const { cargaHoraria, dataInicio, diasSemana } = req.body;
+  const { cargaHoraria, dataInicio, diasSemana, horasPorDia } = req.body;
   if (!cargaHoraria || !dataInicio || !diasSemana || !Array.isArray(diasSemana)) {
-    return res.status(400).json({ error: 'Parâmetros inválidos. Necessário cargaHoraria, dataInicio, e diasSemana.' });
+    return res.status(400).json({ error: 'Parâmetros inválidos. Necessário cargaHoraria, dataInicio e diasSemana.' });
   }
 
   const resultado = await calculadoraService.calcularCronograma(
     Number(cargaHoraria),
-    new Date(dataInicio),
-    diasSemana
+    dataInicio,
+    diasSemana,
+    horasPorDia ? Number(horasPorDia) : 4
   );
 
   res.json(resultado);

@@ -111,7 +111,7 @@ export class TurmaService {
           codigo_turma: codigoTurmaFinal,
           fk_id_turno: idTurnoReal,
           data_inicio: new Date(data.data_inicio),
-          data_termino: new Date(cronograma.dataTermino),
+          data_termino: new Date(cronograma.dataTermino || data.data_inicio),
           total_alunos: data.total_alunos,
           fk_id_status: idStatusReal,
           dias_semana: diasSemana.join(','),
@@ -176,7 +176,7 @@ export class TurmaService {
         data: {
           fk_id_turno: idTurnoReal,
           data_inicio: new Date(data.data_inicio),
-          data_termino: new Date(cronograma.dataTermino),
+          data_termino: new Date(cronograma.dataTermino || data.data_inicio),
           dias_semana: diasSemana.join(','),
           ...(data.id_instrutores !== undefined ? { id_instrutores: data.id_instrutores } : {})
         }

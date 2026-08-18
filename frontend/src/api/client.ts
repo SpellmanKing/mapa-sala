@@ -40,7 +40,7 @@ export const InstrutorService = {
 };
 
 export const CalculadoraService = {
-  calcularCronograma: (data: { cargaHoraria: number, dataInicio: string, diasSemana: string[] }) => 
+  calcularCronograma: (data: { cargaHoraria: number; dataInicio: string; diasSemana: string[]; horasPorDia?: number }) => 
     api.post('/calcular_cronograma', data).then(res => res.data)
 };
 
