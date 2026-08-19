@@ -5,7 +5,7 @@ interface Props {
   open: boolean;
   title: string;
   itemName: string;
-  itemType: 'curso' | 'instrutor' | 'sala' | 'item';
+  itemType: 'curso' | 'instrutor' | 'sala' | 'turma' | 'alocação' | 'item';
   activeTurmasCount?: number;
   onConfirm: () => void;
   onClose: () => void;
