@@ -990,7 +990,7 @@ export function PainelPage() {
                       </p>
                     </div>
                   ) : (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4.5">
                       {turmasDoTurno.map((turma) => {
                         const sala = getSalaInfo(turma.salaId);
                         const { presencial, remoto } = formatDiasSemanaSeparados(turma.diasSemana, turma.diasRemotos);
@@ -1004,24 +1004,24 @@ export function PainelPage() {
                           <div
                             key={turma.id}
                             onClick={() => handleEditClick(turma)}
-                            className={`glass-panel rounded-2xl p-4 shadow-xs border border-border/80 hover:border-primary/50 hover-glow-primary transition-all duration-200 cursor-pointer flex flex-col justify-between gap-3 group/card ${
+                            className={`glass-panel rounded-3xl p-5 shadow-xs border border-border/80 hover:border-primary/50 hover-glow-primary transition-all duration-200 cursor-pointer flex flex-col justify-between gap-3.5 group/card bg-card/60 ${
                               isHighlighted ? 'ring-2 ring-primary ring-offset-2 ring-offset-bg shadow-md' : ''
                             }`}
                           >
-                            {/* 1. CÓDIGO DA TURMA & BADGES */}
+                            {/* 1. CÓDIGO DA TURMA (Nº DA TURMA DESTACADO) & BADGES */}
                             <div className="flex items-center justify-between gap-2 shrink-0">
-                              <span className="text-[11px] font-black tracking-wider px-2.5 py-0.5 rounded-lg border border-border bg-surface text-text-muted font-mono shadow-3xs">
+                              <span className="text-xs md:text-sm font-black tracking-wider px-3 py-1 rounded-xl border border-primary/25 bg-primary/10 text-primary font-mono shadow-xs">
                                 {turma.codigo}
                               </span>
                               
                               <div className="flex items-center gap-1.5 flex-wrap">
                                 {turma.cursoTem && (
-                                  <span className="text-[9px] font-black bg-primary text-white px-2 py-0.5 rounded-md uppercase tracking-wider">
+                                  <span className="text-[9px] font-black bg-primary text-white px-2 py-0.5 rounded-md uppercase tracking-wider shadow-3xs">
                                     TEM
                                   </span>
                                 )}
                                 {isRemoto && (
-                                  <span className="text-[9px] font-bold bg-amber-500 text-white px-2 py-0.5 rounded-md uppercase tracking-wider">
+                                  <span className="text-[9px] font-bold bg-amber-500 text-white px-2 py-0.5 rounded-md uppercase tracking-wider shadow-3xs">
                                     Remoto
                                   </span>
                                 )}
@@ -1035,7 +1035,7 @@ export function PainelPage() {
 
                             {/* 2. NOME DO CURSO */}
                             <div className="flex flex-col gap-1">
-                              <h3 className="text-sm font-black text-text-main font-display leading-snug group-hover/card:text-primary transition-colors line-clamp-2">
+                              <h3 className="text-base font-black text-text-main font-display leading-tight group-hover/card:text-primary transition-colors line-clamp-2">
                                 {turma.cursoNome}
                               </h3>
                               {turma.unidade && (
@@ -1045,54 +1045,56 @@ export function PainelPage() {
                               )}
                             </div>
 
-                            {/* 3. DATA DE INÍCIO E TÉRMINO */}
-                            <div className="flex items-center gap-1.5 text-xs font-bold text-text-muted bg-surface/40 p-2 rounded-xl border border-border/60">
-                              <CalendarIcon className="w-3.5 h-3.5 text-primary shrink-0" />
-                              <span className="font-mono text-[11px]">
-                                {formatDataCurta(turma.dataInicio)} a {formatDataCurta(turma.dataFim)}
+                            {/* 3. DATA DE INÍCIO E FIM */}
+                            <div className="flex items-center gap-2 text-xs font-bold text-text-muted bg-surface/60 px-3 py-2 rounded-xl border border-border/60">
+                              <CalendarIcon className="w-4 h-4 text-primary shrink-0 opacity-80" />
+                              <span className="font-mono text-xs">
+                                {formatDataCurta(turma.dataInicio)} - {formatDataCurta(turma.dataFim)}
                               </span>
                             </div>
 
-                            {/* 4. DIAS LETIVOS (PRESENCIAL E REMOTO SEPARADOS) */}
-                            <div className="flex flex-col gap-1 text-[11px] font-semibold border-l-2 border-primary/50 pl-2">
+                            {/* 4. DIAS LETIVOS DE AULA (MOSTRANDO PRESENCIAL E REMOTO) */}
+                            <div className="flex flex-col gap-1 text-xs font-bold border-l-3 border-primary pl-2.5 py-0.5 my-0.5">
                               {presencial && (
-                                <div className="text-text-main">
-                                  <span className="text-text-muted font-bold">Presencial:</span> <strong>{presencial}</strong>
+                                <div className="text-text-main flex items-baseline gap-1.5">
+                                  <span className="text-text-muted text-[11px] font-bold">Presencial:</span>
+                                  <span className="font-black text-primary">{presencial}</span>
                                 </div>
                               )}
                               {remoto && (
-                                <div className="text-amber-700 dark:text-amber-300">
-                                  <span className="font-bold">Remoto:</span> <strong>{remoto}</strong>
+                                <div className="text-amber-700 dark:text-amber-300 flex items-baseline gap-1.5">
+                                  <span className="text-amber-600/70 text-[11px] font-bold">Remoto:</span>
+                                  <span className="font-black">{remoto}</span>
                                 </div>
                               )}
                             </div>
 
-                            {/* 5. AMBIENTE / SALA ALOCADA */}
-                            <div className="bg-primary/10 border border-primary/20 text-primary px-3 py-2 rounded-xl font-black text-xs flex items-center justify-between gap-1.5 font-display shadow-3xs">
-                              <div className="flex items-center gap-1.5 truncate">
-                                <MapPin size={13} className="shrink-0 text-primary" />
+                            {/* 5. AMBIENTE EM QUE A TURMA ESTÁ ALOCADA */}
+                            <div className="bg-primary/10 border border-primary/20 text-primary px-3.5 py-2.5 rounded-2xl font-black text-xs flex items-center justify-between gap-2 font-display shadow-3xs">
+                              <div className="flex items-center gap-2 truncate">
+                                <MapPin size={14} className="shrink-0 text-primary" />
                                 <span className="truncate">{sala?.nome || 'Ambiente não atribuído'}</span>
                               </div>
                               {sala?.capacidade && (
-                                <span className="text-[10px] font-mono text-primary/80 shrink-0">
+                                <span className="text-[10px] font-mono text-primary/80 shrink-0 bg-primary/15 px-2 py-0.5 rounded-md">
                                   Cap: {sala.capacidade}
                                 </span>
                               )}
                             </div>
 
                             {/* 6. NOME DO PROFESSOR */}
-                            <div className="flex items-center gap-2 text-xs font-bold text-text-main pt-2 border-t border-dashed border-border/60">
-                              <Users className="w-3.5 h-3.5 text-text-muted shrink-0" />
-                              <span className="truncate">{turma.instrutorNome || 'Sem Instrutor'}</span>
+                            <div className="flex items-center gap-2 text-xs font-bold text-text-main pt-2.5 border-t border-dashed border-border/60">
+                              <Users className="w-4 h-4 text-text-muted shrink-0 opacity-80" />
+                              <span className="truncate font-semibold">{turma.instrutorNome || 'Sem Instrutor'}</span>
                             </div>
 
                             {/* 7. PROGRESSO DA TURMA */}
                             <div className="flex flex-col gap-1.5 pt-1">
-                              <div className="flex justify-between items-center text-[10px] font-black text-text-muted">
+                              <div className="flex justify-between items-center text-[11px] font-black text-text-muted">
                                 <span>{concluidas}/{total} aulas concluídas</span>
-                                <span className="font-mono text-primary">{porcentagem}%</span>
+                                <span className="font-mono text-primary font-black">{porcentagem}%</span>
                               </div>
-                              <div className="w-full h-1.5 rounded-full overflow-hidden bg-border/40 relative">
+                              <div className="w-full h-2 rounded-full overflow-hidden bg-border/40 relative">
                                 <div 
                                   className="absolute inset-y-0 left-0 bg-primary transition-all duration-500 rounded-full"
                                   style={{ width: `${porcentagem}%` }}
