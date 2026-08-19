@@ -990,7 +990,11 @@ export function PainelPage() {
                       </p>
                     </div>
                   ) : (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4.5">
+                    <div className={
+                      modoTV 
+                        ? "grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-4" 
+                        : "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4.5"
+                    }>
                       {turmasDoTurno.map((turma) => {
                         const sala = getSalaInfo(turma.salaId);
                         const { presencial, remoto } = formatDiasSemanaSeparados(turma.diasSemana, turma.diasRemotos);
@@ -1000,11 +1004,25 @@ export function PainelPage() {
                         const isSemInstrutor = !turma.instrutorNome || turma.instrutorNome.toLowerCase().includes('sem instrutor');
                         const isHighlighted = searchTurma.trim() && isTurmaMatchingSearch(turma);
 
+                        // Estilos exclusivos para o Modo TV
+                        const cardProportionClass = modoTV 
+                          ? "aspect-[4/3.8] min-h-[320px] p-5.5 gap-3" 
+                          : "p-5 gap-3.5";
+                        const progressoFontClass = modoTV 
+                          ? "text-sm font-black text-text-muted" 
+                          : "text-[11px] font-black text-text-muted";
+                        const progressoPercentClass = modoTV 
+                          ? "text-base md:text-lg font-mono text-primary font-black" 
+                          : "text-[11px] font-mono text-primary font-black";
+                        const progressBarHeightClass = modoTV 
+                          ? "w-full h-3.5 md:h-4 rounded-full overflow-hidden bg-border/40 relative shadow-inner" 
+                          : "w-full h-2 rounded-full overflow-hidden bg-border/40 relative";
+
                         return (
                           <div
                             key={turma.id}
                             onClick={() => handleEditClick(turma)}
-                            className={`glass-panel rounded-3xl p-5 shadow-xs border border-border/80 hover:border-primary/50 hover-glow-primary transition-all duration-200 cursor-pointer flex flex-col justify-between gap-3.5 group/card bg-card/60 ${
+                            className={`glass-panel rounded-3xl shadow-xs border border-border/80 hover:border-primary/50 hover-glow-primary transition-all duration-200 cursor-pointer flex flex-col justify-between group/card bg-card/60 ${cardProportionClass} ${
                               isHighlighted ? 'ring-2 ring-primary ring-offset-2 ring-offset-bg shadow-md' : ''
                             }`}
                           >
@@ -1090,11 +1108,11 @@ export function PainelPage() {
 
                             {/* 7. PROGRESSO DA TURMA */}
                             <div className="flex flex-col gap-1.5 pt-1">
-                              <div className="flex justify-between items-center text-[11px] font-black text-text-muted">
-                                <span>{concluidas}/{total} aulas concluídas</span>
-                                <span className="font-mono text-primary font-black">{porcentagem}%</span>
+                              <div className="flex justify-between items-center">
+                                <span className={progressoFontClass}>{concluidas}/{total} aulas concluídas</span>
+                                <span className={progressoPercentClass}>{porcentagem}%</span>
                               </div>
-                              <div className="w-full h-2 rounded-full overflow-hidden bg-border/40 relative">
+                              <div className={progressBarHeightClass}>
                                 <div 
                                   className="absolute inset-y-0 left-0 bg-primary transition-all duration-500 rounded-full"
                                   style={{ width: `${porcentagem}%` }}
