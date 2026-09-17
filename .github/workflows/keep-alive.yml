@@ -1,0 +1,23 @@
+name: Keep Alive (Render + Supabase)
+
+on:
+  schedule:
+    # Executa a cada 14 minutos de segunda a sexta entre 07:00 e 22:00 BRT (10:00 a 01:00 UTC)
+    - cron: '*/14 10-23 * * 1-5'
+    # Executa 1 vez por dia nos fins de semana para evitar pausa do Supabase (7 dias)
+    - cron: '0 12 * * 0,6'
+  workflow_dispatch:
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping Backend Health Check
+        run: |
+          URL="${{ secrets.API_HEALTH_URL }}"
+          if [ -n "$URL" ]; then
+            echo "Enviando ping para $URL/health..."
+            curl -s -f "$URL/health" || echo "Ping retornou status diferente de 200, mas acordou o servidor."
+          else
+            echo "API_HEALTH_URL não configurada nos secrets do GitHub (Configure quando o Render estiver publicado)."
+          fi

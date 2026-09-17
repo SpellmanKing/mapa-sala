@@ -102,37 +102,39 @@ export class TurmaService {
     });
     const idStatusReal = statusPlanejada ? statusPlanejada.id_status : 7;
 
-    // Cria a Turma
-    const turma = await prisma.turma.create({
-      data: {
-        id_cursos: data.id_cursos,
-        id_instrutores: data.id_instrutores !== undefined ? data.id_instrutores : curso.id_instrutor_padrao,
-        codigo_turma: codigoTurmaFinal,
-        fk_id_turno: idTurnoReal,
-        data_inicio: new Date(data.data_inicio),
-        data_termino: new Date(cronograma.dataTermino),
-        total_alunos: data.total_alunos,
-        fk_id_status: idStatusReal,
-        dias_semana: diasSemana.join(','),
-      }
-    });
+    return prisma.$transaction(async (tx) => {
+      // Cria a Turma
+      const turma = await tx.turma.create({
+        data: {
+          id_cursos: data.id_cursos,
+          id_instrutores: data.id_instrutores !== undefined ? data.id_instrutores : curso.id_instrutor_padrao,
+          codigo_turma: codigoTurmaFinal,
+          fk_id_turno: idTurnoReal,
+          data_inicio: new Date(data.data_inicio),
+          data_termino: new Date(cronograma.dataTermino || data.data_inicio),
+          total_alunos: data.total_alunos,
+          fk_id_status: idStatusReal,
+          dias_semana: diasSemana.join(','),
+        }
+      });
 
-    // Cria os Agendamentos
-    const agendamentosParaCriar = cronograma.datasAulas.map(dataAula => ({
-      id_turmas: turma.id_turmas,
-      id_salas: data.id_salas,
-      data_aula: new Date(dataAula),
-    }));
+      // Cria os Agendamentos
+      const agendamentosParaCriar = cronograma.datasAulas.map(dataAula => ({
+        id_turmas: turma.id_turmas,
+        id_salas: data.id_salas,
+        data_aula: new Date(dataAula),
+      }));
 
-    await prisma.agendamento.createMany({
-      data: agendamentosParaCriar
-    });
+      await tx.agendamento.createMany({
+        data: agendamentosParaCriar
+      });
 
-    return prisma.turma.findUnique({
-      where: { id_turmas: turma.id_turmas },
-      include: {
-        agendamentos: true
-      }
+      return tx.turma.findUnique({
+        where: { id_turmas: turma.id_turmas },
+        include: {
+          agendamentos: true
+        }
+      });
     });
   }
 
@@ -166,30 +168,32 @@ export class TurmaService {
       throw new HttpError(409, `Conflito: O ambiente ${conflito.sala.nome_sala} já está ocupado neste turno no dia ${dataFormatada}.`);
     }
 
-    await prisma.agendamento.deleteMany({ where: { id_turmas } });
-    
-    await prisma.turma.update({
-      where: { id_turmas },
-      data: {
-        fk_id_turno: idTurnoReal,
-        data_inicio: new Date(data.data_inicio),
-        data_termino: new Date(cronograma.dataTermino),
-        dias_semana: diasSemana.join(','),
-        ...(data.id_instrutores !== undefined ? { id_instrutores: data.id_instrutores } : {})
-      }
-    });
+    return prisma.$transaction(async (tx) => {
+      await tx.agendamento.deleteMany({ where: { id_turmas } });
+      
+      await tx.turma.update({
+        where: { id_turmas },
+        data: {
+          fk_id_turno: idTurnoReal,
+          data_inicio: new Date(data.data_inicio),
+          data_termino: new Date(cronograma.dataTermino || data.data_inicio),
+          dias_semana: diasSemana.join(','),
+          ...(data.id_instrutores !== undefined ? { id_instrutores: data.id_instrutores } : {})
+        }
+      });
 
-    const agendamentosParaCriar = datas.map(dataAula => ({
-      id_turmas,
-      id_salas: data.id_salas,
-      data_aula: dataAula,
-    }));
+      const agendamentosParaCriar = datas.map(dataAula => ({
+        id_turmas,
+        id_salas: data.id_salas,
+        data_aula: dataAula,
+      }));
 
-    await prisma.agendamento.createMany({ data: agendamentosParaCriar });
+      await tx.agendamento.createMany({ data: agendamentosParaCriar });
 
-    return prisma.turma.findUnique({
-      where: { id_turmas },
-      include: { agendamentos: true }
+      return tx.turma.findUnique({
+        where: { id_turmas },
+        include: { agendamentos: true }
+      });
     });
   }
 

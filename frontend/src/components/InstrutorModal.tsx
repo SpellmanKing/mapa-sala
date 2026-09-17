@@ -1,4 +1,5 @@
 import React, { useEffect } from 'react';
+import { Loader2 } from 'lucide-react';
 
 export type InstrutorPayload = {
   id?: string;
@@ -13,20 +14,21 @@ type Props = {
   onSave: () => void;
   form: InstrutorPayload;
   setForm: React.Dispatch<React.SetStateAction<InstrutorPayload>>;
+  isSaving?: boolean;
 };
 
-export function InstrutorModal({ open, title, error, onClose, onSave, form, setForm }: Props) {
+export function InstrutorModal({ open, title, error, onClose, onSave, form, setForm, isSaving = false }: Props) {
   useEffect(() => {
     if (!open) return;
 
     function onKeyDown(e: KeyboardEvent) {
-      if (e.key === 'Escape') onClose();
-      if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) onSave();
+      if (e.key === 'Escape' && !isSaving) onClose();
+      if (e.key === 'Enter' && (e.ctrlKey || e.metaKey) && !isSaving) onSave();
     }
 
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
-  }, [open, onClose, onSave]);
+  }, [open, onClose, onSave, isSaving]);
 
   if (!open) return null;
 
@@ -34,9 +36,6 @@ export function InstrutorModal({ open, title, error, onClose, onSave, form, setF
     <div
       role="dialog"
       aria-modal="true"
-      onMouseDown={(e) => {
-        if (e.target === e.currentTarget) onClose();
-      }}
       className="fixed inset-0 bg-slate-950/60 backdrop-blur-md flex items-center justify-center p-4 z-[999] overflow-hidden"
     >
       <div className="glass-panel rounded-2xl shadow-2xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in-95 duration-200 flex flex-col transition-all duration-300">
@@ -48,8 +47,9 @@ export function InstrutorModal({ open, title, error, onClose, onSave, form, setF
           </div>
           <button
             type="button"
+            disabled={isSaving}
             onClick={onClose}
-            className="text-text-muted hover:text-text-main hover:bg-surface/60 p-2 rounded-xl transition-all font-black text-lg leading-none btn-tactile cursor-pointer"
+            className="text-text-muted hover:text-text-main hover:bg-surface/60 p-2 rounded-xl transition-all font-black text-lg leading-none btn-tactile cursor-pointer disabled:opacity-50"
           >
             ×
           </button>
@@ -82,16 +82,24 @@ export function InstrutorModal({ open, title, error, onClose, onSave, form, setF
           <div className="flex justify-end gap-3 mt-4 pt-4 border-t border-border/60 shrink-0">
             <button 
               type="button" 
+              disabled={isSaving}
               onClick={onClose} 
-              className="px-5 py-2.5 text-sm font-bold text-text-muted hover:text-text-main hover:bg-surface/50 rounded-xl btn-tactile cursor-pointer"
+              className="px-5 py-2.5 text-sm font-bold text-text-muted hover:text-text-main hover:bg-surface/50 rounded-xl btn-tactile cursor-pointer disabled:opacity-50"
             >
               Cancelar
             </button>
             <button 
               type="submit" 
-              className="bg-primary text-white font-black py-2.5 px-6 rounded-xl shadow-md hover:shadow-lg hover:shadow-primary/20 btn-tactile cursor-pointer text-sm"
+              disabled={isSaving}
+              className="bg-primary text-white font-black py-2.5 px-6 rounded-xl shadow-md hover:shadow-lg hover:shadow-primary/20 btn-tactile cursor-pointer text-sm flex items-center gap-2 disabled:opacity-50"
             >
-              Salvar Instrutor
+              {isSaving ? (
+                <>
+                  <Loader2 size={16} className="animate-spin" /> Salvando...
+                </>
+              ) : (
+                'Salvar Instrutor'
+              )}
             </button>
           </div>
 
@@ -100,3 +108,4 @@ export function InstrutorModal({ open, title, error, onClose, onSave, form, setF
     </div>
   );
 }
+

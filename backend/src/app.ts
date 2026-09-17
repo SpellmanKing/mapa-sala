@@ -13,6 +13,8 @@ import { instrutorRouter } from './controllers/instrutorController.js';
 import { feriadoRouter } from './controllers/feriadoController.js';
 import { calculadoraRouter } from './controllers/calculadoraController.js';
 import { turmaRouter } from './controllers/turmaController.js';
+import { prisma } from './infrastructure/prismaClient.js';
+
 export function createApp() {
   const app = express();
 
@@ -31,7 +33,23 @@ export function createApp() {
   app.use(express.urlencoded({ extended: true }));
 
   app.get('/', (_req, res) => res.json({ name: 'SGST API', status: 'online', version: '1.0.0' }));
-  app.get('/health', (_req, res) => res.status(200).json({ ok: true }));
+  
+  app.get('/health', async (_req, res) => {
+    try {
+      await prisma.$queryRaw`SELECT 1`;
+      return res.status(200).json({ 
+        status: 'healthy', 
+        database: 'connected', 
+        timestamp: new Date().toISOString() 
+      });
+    } catch (error: any) {
+      return res.status(503).json({ 
+        status: 'unhealthy', 
+        database: 'disconnected', 
+        error: error?.message || 'Database ping failed' 
+      });
+    }
+  });
 
   app.use('/auth', authRouter);
   app.use('/cursos', cursoRouter);

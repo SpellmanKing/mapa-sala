@@ -15,6 +15,9 @@ export const CursoService = {
 export const SalaService = {
   getAll: () => api.get('/salas').then(res => res.data),
   getTipos: () => api.get('/salas/tipos').then(res => res.data),
+  create: (data: any) => api.post('/salas', data).then(res => res.data),
+  update: (id: number, data: any) => api.put(`/salas/${id}`, data).then(res => res.data),
+  delete: (id: number) => api.delete(`/salas/${id}`).then(res => res.data),
 };
 
 export const InstrutorService = {
@@ -37,7 +40,7 @@ export const InstrutorService = {
 };
 
 export const CalculadoraService = {
-  calcularCronograma: (data: { cargaHoraria: number, dataInicio: string, diasSemana: string[] }) => 
+  calcularCronograma: (data: { cargaHoraria: number; dataInicio: string; diasSemana: string[]; horasPorDia?: number }) => 
     api.post('/calcular_cronograma', data).then(res => res.data)
 };
 

@@ -1,10 +1,13 @@
 import React, { useEffect, useMemo } from 'react';
 import { TipoSala, Instrutor, Modality } from '../context/AppContext';
+import { Loader2 } from 'lucide-react';
 import Select from 'react-select';
 
 export type CursoPayload = {
   id?: string;
   nome: string;
+  cargaHoraria: number;
+  segmento: string;
   instrutorId: string;
   unidade: string;
   diasSemanaLetiva: string[];
@@ -24,6 +27,7 @@ type Props = {
   setForm: React.Dispatch<React.SetStateAction<CursoPayload>>;
   ambientes: TipoSala[];
   instrutores: Instrutor[];
+  isSaving?: boolean;
 };
 
 export function AllocationModal({
@@ -35,7 +39,8 @@ export function AllocationModal({
   form,
   setForm,
   ambientes,
-  instrutores
+  instrutores,
+  isSaving = false
 }: Props) {
 
   const instrutorOptions = useMemo(() => {
@@ -46,13 +51,13 @@ export function AllocationModal({
     if (!open) return;
 
     function onKeyDown(e: KeyboardEvent) {
-      if (e.key === 'Escape') onClose();
-      if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) onSave();
+      if (e.key === 'Escape' && !isSaving) onClose();
+      if (e.key === 'Enter' && (e.ctrlKey || e.metaKey) && !isSaving) onSave();
     }
 
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
-  }, [open, onClose, onSave]);
+  }, [open, onClose, onSave, isSaving]);
 
   if (!open) return null;
 
@@ -60,9 +65,6 @@ export function AllocationModal({
     <div
       role="dialog"
       aria-modal="true"
-      onMouseDown={(e) => {
-        if (e.target === e.currentTarget) onClose();
-      }}
       className="fixed inset-0 bg-slate-950/60 backdrop-blur-md flex items-center justify-center p-4 z-[999] overflow-hidden"
     >
       <div className="glass-panel rounded-2xl shadow-2xl w-full max-w-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200 flex flex-col max-h-[90vh] transition-all duration-300">
@@ -175,81 +177,190 @@ export function AllocationModal({
               </select>
             </div>
 
-            {/* Dias da semana letiva (Presenciais) */}
-            <div className="md:col-span-2">
-              <label className="block text-xs font-black text-text-muted uppercase tracking-widest mb-2">
-                Dias da Semana Letiva (Presenciais)
+            {/* Carga Horária */}
+            <div>
+              <label className="block text-xs font-black text-text-muted uppercase tracking-widest mb-1.5">
+                Carga Horária (Horas)
               </label>
-              <div className="flex flex-wrap gap-2">
+              <input
+                type="number"
+                min="1"
+                step="1"
+                value={form.cargaHoraria || ''}
+                onChange={(e) => setForm((prev) => ({ ...prev, cargaHoraria: Math.max(1, Number(e.target.value)) }))}
+                placeholder="Ex: 160"
+                className="w-full border border-border rounded-xl p-3 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none text-sm font-semibold transition-all bg-input text-text-main"
+                required
+              />
+            </div>
+
+            {/* Segmento */}
+            <div>
+              <label className="block text-xs font-black text-text-muted uppercase tracking-widest mb-1.5">
+                Segmento / Área
+              </label>
+              <select
+                value={form.segmento || 'Tecnologia da Informação'}
+                onChange={(e) => setForm((prev) => ({ ...prev, segmento: e.target.value }))}
+                className="w-full border border-border rounded-xl p-3 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none text-sm font-semibold transition-all bg-input text-text-main cursor-pointer"
+                required
+              >
                 {[
-                  { id: '1', label: 'Segunda' },
-                  { id: '2', label: 'Terça' },
-                  { id: '3', label: 'Quarta' },
-                  { id: '4', label: 'Quinta' },
-                  { id: '5', label: 'Sexta' }
+                  'Tecnologia da Informação',
+                  'Gestão e Negócios',
+                  'Saúde',
+                  'Beleza e Estética',
+                  'Gastronomia',
+                  'Moda',
+                  'Design e Artes',
+                  'Idiomas',
+                  'Educacional / Geral'
+                ].map(s => (
+                  <option key={s} value={s} className="bg-card text-text-main">{s}</option>
+                ))}
+              </select>
+            </div>
+
+            {/* Seletor Unificado de Dias da Semana (Presencial / Remoto) */}
+            <div className="md:col-span-2 bg-surface/50 border border-border/80 p-4 rounded-2xl flex flex-col gap-3">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                <div>
+                  <label className="block text-xs font-black text-text-main uppercase tracking-widest">
+                    Dias de Aula & Formato
+                  </label>
+                  <p className="text-[11px] text-text-muted mt-0.5">
+                    Clique no dia para alternar o formato da aula.
+                  </p>
+                </div>
+
+                {/* Legenda visual interativa */}
+                <div className="flex items-center gap-1.5 text-[11px] font-bold flex-wrap">
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-primary/15 text-primary border border-primary/20">
+                    <span className="w-2 h-2 rounded-full bg-primary"></span> 1º Clique: Presencial
+                  </span>
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/20">
+                    <span className="w-2 h-2 rounded-full bg-amber-500"></span> 2º Clique: Remoto
+                  </span>
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-input text-text-muted border border-border">
+                    <span className="w-2 h-2 rounded-full bg-slate-400"></span> 3º: Desmarcar
+                  </span>
+                </div>
+              </div>
+
+              {/* Grid dos botões de dias */}
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-2">
+                {[
+                  { id: '1', label: 'Segunda', abrev: 'Seg' },
+                  { id: '2', label: 'Terça', abrev: 'Ter' },
+                  { id: '3', label: 'Quarta', abrev: 'Qua' },
+                  { id: '4', label: 'Quinta', abrev: 'Qui' },
+                  { id: '5', label: 'Sexta', abrev: 'Sex' },
+                  { id: '6', label: 'Sábado', abrev: 'Sáb' }
                 ].map((dia) => {
-                  const checked = form.diasSemanaLetiva.includes(dia.id);
+                  const isPresencial = form.diasSemanaLetiva.includes(dia.id);
+                  const isRemoto = form.diasRemotos.includes(dia.id);
+
+                  let estiloBotao = 'bg-input text-text-muted border-border hover:bg-surface/80 hover:text-text-main';
+                  let badgeTexto = 'Sem aula';
+                  let badgeEstilo = 'bg-slate-200/50 dark:bg-slate-800 text-text-muted';
+
+                  if (isPresencial) {
+                    estiloBotao = 'bg-primary text-white border-primary shadow-sm hover:brightness-105';
+                    badgeTexto = 'Presencial';
+                    badgeEstilo = 'bg-white/20 text-white';
+                  } else if (isRemoto) {
+                    estiloBotao = 'bg-amber-500 dark:bg-amber-600 text-white border-amber-600 shadow-sm hover:brightness-105';
+                    badgeTexto = 'Remoto';
+                    badgeEstilo = 'bg-white/20 text-white';
+                  }
+
+                  const handleDayClick = () => {
+                    setForm((prev) => {
+                      const curPres = prev.diasSemanaLetiva.includes(dia.id);
+                      const curRem = prev.diasRemotos.includes(dia.id);
+
+                      let nextPres = [...prev.diasSemanaLetiva];
+                      let nextRem = [...prev.diasRemotos];
+
+                      if (!curPres && !curRem) {
+                        // 1º Clique: Presencial
+                        nextPres.push(dia.id);
+                      } else if (curPres) {
+                        // 2º Clique: Remoto
+                        nextPres = nextPres.filter(id => id !== dia.id);
+                        nextRem.push(dia.id);
+                      } else {
+                        // 3º Clique: Desmarcado
+                        nextRem = nextRem.filter(id => id !== dia.id);
+                      }
+
+                      nextPres.sort();
+                      nextRem.sort();
+
+                      // Calcula modalidade automaticamente
+                      let autoMod: Modality = prev.modalidade;
+                      const hasPres = nextPres.length > 0;
+                      const hasRem = nextRem.length > 0;
+
+                      if (hasPres && hasRem) {
+                        autoMod = 'Semi-Presencial';
+                      } else if (hasPres && !hasRem) {
+                        autoMod = 'Presencial';
+                      } else if (!hasPres && hasRem) {
+                        autoMod = 'Remoto';
+                      }
+
+                      return {
+                        ...prev,
+                        diasSemanaLetiva: nextPres,
+                        diasRemotos: nextRem,
+                        modalidade: autoMod
+                      };
+                    });
+                  };
+
                   return (
                     <button
                       type="button"
                       key={dia.id}
-                      onClick={() => {
-                        setForm((prev) => {
-                          const prevSet = new Set(prev.diasSemanaLetiva);
-                          if (prevSet.has(dia.id)) prevSet.delete(dia.id);
-                          else prevSet.add(dia.id);
-                          return { ...prev, diasSemanaLetiva: Array.from(prevSet) };
-                        });
-                      }}
-                      className={`px-4 py-2.5 text-xs font-bold rounded-xl border border-border/80 btn-tactile cursor-pointer ${
-                        checked 
-                          ? 'bg-primary/10 border-primary text-primary shadow-xs font-black' 
-                          : 'bg-input text-text-muted hover:bg-surface/50 hover:text-text-main'
-                      }`}
+                      onClick={handleDayClick}
+                      className={`p-2.5 rounded-xl border flex flex-col items-center justify-center gap-1 transition-all active:scale-95 cursor-pointer font-bold select-none ${estiloBotao}`}
+                      title={`Clique para alternar ${dia.label}: Sem aula -> Presencial -> Remoto`}
                     >
-                      {dia.label}
+                      <span className="text-xs uppercase tracking-wider font-black">{dia.label}</span>
+                      <span className={`text-[9px] uppercase tracking-wider px-1.5 py-0.5 rounded font-black ${badgeEstilo}`}>
+                        {badgeTexto}
+                      </span>
                     </button>
                   );
                 })}
               </div>
-            </div>
 
-            {/* Dias da semana letiva (Remotos) */}
-            <div className="md:col-span-2">
-              <label className="block text-xs font-black text-text-muted uppercase tracking-widest mb-2">
-                Dias da Semana Letiva (Remotos)
-              </label>
-              <div className="flex flex-wrap gap-2">
-                {[
-                  { id: '1', label: 'Segunda' },
-                  { id: '2', label: 'Terça' },
-                  { id: '3', label: 'Quarta' },
-                  { id: '4', label: 'Quinta' },
-                  { id: '5', label: 'Sexta' }
-                ].map((dia) => {
-                  const checked = form.diasRemotos.includes(dia.id);
-                  return (
-                    <button
-                      type="button"
-                      key={dia.id}
-                      onClick={() => {
-                        setForm((prev) => {
-                          const prevSet = new Set(prev.diasRemotos);
-                          if (prevSet.has(dia.id)) prevSet.delete(dia.id);
-                          else prevSet.add(dia.id);
-                          return { ...prev, diasRemotos: Array.from(prevSet) };
-                        });
-                      }}
-                      className={`px-4 py-2.5 text-xs font-bold rounded-xl border border-border/80 btn-tactile cursor-pointer ${
-                        checked 
-                          ? 'bg-accent/10 border-accent text-accent dark:text-light-accent shadow-xs font-black' 
-                          : 'bg-input text-text-muted hover:bg-surface/50 hover:text-text-main'
-                      }`}
-                    >
-                      {dia.label}
-                    </button>
-                  );
-                })}
+              {/* Resumo Dinâmico em tempo real */}
+              <div className="text-[11px] font-medium text-text-muted pt-2 border-t border-border/50 flex flex-wrap items-center justify-between gap-1">
+                <span>
+                  {form.diasSemanaLetiva.length === 0 && form.diasRemotos.length === 0 ? (
+                    <span className="text-amber-500 font-semibold">⚠️ Nenhum dia selecionado</span>
+                  ) : (
+                    <span>
+                      {form.diasSemanaLetiva.length > 0 && (
+                        <strong className="text-primary font-bold">
+                          {form.diasSemanaLetiva.length} dia{form.diasSemanaLetiva.length > 1 ? 's' : ''} presencial
+                        </strong>
+                      )}
+                      {form.diasSemanaLetiva.length > 0 && form.diasRemotos.length > 0 && ' • '}
+                      {form.diasRemotos.length > 0 && (
+                        <strong className="text-amber-600 dark:text-amber-400 font-bold">
+                          {form.diasRemotos.length} dia{form.diasRemotos.length > 1 ? 's' : ''} remoto
+                        </strong>
+                      )}
+                    </span>
+                  )}
+                </span>
+
+                <span className="text-[11px] font-bold text-text-main flex items-center gap-1">
+                  Modalidade selecionada: <span className="px-2 py-0.5 rounded-md bg-surface border border-border font-black text-secondary dark:text-primary">{form.modalidade}</span>
+                </span>
               </div>
             </div>
 
@@ -285,7 +396,7 @@ export function AllocationModal({
             {/* Modalidade */}
             <div>
               <label className="block text-xs font-black text-text-muted uppercase tracking-widest mb-1.5">
-                Modalidade
+                Modalidade <span className="text-[10px] lowercase font-normal text-text-muted">(definida automaticamente)</span>
               </label>
               <select
                 value={form.modalidade}
@@ -310,16 +421,24 @@ export function AllocationModal({
           <div className="flex justify-end gap-3 mt-4 pt-4 border-t border-border/60 shrink-0">
             <button 
               type="button" 
+              disabled={isSaving}
               onClick={onClose} 
-              className="px-5 py-2.5 text-sm font-bold text-text-muted hover:text-text-main hover:bg-surface/50 rounded-xl btn-tactile cursor-pointer"
+              className="px-5 py-2.5 text-sm font-bold text-text-muted hover:text-text-main hover:bg-surface/50 rounded-xl btn-tactile cursor-pointer disabled:opacity-50"
             >
               Cancelar
             </button>
             <button 
               type="submit" 
-              className="bg-primary text-white font-black py-2.5 px-6 rounded-xl shadow-md hover:shadow-lg hover:shadow-primary/20 btn-tactile cursor-pointer text-sm"
+              disabled={isSaving}
+              className="bg-primary text-white font-black py-2.5 px-6 rounded-xl shadow-md hover:shadow-lg hover:shadow-primary/20 btn-tactile cursor-pointer text-sm flex items-center gap-2 disabled:opacity-50"
             >
-              Salvar Curso
+              {isSaving ? (
+                <>
+                  <Loader2 size={16} className="animate-spin" /> Salvando...
+                </>
+              ) : (
+                'Salvar Curso'
+              )}
             </button>
           </div>
 
