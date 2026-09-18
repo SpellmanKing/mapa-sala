@@ -90,12 +90,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }, []);
 
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      (window as any).showToast = showToast;
-    }
-  }, [showToast]);
-
-  useEffect(() => {
     if (toast) {
       const timer = setTimeout(() => {
         setToast(null);
@@ -207,16 +201,23 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     setIsLoading(true);
+    let errorCount = 0;
+    const trackError = (p: Promise<any>) => p.catch(() => { errorCount++; });
+
     Promise.all([
-      refreshCursos(),
-      refreshTipoSalas(),
-      refreshSalas(),
-      refreshInstrutores(),
-      refreshTurmas()
-    ]).finally(() => {
+      trackError(refreshCursos()),
+      trackError(refreshTipoSalas()),
+      trackError(refreshSalas()),
+      trackError(refreshInstrutores()),
+      trackError(refreshTurmas())
+    ]).then(() => {
+      if (errorCount === 5) {
+        showToast("Servidor indisponível. Verifique se o backend está em execução.", "error");
+      }
+    }).finally(() => {
       setIsLoading(false);
     });
-  }, [refreshCursos, refreshInstrutores, refreshTurmas, refreshTipoSalas, refreshSalas]);
+  }, [refreshCursos, refreshInstrutores, refreshTurmas, refreshTipoSalas, refreshSalas, showToast]);
 
   return (
     <AppContext.Provider value={{ cursos, setCursos, refreshCursos, salas, setSalas, refreshSalas, instrutores, setInstrutores, refreshInstrutores, turmas, setTurmas, refreshTurmas, tipoSalas, refreshTipoSalas, isLoading, theme, toggleTheme, showToast }}>

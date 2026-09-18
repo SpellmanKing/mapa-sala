@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { AllocationModal, CursoPayload } from '../components/AllocationModal';
+import { CursoModal, CursoPayload } from '../components/CursoModal';
 import { InstrutorModal, InstrutorPayload } from '../components/InstrutorModal';
 import { SalaModal, SalaPayload } from '../components/SalaModal';
 import { ConfirmDeleteModal } from '../components/ConfirmDeleteModal';
@@ -1007,7 +1007,7 @@ export function ManageSystemPage() {
       </div>
 
       {/* Modal de Cursos */}
-      <AllocationModal
+      <CursoModal
         open={cursoModalOpen}
         title={editingCurso ? 'Editar Curso' : 'Adicionar Curso'}
         error={cursoError}

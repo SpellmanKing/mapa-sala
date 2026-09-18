@@ -2,6 +2,16 @@ import { prisma } from '../infrastructure/prismaClient.js';
 import { HttpError } from '../utils/errors.js';
 import { CalculadoraService } from './calculadoraService.js';
 
+function formatarDataBR(data: Date | string): string {
+  const str = typeof data === 'string' ? data : data.toISOString();
+  const dateOnly = str.split('T')[0] || '';
+  const parts = dateOnly.split('-');
+  if (parts.length === 3) {
+    return `${parts[2]}/${parts[1]}/${parts[0]}`;
+  }
+  return dateOnly;
+}
+
 export class TurmaService {
   private calculadoraService = new CalculadoraService();
 
@@ -60,6 +70,17 @@ export class TurmaService {
 
     if (!curso) throw new HttpError(404, 'Curso não encontrado');
 
+    // Busca a sala para validar existência e capacidade física
+    const sala = await prisma.sala.findUnique({
+      where: { id_salas: data.id_salas }
+    });
+    if (!sala) throw new HttpError(404, 'Ambiente pedagógico não encontrado');
+
+    const totalAlunos = Number(data.total_alunos) || 30;
+    if (totalAlunos > sala.capacidade_maxima) {
+      throw new HttpError(400, `Capacidade física insuficiente: o ambiente ${sala.nome_sala} comporta no máximo ${sala.capacidade_maxima} alunos (solicitado: ${totalAlunos}).`);
+    }
+
     const diasSemana = data.dias_semana && data.dias_semana.length > 0 ? data.dias_semana : ['1', '2', '3', '4', '5']; 
 
     const cronograma = await this.calculadoraService.calcularCronograma(
@@ -81,7 +102,7 @@ export class TurmaService {
     });
 
     if (conflito) {
-      const dataFormatada = conflito.data_aula.toLocaleDateString('pt-BR');
+      const dataFormatada = formatarDataBR(conflito.data_aula);
       throw new HttpError(409, `Conflito: O ambiente ${conflito.sala.nome_sala} já está ocupado neste turno no dia ${dataFormatada}.`);
     }
 
@@ -164,7 +185,7 @@ export class TurmaService {
     });
 
     if (conflito) {
-      const dataFormatada = conflito.data_aula.toLocaleDateString('pt-BR');
+      const dataFormatada = formatarDataBR(conflito.data_aula);
       throw new HttpError(409, `Conflito: O ambiente ${conflito.sala.nome_sala} já está ocupado neste turno no dia ${dataFormatada}.`);
     }
 

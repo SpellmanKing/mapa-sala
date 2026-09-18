@@ -1,3 +1,4 @@
+import 'dotenv/config';
 import { PrismaClient } from '@prisma/client';
 import xlsx from 'xlsx';
 import path from 'path';

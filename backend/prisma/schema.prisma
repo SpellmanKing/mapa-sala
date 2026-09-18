@@ -115,7 +115,7 @@ model Turma {
   eh_hibrida       Boolean       @default(false)
   dias_semana      String        @default("1,2,3,4,5")
 
-  curso            Curso         @relation(fields: [id_cursos], references: [id_cursos], onDelete: Cascade, onUpdate: Cascade)
+  curso            Curso         @relation(fields: [id_cursos], references: [id_cursos], onDelete: Restrict, onUpdate: Cascade)
   instrutor        Instrutor?    @relation(fields: [id_instrutores], references: [id_instrutores], onDelete: SetNull, onUpdate: Cascade)
   statusTurma      StatusTurma   @relation(fields: [fk_id_status], references: [id_status])
   turno            Turno         @relation(fields: [fk_id_turno], references: [id_turno])

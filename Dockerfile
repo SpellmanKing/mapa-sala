@@ -2,16 +2,23 @@ FROM node:20-alpine
 
 WORKDIR /app
 
-# Copia apenas package.json primeiro (melhora cache)
-COPY package.json ./
+# Copia arquivos do backend
+COPY backend/package*.json ./backend/
+COPY backend/prisma ./backend/prisma/
 
+WORKDIR /app/backend
 RUN npm install
+RUN npx prisma generate
 
-# Copia o restante
-COPY . .
+WORKDIR /app
+COPY backend ./backend/
+
+WORKDIR /app/backend
+RUN npm run build
 
 ENV PORT=3000
 EXPOSE 3000
 
-CMD ["npm","run","start"]
+CMD ["node", "dist/main.js"]
+
 
