@@ -22,8 +22,9 @@ export class TurmaService {
         instrutor: true,
         turno: true,
         agendamentos: {
-          include: {
-            sala: true
+          take: 1,
+          select: {
+            id_salas: true
           }
         }
       }

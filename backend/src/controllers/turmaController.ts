@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import { TurmaService } from '../services/turmaService.js';
 import { asyncHandler } from '../utils/asyncHandler.js';
 import { Router } from 'express';
+import { alocarTurmaSchema, reallocarTurmaSchema } from '../schemas/turmaSchema.js';
 
 const turmaService = new TurmaService();
 export const turmaRouter = Router();
@@ -17,12 +18,14 @@ turmaRouter.get('/agendamentos', asyncHandler(async (req: Request, res: Response
 }));
 
 turmaRouter.post('/alocar', asyncHandler(async (req: Request, res: Response) => {
-  const turma = await turmaService.alocarTurma(req.body);
+  const data = alocarTurmaSchema.parse(req.body);
+  const turma = await turmaService.alocarTurma(data as any);
   res.status(201).json(turma);
 }));
 
 turmaRouter.put('/:id/reallocar', asyncHandler(async (req: Request, res: Response) => {
-  const turma = await turmaService.reallocarTurma(Number(req.params.id), req.body);
+  const data = reallocarTurmaSchema.parse(req.body);
+  const turma = await turmaService.reallocarTurma(Number(req.params.id), data as any);
   res.json(turma);
 }));
 

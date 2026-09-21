@@ -1,5 +1,6 @@
 import type { NextFunction, Request, Response } from 'express';
 import { Prisma } from '@prisma/client';
+import { ZodError } from 'zod';
 
 type ApiErrorPayload = {
   success: false;
@@ -14,8 +15,16 @@ export function errorHandler(err: unknown, req: Request, res: Response, _next: N
 
   let status = 500;
   let message = 'Erro interno do servidor';
+  let details: unknown = undefined;
 
-  if (err instanceof Prisma.PrismaClientKnownRequestError) {
+  if (err instanceof ZodError) {
+    status = 400;
+    message = 'Dados inválidos na requisição';
+    details = err.errors.map(e => ({
+      campo: e.path.join('.'),
+      mensagem: e.message
+    }));
+  } else if (err instanceof Prisma.PrismaClientKnownRequestError) {
     if (err.code === 'P2002') {
       status = 409;
       const targets = (err.meta?.target as string) || '';
@@ -32,7 +41,10 @@ export function errorHandler(err: unknown, req: Request, res: Response, _next: N
       }
     } else if (err.code === 'P2003') {
       status = 409;
-      message = 'Não é possível salvar ou deletar este registro devido a uma restrição de integridade (chave estrangeira).';
+      message = 'Não é possível salvar ou deletar este registro devido a vínculos existentes com outros dados.';
+    } else if (err.code === 'P2025') {
+      status = 404;
+      message = 'Registro não encontrado no banco de dados.';
     }
   } else if (typeof err === 'object' && err !== null) {
     if ('statusCode' in err) {
@@ -41,12 +53,15 @@ export function errorHandler(err: unknown, req: Request, res: Response, _next: N
     if ('message' in err) {
       message = String((err as any).message);
     }
+    if ('details' in err) {
+      details = (err as any).details;
+    }
   }
 
   const payload: ApiErrorPayload = {
     success: false,
     error: message,
-    details: typeof err === 'object' && err !== null && 'details' in err ? (err as any).details : undefined,
+    details,
     path: req.originalUrl
   };
 

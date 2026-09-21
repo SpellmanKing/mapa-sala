@@ -785,8 +785,10 @@ async function main() {
   });
 
   // 3. Feriados
-  let tipoNacional = await prisma.tipoFeriado.create({
-    data: { nome_tipo: 'Nacional' }
+  let tipoNacional = await prisma.tipoFeriado.upsert({
+    where: { nome_tipo: 'Nacional' },
+    update: {},
+    create: { nome_tipo: 'Nacional' }
   });
 
   const feriadosList = [

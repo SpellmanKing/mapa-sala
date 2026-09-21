@@ -43,8 +43,13 @@ export class SalaService {
 
   async delete(id: number) {
     await this.getById(id);
-    return prisma.sala.delete({
-      where: { id_salas: id }
+    return prisma.$transaction(async (tx) => {
+      await tx.agendamento.deleteMany({
+        where: { id_salas: id }
+      });
+      return tx.sala.delete({
+        where: { id_salas: id }
+      });
     });
   }
 }

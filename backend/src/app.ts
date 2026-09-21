@@ -5,6 +5,7 @@ import morgan from 'morgan';
 
 import { errorHandler } from './middlewares/errorHandler.js';
 import { notFoundHandler } from './middlewares/notFoundHandler.js';
+import { authMiddleware } from './middlewares/authMiddleware.js';
 
 import { authRouter } from './controllers/authController.js';
 import { cursoRouter } from './controllers/cursoController.js';
@@ -52,12 +53,12 @@ export function createApp() {
   });
 
   app.use('/auth', authRouter);
-  app.use('/cursos', cursoRouter);
-  app.use('/salas', salaRouter);
-  app.use('/instrutores', instrutorRouter);
+  app.use('/cursos', authMiddleware, cursoRouter);
+  app.use('/salas', authMiddleware, salaRouter);
+  app.use('/instrutores', authMiddleware, instrutorRouter);
   app.use('/feriados', feriadoRouter);
   app.use('/calcular_cronograma', calculadoraRouter);
-  app.use('/turmas', turmaRouter);
+  app.use('/turmas', authMiddleware, turmaRouter);
   app.use(notFoundHandler);
   app.use(errorHandler);
 

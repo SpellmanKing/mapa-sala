@@ -39,8 +39,23 @@ export class CursoService {
 
   async delete(id: number) {
     await this.getById(id);
-    return prisma.curso.delete({
-      where: { id_cursos: id }
+    return prisma.$transaction(async (tx) => {
+      const turmas = await tx.turma.findMany({
+        where: { id_cursos: id },
+        select: { id_turmas: true }
+      });
+      const turmaIds = turmas.map(t => t.id_turmas);
+      if (turmaIds.length > 0) {
+        await tx.agendamento.deleteMany({
+          where: { id_turmas: { in: turmaIds } }
+        });
+        await tx.turma.deleteMany({
+          where: { id_turmas: { in: turmaIds } }
+        });
+      }
+      return tx.curso.delete({
+        where: { id_cursos: id }
+      });
     });
   }
 }
