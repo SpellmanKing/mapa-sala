@@ -4,14 +4,15 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "postinstall": "npm --prefix backend install && npm --prefix backend run prisma:generate && npm --prefix frontend install",
     "dev:backend": "npm run dev --prefix backend",
     "dev:frontend": "npm run dev --prefix frontend",
     "build:backend": "npm run build --prefix backend",
     "build:frontend": "npm run build --prefix frontend",
     "build": "npm run build:backend && npm run build:frontend",
     "start": "npm run start --prefix backend",
-    "lint": "npm run lint --prefix backend --if-present",
-    "test": "npm run test --prefix backend --if-present",
+    "lint": "npm run lint --prefix backend",
+    "test": "npm run test --prefix backend",
     "db:up": "docker compose up -d postgres",
     "db:down": "docker compose down",
     "db:logs": "docker compose logs -f postgres"
