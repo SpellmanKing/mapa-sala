@@ -141,4 +141,16 @@ dist
 # SvelteKit build / generate output
 .svelte-kit
 
+# SGST Custom Ignores
+backend/.env
+frontend/.env
+*.env
+backend/dist/
+frontend/dist/
+dist/
+**/node_modules/
+*.log
+.DS_Store
+Thumbs.db
+
 # End of https://www.toptal.com/developers/gitignore/api/node

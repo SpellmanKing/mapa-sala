@@ -30,7 +30,7 @@ type Props = {
   isSaving?: boolean;
 };
 
-export function AllocationModal({
+export function CursoModal({
   open,
   title,
   error,
@@ -447,3 +447,5 @@ export function AllocationModal({
     </div>
   );
 }
+
+export const AllocationModal = CursoModal;

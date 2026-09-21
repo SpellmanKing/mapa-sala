@@ -26,30 +26,10 @@ import {
 import { useAppContext, Sala, TurmaDetalhada } from '../context/AppContext';
 import { TurmaService } from '../api/client';
 import { ConfirmDeleteModal } from '../components/ConfirmDeleteModal';
+import { DigitalClock } from '../components/painel/DigitalClock';
 
 export function PainelPage() {
   const { salas, turmas, cursos, instrutores, refreshTurmas, showToast } = useAppContext();
-
-  // Relógio Digital (Horário de Brasília)
-  const [horaAtual, setHoraAtual] = useState(() => new Date());
-
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setHoraAtual(new Date());
-    }, 1000);
-    return () => clearInterval(timer);
-  }, []);
-
-  const formatHoraBrasilia = (date: Date) => {
-    const options: Intl.DateTimeFormatOptions = {
-      timeZone: 'America/Sao_Paulo',
-      hour: '2-digit',
-      minute: '2-digit',
-      second: '2-digit',
-      hour12: false
-    };
-    return new Intl.DateTimeFormat('pt-BR', options).format(date);
-  };
 
   // Preferências Persistidas em LocalStorage
   const [filtroTipo, setFiltroTipo] = useState(() => {
@@ -197,7 +177,8 @@ export function PainelPage() {
     turno: 'Manhã',
     codigoTurma: '',
     diasSemana: ['1', '3', '5'] as string[],
-    instrutorId: ''
+    instrutorId: '',
+    totalAlunos: 25
   });
 
   // --- LÓGICA DO MODAL DE EDIÇÃO E REALOCAÇÃO ---
@@ -477,6 +458,14 @@ export function PainelPage() {
     );
   }, [dadosEdicao.turno, dadosEdicao.dataInicio, dadosEdicao.diasSemana, turmaEditando, salas, turmas, cursos]);
 
+  const salaSelecionadaNovo = useMemo(() => {
+    return salas.find(s => s.id === novoAgendamento.salaId);
+  }, [salas, novoAgendamento.salaId]);
+
+  const capacidadeExcedidaNovo = Boolean(
+    salaSelecionadaNovo && Number(novoAgendamento.totalAlunos) > salaSelecionadaNovo.capacidade
+  );
+
   const handleCursoChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const cid = e.target.value;
     const curso = cursos.find(c => c.id === cid);
@@ -504,6 +493,13 @@ export function PainelPage() {
       return;
     }
 
+    const salaObj = salas.find(s => s.id === novoAgendamento.salaId);
+    const totalAlunosNum = Number(novoAgendamento.totalAlunos) || 25;
+    if (salaObj && totalAlunosNum > salaObj.capacidade) {
+      showToast(`A sala ${salaObj.nome} comporta no máximo ${salaObj.capacidade} alunos. Total informado: ${totalAlunosNum}.`, "error");
+      return;
+    }
+
     setIsSavingAlocacao(true);
     try {
       await TurmaService.alocar({
@@ -511,7 +507,7 @@ export function PainelPage() {
         id_salas: Number(novoAgendamento.salaId),
         data_inicio: novoAgendamento.dataInicio,
         fk_id_turno: novoAgendamento.turno === 'Manhã' ? 1 : novoAgendamento.turno === 'Tarde' ? 2 : 3,
-        total_alunos: 30,
+        total_alunos: totalAlunosNum,
         codigo_turma: novoAgendamento.codigoTurma,
         dias_semana: novoAgendamento.diasSemana,
         id_instrutores: novoAgendamento.instrutorId ? Number(novoAgendamento.instrutorId) : undefined
@@ -527,7 +523,8 @@ export function PainelPage() {
         turno: 'Manhã', 
         codigoTurma: '', 
         diasSemana: ['1', '3', '5'], 
-        instrutorId: '' 
+        instrutorId: '',
+        totalAlunos: 25
       });
     } catch (err: any) {
       const msg = err.response?.data?.error || err.response?.data?.message || 'Erro ao alocar turma.';
@@ -652,19 +649,8 @@ export function PainelPage() {
       {modoTV ? (
         /* ================= CABEÇALHO MODO TV ================= */
         <div className="flex justify-between items-center p-4 shrink-0 bg-card/40 border-b border-border/30 relative z-20 gap-3">
-          {/* Relógio Digital (Horário de Brasília) + Data */}
-          <div className="flex items-center gap-3 bg-primary/5 dark:bg-primary/10 border border-primary/15 px-4 py-2.5 rounded-xl text-primary shadow-xs">
-            <span className="relative flex h-2 w-2">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
-            </span>
-            <span className="font-mono text-sm font-black tracking-wider">
-              {formatHoraBrasilia(horaAtual)}
-            </span>
-            <span className="text-[10px] font-black uppercase bg-primary text-white px-2 py-0.5 rounded-md tracking-wider">
-              {new Date().toLocaleDateString('pt-BR', { weekday: 'short', day: '2-digit', month: 'short' })}
-            </span>
-          </div>
+          {/* Relógio Digital Modularizado (Horário de Brasília) + Data */}
+          <DigitalClock variant="tv" />
 
           {/* Título Central */}
           <div className="hidden md:flex items-center gap-2">
@@ -757,19 +743,8 @@ export function PainelPage() {
             </div>
             
             <div className="flex flex-wrap items-center gap-3">
-              {/* Relógio Digital (Horário de Brasília) */}
-              <div className="flex items-center gap-2.5 bg-primary/5 dark:bg-primary/10 border border-primary/15 px-3.5 py-2 rounded-xl text-primary shadow-xs">
-                <span className="relative flex h-2 w-2">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
-                  <span className="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
-                </span>
-                <span className="font-mono text-xs font-black tracking-wider">
-                  {formatHoraBrasilia(horaAtual)}
-                </span>
-                <span className="text-[9px] font-black uppercase bg-primary text-white px-1.5 py-0.5 rounded-md tracking-widest">
-                  Brasília
-                </span>
-              </div>
+              {/* Relógio Digital Modularizado (Horário de Brasília) */}
+              <DigitalClock variant="default" />
 
               {/* Botão de Nova Alocação */}
               <button 
@@ -1295,6 +1270,40 @@ export function PainelPage() {
                 )}
               </div>
 
+              {/* Quantidade Prevista de Alunos */}
+              <div>
+                <div className="flex justify-between items-center mb-1.5">
+                  <label className="text-xs font-black text-text-muted uppercase tracking-widest flex items-center gap-1.5">
+                    <Users size={14} className="text-primary" /> Total de Alunos Previsto
+                  </label>
+                  {salaSelecionadaNovo && (
+                    <span className={`text-[11px] font-mono font-bold ${capacidadeExcedidaNovo ? 'text-red-500 font-black' : 'text-emerald-600 dark:text-emerald-400'}`}>
+                      Capacidade da Sala: {salaSelecionadaNovo.capacidade} vagas
+                    </span>
+                  )}
+                </div>
+                <input 
+                  type="number" 
+                  min="1"
+                  max="100"
+                  value={novoAgendamento.totalAlunos}
+                  onChange={e => setNovoAgendamento({...novoAgendamento, totalAlunos: Number(e.target.value) || 0})}
+                  className={`w-full border rounded-xl p-3 focus:ring-2 outline-none text-sm font-semibold transition-all bg-input text-text-main cursor-pointer ${
+                    capacidadeExcedidaNovo 
+                      ? 'border-red-500 focus:ring-red-500/20 focus:border-red-500' 
+                      : 'border-border focus:ring-primary/20 focus:border-primary'
+                  }`}
+                  placeholder="Ex: 25"
+                  required
+                />
+                {capacidadeExcedidaNovo && (
+                  <div className="mt-2 p-2.5 bg-red-500/10 border border-red-500/30 rounded-xl flex items-center gap-2 text-xs font-bold text-red-600 dark:text-red-400 animate-in fade-in">
+                    <AlertTriangle size={15} className="shrink-0" />
+                    <span>Capacidade da sala excedida! A sala comporta no máximo {salaSelecionadaNovo?.capacidade} alunos.</span>
+                  </div>
+                )}
+              </div>
+
               {/* Instrutor */}
               <div>
                 <label className="block text-xs font-black text-text-muted uppercase tracking-widest mb-1.5 flex justify-between items-center">
@@ -1325,7 +1334,7 @@ export function PainelPage() {
                 </button>
                 <button 
                   type="submit" 
-                  disabled={isSavingAlocacao || !novoAgendamento.salaId}
+                  disabled={isSavingAlocacao || !novoAgendamento.salaId || capacidadeExcedidaNovo}
                   className="bg-primary text-white font-black py-2.5 px-6 rounded-xl shadow-md hover:shadow-lg hover:shadow-primary/20 btn-tactile cursor-pointer text-sm flex items-center gap-2 disabled:opacity-50"
                 >
                   {isSavingAlocacao ? (
