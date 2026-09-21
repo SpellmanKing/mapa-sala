@@ -235,11 +235,11 @@ export function CursoModal({
 
                 {/* Legenda visual interativa */}
                 <div className="flex items-center gap-1.5 text-[11px] font-bold flex-wrap">
-                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-primary/15 text-primary border border-primary/20">
-                    <span className="w-2 h-2 rounded-full bg-primary"></span> 1º Clique: Presencial
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-red-500/15 text-red-600 dark:text-red-400 border border-red-500/20">
+                    <span className="w-2 h-2 rounded-full bg-red-500"></span> 1º Clique: Presencial
                   </span>
-                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/20">
-                    <span className="w-2 h-2 rounded-full bg-amber-500"></span> 2º Clique: Remoto
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-blue-500/15 text-blue-600 dark:text-blue-400 border border-blue-500/20">
+                    <span className="w-2 h-2 rounded-full bg-blue-500"></span> 2º Clique: Remoto
                   </span>
                   <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-input text-text-muted border border-border">
                     <span className="w-2 h-2 rounded-full bg-slate-400"></span> 3º: Desmarcar
@@ -265,11 +265,11 @@ export function CursoModal({
                   let badgeEstilo = 'bg-slate-200/50 dark:bg-slate-800 text-text-muted';
 
                   if (isPresencial) {
-                    estiloBotao = 'bg-primary text-white border-primary shadow-sm hover:brightness-105';
+                    estiloBotao = 'bg-red-600 text-white border-red-600 shadow-sm hover:brightness-105';
                     badgeTexto = 'Presencial';
                     badgeEstilo = 'bg-white/20 text-white';
                   } else if (isRemoto) {
-                    estiloBotao = 'bg-amber-500 dark:bg-amber-600 text-white border-amber-600 shadow-sm hover:brightness-105';
+                    estiloBotao = 'bg-blue-600 text-white border-blue-600 shadow-sm hover:brightness-105';
                     badgeTexto = 'Remoto';
                     badgeEstilo = 'bg-white/20 text-white';
                   }
@@ -344,13 +344,13 @@ export function CursoModal({
                   ) : (
                     <span>
                       {form.diasSemanaLetiva.length > 0 && (
-                        <strong className="text-primary font-bold">
+                        <strong className="text-red-600 dark:text-red-400 font-bold">
                           {form.diasSemanaLetiva.length} dia{form.diasSemanaLetiva.length > 1 ? 's' : ''} presencial
                         </strong>
                       )}
                       {form.diasSemanaLetiva.length > 0 && form.diasRemotos.length > 0 && ' • '}
                       {form.diasRemotos.length > 0 && (
-                        <strong className="text-amber-600 dark:text-amber-400 font-bold">
+                        <strong className="text-blue-600 dark:text-blue-400 font-bold">
                           {form.diasRemotos.length} dia{form.diasRemotos.length > 1 ? 's' : ''} remoto
                         </strong>
                       )}

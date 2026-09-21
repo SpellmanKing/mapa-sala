@@ -38,6 +38,10 @@ export function PainelPage() {
     return localStorage.getItem('sgst_painel_tipo_sala') || 'Todos';
   });
 
+  const [filtroModalidade, setFiltroModalidade] = useState<'Todas' | 'Presencial' | 'Remoto'>(() => {
+    return (localStorage.getItem('sgst_painel_modalidade') as 'Todas' | 'Presencial' | 'Remoto') || 'Todas';
+  });
+
   const [modoVisualizacao, setModoVisualizacao] = useState<'semanal' | 'diario'>(() => {
     return (localStorage.getItem('sgst_painel_modo') as 'semanal' | 'diario') || 'semanal';
   });
@@ -45,6 +49,11 @@ export function PainelPage() {
   const handleSetFiltroTipo = (tipo: string) => {
     setFiltroTipo(tipo);
     localStorage.setItem('sgst_painel_tipo_sala', tipo);
+  };
+
+  const handleSetFiltroModalidade = (mod: 'Todas' | 'Presencial' | 'Remoto') => {
+    setFiltroModalidade(mod);
+    localStorage.setItem('sgst_painel_modalidade', mod);
   };
 
   const handleSetModoVisualizacao = (modo: 'semanal' | 'diario') => {
@@ -612,6 +621,14 @@ export function PainelPage() {
       const matchUnidade = filtroUnidade === 'Todas' || t.unidade === filtroUnidade;
       const matchBusca = isTurmaMatchingSearch(t);
 
+      // Filtro de modalidade (Presencial / Remoto)
+      let matchModalidade = true;
+      if (filtroModalidade === 'Presencial') {
+        matchModalidade = t.modalidade !== 'Remoto';
+      } else if (filtroModalidade === 'Remoto') {
+        matchModalidade = t.modalidade === 'Remoto';
+      }
+
       // Filtro de tipo de sala da turma
       let matchTipoSala = true;
       if (filtroTipo !== 'Todos') {
@@ -632,14 +649,28 @@ export function PainelPage() {
         }
       }
 
-      return matchModo && matchUnidade && matchBusca && matchTipoSala;
+      return matchModo && matchUnidade && matchBusca && matchTipoSala && matchModalidade;
     });
   };
 
-  // Taxa de ocupação global
-  const totalTurmasVisiveis = useMemo(() => {
-    return TURNOS.reduce((acc, turno) => acc + getTurmasPorTurno(turno).length, 0);
-  }, [turmas, modoVisualizacao, dataBaseSemana, dataFiltro, filtroUnidade, searchTurma, filtroTipo]);
+  // Contadores globais de turmas
+  const { totalTurmasVisiveis, totalPresenciaisVisiveis, totalRemotasVisiveis } = useMemo(() => {
+    let total = 0;
+    let pres = 0;
+    let rem = 0;
+    TURNOS.forEach(turno => {
+      const lista = getTurmasPorTurno(turno);
+      total += lista.length;
+      lista.forEach(t => {
+        if (t.modalidade === 'Remoto') {
+          rem++;
+        } else {
+          pres++;
+        }
+      });
+    });
+    return { totalTurmasVisiveis: total, totalPresenciaisVisiveis: pres, totalRemotasVisiveis: rem };
+  }, [turmas, modoVisualizacao, dataBaseSemana, dataFiltro, filtroUnidade, searchTurma, filtroTipo, filtroModalidade]);
 
   const content = (
     <div className={`flex flex-col h-full overflow-hidden transition-all duration-300 ${
@@ -666,9 +697,19 @@ export function PainelPage() {
           </div>
 
           <div className="flex items-center gap-2">
-            {/* Total de Turmas em Andamento */}
-            <div className="flex items-center gap-1.5 bg-primary/10 border border-primary/20 px-3 py-1.5 rounded-xl text-primary shadow-xs select-none shrink-0 text-xs font-black uppercase tracking-wider">
-              Turmas Ativas: {totalTurmasVisiveis}
+            {/* Total de Turmas em Andamento com Divisão Presencial e Remoto */}
+            <div className="flex items-center gap-1.5 shrink-0 select-none">
+              <div className="flex items-center gap-1.5 bg-primary/10 border border-primary/20 px-2.5 py-1.5 rounded-xl text-primary shadow-xs text-xs font-black uppercase tracking-wider">
+                Total: {totalTurmasVisiveis}
+              </div>
+              <div className="flex items-center gap-1.5 bg-red-500/10 border border-red-500/20 px-2.5 py-1.5 rounded-xl text-red-600 dark:text-red-400 shadow-xs text-xs font-black">
+                <span className="w-2 h-2 rounded-full bg-red-500 shadow-xs shadow-red-500/50"></span>
+                Presenciais: {totalPresenciaisVisiveis}
+              </div>
+              <div className="flex items-center gap-1.5 bg-blue-500/10 border border-blue-500/20 px-2.5 py-1.5 rounded-xl text-blue-600 dark:text-blue-400 shadow-xs text-xs font-black">
+                <span className="w-2 h-2 rounded-full bg-blue-500 shadow-xs shadow-blue-500/50"></span>
+                Remotas: {totalRemotasVisiveis}
+              </div>
             </div>
 
             {/* Seletor Rápido de Calibragem TV */}
@@ -888,6 +929,29 @@ export function PainelPage() {
                 </div>
               )}
 
+              {/* Filtro de Modalidade (Presencial / Remoto) */}
+              <div className="flex bg-surface p-1 rounded-xl border border-border shadow-xs flex-wrap gap-1">
+                {(['Todas', 'Presencial', 'Remoto'] as const).map(mod => (
+                  <button
+                    key={mod}
+                    onClick={() => handleSetFiltroModalidade(mod)}
+                    className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+                      filtroModalidade === mod
+                        ? mod === 'Presencial'
+                          ? 'bg-red-500 text-white shadow-xs font-black'
+                          : mod === 'Remoto'
+                            ? 'bg-blue-600 text-white shadow-xs font-black'
+                            : 'bg-primary text-white shadow-xs font-black'
+                        : 'text-text-muted hover:text-text-main hover:bg-card/50'
+                    }`}
+                  >
+                    {mod === 'Presencial' && <span className={`w-2 h-2 rounded-full ${filtroModalidade === mod ? 'bg-white' : 'bg-red-500'}`}></span>}
+                    {mod === 'Remoto' && <span className={`w-2 h-2 rounded-full ${filtroModalidade === mod ? 'bg-white' : 'bg-blue-500'}`}></span>}
+                    {mod === 'Todas' ? 'Todas' : mod}
+                  </button>
+                ))}
+              </div>
+
               {/* Filtro de Tipo de Sala */}
               <div className="flex bg-surface p-1 rounded-xl border border-border shadow-xs flex-wrap gap-1">
                 {['Todos', 'Inovadora', 'TI', 'Imagem', 'Auditorio'].map(tipoId => (
@@ -922,8 +986,6 @@ export function PainelPage() {
           } : undefined}
         >
           {TURNOS.map((turno) => {
-            const turmasDoTurno = getTurmasPorTurno(turno);
-
             // Cores e Borda do Turno
             let turnoBorderColor = 'border-l-8 border-l-primary';
             let turnoBgColor = 'bg-primary/5 dark:bg-primary/10 text-primary';
@@ -939,26 +1001,213 @@ export function PainelPage() {
               badgeBg = 'bg-purple-600/10 text-purple-600 dark:text-purple-400 border-purple-600/20';
             }
 
+            const turmasDoTurno = getTurmasPorTurno(turno);
+            const turmasPresenciais = turmasDoTurno.filter(t => t.modalidade !== 'Remoto');
+            const turmasRemotas = turmasDoTurno.filter(t => t.modalidade === 'Remoto');
+
+            const gridClasses = modoTV 
+              ? "grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-4" 
+              : "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4.5";
+
+            // Renderizador do Card de Turma com Divisão de Cores: Vermelho (Presencial) | Azul (Remoto)
+            const renderCardTurma = (turma: any) => {
+              const sala = getSalaInfo(turma.salaId);
+              const { presencial, remoto } = formatDiasSemanaSeparados(turma.diasSemana, turma.diasRemotos);
+              const { concluidas, total, porcentagem } = calcularProgressoAulas(turma.dataInicio, turma.dataFim, turma.diasSemana);
+
+              const isRemoto = turma.modalidade === 'Remoto';
+              const isSemInstrutor = !turma.instrutorNome || turma.instrutorNome.toLowerCase().includes('sem instrutor');
+              const isHighlighted = searchTurma.trim() && isTurmaMatchingSearch(turma);
+
+              // Estilos exclusivos para o Modo TV vs Modo Normal
+              const cardProportionClass = modoTV 
+                ? "aspect-[4/3.8] min-h-[320px] p-5.5 gap-3" 
+                : "p-5 gap-3.5";
+              const progressoFontClass = modoTV 
+                ? "text-sm font-black text-text-muted" 
+                : "text-[11px] font-black text-text-muted";
+              const progressoPercentClass = modoTV 
+                ? `text-base md:text-lg font-mono font-black ${isRemoto ? 'text-blue-600 dark:text-blue-400' : 'text-red-600 dark:text-red-400'}` 
+                : `text-[11px] font-mono font-black ${isRemoto ? 'text-blue-600 dark:text-blue-400' : 'text-red-600 dark:text-red-400'}`;
+              const progressBarHeightClass = modoTV 
+                ? "w-full h-3.5 md:h-4 rounded-full overflow-hidden bg-border/40 relative shadow-inner" 
+                : "w-full h-2 rounded-full overflow-hidden bg-border/40 relative";
+
+              // Divisão de cores estrita (Vermelho = Presencial | Azul = Remoto)
+              const cardBorderColor = isRemoto 
+                ? "border-l-4 border-l-blue-500 hover:border-blue-500/60 hover:shadow-[0_0_20px_rgba(59,130,246,0.18)]" 
+                : "border-l-4 border-l-red-500 hover:border-red-500/60 hover:shadow-[0_0_20px_rgba(239,68,68,0.18)]";
+
+              const badgeCodigoClass = isRemoto
+                ? "border-blue-500/30 bg-blue-500/10 text-blue-600 dark:text-blue-400"
+                : "border-red-500/30 bg-red-500/10 text-red-600 dark:text-red-400";
+
+              const hoverTitleClass = isRemoto
+                ? "group-hover/card:text-blue-600 dark:group-hover/card:text-blue-400"
+                : "group-hover/card:text-red-600 dark:group-hover/card:text-red-400";
+
+              const salaBoxClass = isRemoto
+                ? "bg-blue-500/10 border-blue-500/20 text-blue-700 dark:text-blue-300"
+                : "bg-red-500/10 border-red-500/20 text-red-700 dark:text-red-300";
+
+              const salaIcon = isRemoto
+                ? <Tv size={14} className="shrink-0 text-blue-500" />
+                : <MapPin size={14} className="shrink-0 text-red-500" />;
+
+              const salaCapBadgeClass = isRemoto
+                ? "text-blue-700 dark:text-blue-300 bg-blue-500/15"
+                : "text-red-700 dark:text-red-300 bg-red-500/15";
+
+              const progressBarFillClass = isRemoto ? "bg-blue-500" : "bg-red-500";
+              const diasBorderClass = isRemoto ? "border-l-3 border-blue-500" : "border-l-3 border-red-500";
+
+              return (
+                <div
+                  key={turma.id}
+                  onClick={() => handleEditClick(turma)}
+                  className={`glass-panel rounded-3xl shadow-xs border border-border/80 transition-all duration-200 cursor-pointer flex flex-col justify-between group/card bg-card/60 ${cardProportionClass} ${cardBorderColor} ${
+                    isHighlighted ? (isRemoto ? 'ring-2 ring-blue-500 ring-offset-2 ring-offset-bg shadow-md' : 'ring-2 ring-red-500 ring-offset-2 ring-offset-bg shadow-md') : ''
+                  }`}
+                >
+                  {/* 1. CÓDIGO DA TURMA (Nº DA TURMA DESTACADO) & BADGES */}
+                  <div className="flex items-center justify-between gap-2 shrink-0">
+                    <span className={`text-xs md:text-sm font-black tracking-wider px-3 py-1 rounded-xl border font-mono shadow-xs ${badgeCodigoClass}`}>
+                      {turma.codigo}
+                    </span>
+                    
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      {turma.cursoTem && (
+                        <span className="text-[9px] font-black bg-primary text-white px-2 py-0.5 rounded-md uppercase tracking-wider shadow-3xs">
+                          TEM
+                        </span>
+                      )}
+                      {isRemoto ? (
+                        <span className="text-[9px] font-black bg-blue-600 text-white px-2 py-0.5 rounded-md uppercase tracking-wider shadow-3xs flex items-center gap-1">
+                          <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse"></span>
+                          Remoto
+                        </span>
+                      ) : (
+                        <span className="text-[9px] font-black bg-red-500 text-white px-2 py-0.5 rounded-md uppercase tracking-wider shadow-3xs flex items-center gap-1">
+                          <span className="w-1.5 h-1.5 rounded-full bg-white"></span>
+                          Presencial
+                        </span>
+                      )}
+                      {isSemInstrutor && (
+                        <span className="text-[9px] font-black bg-amber-500/20 text-amber-700 dark:text-amber-300 border border-amber-500/30 px-1.5 py-0.5 rounded-md uppercase tracking-wider flex items-center gap-0.5">
+                          ⚠️ Sem Prof.
+                        </span>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* 2. NOME DO CURSO */}
+                  <div className="flex flex-col gap-1">
+                    <h3 className={`text-base font-black text-text-main font-display leading-tight ${hoverTitleClass} transition-colors line-clamp-2`}>
+                      {turma.cursoNome}
+                    </h3>
+                    {turma.unidade && (
+                      <span className="text-[9px] font-black uppercase tracking-wide px-2 py-0.5 rounded-md bg-surface text-text-muted border border-border/80 w-fit">
+                        {turma.unidade}
+                      </span>
+                    )}
+                  </div>
+
+                  {/* 3. DATA DE INÍCIO E FIM */}
+                  <div className="flex items-center gap-2 text-xs font-bold text-text-muted bg-surface/60 px-3 py-2 rounded-xl border border-border/60">
+                    <CalendarIcon className={`w-4 h-4 shrink-0 opacity-80 ${isRemoto ? 'text-blue-500' : 'text-red-500'}`} />
+                    <span className="font-mono text-xs">
+                      {formatDataCurta(turma.dataInicio)} - {formatDataCurta(turma.dataFim)}
+                    </span>
+                  </div>
+
+                  {/* 4. DIAS LETIVOS DE AULA (PRESENCIAL EM VERMELHO, REMOTO EM AZUL) */}
+                  <div className={`flex flex-col gap-1 text-xs font-bold ${diasBorderClass} pl-2.5 py-0.5 my-0.5`}>
+                    {presencial && (
+                      <div className="text-text-main flex items-baseline gap-1.5">
+                        <span className="text-text-muted text-[11px] font-bold">Presencial:</span>
+                        <span className="font-black text-red-600 dark:text-red-400">{presencial}</span>
+                      </div>
+                    )}
+                    {remoto && (
+                      <div className="text-text-main flex items-baseline gap-1.5">
+                        <span className="text-text-muted text-[11px] font-bold">Remoto:</span>
+                        <span className="font-black text-blue-600 dark:text-blue-400">{remoto}</span>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* 5. AMBIENTE EM QUE A TURMA ESTÁ ALOCADA */}
+                  <div className={`border px-3.5 py-2.5 rounded-2xl font-black text-xs flex items-center justify-between gap-2 font-display shadow-3xs ${salaBoxClass}`}>
+                    <div className="flex items-center gap-2 truncate">
+                      {salaIcon}
+                      <span className="truncate">{sala?.nome || (isRemoto ? 'Ambiente Virtual / Remoto' : 'Ambiente não atribuído')}</span>
+                    </div>
+                    {sala?.capacidade && (
+                      <span className={`text-[10px] font-mono shrink-0 px-2 py-0.5 rounded-md ${salaCapBadgeClass}`}>
+                        Cap: {sala.capacidade}
+                      </span>
+                    )}
+                  </div>
+
+                  {/* 6. NOME DO PROFESSOR */}
+                  <div className="flex items-center gap-2 text-xs font-bold text-text-main pt-2.5 border-t border-dashed border-border/60">
+                    <Users className="w-4 h-4 text-text-muted shrink-0 opacity-80" />
+                    <span className="truncate font-semibold">{turma.instrutorNome || 'Sem Instrutor'}</span>
+                  </div>
+
+                  {/* 7. PROGRESSO DA TURMA */}
+                  <div className="flex flex-col gap-1.5 pt-1">
+                    <div className="flex justify-between items-center">
+                      <span className={progressoFontClass}>{concluidas}/{total} aulas concluídas</span>
+                      <span className={progressoPercentClass}>{porcentagem}%</span>
+                    </div>
+                    <div className={progressBarHeightClass}>
+                      <div 
+                        className={`absolute inset-y-0 left-0 ${progressBarFillClass} transition-all duration-500 rounded-full`}
+                        style={{ width: `${porcentagem}%` }}
+                      ></div>
+                    </div>
+                  </div>
+
+                </div>
+              );
+            };
+
             return (
               <div 
                 key={turno} 
                 className={`glass-panel rounded-3xl overflow-hidden shadow-xs border border-border/80 flex flex-col md:flex-row transition-all duration-300 ${turnoBorderColor}`}
               >
                 {/* COLUNA FIXA DO TURNO NA ESQUERDA */}
-                <div className={`md:w-36 shrink-0 p-5 flex md:flex-col items-center justify-between md:justify-center gap-3 border-b md:border-b-0 md:border-r border-border/60 ${turnoBgColor}`}>
+                <div className={`md:w-44 shrink-0 p-5 flex md:flex-col items-center justify-between md:justify-center gap-3.5 border-b md:border-b-0 md:border-r border-border/60 ${turnoBgColor}`}>
                   <div className="flex flex-col items-center justify-center text-center">
                     <span className="text-[10px] font-black uppercase tracking-widest opacity-75 font-mono">Turno</span>
                     <h2 className="text-xl font-black uppercase tracking-wider font-display mt-0.5">
                       {turno}
                     </h2>
                   </div>
-                  <span className={`text-[10px] font-black px-2.5 py-1 rounded-xl border uppercase tracking-wider font-mono ${badgeBg}`}>
-                    {turmasDoTurno.length} {turmasDoTurno.length === 1 ? 'Turma' : 'Turmas'}
-                  </span>
+
+                  <div className="flex flex-col items-center gap-2 w-full">
+                    <span className={`text-[10px] font-black px-2.5 py-1 rounded-xl border uppercase tracking-wider font-mono w-full text-center ${badgeBg}`}>
+                      {turmasDoTurno.length} {turmasDoTurno.length === 1 ? 'Turma' : 'Turmas'}
+                    </span>
+                    {turmasDoTurno.length > 0 && (
+                      <div className="flex md:flex-col gap-1.5 w-full text-[10px] font-black">
+                        <span className="flex-1 px-2.5 py-1 rounded-lg bg-red-500/10 text-red-600 dark:text-red-400 border border-red-500/25 text-center flex items-center justify-center gap-1.5 shadow-3xs">
+                          <span className="w-2 h-2 rounded-full bg-red-500 shrink-0"></span>
+                          {turmasPresenciais.length} Presencial{turmasPresenciais.length !== 1 ? 'is' : ''}
+                        </span>
+                        <span className="flex-1 px-2.5 py-1 rounded-lg bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/25 text-center flex items-center justify-center gap-1.5 shadow-3xs">
+                          <span className="w-2 h-2 rounded-full bg-blue-500 shrink-0"></span>
+                          {turmasRemotas.length} Remota{turmasRemotas.length !== 1 ? 's' : ''}
+                        </span>
+                      </div>
+                    )}
+                  </div>
                 </div>
 
-                {/* ÁREA DE CARDS DE ALOCAÇÃO DO TURNO */}
-                <div className="flex-1 p-5 bg-card/20">
+                {/* ÁREA DE CARDS DE ALOCAÇÃO DO TURNO (ENQUADRAMENTO POR MODALIDADE) */}
+                <div className="flex-1 p-5 bg-card/20 flex flex-col gap-6">
                   {turmasDoTurno.length === 0 ? (
                     <div className="py-8 px-4 text-center flex flex-col items-center justify-center gap-2 border border-dashed border-border/70 rounded-2xl bg-surface/30">
                       <Clock className="w-8 h-8 text-text-muted/60" />
@@ -967,140 +1216,47 @@ export function PainelPage() {
                       </p>
                     </div>
                   ) : (
-                    <div className={
-                      modoTV 
-                        ? "grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-4" 
-                        : "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4.5"
-                    }>
-                      {turmasDoTurno.map((turma) => {
-                        const sala = getSalaInfo(turma.salaId);
-                        const { presencial, remoto } = formatDiasSemanaSeparados(turma.diasSemana, turma.diasRemotos);
-                        const { concluidas, total, porcentagem } = calcularProgressoAulas(turma.dataInicio, turma.dataFim, turma.diasSemana);
-
-                        const isRemoto = turma.modalidade === 'Remoto';
-                        const isSemInstrutor = !turma.instrutorNome || turma.instrutorNome.toLowerCase().includes('sem instrutor');
-                        const isHighlighted = searchTurma.trim() && isTurmaMatchingSearch(turma);
-
-                        // Estilos exclusivos para o Modo TV
-                        const cardProportionClass = modoTV 
-                          ? "aspect-[4/3.8] min-h-[320px] p-5.5 gap-3" 
-                          : "p-5 gap-3.5";
-                        const progressoFontClass = modoTV 
-                          ? "text-sm font-black text-text-muted" 
-                          : "text-[11px] font-black text-text-muted";
-                        const progressoPercentClass = modoTV 
-                          ? "text-base md:text-lg font-mono text-primary font-black" 
-                          : "text-[11px] font-mono text-primary font-black";
-                        const progressBarHeightClass = modoTV 
-                          ? "w-full h-3.5 md:h-4 rounded-full overflow-hidden bg-border/40 relative shadow-inner" 
-                          : "w-full h-2 rounded-full overflow-hidden bg-border/40 relative";
-
-                        return (
-                          <div
-                            key={turma.id}
-                            onClick={() => handleEditClick(turma)}
-                            className={`glass-panel rounded-3xl shadow-xs border border-border/80 hover:border-primary/50 hover-glow-primary transition-all duration-200 cursor-pointer flex flex-col justify-between group/card bg-card/60 ${cardProportionClass} ${
-                              isHighlighted ? 'ring-2 ring-primary ring-offset-2 ring-offset-bg shadow-md' : ''
-                            }`}
-                          >
-                            {/* 1. CÓDIGO DA TURMA (Nº DA TURMA DESTACADO) & BADGES */}
-                            <div className="flex items-center justify-between gap-2 shrink-0">
-                              <span className="text-xs md:text-sm font-black tracking-wider px-3 py-1 rounded-xl border border-primary/25 bg-primary/10 text-primary font-mono shadow-xs">
-                                {turma.codigo}
-                              </span>
-                              
-                              <div className="flex items-center gap-1.5 flex-wrap">
-                                {turma.cursoTem && (
-                                  <span className="text-[9px] font-black bg-primary text-white px-2 py-0.5 rounded-md uppercase tracking-wider shadow-3xs">
-                                    TEM
-                                  </span>
-                                )}
-                                {isRemoto && (
-                                  <span className="text-[9px] font-bold bg-amber-500 text-white px-2 py-0.5 rounded-md uppercase tracking-wider shadow-3xs">
-                                    Remoto
-                                  </span>
-                                )}
-                                {isSemInstrutor && (
-                                  <span className="text-[9px] font-black bg-amber-500/20 text-amber-700 dark:text-amber-300 border border-amber-500/30 px-1.5 py-0.5 rounded-md uppercase tracking-wider flex items-center gap-0.5">
-                                    ⚠️ Sem Prof.
-                                  </span>
-                                )}
-                              </div>
-                            </div>
-
-                            {/* 2. NOME DO CURSO */}
-                            <div className="flex flex-col gap-1">
-                              <h3 className="text-base font-black text-text-main font-display leading-tight group-hover/card:text-primary transition-colors line-clamp-2">
-                                {turma.cursoNome}
+                    <>
+                      {/* ENQUADRAMENTO PRESENCIAL (VERMELHO) */}
+                      {turmasPresenciais.length > 0 && (
+                        <div className="flex flex-col gap-3">
+                          <div className="flex items-center justify-between pb-2 border-b-2 border-red-500/30">
+                            <div className="flex items-center gap-2">
+                              <span className="w-3 h-3 rounded-full bg-red-500 shadow-xs shadow-red-500/50"></span>
+                              <h3 className="text-xs font-black uppercase tracking-wider text-red-600 dark:text-red-400 font-display">
+                                Turmas Presenciais ({turmasPresenciais.length})
                               </h3>
-                              {turma.unidade && (
-                                <span className="text-[9px] font-black uppercase tracking-wide px-2 py-0.5 rounded-md bg-surface text-text-muted border border-border/80 w-fit">
-                                  {turma.unidade}
-                                </span>
-                              )}
                             </div>
-
-                            {/* 3. DATA DE INÍCIO E FIM */}
-                            <div className="flex items-center gap-2 text-xs font-bold text-text-muted bg-surface/60 px-3 py-2 rounded-xl border border-border/60">
-                              <CalendarIcon className="w-4 h-4 text-primary shrink-0 opacity-80" />
-                              <span className="font-mono text-xs">
-                                {formatDataCurta(turma.dataInicio)} - {formatDataCurta(turma.dataFim)}
-                              </span>
-                            </div>
-
-                            {/* 4. DIAS LETIVOS DE AULA (MOSTRANDO PRESENCIAL E REMOTO) */}
-                            <div className="flex flex-col gap-1 text-xs font-bold border-l-3 border-primary pl-2.5 py-0.5 my-0.5">
-                              {presencial && (
-                                <div className="text-text-main flex items-baseline gap-1.5">
-                                  <span className="text-text-muted text-[11px] font-bold">Presencial:</span>
-                                  <span className="font-black text-primary">{presencial}</span>
-                                </div>
-                              )}
-                              {remoto && (
-                                <div className="text-amber-700 dark:text-amber-300 flex items-baseline gap-1.5">
-                                  <span className="text-amber-600/70 text-[11px] font-bold">Remoto:</span>
-                                  <span className="font-black">{remoto}</span>
-                                </div>
-                              )}
-                            </div>
-
-                            {/* 5. AMBIENTE EM QUE A TURMA ESTÁ ALOCADA */}
-                            <div className="bg-primary/10 border border-primary/20 text-primary px-3.5 py-2.5 rounded-2xl font-black text-xs flex items-center justify-between gap-2 font-display shadow-3xs">
-                              <div className="flex items-center gap-2 truncate">
-                                <MapPin size={14} className="shrink-0 text-primary" />
-                                <span className="truncate">{sala?.nome || 'Ambiente não atribuído'}</span>
-                              </div>
-                              {sala?.capacidade && (
-                                <span className="text-[10px] font-mono text-primary/80 shrink-0 bg-primary/15 px-2 py-0.5 rounded-md">
-                                  Cap: {sala.capacidade}
-                                </span>
-                              )}
-                            </div>
-
-                            {/* 6. NOME DO PROFESSOR */}
-                            <div className="flex items-center gap-2 text-xs font-bold text-text-main pt-2.5 border-t border-dashed border-border/60">
-                              <Users className="w-4 h-4 text-text-muted shrink-0 opacity-80" />
-                              <span className="truncate font-semibold">{turma.instrutorNome || 'Sem Instrutor'}</span>
-                            </div>
-
-                            {/* 7. PROGRESSO DA TURMA */}
-                            <div className="flex flex-col gap-1.5 pt-1">
-                              <div className="flex justify-between items-center">
-                                <span className={progressoFontClass}>{concluidas}/{total} aulas concluídas</span>
-                                <span className={progressoPercentClass}>{porcentagem}%</span>
-                              </div>
-                              <div className={progressBarHeightClass}>
-                                <div 
-                                  className="absolute inset-y-0 left-0 bg-primary transition-all duration-500 rounded-full"
-                                  style={{ width: `${porcentagem}%` }}
-                                ></div>
-                              </div>
-                            </div>
-
+                            <span className="text-[10px] font-bold text-red-600/80 dark:text-red-400/80 bg-red-500/10 px-2.5 py-0.5 rounded-lg border border-red-500/20">
+                              Aulas em Sala Física
+                            </span>
                           </div>
-                        );
-                      })}
-                    </div>
+                          <div className={gridClasses}>
+                            {turmasPresenciais.map(renderCardTurma)}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* ENQUADRAMENTO REMOTO (AZUL) */}
+                      {turmasRemotas.length > 0 && (
+                        <div className="flex flex-col gap-3">
+                          <div className="flex items-center justify-between pb-2 border-b-2 border-blue-500/30">
+                            <div className="flex items-center gap-2">
+                              <span className="w-3 h-3 rounded-full bg-blue-500 shadow-xs shadow-blue-500/50"></span>
+                              <h3 className="text-xs font-black uppercase tracking-wider text-blue-600 dark:text-blue-400 font-display">
+                                Turmas Remotas ({turmasRemotas.length})
+                              </h3>
+                            </div>
+                            <span className="text-[10px] font-bold text-blue-600/80 dark:text-blue-400/80 bg-blue-500/10 px-2.5 py-0.5 rounded-lg border border-blue-500/20">
+                              Aulas Remotas / Virtuais
+                            </span>
+                          </div>
+                          <div className={gridClasses}>
+                            {turmasRemotas.map(renderCardTurma)}
+                          </div>
+                        </div>
+                      )}
+                    </>
                   )}
                 </div>
               </div>
