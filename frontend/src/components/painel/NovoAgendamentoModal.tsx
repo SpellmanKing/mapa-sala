@@ -1,5 +1,7 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { Calendar as CalendarIcon, X, Users, AlertTriangle, Lightbulb, ArrowRight, Loader2 } from 'lucide-react';
+import { useDialogFocus } from '../../utils/useDialogFocus';
+import { CLASS_DAYS, SHIFTS } from '../../constants/referenceData';
 
 interface Props {
   open: boolean;
@@ -21,11 +23,23 @@ interface Props {
   instrutores: any[];
   disponibilidadeNovo: {
     salasLivres: any[];
+    salasOcupadas: Array<{ salaId: number; turmaCodigo: string; data: string }>;
+    salasCapacidadeInsuficiente: Array<{ salaId: number; nome: string; capacidade: number }>;
+    conflitoInstrutor: null | { nome: string; turmaCodigo: string; data: string };
     sugestoesTurnos: { turno: string; vagas: number }[];
+    totalSalas: number;
+    erro: string | null;
+  };
+  avisoDisponibilidade: string | null;
+  calculoImportado: null | {
+    cargaHoraria: number;
+    horasPorDia: number;
+    cronograma: { dataTermino: string; totalAulas: number };
   };
   salaSelecionadaNovo?: any;
   capacidadeExcedidaNovo: boolean;
   isSavingAlocacao: boolean;
+  isLoadingDisponibilidade: boolean;
 }
 
 export function NovoAgendamentoModal({
@@ -38,35 +52,34 @@ export function NovoAgendamentoModal({
   cursos,
   instrutores,
   disponibilidadeNovo,
+  avisoDisponibilidade,
+  calculoImportado,
   salaSelecionadaNovo,
   capacidadeExcedidaNovo,
-  isSavingAlocacao
+  isSavingAlocacao,
+  isLoadingDisponibilidade
 }: Props) {
-  useEffect(() => {
-    if (!open) return;
-    function onKeyDown(e: KeyboardEvent) {
-      if (e.key === 'Escape' && !isSavingAlocacao) onClose();
-    }
-    window.addEventListener('keydown', onKeyDown);
-    return () => window.removeEventListener('keydown', onKeyDown);
-  }, [open, onClose, isSavingAlocacao]);
+  const dialogRef = useDialogFocus(open, onClose, isSavingAlocacao);
 
   if (!open) return null;
 
   return (
-    <div 
-      role="dialog"
-      aria-modal="true"
-      className="fixed inset-0 bg-slate-950/60 backdrop-blur-md z-[999] flex items-center justify-center p-4 overflow-y-auto"
-    >
-      <div className="glass-panel rounded-3xl shadow-2xl w-full max-w-lg overflow-hidden animate-in fade-in zoom-in-95 duration-200 flex flex-col transition-all max-h-[90vh]">
-        <div className="p-6 border-b border-border/60 flex justify-between items-center bg-surface/40 shrink-0">
-          <h2 className="text-lg font-black text-secondary dark:text-white uppercase tracking-tight flex items-center gap-2 font-display">
+    <div className="fixed inset-0 bg-slate-950/60 backdrop-blur-md z-[999] flex items-center justify-center p-2 sm:p-4 overflow-y-auto">
+      <div
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="novo-agendamento-title"
+        className="glass-panel rounded-2xl sm:rounded-3xl shadow-2xl w-full max-w-lg overflow-hidden animate-in fade-in zoom-in-95 duration-200 flex flex-col transition-all max-h-[calc(100dvh-1rem)] sm:max-h-[calc(100dvh-2rem)]"
+      >
+        <div className="p-4 sm:p-5 border-b border-border/60 flex justify-between items-center bg-surface/40 shrink-0">
+          <h2 id="novo-agendamento-title" className="text-base sm:text-lg font-black text-secondary dark:text-white tracking-tight flex items-center gap-2 font-display">
             <CalendarIcon className="w-5 h-5 text-primary" />
             Nova Alocação de Turma
           </h2>
           <button 
             type="button"
+            aria-label="Fechar nova alocação"
             disabled={isSavingAlocacao}
             onClick={onClose} 
             className="text-text-muted hover:text-text-main hover:bg-surface/60 p-2 rounded-xl transition-all btn-tactile cursor-pointer disabled:opacity-50"
@@ -75,12 +88,21 @@ export function NovoAgendamentoModal({
           </button>
         </div>
         
-        <form onSubmit={onSave} className="p-6 flex flex-col gap-4 overflow-y-auto custom-scrollbar">
+        <form onSubmit={onSave} className="p-4 sm:p-5 flex flex-col gap-4 overflow-y-auto custom-scrollbar">
+          {calculoImportado && (
+            <div className="bg-primary/5 border border-primary/20 rounded-2xl p-3 text-xs text-text-main">
+              <strong>Cronograma importado da calculadora:</strong>{' '}
+              {calculoImportado.cargaHoraria}h, {calculoImportado.horasPorDia}h por encontro,
+              {' '}{calculoImportado.cronograma.totalAulas} encontros, término previsto em{' '}
+              {calculoImportado.cronograma.dataTermino.split('-').reverse().join('/')}.
+            </div>
+          )}
           
           {/* Curso */}
           <div>
             <label className="block text-xs font-black text-text-muted uppercase tracking-widest mb-1.5">Curso</label>
             <select 
+              data-dialog-initial-focus
               value={novoAgendamento.cursoId}
               onChange={handleCursoChange}
               className="w-full border border-border rounded-xl p-3 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none text-sm font-semibold transition-all bg-input text-text-main cursor-pointer"
@@ -114,9 +136,9 @@ export function NovoAgendamentoModal({
                 onChange={e => setNovoAgendamento({ ...novoAgendamento, turno: e.target.value, salaId: '' })}
                 className="w-full border border-border rounded-xl p-3 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none text-sm font-semibold transition-all bg-input text-text-main cursor-pointer"
               >
-                <option value="Manhã" className="bg-card text-text-main">Manhã</option>
-                <option value="Tarde" className="bg-card text-text-main">Tarde</option>
-                <option value="Noite" className="bg-card text-text-main">Noite</option>
+                {SHIFTS.map(shift => (
+                  <option key={shift.id} value={shift.label} className="bg-card text-text-main">{shift.label}</option>
+                ))}
               </select>
             </div>
           </div>
@@ -125,19 +147,13 @@ export function NovoAgendamentoModal({
           <div>
             <label className="block text-xs font-black text-text-muted uppercase tracking-widest mb-2">Dias de Execução da Turma</label>
             <div className="flex flex-wrap gap-2">
-              {[
-                { id: '1', label: 'Seg' },
-                { id: '2', label: 'Ter' },
-                { id: '3', label: 'Qua' },
-                { id: '4', label: 'Qui' },
-                { id: '5', label: 'Sex' },
-                { id: '6', label: 'Sáb' }
-              ].map((dia) => {
+              {CLASS_DAYS.map((dia) => {
                 const checked = novoAgendamento.diasSemana.includes(dia.id);
                 return (
                   <button
                     type="button"
                     key={dia.id}
+                    aria-pressed={checked}
                     onClick={() => {
                       setNovoAgendamento((prev: any) => {
                         const prevSet = new Set(prev.diasSemana);
@@ -152,7 +168,7 @@ export function NovoAgendamentoModal({
                         : 'bg-input text-text-muted hover:bg-surface/50'
                     }`}
                   >
-                    {dia.label}
+                    {dia.short}
                   </button>
                 );
               })}
@@ -165,14 +181,15 @@ export function NovoAgendamentoModal({
               <label className="text-xs font-black text-text-muted uppercase tracking-widest">
                 Ambiente / Sala Disponível
               </label>
-              <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 font-mono">
-                {disponibilidadeNovo.salasLivres.length} salas livres no turno
+              <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 font-mono" aria-live="polite">
+                {isLoadingDisponibilidade ? 'verificando disponibilidade...' : `${disponibilidadeNovo.salasLivres.length} salas livres no turno`}
               </span>
             </div>
 
             <select 
               value={novoAgendamento.salaId}
               onChange={e => setNovoAgendamento({ ...novoAgendamento, salaId: e.target.value })}
+              disabled={isLoadingDisponibilidade || Boolean(disponibilidadeNovo.erro)}
               className="w-full border border-border rounded-xl p-3 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none text-sm font-semibold transition-all bg-input text-text-main cursor-pointer"
               required
             >
@@ -188,14 +205,30 @@ export function NovoAgendamentoModal({
               ))}
             </select>
 
+            {disponibilidadeNovo.erro && (
+              <div role="alert" className="mt-3 bg-red-500/10 border border-red-500/30 rounded-xl p-3 flex items-center gap-2 text-xs font-bold text-red-600 dark:text-red-400">
+                <AlertTriangle size={15} className="shrink-0" />
+                {disponibilidadeNovo.erro}
+              </div>
+            )}
+
+            {disponibilidadeNovo.conflitoInstrutor && (
+              <div role="alert" className="mt-3 bg-red-500/10 border border-red-500/30 rounded-xl p-3 flex items-center gap-2 text-xs font-bold text-red-600 dark:text-red-400">
+                <AlertTriangle size={15} className="shrink-0" />
+                Conflito de instrutor: {disponibilidadeNovo.conflitoInstrutor.nome} já está associado à turma{' '}
+                {disponibilidadeNovo.conflitoInstrutor.turmaCodigo} neste turno em{' '}
+                {disponibilidadeNovo.conflitoInstrutor.data.split('T')[0].split('-').reverse().join('/')}.
+              </div>
+            )}
+
             {/* SUGESTÃO DE TURNOS ALTERNATIVOS SE 0 SALAS LIVRES */}
-            {disponibilidadeNovo.salasLivres.length === 0 && (
+            {avisoDisponibilidade && !disponibilidadeNovo.erro && (
               <div className="mt-3 bg-amber-500/10 border border-amber-500/30 rounded-2xl p-4 flex flex-col gap-2.5 animate-in fade-in">
                 <div className="flex items-center gap-2 text-xs font-black text-amber-700 dark:text-amber-300 uppercase tracking-wider">
                   <Lightbulb size={15} /> Sugestão de Horários Alternativos
                 </div>
                 <p className="text-xs text-text-muted">
-                  Todas as salas estão ocupadas no turno da <strong>{novoAgendamento.turno}</strong> para as datas selecionadas.
+                  {avisoDisponibilidade}
                 </p>
                 {disponibilidadeNovo.sugestoesTurnos.length > 0 && (
                   <div className="flex flex-wrap gap-2 mt-1">
@@ -246,7 +279,7 @@ export function NovoAgendamentoModal({
               required
             />
             {capacidadeExcedidaNovo && (
-              <div className="mt-2 p-2.5 bg-red-500/10 border border-red-500/30 rounded-xl flex items-center gap-2 text-xs font-bold text-red-600 dark:text-red-400 animate-in fade-in">
+              <div role="alert" className="mt-2 p-2.5 bg-red-500/10 border border-red-500/30 rounded-xl flex items-center gap-2 text-xs font-bold text-red-600 dark:text-red-400 animate-in fade-in">
                 <AlertTriangle size={15} className="shrink-0" />
                 <span>Capacidade da sala excedida! A sala comporta no máximo {salaSelecionadaNovo?.capacidade} alunos.</span>
               </div>
@@ -272,19 +305,26 @@ export function NovoAgendamentoModal({
           </div>
 
           {/* Ações */}
-          <div className="flex justify-end gap-3 mt-4 pt-4 border-t border-border/60 shrink-0">
+          <div className="sticky bottom-0 -mx-4 sm:-mx-5 -mb-4 sm:-mb-5 px-4 sm:px-5 py-4 bg-card border-t border-border/60 flex flex-col-reverse sm:flex-row sm:justify-end gap-2 sm:gap-3 shrink-0">
             <button 
               type="button" 
               disabled={isSavingAlocacao}
               onClick={onClose} 
-              className="px-4 py-2 text-sm font-bold text-text-muted hover:text-text-main hover:bg-surface/50 rounded-xl btn-tactile cursor-pointer disabled:opacity-50"
+              className="w-full sm:w-auto px-4 py-2.5 text-sm font-bold text-text-muted hover:text-text-main hover:bg-surface/50 rounded-xl btn-tactile cursor-pointer disabled:opacity-50"
             >
               Cancelar
             </button>
             <button 
               type="submit" 
-              disabled={isSavingAlocacao || !novoAgendamento.salaId || capacidadeExcedidaNovo}
-              className="bg-primary text-white font-black py-2.5 px-6 rounded-xl shadow-md hover:shadow-lg hover:shadow-primary/20 btn-tactile cursor-pointer text-sm flex items-center gap-2 disabled:opacity-50"
+              disabled={
+                isSavingAlocacao ||
+                isLoadingDisponibilidade ||
+                !novoAgendamento.salaId ||
+                capacidadeExcedidaNovo ||
+                Boolean(disponibilidadeNovo.erro) ||
+                Boolean(disponibilidadeNovo.conflitoInstrutor)
+              }
+              className="w-full sm:w-auto bg-primary text-white font-black py-2.5 px-6 rounded-xl shadow-md hover:bg-primary/90 btn-tactile cursor-pointer text-sm flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isSavingAlocacao ? (
                 <>

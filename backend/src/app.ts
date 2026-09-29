@@ -15,8 +15,10 @@ import { feriadoRouter } from './controllers/feriadoController.js';
 import { calculadoraRouter } from './controllers/calculadoraController.js';
 import { turmaRouter } from './controllers/turmaController.js';
 import { prisma } from './infrastructure/prismaClient.js';
+import { env, getJwtSecret } from './config/env.js';
 
 export function createApp() {
+  if (env.requireAuth) getJwtSecret();
   const app = express();
 
   app.disable('x-powered-by');
@@ -24,7 +26,7 @@ export function createApp() {
 
   app.use(
     cors({
-      origin: process.env.CORS_ORIGIN ?? '*',
+      origin: env.corsOrigin,
       credentials: true
     })
   );
@@ -43,11 +45,13 @@ export function createApp() {
         database: 'connected', 
         timestamp: new Date().toISOString() 
       });
-    } catch (error: any) {
+    } catch (error) {
+      // eslint-disable-next-line no-console
+      console.error('Health check failed:', error);
       return res.status(503).json({ 
         status: 'unhealthy', 
         database: 'disconnected', 
-        error: error?.message || 'Database ping failed' 
+        error: 'Database ping failed'
       });
     }
   });
@@ -56,12 +60,11 @@ export function createApp() {
   app.use('/cursos', authMiddleware, cursoRouter);
   app.use('/salas', authMiddleware, salaRouter);
   app.use('/instrutores', authMiddleware, instrutorRouter);
-  app.use('/feriados', feriadoRouter);
-  app.use('/calcular_cronograma', calculadoraRouter);
+  app.use('/feriados', authMiddleware, feriadoRouter);
+  app.use('/calcular_cronograma', authMiddleware, calculadoraRouter);
   app.use('/turmas', authMiddleware, turmaRouter);
   app.use(notFoundHandler);
   app.use(errorHandler);
 
   return app;
 }
-

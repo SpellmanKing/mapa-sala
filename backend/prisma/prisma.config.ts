@@ -1,3 +1,4 @@
+import 'dotenv/config';
 import type { PrismaClientOptions } from '@prisma/client';
 import { PrismaClient } from '@prisma/client';
 
@@ -19,4 +20,3 @@ function createPrismaClient(options: PrismaClientOptions = {}) {
 }
 
 export const prisma = createPrismaClient();
-

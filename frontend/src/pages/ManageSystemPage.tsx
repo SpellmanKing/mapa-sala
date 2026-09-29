@@ -3,11 +3,13 @@ import { CursoModal, CursoPayload } from '../components/CursoModal';
 import { InstrutorModal, InstrutorPayload } from '../components/InstrutorModal';
 import { SalaModal, SalaPayload } from '../components/SalaModal';
 import { ConfirmDeleteModal } from '../components/ConfirmDeleteModal';
-import { useAppContext, Curso, Instrutor, Sala } from '../context/AppContext';
+import { FeriadosManager } from '../components/FeriadosManager';
+import { useAppData, useAppUi, Curso, Instrutor, Sala, type DataResource } from '../context/AppContext';
 import { CursoService, InstrutorService, SalaService } from '../api/client';
-import { Plus, Edit, Trash2, BookOpen, Users, School, Search, X, ChevronLeft, ChevronRight, Filter } from 'lucide-react';
+import { Plus, Edit, Trash2, BookOpen, Users, School, Search, X, ChevronLeft, ChevronRight, Filter, CalendarDays } from 'lucide-react';
+import { mergeReferenceValues, REFERENCE_UNITS, SHIFTS } from '../constants/referenceData';
 
-type Tab = 'cursos' | 'instrutores' | 'salas';
+type Tab = 'cursos' | 'instrutores' | 'salas' | 'feriados';
 
 export function ManageSystemPage() {
   const { 
@@ -20,11 +22,24 @@ export function ManageSystemPage() {
     refreshCursos, 
     refreshInstrutores, 
     refreshSalas, 
-    refreshTurmas, 
-    showToast 
-  } = useAppContext();
+    refreshTurmas,
+    loadData
+  } = useAppData();
+  const { showToast } = useAppUi();
 
   const [activeTab, setActiveTab] = useState<Tab>('cursos');
+
+  React.useEffect(() => {
+    const resources: Record<Exclude<Tab, 'feriados'>, DataResource[]> = {
+      cursos: ['cursos', 'instrutores', 'turmas'],
+      instrutores: ['instrutores', 'turmas'],
+      salas: ['salas', 'tiposSala', 'turmas']
+    };
+    if (activeTab === 'feriados') return;
+    void loadData(resources[activeTab]).catch(() => {
+      showToast('Não foi possível carregar os dados administrativos.', 'error');
+    });
+  }, [activeTab, loadData, showToast]);
 
   // --- Estados do Curso ---
   const [cursoModalOpen, setCursoModalOpen] = useState(false);
@@ -39,7 +54,7 @@ export function ManageSystemPage() {
     diasSemanaLetiva: ['1', '3', '5'], 
     diasRemotos: [], 
     codigoTurmaPadrao: '', 
-    turnoPadrao: 'Manhã', 
+    turnoPadrao: SHIFTS[0].label,
     modalidade: 'Presencial'
   });
   const [cursoError, setCursoError] = useState<string | null>(null);
@@ -91,6 +106,10 @@ export function ManageSystemPage() {
   });
 
   const ITEMS_PER_PAGE = 12;
+  const unidadesCadastro = useMemo(
+    () => mergeReferenceValues(cursos.map(curso => curso.unidade), REFERENCE_UNITS),
+    [cursos]
+  );
 
   // === MÉTODOS DE CURSO ===
   function openCursoCreate() {
@@ -101,11 +120,11 @@ export function ManageSystemPage() {
       cargaHoraria: 160,
       segmento: 'Tecnologia da Informação',
       instrutorId: instrutores[0]?.id ?? '', 
-      unidade: 'Cep Talal', 
+      unidade: unidadesCadastro[0] ?? '',
       diasSemanaLetiva: ['1', '3', '5'], 
       diasRemotos: [], 
       codigoTurmaPadrao: '', 
-      turnoPadrao: 'Manhã', 
+      turnoPadrao: SHIFTS[0].label,
       modalidade: 'Presencial' 
     });
     setCursoModalOpen(true);
@@ -120,11 +139,11 @@ export function ManageSystemPage() {
       cargaHoraria: curso.cargaHoraria || 160,
       segmento: curso.segmento || 'Tecnologia da Informação',
       instrutorId: curso.instrutorId ?? '', 
-      unidade: curso.unidade ?? 'Cep Talal', 
+      unidade: curso.unidade ?? unidadesCadastro[0] ?? '',
       diasSemanaLetiva: curso.diasSemana ?? ['1', '3', '5'], 
       diasRemotos: curso.diasRemotos ?? [], 
       codigoTurmaPadrao: curso.codigoTurmaPadrao ?? '', 
-      turnoPadrao: curso.turnoPadrao ?? 'Manhã', 
+      turnoPadrao: curso.turnoPadrao ?? SHIFTS[0].label,
       modalidade: curso.modalidade 
     });
     setCursoModalOpen(true);
@@ -150,10 +169,10 @@ export function ManageSystemPage() {
         bolsa_compativel: true,
         unidade: cursoForm.unidade,
         id_instrutor_padrao: Number(cursoForm.instrutorId) || undefined,
-        codigo_turma_padrao: cursoForm.codigoTurmaPadrao?.trim(),
+        codigo_turma_padrao: cursoForm.codigoTurmaPadrao?.trim() || null,
         turno_padrao: cursoForm.turnoPadrao,
         dias_letivos_padrao: cursoForm.diasSemanaLetiva.join(','),
-        dias_remotos_padrao: cursoForm.diasRemotos.join(',')
+        dias_remotos_padrao: cursoForm.diasRemotos.length > 0 ? cursoForm.diasRemotos.join(',') : null
       };
 
       if (editingCurso?.id) {
@@ -163,7 +182,7 @@ export function ManageSystemPage() {
         await CursoService.create(apiPayload);
         showToast('Curso criado com sucesso!', 'success');
       }
-      refreshCursos();
+      await refreshCursos();
       setCursoModalOpen(false);
     } catch (err: any) {
       const msg = err.response?.data?.error || err.response?.data?.message || 'Erro ao salvar no backend.';
@@ -220,7 +239,7 @@ export function ManageSystemPage() {
         await InstrutorService.create(payload);
         showToast('Instrutor criado com sucesso!', 'success');
       }
-      refreshInstrutores();
+      await refreshInstrutores();
       setInstrutorModalOpen(false);
     } catch (err: any) {
       const msg = err.response?.data?.error || err.response?.data?.message || 'Erro ao salvar no backend.';
@@ -269,7 +288,7 @@ export function ManageSystemPage() {
       nome: sala.nome,
       capacidade: sala.capacidade,
       idTipoSala: sala.idTipoSala || (tipoSalas.find(t => t.nome === sala.tipo)?.id ? Number(tipoSalas.find(t => t.nome === sala.tipo)?.id) : undefined),
-      local: (sala as any).local || '',
+      local: sala.local || '',
       recursosEspeciais: sala.recursosEspeciais || ''
     });
     setSalaModalOpen(true);
@@ -298,7 +317,7 @@ export function ManageSystemPage() {
         await SalaService.create(payload);
         showToast('Sala criada com sucesso!', 'success');
       }
-      refreshSalas();
+      await refreshSalas();
       setSalaModalOpen(false);
     } catch (err: any) {
       const msg = err.response?.data?.error || err.response?.data?.message || 'Erro ao salvar sala no backend.';
@@ -330,17 +349,17 @@ export function ManageSystemPage() {
       if (deleteModal.type === 'curso') {
         await CursoService.delete(Number(deleteModal.id));
         showToast('Curso excluído com sucesso!', 'success');
-        refreshCursos();
-        refreshTurmas();
+        await refreshCursos();
+        await refreshTurmas();
       } else if (deleteModal.type === 'instrutor') {
         await InstrutorService.delete(Number(deleteModal.id));
         showToast('Instrutor excluído com sucesso!', 'success');
-        refreshInstrutores();
+        await refreshInstrutores();
       } else if (deleteModal.type === 'sala') {
         await SalaService.delete(Number(deleteModal.id));
         showToast('Sala excluída com sucesso!', 'success');
-        refreshSalas();
-        refreshTurmas();
+        await refreshSalas();
+        await refreshTurmas();
       }
       setDeleteModal(prev => ({ ...prev, open: false, isDeleting: false }));
     } catch (err: any) {
@@ -430,7 +449,7 @@ export function ManageSystemPage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 glass-panel p-6 rounded-3xl shadow-sm transition-colors duration-300">
         <div>
           <h1 className="text-2xl font-black text-secondary dark:text-primary tracking-tight">Gerenciamento Educacional</h1>
-          <p className="text-text-muted text-sm mt-1 font-medium">Gestão unificada de Cursos, Instrutores e Ambientes.</p>
+          <p className="text-text-muted text-sm mt-1 font-medium">Gestão unificada de cursos, instrutores, ambientes e calendário.</p>
         </div>
         
         <div className="shrink-0 flex items-center gap-2">
@@ -512,6 +531,18 @@ export function ManageSystemPage() {
           }`}>
             {salas.length}
           </span>
+        </button>
+
+        <button
+          onClick={() => setActiveTab('feriados')}
+          className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-sm transition-all btn-tactile cursor-pointer border ${
+            activeTab === 'feriados'
+              ? 'bg-primary/10 text-primary border-primary/20 shadow-sm font-black'
+              : 'text-text-muted hover:text-text-main hover:bg-surface border-transparent'
+          }`}
+        >
+          <CalendarDays className="w-4 h-4" />
+          <span>Feriados e Recessos</span>
         </button>
       </div>
 
@@ -1010,6 +1041,8 @@ export function ManageSystemPage() {
           </div>
         )}
 
+        {activeTab === 'feriados' && <FeriadosManager />}
+
       </div>
 
       {/* Modal de Cursos */}
@@ -1021,8 +1054,8 @@ export function ManageSystemPage() {
         onSave={saveCurso}
         form={cursoForm}
         setForm={setCursoForm}
-        ambientes={tipoSalas}
         instrutores={instrutores}
+        unidades={unidadesCadastro}
         isSaving={isSavingCurso}
       />
 

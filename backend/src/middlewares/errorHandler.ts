@@ -19,7 +19,7 @@ export function errorHandler(err: unknown, req: Request, res: Response, _next: N
 
   if (err instanceof ZodError) {
     status = 400;
-    message = 'Dados inválidos na requisição';
+    message = err.errors[0]?.message ?? 'Dados inválidos na requisição';
     details = err.errors.map(e => ({
       campo: e.path.join('.'),
       mensagem: e.message
@@ -27,7 +27,7 @@ export function errorHandler(err: unknown, req: Request, res: Response, _next: N
   } else if (err instanceof Prisma.PrismaClientKnownRequestError) {
     if (err.code === 'P2002') {
       status = 409;
-      const targets = (err.meta?.target as string) || '';
+      const targets = String(err.meta?.target ?? '');
       if (targets.includes('nome_instrutor')) {
         message = 'Já existe um instrutor cadastrado com este nome!';
       } else if (targets.includes('nome_curso')) {
@@ -36,6 +36,8 @@ export function errorHandler(err: unknown, req: Request, res: Response, _next: N
         message = 'Já existe um ambiente cadastrado com este nome!';
       } else if (targets.includes('codigo_turma')) {
         message = 'Já existe uma turma cadastrada com este código!';
+      } else if (targets.includes('data_feriado')) {
+        message = 'Já existe um feriado ou recesso cadastrado nesta data.';
       } else {
         message = 'Conflito de registro duplicado no banco de dados.';
       }
@@ -47,14 +49,16 @@ export function errorHandler(err: unknown, req: Request, res: Response, _next: N
       message = 'Registro não encontrado no banco de dados.';
     }
   } else if (typeof err === 'object' && err !== null) {
+    const apiError = err as { statusCode?: unknown; message?: unknown; details?: unknown };
     if ('statusCode' in err) {
-      status = Number((err as any).statusCode);
+      const parsedStatus = Number(apiError.statusCode);
+      if (Number.isInteger(parsedStatus) && parsedStatus >= 400 && parsedStatus <= 599) status = parsedStatus;
     }
     if ('message' in err) {
-      message = String((err as any).message);
+      message = String(apiError.message);
     }
     if ('details' in err) {
-      details = (err as any).details;
+      details = apiError.details;
     }
   }
 

@@ -1,5 +1,6 @@
 import { prisma } from '../infrastructure/prismaClient.js';
 import { HttpError } from '../utils/errors.js';
+import type { Prisma } from '@prisma/client';
 
 export class CursoService {
   async getAll() {
@@ -23,13 +24,13 @@ export class CursoService {
     return curso;
   }
 
-  async create(data: { nome_curso: string, segmento: string, modalidade: string, carga_horaria: number, valor: number, curso_tem: boolean, bolsa_compativel: boolean, idTipo_sala?: number, unidade?: string, codigo_turma_padrao?: string, turno_padrao?: string, dias_letivos_padrao?: string, dias_remotos_padrao?: string, id_instrutor_padrao?: number }) {
+  async create(data: Prisma.CursoUncheckedCreateInput) {
     return prisma.curso.create({
       data
     });
   }
 
-  async update(id: number, data: Partial<{ nome_curso: string, segmento: string, modalidade: string, carga_horaria: number, valor: number, curso_tem: boolean, bolsa_compativel: boolean, idTipo_sala: number, unidade: string, codigo_turma_padrao: string, turno_padrao: string, dias_letivos_padrao: string, dias_remotos_padrao: string, id_instrutor_padrao: number }>) {
+  async update(id: number, data: Prisma.CursoUncheckedUpdateInput) {
     await this.getById(id);
     return prisma.curso.update({
       where: { id_cursos: id },

@@ -1,5 +1,7 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { BookOpen, X, Lightbulb, Trash2, Loader2 } from 'lucide-react';
+import { useDialogFocus } from '../../utils/useDialogFocus';
+import { CLASS_DAYS, SHIFTS } from '../../constants/referenceData';
 
 interface Props {
   open: boolean;
@@ -18,10 +20,17 @@ interface Props {
   instrutores: any[];
   disponibilidadeEdicao: {
     salasLivres: any[];
+    salasOcupadas: Array<{ salaId: number; turmaCodigo: string; data: string }>;
+    salasCapacidadeInsuficiente: Array<{ salaId: number; nome: string; capacidade: number }>;
+    conflitoInstrutor: null | { nome: string; turmaCodigo: string; data: string };
     sugestoesTurnos: { turno: string; vagas: number }[];
+    totalSalas: number;
+    erro: string | null;
   };
+  avisoDisponibilidade: string | null;
   isSavingAlocacao: boolean;
   isDeletingAlocacao: boolean;
+  isLoadingDisponibilidade: boolean;
 }
 
 export function EditTurmaModal({
@@ -34,34 +43,32 @@ export function EditTurmaModal({
   setDadosEdicao,
   instrutores,
   disponibilidadeEdicao,
+  avisoDisponibilidade,
   isSavingAlocacao,
-  isDeletingAlocacao
+  isDeletingAlocacao,
+  isLoadingDisponibilidade
 }: Props) {
-  useEffect(() => {
-    if (!open) return;
-    function onKeyDown(e: KeyboardEvent) {
-      if (e.key === 'Escape' && !isSavingAlocacao && !isDeletingAlocacao) onClose();
-    }
-    window.addEventListener('keydown', onKeyDown);
-    return () => window.removeEventListener('keydown', onKeyDown);
-  }, [open, onClose, isSavingAlocacao, isDeletingAlocacao]);
+  const dialogRef = useDialogFocus(open, onClose, isSavingAlocacao || isDeletingAlocacao);
 
   if (!open || !turma) return null;
 
   return (
-    <div 
-      role="dialog"
-      aria-modal="true"
-      className="fixed inset-0 bg-slate-950/60 backdrop-blur-md z-[999] flex items-center justify-center p-4 overflow-y-auto"
-    >
-      <div className="glass-panel rounded-3xl shadow-2xl w-full max-w-lg overflow-hidden animate-in fade-in zoom-in-95 duration-200 flex flex-col transition-all max-h-[90vh]">
-        <div className="p-6 border-b border-border/60 flex justify-between items-center bg-surface/40 shrink-0">
-          <h2 className="text-lg font-black text-secondary dark:text-white uppercase tracking-tight flex items-center gap-2 font-display">
+    <div className="fixed inset-0 bg-slate-950/60 backdrop-blur-md z-[999] flex items-center justify-center p-2 sm:p-4 overflow-y-auto">
+      <div
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="editar-agendamento-title"
+        className="glass-panel rounded-2xl sm:rounded-3xl shadow-2xl w-full max-w-lg overflow-hidden animate-in fade-in zoom-in-95 duration-200 flex flex-col transition-all max-h-[calc(100dvh-1rem)] sm:max-h-[calc(100dvh-2rem)]"
+      >
+        <div className="p-4 sm:p-5 border-b border-border/60 flex justify-between items-center bg-surface/40 shrink-0">
+          <h2 id="editar-agendamento-title" className="text-base sm:text-lg font-black text-secondary dark:text-white tracking-tight flex items-center gap-2 font-display min-w-0">
             <BookOpen className="w-5 h-5 text-primary" />
             Editar Alocação: {turma.codigo}
           </h2>
           <button 
             type="button"
+            aria-label="Fechar edição da alocação"
             disabled={isSavingAlocacao || isDeletingAlocacao}
             onClick={onClose} 
             className="text-text-muted hover:text-text-main hover:bg-surface/60 p-2 rounded-xl transition-all btn-tactile cursor-pointer disabled:opacity-50"
@@ -70,13 +77,14 @@ export function EditTurmaModal({
           </button>
         </div>
         
-        <form onSubmit={onSave} className="p-6 flex flex-col gap-4 overflow-y-auto custom-scrollbar">
+        <form onSubmit={onSave} className="p-4 sm:p-5 flex flex-col gap-4 overflow-y-auto custom-scrollbar">
           
           {/* Data e Turno */}
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="block text-xs font-black text-text-muted uppercase tracking-widest mb-1.5">Nova Data Início</label>
               <input 
+                data-dialog-initial-focus
                 type="date" 
                 value={dadosEdicao.dataInicio}
                 onChange={e => setDadosEdicao({ ...dadosEdicao, dataInicio: e.target.value })}
@@ -91,9 +99,9 @@ export function EditTurmaModal({
                 onChange={e => setDadosEdicao({ ...dadosEdicao, turno: e.target.value })}
                 className="w-full border border-border rounded-xl p-3 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none text-sm font-semibold transition-all bg-input text-text-main cursor-pointer"
               >
-                <option value="Manhã" className="bg-card text-text-main">Manhã</option>
-                <option value="Tarde" className="bg-card text-text-main">Tarde</option>
-                <option value="Noite" className="bg-card text-text-main">Noite</option>
+                {SHIFTS.map(shift => (
+                  <option key={shift.id} value={shift.label} className="bg-card text-text-main">{shift.label}</option>
+                ))}
               </select>
             </div>
           </div>
@@ -102,19 +110,13 @@ export function EditTurmaModal({
           <div>
             <label className="block text-xs font-black text-text-muted uppercase tracking-widest mb-2">Dias de Execução da Turma</label>
             <div className="flex flex-wrap gap-2">
-              {[
-                { id: '1', label: 'Seg' },
-                { id: '2', label: 'Ter' },
-                { id: '3', label: 'Qua' },
-                { id: '4', label: 'Qui' },
-                { id: '5', label: 'Sex' },
-                { id: '6', label: 'Sáb' }
-              ].map((dia) => {
+              {CLASS_DAYS.map((dia) => {
                 const checked = dadosEdicao.diasSemana.includes(dia.id);
                 return (
                   <button
                     type="button"
                     key={dia.id}
+                    aria-pressed={checked}
                     onClick={() => {
                       setDadosEdicao((prev: any) => {
                         const prevSet = new Set(prev.diasSemana);
@@ -129,7 +131,7 @@ export function EditTurmaModal({
                         : 'bg-input text-text-muted hover:bg-surface/50'
                     }`}
                   >
-                    {dia.label}
+                    {dia.short}
                   </button>
                 );
               })}
@@ -142,14 +144,15 @@ export function EditTurmaModal({
               <label className="text-xs font-black text-text-muted uppercase tracking-widest">
                 Ambiente / Sala
               </label>
-              <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 font-mono">
-                {disponibilidadeEdicao.salasLivres.length} salas disponíveis
+              <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 font-mono" aria-live="polite">
+                {isLoadingDisponibilidade ? 'verificando disponibilidade...' : `${disponibilidadeEdicao.salasLivres.length} salas disponíveis`}
               </span>
             </div>
 
             <select 
               value={dadosEdicao.salaId}
               onChange={e => setDadosEdicao({ ...dadosEdicao, salaId: e.target.value })}
+              disabled={isLoadingDisponibilidade || Boolean(disponibilidadeEdicao.erro)}
               className="w-full border border-border rounded-xl p-3 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none text-sm font-semibold transition-all bg-input text-text-main cursor-pointer"
               required
             >
@@ -160,14 +163,28 @@ export function EditTurmaModal({
               ))}
             </select>
 
+            {disponibilidadeEdicao.erro && (
+              <div role="alert" className="mt-3 bg-red-500/10 border border-red-500/30 rounded-xl p-3 text-xs font-bold text-red-600 dark:text-red-400">
+                {disponibilidadeEdicao.erro}
+              </div>
+            )}
+
+            {disponibilidadeEdicao.conflitoInstrutor && (
+              <div role="alert" className="mt-3 bg-red-500/10 border border-red-500/30 rounded-xl p-3 text-xs font-bold text-red-600 dark:text-red-400">
+                Conflito de instrutor: {disponibilidadeEdicao.conflitoInstrutor.nome} já está associado à turma{' '}
+                {disponibilidadeEdicao.conflitoInstrutor.turmaCodigo} neste turno em{' '}
+                {disponibilidadeEdicao.conflitoInstrutor.data.split('T')[0].split('-').reverse().join('/')}.
+              </div>
+            )}
+
             {/* Sugestões de Turno caso não haja salas livres */}
-            {disponibilidadeEdicao.salasLivres.length === 0 && (
+            {avisoDisponibilidade && !disponibilidadeEdicao.erro && (
               <div className="mt-3 bg-amber-500/10 border border-amber-500/30 rounded-2xl p-4 flex flex-col gap-2 animate-in fade-in">
                 <div className="flex items-center gap-2 text-xs font-black text-amber-700 dark:text-amber-300 uppercase tracking-wider">
                   <Lightbulb size={15} /> Sugestão de Turnos Livres
                 </div>
                 <p className="text-xs text-text-muted">
-                  Não há salas disponíveis no turno da {dadosEdicao.turno} para essas novas datas.
+                  {avisoDisponibilidade}
                 </p>
                 {disponibilidadeEdicao.sugestoesTurnos.map(sug => (
                   <button
@@ -205,29 +222,36 @@ export function EditTurmaModal({
           </div>
 
           {/* Botões de Ação */}
-          <div className="flex flex-col sm:flex-row justify-between items-center gap-3 mt-4 pt-4 border-t border-border/60 shrink-0">
+          <div className="sticky bottom-0 -mx-4 sm:-mx-5 -mb-4 sm:-mb-5 px-4 sm:px-5 py-4 bg-card border-t border-border/60 flex flex-col sm:flex-row justify-between gap-3 shrink-0">
             <button 
               type="button" 
-              disabled={isSavingAlocacao || isDeletingAlocacao}
+              disabled={isSavingAlocacao || isDeletingAlocacao || isLoadingDisponibilidade}
               onClick={onRequestDelete}
               className="w-full sm:w-auto bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 text-red-600 dark:text-red-400 font-bold px-4 py-2.5 rounded-xl flex items-center justify-center gap-1.5 text-xs transition-all btn-tactile cursor-pointer disabled:opacity-50"
             >
               <Trash2 size={14} /> Excluir Alocação
             </button>
 
-            <div className="flex justify-end gap-3 w-full sm:w-auto shrink-0">
+            <div className="flex flex-col-reverse sm:flex-row justify-end gap-2 sm:gap-3 w-full sm:w-auto shrink-0">
               <button 
                 type="button" 
                 disabled={isSavingAlocacao || isDeletingAlocacao}
                 onClick={onClose} 
-                className="px-4 py-2 text-sm font-bold text-text-muted hover:text-text-main hover:bg-surface/50 rounded-xl btn-tactile cursor-pointer disabled:opacity-50"
+                className="w-full sm:w-auto px-4 py-2.5 text-sm font-bold text-text-muted hover:text-text-main hover:bg-surface/50 rounded-xl btn-tactile cursor-pointer disabled:opacity-50"
               >
                 Cancelar
               </button>
               <button 
                 type="submit" 
-                disabled={isSavingAlocacao || isDeletingAlocacao}
-                className="bg-primary text-white font-black py-2.5 px-6 rounded-xl shadow-md hover:shadow-lg hover:shadow-primary/20 btn-tactile cursor-pointer text-sm flex items-center gap-2 disabled:opacity-50"
+                disabled={
+                  isSavingAlocacao ||
+                  isDeletingAlocacao ||
+                  isLoadingDisponibilidade ||
+                  !dadosEdicao.salaId ||
+                  Boolean(disponibilidadeEdicao.erro) ||
+                  Boolean(disponibilidadeEdicao.conflitoInstrutor)
+                }
+                className="w-full sm:w-auto bg-primary text-white font-black py-2.5 px-6 rounded-xl shadow-md hover:bg-primary/90 btn-tactile cursor-pointer text-sm flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isSavingAlocacao ? (
                   <>

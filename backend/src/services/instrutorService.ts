@@ -1,5 +1,6 @@
 import { prisma } from '../infrastructure/prismaClient.js';
 import { HttpError } from '../utils/errors.js';
+import type { Prisma } from '@prisma/client';
 
 export class InstrutorService {
   async getAll() {
@@ -16,13 +17,13 @@ export class InstrutorService {
     return instrutor;
   }
 
-  async create(data: { nome_instrutor: string, segmento_principal?: string, habilidades_extras?: string }) {
+  async create(data: Prisma.InstrutorCreateInput) {
     return prisma.instrutor.create({
       data
     });
   }
 
-  async update(id: number, data: Partial<{ nome_instrutor: string, segmento_principal: string, habilidades_extras: string }>) {
+  async update(id: number, data: Prisma.InstrutorUpdateInput) {
     await this.getById(id);
     return prisma.instrutor.update({
       where: { id_instrutores: id },

@@ -1,5 +1,6 @@
 import { prisma } from '../infrastructure/prismaClient.js';
 import { HttpError } from '../utils/errors.js';
+import type { Prisma } from '@prisma/client';
 
 export class SalaService {
   async getAll() {
@@ -27,13 +28,13 @@ export class SalaService {
     return sala;
   }
 
-  async create(data: { nome_sala: string, capacidade_maxima: number, idTipo_sala?: number, local?: string, recursos_especiais?: string }) {
+  async create(data: Prisma.SalaUncheckedCreateInput) {
     return prisma.sala.create({
       data
     });
   }
 
-  async update(id: number, data: Partial<{ nome_sala: string, capacidade_maxima: number, idTipo_sala: number, local: string, recursos_especiais: string }>) {
+  async update(id: number, data: Prisma.SalaUncheckedUpdateInput) {
     await this.getById(id);
     return prisma.sala.update({
       where: { id_salas: id },

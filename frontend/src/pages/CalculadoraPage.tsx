@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { 
   Calculator, 
   Calendar, 
@@ -17,18 +17,11 @@ import {
   BookOpen
 } from 'lucide-react';
 import { CalculadoraService } from '../api/client';
-import { useAppContext } from '../context/AppContext';
+import { useAppData, useAppUi } from '../context/AppContext';
 import { useNavigate } from 'react-router-dom';
-
-const DIAS = [
-  { id: '1', label: 'Segunda-feira', short: 'Seg' },
-  { id: '2', label: 'Terça-feira', short: 'Ter' },
-  { id: '3', label: 'Quarta-feira', short: 'Qua' },
-  { id: '4', label: 'Quinta-feira', short: 'Qui' },
-  { id: '5', label: 'Sexta-feira', short: 'Sex' },
-  { id: '6', label: 'Sábado', short: 'Sáb' },
-  { id: '0', label: 'Domingo', short: 'Dom' },
-];
+import { formatDateInput } from '../utils/date';
+import { useAuth } from '../context/AuthContext';
+import { WEEK_DAYS } from '../constants/referenceData';
 
 const PRESETS_HORAS = [40, 80, 160, 200, 400, 800];
 const PRESETS_DURACAO_DIARIA = [2, 3, 4, 5];
@@ -49,8 +42,16 @@ interface ResultadoCronograma {
 }
 
 export function CalculadoraPage() {
-  const { cursos, showToast } = useAppContext();
+  const { cursos, loadData } = useAppData();
+  const { showToast } = useAppUi();
+  const { can } = useAuth();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    void loadData(['cursos']).catch(() => {
+      showToast('Não foi possível carregar os cursos.', 'error');
+    });
+  }, [loadData, showToast]);
 
   const [cursoSelecionadoId, setCursoSelecionadoId] = useState<string>('');
   const [cargaHoraria, setCargaHoraria] = useState('160');
@@ -58,7 +59,7 @@ export function CalculadoraPage() {
   const [diasSelecionados, setDiasSelecionados] = useState<string[]>(['1', '3', '5']);
   const [dataInicio, setDataInicio] = useState<string>(() => {
     const today = new Date();
-    return today.toISOString().split('T')[0];
+    return formatDateInput(today);
   });
 
   const [isCalculating, setIsCalculating] = useState(false);
@@ -147,7 +148,7 @@ export function CalculadoraPage() {
     setHorasPorDia(4);
     setDiasSelecionados(['1', '3', '5']);
     const today = new Date();
-    setDataInicio(today.toISOString().split('T')[0]);
+    setDataInicio(formatDateInput(today));
     setResultado(null);
     setShowAllDates(false);
   };
@@ -214,7 +215,18 @@ export function CalculadoraPage() {
   const irParaAlocacao = () => {
     if (!resultado) return;
     showToast('Redirecionando para o Mapa de Salas...', 'info');
-    navigate('/painel');
+    navigate('/painel', {
+      state: {
+        novaAlocacao: {
+          cursoId: cursoSelecionadoId,
+          dataInicio,
+          diasSemana: diasSelecionados,
+          cargaHoraria: Number(cargaHoraria),
+          horasPorDia,
+          cronograma: resultado
+        }
+      }
+    });
   };
 
   // Helpers de Formatação Segura de Datas
@@ -435,7 +447,7 @@ export function CalculadoraPage() {
               Dias Letivos na Semana
             </label>
             <div className="grid grid-cols-4 sm:grid-cols-7 gap-1.5">
-              {DIAS.map(dia => {
+              {WEEK_DAYS.map(dia => {
                 const isSelected = diasSelecionados.includes(dia.id);
                 return (
                   <button
@@ -564,12 +576,19 @@ export function CalculadoraPage() {
                     </button>
                   </div>
 
-                  <button
-                    onClick={irParaAlocacao}
-                    className="bg-primary text-white font-black px-4 py-2 rounded-xl text-xs flex items-center gap-1.5 shadow-sm btn-tactile cursor-pointer hover:scale-105 transition-all"
-                  >
-                    <CalendarDays size={13} /> Alocar Turma no Mapa
-                  </button>
+                  {can('ALLOCATE') ? (
+                    <button
+                      type="button"
+                      onClick={irParaAlocacao}
+                      className="bg-primary text-white font-black px-4 py-2 rounded-xl text-xs flex items-center gap-1.5 shadow-sm btn-tactile cursor-pointer hover:bg-primary/90 transition-colors"
+                    >
+                      <CalendarDays size={13} /> Alocar Turma no Mapa
+                    </button>
+                  ) : (
+                    <span className="text-[11px] font-bold text-text-muted">
+                      Perfil com acesso somente para consulta
+                    </span>
+                  )}
                 </div>
               </div>
 

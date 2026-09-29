@@ -1,12 +1,16 @@
 import React, { useState } from 'react';
 import { Outlet, Link, useLocation } from 'react-router-dom';
-import { Calendar, Calculator, Settings, Menu, X, Sun, Moon, ChevronLeft, ChevronRight, School } from 'lucide-react';
-import { useAppContext } from '../context/AppContext';
+import { Calendar, Calculator, Settings, Menu, X, Sun, Moon, ChevronLeft, ChevronRight, School, LogOut, UserCircle } from 'lucide-react';
+import { useAppUi } from '../context/AppContext';
+import { useDialogFocus } from '../utils/useDialogFocus';
+import { useAuth } from '../context/AuthContext';
 
 export function Layout() {
   const location = useLocation();
-  const { theme, toggleTheme } = useAppContext();
+  const { theme, toggleTheme } = useAppUi();
+  const { user, logout, can } = useAuth();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const mobileDrawerRef = useDialogFocus(mobileOpen, () => setMobileOpen(false));
   
   // Estado da Sidebar Colapsada (Desktop)
   const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
@@ -24,7 +28,7 @@ export function Layout() {
   const menuItems = [
     { path: '/painel', label: 'Painel Visual', icon: Calendar },
     { path: '/calculadora', label: 'Calculadora', icon: Calculator },
-    { path: '/manage', label: 'Gerenciamento', icon: Settings },
+    ...(can('MANAGE') ? [{ path: '/manage', label: 'Gerenciamento', icon: Settings }] : []),
   ];
 
   return (
@@ -49,15 +53,21 @@ export function Layout() {
         <div className="flex items-center gap-3">
           {/* Botão Tema Mobile */}
           <button 
+            type="button"
             onClick={toggleTheme}
             className="p-2 rounded-xl text-text-muted hover:bg-surface hover:text-text-main btn-tactile active:scale-95 transition-all"
             title="Alternar tema"
+            aria-label={theme === 'light' ? 'Ativar tema escuro' : 'Ativar tema claro'}
           >
             {theme === 'light' ? <Moon className="w-5 h-5" /> : <Sun className="w-5 h-5 text-amber-400" />}
           </button>
           <button 
+            type="button"
             onClick={() => setMobileOpen(true)}
             className="p-2 rounded-xl text-text-muted hover:bg-surface btn-tactile active:scale-95 transition-all"
+            aria-label="Abrir menu principal"
+            aria-expanded={mobileOpen}
+            aria-controls="mobile-navigation"
           >
             <Menu className="w-6 h-6" />
           </button>
@@ -66,15 +76,22 @@ export function Layout() {
 
       {/* Sidebar Mobile (Drawer) */}
       {mobileOpen && (
-        <div className="fixed inset-0 z-50 lg:hidden flex">
+        <div
+          ref={mobileDrawerRef}
+          role="dialog"
+          aria-modal="true"
+          aria-label="Menu principal"
+          className="fixed inset-0 z-50 lg:hidden flex"
+        >
           {/* Overlay escuro */}
           <div 
+            aria-hidden="true"
             className="fixed inset-0 bg-black/45 backdrop-blur-xs transition-opacity duration-300"
             onClick={() => setMobileOpen(false)}
           ></div>
           
           {/* Sidebar Drawer */}
-          <aside className="relative w-72 max-w-[80vw] glass-panel h-full flex flex-col shadow-2xl z-50 animate-in slide-in-from-left duration-300 transition-colors">
+          <aside id="mobile-navigation" className="relative w-72 max-w-[85vw] glass-panel h-full flex flex-col shadow-2xl z-50 animate-in slide-in-from-left duration-300 transition-colors">
             <div className="p-6 border-b border-border flex items-center justify-between bg-gradient-to-b from-card/40 to-transparent">
               <div className="flex items-center gap-2">
                 <School className="w-5 h-5 text-primary" />
@@ -83,14 +100,17 @@ export function Layout() {
                 </span>
               </div>
               <button 
+                type="button"
+                data-dialog-initial-focus
                 onClick={() => setMobileOpen(false)}
                 className="p-2 rounded-xl text-text-muted hover:bg-surface hover:text-text-main btn-tactile transition-all"
+                aria-label="Fechar menu principal"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
             
-            <nav className="flex-1 p-4 flex flex-col gap-2.5">
+            <nav aria-label="Navegacao principal" className="flex-1 p-4 flex flex-col gap-2.5">
               {menuItems.map((item) => {
                 const Icon = item.icon;
                 const isActive = location.pathname.startsWith(item.path);
@@ -100,6 +120,7 @@ export function Layout() {
                     key={item.path}
                     to={item.path}
                     onClick={() => setMobileOpen(false)}
+                    aria-current={isActive ? 'page' : undefined}
                     className={`flex items-center gap-4 px-4 py-3 rounded-xl font-bold text-base transition-all duration-200 border border-transparent btn-tactile ${
                       isActive 
                         ? 'bg-primary/10 text-primary border-primary/20 shadow-sm font-black' 
@@ -113,8 +134,24 @@ export function Layout() {
               })}
             </nav>
             
-            <div className="p-6 border-t border-border text-xs text-center text-text-muted font-medium uppercase tracking-widest bg-surface/30">
-              v2.0 - Senac Edition
+            <div className="p-4 border-t border-border bg-surface/30 space-y-3">
+              <div className="flex items-center gap-3 min-w-0">
+                <UserCircle className="w-8 h-8 text-primary shrink-0" />
+                <div className="min-w-0">
+                  <p className="text-xs font-bold text-text-main truncate">{user?.email}</p>
+                  <p className="text-[10px] font-black text-text-muted uppercase tracking-wider">{user?.role}</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  setMobileOpen(false);
+                  logout();
+                }}
+                className="w-full flex items-center justify-center gap-2 rounded-xl border border-border px-3 py-2.5 text-xs font-bold text-text-muted hover:text-red-600 hover:bg-red-500/10 hover:border-red-500/20 transition-colors"
+              >
+                <LogOut size={15} /> Sair
+              </button>
             </div>
           </aside>
         </div>
@@ -139,7 +176,7 @@ export function Layout() {
         </div>
         
         {/* Links de Navegação */}
-        <nav className="flex-1 p-4 flex flex-col gap-3.5">
+        <nav aria-label="Navegacao principal" className="flex-1 p-4 flex flex-col gap-3.5">
           {menuItems.map((item) => {
             const Icon = item.icon;
             const isActive = location.pathname.startsWith(item.path);
@@ -148,6 +185,7 @@ export function Layout() {
               <Link
                 key={item.path}
                 to={item.path}
+                aria-current={isActive ? 'page' : undefined}
                 className={`flex items-center rounded-2xl font-bold transition-all duration-300 border btn-tactile ${
                   sidebarCollapsed ? 'justify-center p-3.5' : 'gap-4 px-4 py-3.5 text-base'
                 } ${
@@ -166,14 +204,28 @@ export function Layout() {
 
         {/* Rodapé / Controles */}
         <div className="p-4 border-t border-border/50 flex flex-col gap-2 shrink-0 bg-surface/10 rounded-b-3xl">
+          <div
+            className={`flex items-center rounded-xl bg-surface/40 border border-border/60 ${sidebarCollapsed ? 'justify-center p-2.5' : 'gap-3 px-3 py-2.5'}`}
+            title={sidebarCollapsed ? user?.email : undefined}
+          >
+            <UserCircle className="w-5 h-5 text-primary shrink-0" />
+            {!sidebarCollapsed && (
+              <div className="min-w-0">
+                <p className="text-xs font-bold text-text-main truncate">{user?.email}</p>
+                <p className="text-[9px] font-black text-text-muted uppercase tracking-wider">{user?.role}</p>
+              </div>
+            )}
+          </div>
           
           {/* Botão de Tema */}
           <button
+            type="button"
             onClick={toggleTheme}
             className={`flex items-center rounded-xl hover:bg-surface/50 text-text-muted hover:text-text-main btn-tactile cursor-pointer ${
               sidebarCollapsed ? 'justify-center p-3' : 'gap-3 px-4 py-2.5 text-sm font-bold'
             }`}
             title="Alternar tema"
+            aria-label={theme === 'light' ? 'Ativar tema escuro' : 'Ativar tema claro'}
           >
             {theme === 'light' ? (
               <>
@@ -190,11 +242,14 @@ export function Layout() {
 
           {/* Botão Colapsar Sidebar */}
           <button
+            type="button"
             onClick={toggleSidebar}
             className={`flex items-center rounded-xl hover:bg-surface/50 text-text-muted hover:text-text-main btn-tactile cursor-pointer ${
               sidebarCollapsed ? 'justify-center p-3' : 'gap-3 px-4 py-2.5 text-sm font-bold'
             }`}
             title={sidebarCollapsed ? "Expandir Menu" : "Recolher Menu"}
+            aria-label={sidebarCollapsed ? 'Expandir menu lateral' : 'Recolher menu lateral'}
+            aria-expanded={!sidebarCollapsed}
           >
             {sidebarCollapsed ? (
               <ChevronRight className="w-5 h-5" />
@@ -204,6 +259,17 @@ export function Layout() {
                 <span>Recolher Menu</span>
               </>
             )}
+          </button>
+
+          <button
+            type="button"
+            onClick={logout}
+            className={`flex items-center rounded-xl hover:bg-red-500/10 text-text-muted hover:text-red-600 btn-tactile cursor-pointer ${sidebarCollapsed ? 'justify-center p-3' : 'gap-3 px-4 py-2.5 text-sm font-bold'}`}
+            title="Sair do sistema"
+            aria-label="Sair do sistema"
+          >
+            <LogOut className="w-5 h-5" />
+            {!sidebarCollapsed && <span>Sair</span>}
           </button>
           
           {!sidebarCollapsed && (

@@ -43,6 +43,14 @@ describe('CalculadoraService', () => {
     expect(resultado.feriadosPulados).toHaveLength(0);
   });
 
+  it('deve rejeitar carga horária inválida', async () => {
+    vi.mocked(prisma.feriadosRecessos.findMany).mockResolvedValueOnce([]);
+
+    await expect(
+      calculadora.calcularCronograma(-1, '2026-03-02', ['1'], 4)
+    ).rejects.toThrow(/positiva/);
+  });
+
   it('deve pular finais de semana quando os dias selecionados forem de segunda a sexta', async () => {
     vi.mocked(prisma.feriadosRecessos.findMany).mockResolvedValueOnce([]);
 

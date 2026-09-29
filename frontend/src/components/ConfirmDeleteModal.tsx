@@ -1,11 +1,12 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { AlertTriangle, Trash2, X, Loader2 } from 'lucide-react';
+import { useDialogFocus } from '../utils/useDialogFocus';
 
 interface Props {
   open: boolean;
   title: string;
   itemName: string;
-  itemType: 'curso' | 'instrutor' | 'sala' | 'turma' | 'alocação' | 'item';
+  itemType: 'curso' | 'instrutor' | 'sala' | 'turma' | 'alocação' | 'feriado' | 'item';
   activeTurmasCount?: number;
   onConfirm: () => void;
   onClose: () => void;
@@ -22,26 +23,19 @@ export function ConfirmDeleteModal({
   onClose,
   isDeleting = false
 }: Props) {
-  useEffect(() => {
-    if (!open) return;
-
-    function onKeyDown(e: KeyboardEvent) {
-      if (e.key === 'Escape' && !isDeleting) onClose();
-    }
-
-    window.addEventListener('keydown', onKeyDown);
-    return () => window.removeEventListener('keydown', onKeyDown);
-  }, [open, onClose, isDeleting]);
+  const dialogRef = useDialogFocus(open, onClose, isDeleting);
 
   if (!open) return null;
 
   return (
-    <div
-      role="dialog"
-      aria-modal="true"
-      className="fixed inset-0 bg-slate-950/70 backdrop-blur-md flex items-center justify-center p-4 z-[1000] overflow-hidden"
-    >
-      <div className="glass-panel rounded-3xl shadow-2xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in-95 duration-200 flex flex-col border border-red-500/20 bg-card transition-all">
+    <div className="fixed inset-0 bg-slate-950/70 backdrop-blur-md flex items-center justify-center p-2 sm:p-4 z-[1000] overflow-hidden">
+      <div
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="confirm-delete-title"
+        className="glass-panel rounded-2xl sm:rounded-3xl shadow-2xl w-full max-w-md max-h-[calc(100dvh-1rem)] sm:max-h-[calc(100dvh-2rem)] overflow-y-auto animate-in fade-in zoom-in-95 duration-200 flex flex-col border border-red-500/20 bg-card transition-all"
+      >
         
         {/* Cabeçalho de Alerta */}
         <div className="p-5 border-b border-border/60 flex justify-between items-center bg-red-500/10 dark:bg-red-950/30">
@@ -50,12 +44,13 @@ export function ConfirmDeleteModal({
               <AlertTriangle className="w-5 h-5" />
             </div>
             <div>
-              <h2 className="text-base font-black text-text-main tracking-tight font-display">{title}</h2>
+              <h2 id="confirm-delete-title" className="text-base font-black text-text-main tracking-tight font-display">{title}</h2>
               <span className="text-[11px] font-bold text-red-600 dark:text-red-400 uppercase tracking-wider">Ação Irreversível</span>
             </div>
           </div>
           <button
             type="button"
+            aria-label="Fechar modal"
             disabled={isDeleting}
             onClick={onClose}
             className="text-text-muted hover:text-text-main hover:bg-surface p-2 rounded-xl transition-all font-black text-lg leading-none cursor-pointer disabled:opacity-50"
@@ -95,12 +90,12 @@ export function ConfirmDeleteModal({
           )}
 
           {/* Ações */}
-          <div className="flex justify-end items-center gap-3 mt-3 pt-4 border-t border-border/60">
+          <div className="flex flex-col-reverse sm:flex-row sm:justify-end sm:items-center gap-3 mt-3 pt-4 border-t border-border/60">
             <button
               type="button"
               disabled={isDeleting}
               onClick={onClose}
-              className="px-5 py-2.5 text-xs font-bold text-text-muted hover:text-text-main hover:bg-surface rounded-xl transition-all cursor-pointer disabled:opacity-50"
+              className="w-full sm:w-auto px-5 py-2.5 text-xs font-bold text-text-muted hover:text-text-main hover:bg-surface rounded-xl transition-all cursor-pointer disabled:opacity-50"
             >
               Cancelar
             </button>
@@ -108,7 +103,7 @@ export function ConfirmDeleteModal({
               type="button"
               disabled={isDeleting}
               onClick={onConfirm}
-              className="bg-red-600 hover:bg-red-700 text-white font-black py-2.5 px-6 rounded-xl shadow-md hover:shadow-lg hover:shadow-red-600/20 transition-all cursor-pointer text-xs flex items-center gap-2 disabled:opacity-50"
+              className="w-full sm:w-auto justify-center bg-red-600 hover:bg-red-700 text-white font-black py-2.5 px-6 rounded-xl shadow-md hover:shadow-lg hover:shadow-red-600/20 transition-all cursor-pointer text-xs flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isDeleting ? (
                 <>

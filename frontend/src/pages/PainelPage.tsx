@@ -1,37 +1,121 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { createPortal } from 'react-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { 
   Calendar as CalendarIcon, 
   Plus, 
   X, 
   Users, 
-  BookOpen, 
   Tv, 
   Minimize2, 
-  Trash2, 
   ChevronLeft, 
   ChevronRight, 
   Search, 
-  RotateCcw, 
-  AlertTriangle, 
-  CheckCircle2, 
   Clock, 
-  Loader2, 
   Building,
   MapPin,
-  Sparkles,
-  Lightbulb,
-  ArrowRight
+  SlidersHorizontal
 } from 'lucide-react';
-import { useAppContext, Sala, TurmaDetalhada } from '../context/AppContext';
+import { useAppData, useAppUi, Sala, TurmaDetalhada } from '../context/AppContext';
 import { TurmaService } from '../api/client';
 import { ConfirmDeleteModal } from '../components/ConfirmDeleteModal';
 import { DigitalClock } from '../components/painel/DigitalClock';
 import { NovoAgendamentoModal } from '../components/painel/NovoAgendamentoModal';
 import { EditTurmaModal } from '../components/painel/EditTurmaModal';
+import { formatDateInput } from '../utils/date';
+import { useAuth } from '../context/AuthContext';
+import { getShiftId, SHIFTS } from '../constants/referenceData';
+
+const TURNOS = SHIFTS.map(shift => shift.label);
+
+interface CalculoImportado {
+  cursoId: string;
+  dataInicio: string;
+  diasSemana: string[];
+  cargaHoraria: number;
+  horasPorDia: number;
+  cronograma: {
+    dataTermino: string;
+    totalAulas: number;
+    datasAulas: string[];
+  };
+}
+
+interface DisponibilidadePainel {
+  salasLivres: Sala[];
+  salasOcupadas: Array<{ salaId: number; turmaCodigo: string; data: string }>;
+  salasCapacidadeInsuficiente: Array<{ salaId: number; nome: string; capacidade: number }>;
+  conflitoInstrutor: null | {
+    nome: string;
+    turmaCodigo: string;
+    data: string;
+  };
+  sugestoesTurnos: Array<{ turno: string; vagas: number }>;
+  totalSalas: number;
+  erro: string | null;
+}
+
+interface DisponibilidadeApi extends Omit<DisponibilidadePainel, 'salasLivres' | 'erro'> {
+  salasLivres: number[];
+}
+
+const criarDisponibilidade = (salasLivres: Sala[] = []): DisponibilidadePainel => ({
+  salasLivres,
+  salasOcupadas: [],
+  salasCapacidadeInsuficiente: [],
+  conflitoInstrutor: null,
+  sugestoesTurnos: [],
+  totalSalas: salasLivres.length,
+  erro: null
+});
+
+const descreverIndisponibilidade = (disponibilidade: DisponibilidadePainel): string | null => {
+  if (disponibilidade.salasLivres.length > 0) return null;
+  if (disponibilidade.totalSalas === 0) {
+    return 'Não há salas cadastradas no sistema.';
+  }
+
+  const capacidadeInsuficiente = new Set(
+    disponibilidade.salasCapacidadeInsuficiente.map(sala => sala.salaId)
+  );
+  const salasComCapacidade = disponibilidade.totalSalas - capacidadeInsuficiente.size;
+  if (salasComCapacidade === 0) {
+    return 'Nenhuma sala cadastrada possui capacidade para o total de alunos informado.';
+  }
+
+  const ocupadasComCapacidade = new Set(
+    disponibilidade.salasOcupadas
+      .filter(sala => !capacidadeInsuficiente.has(sala.salaId))
+      .map(sala => sala.salaId)
+  );
+  if (ocupadasComCapacidade.size >= salasComCapacidade) {
+    return `As ${salasComCapacidade} sala(s) com capacidade adequada já estão ocupadas neste turno e período.`;
+  }
+
+  return 'Nenhuma sala atende simultaneamente aos critérios de capacidade e disponibilidade.';
+};
 
 export function PainelPage() {
-  const { salas, turmas, cursos, instrutores, refreshTurmas, showToast } = useAppContext();
+  const {
+    salas,
+    turmas,
+    cursos,
+    instrutores,
+    tipoSalas,
+    refreshTurmas,
+    loadData,
+    isLoading
+  } = useAppData();
+  const { showToast } = useAppUi();
+  const { can } = useAuth();
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    void loadData(['cursos', 'salas', 'tiposSala', 'instrutores', 'turmas']).catch(() => {
+      showToast('Não foi possível carregar os dados do painel.', 'error');
+    });
+  }, [loadData, showToast]);
 
   // Preferências Persistidas em LocalStorage
   const [filtroTipo, setFiltroTipo] = useState(() => {
@@ -51,6 +135,13 @@ export function PainelPage() {
     localStorage.setItem('sgst_painel_tipo_sala', tipo);
   };
 
+  useEffect(() => {
+    if (tipoSalas.length > 0 && filtroTipo !== 'Todos' && !tipoSalas.some(tipo => tipo.nome === filtroTipo)) {
+      setFiltroTipo('Todos');
+      localStorage.setItem('sgst_painel_tipo_sala', 'Todos');
+    }
+  }, [filtroTipo, tipoSalas]);
+
   const handleSetFiltroModalidade = (mod: 'Todas' | 'Presencial' | 'Remoto') => {
     setFiltroModalidade(mod);
     localStorage.setItem('sgst_painel_modalidade', mod);
@@ -62,12 +153,13 @@ export function PainelPage() {
   };
 
   // Controle Temporal: Data Diária & Data Base da Semana
-  const [dataFiltro, setDataFiltro] = useState(() => new Date().toISOString().split('T')[0]);
-  const [dataBaseSemana, setDataBaseSemana] = useState(() => new Date().toISOString().split('T')[0]);
+  const [dataFiltro, setDataFiltro] = useState(() => formatDateInput());
+  const [dataBaseSemana, setDataBaseSemana] = useState(() => formatDateInput());
 
   // Filtros de Pesquisa e Unidade
   const [searchTurma, setSearchTurma] = useState('');
   const [filtroUnidade, setFiltroUnidade] = useState('Todas');
+  const [mostrarFiltros, setMostrarFiltros] = useState(false);
 
   // Estados do Modo TV e Escala
   const [modoTV, setModoTV] = useState(false);
@@ -107,21 +199,22 @@ export function PainelPage() {
       label: `Semana de ${f(startOfWeek)} a ${f(endOfWeek)}/${year}`
     };
   };
+  const weekRangeInfo = useMemo(() => getWeekRangeInfo(dataBaseSemana), [dataBaseSemana]);
 
   const navSemanaAnterior = () => {
     const d = new Date(dataBaseSemana + 'T12:00:00');
     d.setDate(d.getDate() - 7);
-    setDataBaseSemana(d.toISOString().split('T')[0]);
+    setDataBaseSemana(formatDateInput(d));
   };
 
   const navProximaSemana = () => {
     const d = new Date(dataBaseSemana + 'T12:00:00');
     d.setDate(d.getDate() + 7);
-    setDataBaseSemana(d.toISOString().split('T')[0]);
+    setDataBaseSemana(formatDateInput(d));
   };
 
   const navHoje = () => {
-    const hoje = new Date().toISOString().split('T')[0];
+    const hoje = formatDateInput();
     setDataBaseSemana(hoje);
     setDataFiltro(hoje);
   };
@@ -133,6 +226,7 @@ export function PainelPage() {
     cursos.forEach(c => { if (c.unidade) setU.add(c.unidade); });
     return Array.from(setU);
   }, [turmas, cursos]);
+  const salasById = useMemo(() => new Map(salas.map(sala => [sala.id, sala])), [salas]);
 
   // Sincronizar Modo TV com fullscreen do navegador
   useEffect(() => {
@@ -184,13 +278,55 @@ export function PainelPage() {
   const [novoAgendamento, setNovoAgendamento] = useState({ 
     cursoId: '', 
     salaId: '', 
-    dataInicio: new Date().toISOString().split('T')[0], 
-    turno: 'Manhã',
+    dataInicio: formatDateInput(),
+    turno: String(SHIFTS[0].label),
     codigoTurma: '',
     diasSemana: ['1', '3', '5'] as string[],
     instrutorId: '',
     totalAlunos: 25
   });
+  const [calculoImportado, setCalculoImportado] = useState<CalculoImportado | null>(null);
+  const transferenciaProcessada = useRef(false);
+
+  useEffect(() => {
+    const pageState = location.state as {
+      novaAlocacao?: CalculoImportado;
+      accessDenied?: boolean;
+    } | null;
+
+    if (pageState?.accessDenied) {
+      showToast('Seu perfil não possui permissão para acessar o gerenciamento.', 'error');
+      navigate('/painel', { replace: true, state: null });
+      return;
+    }
+
+    const transferencia = pageState?.novaAlocacao;
+    if (!transferencia || transferenciaProcessada.current) return;
+    if (!can('ALLOCATE')) {
+      showToast('Seu perfil permite apenas consultar as alocações.', 'info');
+      navigate('/painel', { replace: true, state: null });
+      return;
+    }
+
+    const curso = transferencia.cursoId
+      ? cursos.find(item => item.id === transferencia.cursoId)
+      : undefined;
+    if (transferencia.cursoId && !curso) return;
+
+    transferenciaProcessada.current = true;
+    setNovoAgendamento(prev => ({
+      ...prev,
+      cursoId: transferencia.cursoId,
+      dataInicio: transferencia.dataInicio,
+      diasSemana: transferencia.diasSemana,
+      codigoTurma: curso?.codigoTurmaPadrao || '',
+      turno: curso?.turnoPadrao || prev.turno,
+      instrutorId: curso?.instrutorId || ''
+    }));
+    setCalculoImportado(transferencia);
+    setModalOpen(true);
+    navigate('/painel', { replace: true, state: null });
+  }, [can, cursos, location.state, navigate, showToast]);
 
   // --- LÓGICA DO MODAL DE EDIÇÃO E REALOCAÇÃO ---
   const [editTurmaModalOpen, setEditTurmaModalOpen] = useState(false);
@@ -198,7 +334,7 @@ export function PainelPage() {
   const [dadosEdicao, setDadosEdicao] = useState({
     salaId: '',
     dataInicio: '',
-    turno: 'Manhã',
+    turno: String(SHIFTS[0].label),
     diasSemana: [] as string[],
     instrutorId: ''
   });
@@ -213,7 +349,7 @@ export function PainelPage() {
       if ((e.key === 't' || e.key === 'T') && !modalOpen && !editTurmaModalOpen && !deleteModal.open) {
         e.preventDefault();
         handleToggleModoTV();
-      } else if ((e.key === 'n' || e.key === 'N') && !modalOpen && !editTurmaModalOpen && !deleteModal.open) {
+      } else if ((e.key === 'n' || e.key === 'N') && can('ALLOCATE') && !modalOpen && !editTurmaModalOpen && !deleteModal.open) {
         e.preventDefault();
         setModalOpen(true);
       }
@@ -221,55 +357,11 @@ export function PainelPage() {
 
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
-  }, [modoTV, modalOpen, editTurmaModalOpen, deleteModal.open]);
-
-  // Helper: Verifica se a turma está ativa na semana selecionada
-  const isTurmaActive = (dataInicioStr: string, dataFimStr: string) => {
-    if (!dataInicioStr || !dataFimStr) return true;
-    const inicio = new Date(dataInicioStr + 'T00:00:00');
-    const fim = new Date(dataFimStr + 'T23:59:59');
-    
-    const baseDate = new Date(dataBaseSemana + 'T12:00:00');
-    const day = baseDate.getDay();
-    const startOfWeek = new Date(baseDate);
-    startOfWeek.setDate(baseDate.getDate() - (day === 0 ? 6 : day - 1));
-    startOfWeek.setHours(0, 0, 0, 0);
-    
-    const endOfWeek = new Date(startOfWeek);
-    endOfWeek.setDate(startOfWeek.getDate() + 5);
-    endOfWeek.setHours(23, 59, 59, 999);
-    
-    return (inicio <= endOfWeek && fim >= startOfWeek);
-  };
-
-  // Helper: Verifica se a turma está ativa presencialmente em uma data específica
-  const isTurmaActiveOnDate = (turma: any, dateStr: string) => {
-    if (!turma.dataInicio || !turma.dataFim) return true;
-    const targetDate = new Date(dateStr + 'T00:00:00');
-    const start = new Date(turma.dataInicio + 'T00:00:00');
-    const end = new Date(turma.dataFim + 'T23:59:59');
-    
-    if (targetDate < start || targetDate > end) return false;
-    
-    const dayOfWeek = targetDate.getDay().toString();
-    return turma.diasSemana.includes(dayOfWeek);
-  };
-
-  // Helper: Verifica se a turma atende à busca rápida
-  const isTurmaMatchingSearch = (turma: any) => {
-    if (!searchTurma.trim()) return true;
-    const q = searchTurma.toLowerCase();
-    return (
-      (turma.codigo && turma.codigo.toLowerCase().includes(q)) ||
-      (turma.cursoNome && turma.cursoNome.toLowerCase().includes(q)) ||
-      (turma.instrutorNome && turma.instrutorNome.toLowerCase().includes(q)) ||
-      (turma.unidade && turma.unidade.toLowerCase().includes(q))
-    );
-  };
+  }, [can, modoTV, modalOpen, editTurmaModalOpen, deleteModal.open]);
 
   // Helper para buscar informações de uma sala
   const getSalaInfo = (salaId: string): Sala | undefined => {
-    return salas.find(s => s.id === salaId);
+    return salasById.get(salaId);
   };
 
   // Helper para formatar data curta
@@ -348,126 +440,105 @@ export function PainelPage() {
     return { concluidas, total, porcentagem };
   };
 
-  // =========================================================================
-  // MOTOR DE DISPONIBILIDADE DE SALAS EM TEMPO REAL
-  // =========================================================================
-  const verificarDisponibilidadeSalas = (
-    targetTurno: string,
-    targetDataInicio: string,
-    targetDiasSemana: string[],
-    targetCursoId: string,
-    ignoreTurmaId?: string
-  ) => {
-    if (!targetDataInicio || targetDiasSemana.length === 0) {
-      return {
-        salasLivres: salas,
-        salasOcupadas: [],
-        sugestoesTurnos: []
-      };
+  const [disponibilidadeNovo, setDisponibilidadeNovo] = useState<DisponibilidadePainel>(criarDisponibilidade);
+  const [disponibilidadeEdicao, setDisponibilidadeEdicao] = useState<DisponibilidadePainel>(criarDisponibilidade);
+  const [carregandoDisponibilidadeNovo, setCarregandoDisponibilidadeNovo] = useState(false);
+  const [carregandoDisponibilidadeEdicao, setCarregandoDisponibilidadeEdicao] = useState(false);
+
+  const mapDisponibilidade = (data: DisponibilidadeApi): DisponibilidadePainel => ({
+    salasLivres: salas.filter(sala => data.salasLivres.includes(Number(sala.id))),
+    salasOcupadas: data.salasOcupadas || [],
+    salasCapacidadeInsuficiente: data.salasCapacidadeInsuficiente || [],
+    conflitoInstrutor: data.conflitoInstrutor || null,
+    sugestoesTurnos: data.sugestoesTurnos || [],
+    totalSalas: data.totalSalas,
+    erro: null
+  });
+
+  useEffect(() => {
+    if (!novoAgendamento.cursoId || !novoAgendamento.dataInicio || novoAgendamento.diasSemana.length === 0) {
+      setDisponibilidadeNovo(criarDisponibilidade(salas));
+      setCarregandoDisponibilidadeNovo(false);
+      return;
     }
 
-    const curso = cursos.find(c => c.id === targetCursoId);
-    const cargaHoraria = curso?.cargaHoraria || 160;
-    const classesNeeded = Math.ceil(cargaHoraria / 4);
-
-    // Projeta as datas de aula da turma
-    const targetDates: string[] = [];
-    const current = new Date(targetDataInicio + 'T12:00:00');
-    let count = 0;
-    let safety = 0;
-    while (count < classesNeeded && safety < 1000) {
-      safety++;
-      const dayOfWeek = current.getDay().toString();
-      if (targetDiasSemana.includes(dayOfWeek)) {
-        targetDates.push(current.toISOString().split('T')[0]);
-        count++;
-      }
-      current.setDate(current.getDate() + 1);
-    }
-
-    const targetDateSet = new Set(targetDates);
-
-    // Helper para verificar conflito de uma sala em um determinado turno
-    const checarConflitoSala = (salaId: string, turno: string) => {
-      for (const t of turmas) {
-        if (ignoreTurmaId && t.id === ignoreTurmaId) continue;
-        if (t.salaId !== salaId) continue;
-        if (t.turno !== turno) continue;
-
-        // Verifica sobreposição de datas com a turma t
-        const tInicio = new Date(t.dataInicio + 'T12:00:00');
-        const tFim = new Date(t.dataFim + 'T12:00:00');
-        const tDias = t.diasSemana || [];
-
-        const tDate = new Date(tInicio);
-        while (tDate <= tFim) {
-          const dayOfWeek = tDate.getDay().toString();
-          const dateIso = tDate.toISOString().split('T')[0];
-          if (tDias.includes(dayOfWeek) && targetDateSet.has(dateIso)) {
-            return {
-              conflito: true,
-              turmaConflito: t,
-              dataConflito: dateIso
-            };
-          }
-          tDate.setDate(tDate.getDate() + 1);
+    let cancelled = false;
+    setCarregandoDisponibilidadeNovo(true);
+    const timer = window.setTimeout(() => {
+      TurmaService.getDisponibilidade({
+        id_cursos: Number(novoAgendamento.cursoId),
+        data_inicio: novoAgendamento.dataInicio,
+        fk_id_turno: getShiftId(novoAgendamento.turno),
+        total_alunos: Number(novoAgendamento.totalAlunos) || 1,
+        dias_semana: novoAgendamento.diasSemana,
+        id_instrutores: novoAgendamento.instrutorId ? Number(novoAgendamento.instrutorId) : null
+      }).then(data => {
+        if (cancelled) return;
+        const mapped = mapDisponibilidade(data);
+        setDisponibilidadeNovo(mapped);
+        if (!mapped.salasLivres.some(sala => sala.id === novoAgendamento.salaId)) {
+          setNovoAgendamento(prev => ({ ...prev, salaId: '' }));
         }
-      }
-      return { conflito: false };
-    };
-
-    const salasLivres: Sala[] = [];
-    const salasOcupadas: Array<{ sala: Sala; motivo: string }> = [];
-
-    salas.forEach(sala => {
-      const res = checarConflitoSala(sala.id, targetTurno);
-      if (res.conflito && res.turmaConflito) {
-        salasOcupadas.push({
-          sala,
-          motivo: `Ocupada por ${res.turmaConflito.codigo}`
-        });
-      } else {
-        salasLivres.push(sala);
-      }
-    });
-
-    // Sugestões de outros turnos se salasLivres for vazio
-    const sugestoesTurnos: Array<{ turno: string; vagas: number }> = [];
-    if (salasLivres.length === 0) {
-      const outrosTurnos = ['Manhã', 'Tarde', 'Noite'].filter(t => t !== targetTurno);
-      outrosTurnos.forEach(outroTurno => {
-        const livres = salas.filter(sala => !checarConflitoSala(sala.id, outroTurno).conflito);
-        if (livres.length > 0) {
-          sugestoesTurnos.push({ turno: outroTurno, vagas: livres.length });
+      }).catch(() => {
+        if (!cancelled) {
+          setDisponibilidadeNovo(prev => ({
+            ...prev,
+            erro: 'Não foi possível consultar a disponibilidade. Tente novamente antes de confirmar.'
+          }));
         }
+      }).finally(() => {
+        if (!cancelled) setCarregandoDisponibilidadeNovo(false);
       });
+    }, 300);
+
+    return () => {
+      cancelled = true;
+      window.clearTimeout(timer);
+    };
+  }, [novoAgendamento.cursoId, novoAgendamento.dataInicio, novoAgendamento.turno, novoAgendamento.totalAlunos, novoAgendamento.diasSemana, novoAgendamento.instrutorId, salas]);
+
+  useEffect(() => {
+    if (!turmaEditando || !dadosEdicao.dataInicio || dadosEdicao.diasSemana.length === 0) {
+      setDisponibilidadeEdicao(turmaEditando ? criarDisponibilidade() : criarDisponibilidade(salas));
+      setCarregandoDisponibilidadeEdicao(false);
+      return;
     }
 
-    return { salasLivres, salasOcupadas, sugestoesTurnos };
-  };
+    let cancelled = false;
+    setCarregandoDisponibilidadeEdicao(true);
+    const timer = window.setTimeout(() => {
+      TurmaService.getDisponibilidade({
+        id_cursos: Number(turmaEditando.cursoId),
+        data_inicio: dadosEdicao.dataInicio,
+        fk_id_turno: getShiftId(dadosEdicao.turno),
+        total_alunos: Number(turmaEditando.totalAlunos) || 1,
+        dias_semana: dadosEdicao.diasSemana,
+        id_instrutores: dadosEdicao.instrutorId ? Number(dadosEdicao.instrutorId) : null,
+        ignore_turma_id: Number(turmaEditando.id)
+      }).then(data => {
+        if (cancelled) return;
+        const mapped = mapDisponibilidade(data);
+        setDisponibilidadeEdicao(mapped);
+        if (!mapped.salasLivres.some(sala => sala.id === dadosEdicao.salaId)) {
+          setDadosEdicao(prev => ({ ...prev, salaId: '' }));
+        }
+      }).catch(() => {
+        if (!cancelled) {
+          setDisponibilidadeEdicao(prev => ({
+            ...prev,
+            erro: 'Não foi possível consultar a disponibilidade. Tente novamente antes de salvar.'
+          }));
+        }
+      }).finally(() => {
+        if (!cancelled) setCarregandoDisponibilidadeEdicao(false);
+      });
+    }, 300);
 
-  // Disponibilidade em tempo real para o Modal de Nova Alocação
-  const disponibilidadeNovo = useMemo(() => {
-    return verificarDisponibilidadeSalas(
-      novoAgendamento.turno,
-      novoAgendamento.dataInicio,
-      novoAgendamento.diasSemana,
-      novoAgendamento.cursoId
-    );
-  }, [novoAgendamento.turno, novoAgendamento.dataInicio, novoAgendamento.diasSemana, novoAgendamento.cursoId, salas, turmas, cursos]);
-
-  // Disponibilidade em tempo real para o Modal de Edição (ignora a própria turma)
-  const disponibilidadeEdicao = useMemo(() => {
-    if (!turmaEditando) return { salasLivres: salas, salasOcupadas: [], sugestoesTurnos: [] };
-    const curso = cursos.find(c => c.nome === turmaEditando.cursoNome);
-    return verificarDisponibilidadeSalas(
-      dadosEdicao.turno,
-      dadosEdicao.dataInicio,
-      dadosEdicao.diasSemana,
-      curso?.id || '',
-      turmaEditando.id
-    );
-  }, [dadosEdicao.turno, dadosEdicao.dataInicio, dadosEdicao.diasSemana, turmaEditando, salas, turmas, cursos]);
+    return () => {
+      cancelled = true;
+      window.clearTimeout(timer);
+    };
+  }, [turmaEditando, dadosEdicao.dataInicio, dadosEdicao.turno, dadosEdicao.diasSemana, dadosEdicao.instrutorId, salas]);
 
   const salaSelecionadaNovo = useMemo(() => {
     return salas.find(s => s.id === novoAgendamento.salaId);
@@ -480,13 +551,20 @@ export function PainelPage() {
   const handleCursoChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const cid = e.target.value;
     const curso = cursos.find(c => c.id === cid);
+    if (calculoImportado?.cursoId && calculoImportado.cursoId !== cid) {
+      setCalculoImportado(null);
+    }
     if (curso) {
       setNovoAgendamento(prev => ({
         ...prev,
         cursoId: cid,
         codigoTurma: curso.codigoTurmaPadrao || '',
-        turno: curso.turnoPadrao || 'Manhã',
-        diasSemana: curso.diasSemana && curso.diasSemana.length > 0 ? curso.diasSemana : ['1', '2', '3', '4', '5'],
+        turno: curso.turnoPadrao || SHIFTS[0].label,
+        diasSemana: calculoImportado
+          ? prev.diasSemana
+          : curso.diasSemana && curso.diasSemana.length > 0
+            ? curso.diasSemana
+            : ['1', '2', '3', '4', '5'],
         instrutorId: curso.instrutorId || ''
       }));
     } else {
@@ -517,21 +595,22 @@ export function PainelPage() {
         id_cursos: Number(cursoSelecionado.id),
         id_salas: Number(novoAgendamento.salaId),
         data_inicio: novoAgendamento.dataInicio,
-        fk_id_turno: novoAgendamento.turno === 'Manhã' ? 1 : novoAgendamento.turno === 'Tarde' ? 2 : 3,
+        fk_id_turno: getShiftId(novoAgendamento.turno),
         total_alunos: totalAlunosNum,
         codigo_turma: novoAgendamento.codigoTurma,
         dias_semana: novoAgendamento.diasSemana,
-        id_instrutores: novoAgendamento.instrutorId ? Number(novoAgendamento.instrutorId) : undefined
+        id_instrutores: novoAgendamento.instrutorId ? Number(novoAgendamento.instrutorId) : null
       });
 
-      refreshTurmas();
+      await refreshTurmas();
       showToast("Turma alocada com sucesso!", "success");
       setModalOpen(false);
+      setCalculoImportado(null);
       setNovoAgendamento({ 
         cursoId: '', 
         salaId: '', 
-        dataInicio: new Date().toISOString().split('T')[0], 
-        turno: 'Manhã', 
+        dataInicio: formatDateInput(),
+        turno: SHIFTS[0].label,
         codigoTurma: '', 
         diasSemana: ['1', '3', '5'], 
         instrutorId: '',
@@ -546,6 +625,7 @@ export function PainelPage() {
   };
 
   const handleEditClick = (turma: any) => {
+    if (!can('ALLOCATE')) return;
     setTurmaEditando(turma);
     setDadosEdicao({
       salaId: turma.salaId,
@@ -566,11 +646,11 @@ export function PainelPage() {
       await TurmaService.reallocar(Number(turmaEditando.id), {
         id_salas: Number(dadosEdicao.salaId),
         data_inicio: dadosEdicao.dataInicio,
-        fk_id_turno: dadosEdicao.turno === 'Manhã' ? 1 : dadosEdicao.turno === 'Tarde' ? 2 : 3,
+        fk_id_turno: getShiftId(dadosEdicao.turno),
         dias_semana: dadosEdicao.diasSemana,
-        id_instrutores: dadosEdicao.instrutorId ? Number(dadosEdicao.instrutorId) : undefined
+        id_instrutores: dadosEdicao.instrutorId ? Number(dadosEdicao.instrutorId) : null
       });
-      refreshTurmas();
+      await refreshTurmas();
       showToast("Turma realocada com sucesso!", "success");
       setEditTurmaModalOpen(false);
     } catch (err: any) {
@@ -595,7 +675,7 @@ export function PainelPage() {
 
     try {
       await TurmaService.delete(Number(deleteModal.turma.id));
-      refreshTurmas();
+      await refreshTurmas();
       showToast(`Alocação da turma ${deleteModal.turma.codigo} cancelada e excluída com sucesso!`, "success");
       setDeleteModal({ open: false, turma: null });
       setEditTurmaModalOpen(false);
@@ -607,70 +687,86 @@ export function PainelPage() {
     }
   };
 
-  // Filtragem de Turmas por Turno
-  const TURNOS = ['Manhã', 'Tarde', 'Noite'];
+  // Uma única passagem pela lista alimenta turnos, contadores e cards.
+  const searchNormalized = searchTurma.trim().toLocaleLowerCase('pt-BR');
+  const turmasPorTurno = useMemo(() => {
+    const grouped: Record<string, TurmaDetalhada[]> = Object.fromEntries(
+      TURNOS.map(turno => [turno, []])
+    );
+    const startOfWeek = new Date(weekRangeInfo.startOfWeek);
+    const endOfWeek = new Date(weekRangeInfo.endOfWeek);
+    startOfWeek.setHours(0, 0, 0, 0);
+    endOfWeek.setHours(23, 59, 59, 999);
+    const targetDate = new Date(dataFiltro + 'T00:00:00');
 
-  const getTurmasPorTurno = (turno: string) => {
-    return turmas.filter(t => {
-      if (t.turno !== turno) return false;
+    turmas.forEach(turma => {
+      if (!grouped[turma.turno]) return;
+      const start = turma.dataInicio ? new Date(turma.dataInicio + 'T00:00:00') : null;
+      const end = turma.dataFim ? new Date(turma.dataFim + 'T23:59:59') : null;
+      const matchesPeriod = !start || !end || (
+        modoVisualizacao === 'semanal'
+          ? start <= endOfWeek && end >= startOfWeek
+          : targetDate >= start && targetDate <= end &&
+            turma.diasSemana.includes(targetDate.getDay().toString())
+      );
+      const matchesSearch = !searchNormalized || [
+        turma.codigo,
+        turma.cursoNome,
+        turma.instrutorNome,
+        turma.unidade
+      ].some(value => value?.toLocaleLowerCase('pt-BR').includes(searchNormalized));
+      const matchesModality = filtroModalidade === 'Todas' ||
+        (filtroModalidade === 'Remoto' ? turma.modalidade === 'Remoto' : turma.modalidade !== 'Remoto');
+      const matchesRoomType = filtroTipo === 'Todos' || salasById.get(turma.salaId)?.tipo === filtroTipo;
 
-      const matchModo = modoVisualizacao === 'semanal' 
-        ? isTurmaActive(t.dataInicio, t.dataFim)
-        : isTurmaActiveOnDate(t, dataFiltro);
-
-      const matchUnidade = filtroUnidade === 'Todas' || t.unidade === filtroUnidade;
-      const matchBusca = isTurmaMatchingSearch(t);
-
-      // Filtro de modalidade (Presencial / Remoto)
-      let matchModalidade = true;
-      if (filtroModalidade === 'Presencial') {
-        matchModalidade = t.modalidade !== 'Remoto';
-      } else if (filtroModalidade === 'Remoto') {
-        matchModalidade = t.modalidade === 'Remoto';
+      if (
+        matchesPeriod &&
+        matchesSearch &&
+        matchesModality &&
+        matchesRoomType &&
+        (filtroUnidade === 'Todas' || turma.unidade === filtroUnidade)
+      ) {
+        grouped[turma.turno].push(turma);
       }
-
-      // Filtro de tipo de sala da turma
-      let matchTipoSala = true;
-      if (filtroTipo !== 'Todos') {
-        const s = getSalaInfo(t.salaId);
-        if (s) {
-          if (filtroTipo === 'Inovadora') matchTipoSala = s.tipo.toLowerCase().includes('inovadora');
-          else if (filtroTipo === 'TI') {
-            const tp = s.tipo.toLowerCase();
-            matchTipoSala = (tp.includes('ti') || tp.includes('t.i.')) && !tp.includes('multiuso');
-          } else if (filtroTipo === 'Imagem') {
-            const tp = s.tipo.toLowerCase();
-            matchTipoSala = tp.includes('imagem') || tp.includes('moda') || tp.includes('multiuso');
-          } else if (filtroTipo === 'Auditorio') {
-            matchTipoSala = s.tipo.toLowerCase().includes('auditório') || s.tipo.toLowerCase().includes('auditorio');
-          } else {
-            matchTipoSala = s.tipo === filtroTipo;
-          }
-        }
-      }
-
-      return matchModo && matchUnidade && matchBusca && matchTipoSala && matchModalidade;
     });
+
+    return grouped;
+  }, [
+    dataFiltro,
+    filtroModalidade,
+    filtroTipo,
+    filtroUnidade,
+    modoVisualizacao,
+    salasById,
+    searchNormalized,
+    turmas,
+    weekRangeInfo
+  ]);
+
+  const filtrosAtivos = [
+    Boolean(searchTurma.trim()),
+    filtroUnidade !== 'Todas',
+    filtroModalidade !== 'Todas',
+    filtroTipo !== 'Todos'
+  ].filter(Boolean).length;
+
+  const limparFiltros = () => {
+    setSearchTurma('');
+    setFiltroUnidade('Todas');
+    handleSetFiltroModalidade('Todas');
+    handleSetFiltroTipo('Todos');
   };
 
   // Contadores globais de turmas
   const { totalTurmasVisiveis, totalPresenciaisVisiveis, totalRemotasVisiveis } = useMemo(() => {
-    let total = 0;
-    let pres = 0;
-    let rem = 0;
-    TURNOS.forEach(turno => {
-      const lista = getTurmasPorTurno(turno);
-      total += lista.length;
-      lista.forEach(t => {
-        if (t.modalidade === 'Remoto') {
-          rem++;
-        } else {
-          pres++;
-        }
-      });
-    });
-    return { totalTurmasVisiveis: total, totalPresenciaisVisiveis: pres, totalRemotasVisiveis: rem };
-  }, [turmas, modoVisualizacao, dataBaseSemana, dataFiltro, filtroUnidade, searchTurma, filtroTipo, filtroModalidade]);
+    const visible = TURNOS.flatMap(turno => turmasPorTurno[turno] ?? []);
+    const remotas = visible.filter(turma => turma.modalidade === 'Remoto').length;
+    return {
+      totalTurmasVisiveis: visible.length,
+      totalPresenciaisVisiveis: visible.length - remotas,
+      totalRemotasVisiveis: remotas
+    };
+  }, [turmasPorTurno]);
 
   const content = (
     <div className={`flex flex-col h-full overflow-hidden transition-all duration-300 ${
@@ -718,6 +814,7 @@ export function PainelPage() {
               <button 
                 onClick={() => handleSetTvZoom(60)}
                 className={`px-2 py-0.5 rounded-lg text-[10px] font-black transition-all cursor-pointer ${autoZoom === 60 ? 'bg-primary text-white shadow-xs' : 'text-text-muted hover:text-text-main'}`}
+                aria-pressed={autoZoom === 60}
                 title="Ideal para TV 55 polegadas"
               >
                 55" (60%)
@@ -725,6 +822,7 @@ export function PainelPage() {
               <button 
                 onClick={() => handleSetTvZoom(63)}
                 className={`px-2 py-0.5 rounded-lg text-[10px] font-black transition-all cursor-pointer ${autoZoom === 63 ? 'bg-primary text-white shadow-xs' : 'text-text-muted hover:text-text-main'}`}
+                aria-pressed={autoZoom === 63}
                 title="Ideal para TV 60 polegadas"
               >
                 60" (63%)
@@ -732,6 +830,7 @@ export function PainelPage() {
               <button 
                 onClick={() => handleSetTvZoom(68)}
                 className={`px-2 py-0.5 rounded-lg text-[10px] font-black transition-all cursor-pointer ${autoZoom === 68 ? 'bg-primary text-white shadow-xs' : 'text-text-muted hover:text-text-main'}`}
+                aria-pressed={autoZoom === 68}
                 title="Ideal para TV 65 polegadas"
               >
                 65" (68%)
@@ -741,6 +840,7 @@ export function PainelPage() {
                   onClick={() => handleSetTvZoom(autoZoom - 2)}
                   className="w-5 h-5 flex items-center justify-center rounded hover:bg-card text-text-muted hover:text-text-main font-black cursor-pointer"
                   title="Diminuir Zoom (-2%)"
+                  aria-label="Diminuir zoom em 2%"
                 >
                   -
                 </button>
@@ -751,6 +851,7 @@ export function PainelPage() {
                   onClick={() => handleSetTvZoom(autoZoom + 2)}
                   className="w-5 h-5 flex items-center justify-center rounded hover:bg-card text-text-muted hover:text-text-main font-black cursor-pointer"
                   title="Aumentar Zoom (+2%)"
+                  aria-label="Aumentar zoom em 2%"
                 >
                   +
                 </button>
@@ -768,57 +869,59 @@ export function PainelPage() {
         </div>
       ) : (
         /* ================= CABEÇALHO MODO PADRÃO ================= */
-        <div className="p-6 border-b flex flex-col gap-4 shrink-0 transition-colors bg-card border-border">
+        <div className="p-4 sm:p-5 border-b flex flex-col gap-4 shrink-0 transition-colors bg-card border-border">
           
           {/* Linha Superior: Título, Ações Principais e Relógio */}
           <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-            <div>
-              <h1 className="text-2xl font-black flex items-center gap-2 tracking-tight text-secondary dark:text-primary transition-colors">
+            <div className="min-w-0">
+              <h1 className="text-xl sm:text-2xl font-black flex items-center gap-2 tracking-tight text-secondary dark:text-primary transition-colors">
                 <CalendarIcon className="text-primary w-6 h-6 shrink-0" /> 
                 Quadro de Alocações
               </h1>
               <p className="text-sm mt-0.5 font-medium text-text-muted transition-colors">
                 {modoVisualizacao === 'semanal' 
-                  ? `${getWeekRangeInfo(dataBaseSemana).label} • Cursos em andamento` 
+                  ? `${weekRangeInfo.label} • Cursos em andamento` 
                   : `Filtro de Ocupação Diária para: ${new Date(dataFiltro + 'T00:00:00').toLocaleDateString('pt-BR')}`
                 }
               </p>
             </div>
             
-            <div className="flex flex-wrap items-center gap-3">
+            <div className="flex items-center gap-2 sm:gap-3 w-full lg:w-auto">
               {/* Relógio Digital Modularizado (Horário de Brasília) */}
-              <DigitalClock variant="default" />
+              <div className="hidden xl:block">
+                <DigitalClock variant="default" />
+              </div>
 
-              {/* Botão de Nova Alocação */}
-              <button 
-                onClick={() => setModalOpen(true)}
-                className="bg-primary text-white font-black py-2.5 px-4 rounded-xl shadow-md hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center gap-2 text-sm cursor-pointer"
-                title="Atalho: pressione N no teclado"
-              >
-                <Plus size={16} /> Alocar Turma
-              </button>
+              {can('ALLOCATE') && (
+                <button
+                  type="button"
+                  onClick={() => setModalOpen(true)}
+                  className="bg-primary text-white font-black py-2.5 px-4 rounded-xl shadow-md hover:bg-primary/90 transition-colors flex items-center justify-center gap-2 text-sm cursor-pointer flex-1 sm:flex-none"
+                  title="Atalho: pressione N no teclado"
+                >
+                  <Plus size={16} /> Alocar Turma
+                </button>
+              )}
 
               {/* Botão de Modo TV */}
               <button
                 onClick={handleToggleModoTV}
                 title="Entrar no Modo TV (Atalho: pressione T)"
-                className="p-2.5 px-3.5 rounded-xl border flex items-center gap-1.5 text-sm font-bold active:scale-95 transition-all shadow-sm cursor-pointer bg-surface border-border text-text-muted hover:bg-border/30 hover:text-text-main"
+                className="p-2.5 px-3.5 rounded-xl border flex items-center justify-center gap-1.5 text-sm font-bold transition-colors shadow-sm cursor-pointer bg-surface border-border text-text-muted hover:bg-border/30 hover:text-text-main flex-1 sm:flex-none"
               >
                 <Tv size={16} /> Modo TV
               </button>
             </div>
           </div>
 
-          {/* Linha Inferior: Controles de Navegação Temporal, Busca e Filtros */}
-          <div className="flex flex-wrap items-center justify-between gap-3 pt-2 border-t border-border/50">
-            
-            {/* Bloco Esquerdo: Seletor de Modo + Navegação Temporal */}
-            <div className="flex flex-wrap items-center gap-2.5">
-              
-              {/* Alternador Semanal / Diário */}
-              <div className="flex bg-surface p-1 rounded-xl border border-border shadow-xs">
+          {/* Busca e período são os controles primários; filtros secundários ficam agrupados. */}
+          <div className="grid grid-cols-1 xl:grid-cols-[auto_minmax(260px,1fr)_auto] gap-3 pt-3 border-t border-border/50">
+            <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+              <div className="flex bg-surface p-1 rounded-xl border border-border shadow-xs w-fit" role="group" aria-label="Modo de visualização">
                 <button
+                  type="button"
                   onClick={() => handleSetModoVisualizacao('semanal')}
+                  aria-pressed={modoVisualizacao === 'semanal'}
                   className={`px-3 py-1.5 rounded-lg text-xs font-black transition-all cursor-pointer ${
                     modoVisualizacao === 'semanal' 
                       ? 'bg-primary text-white shadow-xs' 
@@ -828,7 +931,9 @@ export function PainelPage() {
                   Semanal
                 </button>
                 <button
+                  type="button"
                   onClick={() => handleSetModoVisualizacao('diario')}
+                  aria-pressed={modoVisualizacao === 'diario'}
                   className={`px-3 py-1.5 rounded-lg text-xs font-black transition-all cursor-pointer ${
                     modoVisualizacao === 'diario' 
                       ? 'bg-primary text-white shadow-xs' 
@@ -839,27 +944,31 @@ export function PainelPage() {
                 </button>
               </div>
 
-              {/* Navegação Semanal */}
               {modoVisualizacao === 'semanal' && (
-                <div className="flex items-center gap-1.5 bg-surface p-1 rounded-xl border border-border shadow-xs">
+                <div className="flex items-center gap-1 bg-surface p-1 rounded-xl border border-border shadow-xs min-w-0">
                   <button
+                    type="button"
                     onClick={navSemanaAnterior}
-                    className="p-1.5 hover:bg-card rounded-lg text-text-muted hover:text-text-main cursor-pointer"
+                    className="p-1.5 hover:bg-card rounded-lg text-text-muted hover:text-text-main cursor-pointer shrink-0"
                     title="Semana Anterior"
+                    aria-label="Ver semana anterior"
                   >
                     <ChevronLeft size={16} />
                   </button>
-                  <span className="text-xs font-black text-text-main px-2 font-display">
-                    {getWeekRangeInfo(dataBaseSemana).label}
+                  <span className="text-xs font-black text-text-main px-1 sm:px-2 font-display truncate">
+                    {weekRangeInfo.label}
                   </span>
                   <button
+                    type="button"
                     onClick={navProximaSemana}
-                    className="p-1.5 hover:bg-card rounded-lg text-text-muted hover:text-text-main cursor-pointer"
+                    className="p-1.5 hover:bg-card rounded-lg text-text-muted hover:text-text-main cursor-pointer shrink-0"
                     title="Próxima Semana"
+                    aria-label="Ver próxima semana"
                   >
                     <ChevronRight size={16} />
                   </button>
                   <button
+                    type="button"
                     onClick={navHoje}
                     className="px-2.5 py-1 text-[10px] font-black uppercase rounded-lg border border-border/80 text-primary bg-primary/10 hover:bg-primary/20 cursor-pointer transition-all ml-1"
                     title="Voltar para a semana atual"
@@ -872,13 +981,16 @@ export function PainelPage() {
               {/* Seletor de Data no Modo Diário */}
               {modoVisualizacao === 'diario' && (
                 <div className="flex items-center gap-2 bg-surface p-1 rounded-xl border border-border shadow-xs">
+                  <label htmlFor="data-ocupacao" className="sr-only">Data da ocupação</label>
                   <input 
+                    id="data-ocupacao"
                     type="date"
                     value={dataFiltro}
                     onChange={e => setDataFiltro(e.target.value)}
                     className="text-xs font-black border border-border rounded-lg px-2.5 py-1 outline-none transition-all bg-input text-text-main focus:border-primary cursor-pointer"
                   />
                   <button
+                    type="button"
                     onClick={navHoje}
                     className="px-2.5 py-1 text-[10px] font-black uppercase rounded-lg border border-border/80 text-primary bg-primary/10 hover:bg-primary/20 cursor-pointer transition-all"
                   >
@@ -888,38 +1000,76 @@ export function PainelPage() {
               )}
             </div>
 
-            {/* Bloco Direito: Busca Rápida, Filtro de Unidade e Tipo de Sala */}
-            <div className="flex flex-wrap items-center gap-2.5 flex-1 justify-end">
-              
-              {/* Barra de Busca de Turmas */}
-              <div className="relative min-w-[220px] max-w-xs flex-1">
+            <div className="relative min-w-0">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-text-muted" />
+                <label htmlFor="busca-turma" className="sr-only">Buscar turma, curso, sala ou instrutor</label>
                 <input
+                  id="busca-turma"
                   type="text"
-                  placeholder="Buscar turma, curso ou instrutor..."
+                  placeholder="Buscar turma, curso, sala ou instrutor..."
                   value={searchTurma}
                   onChange={e => setSearchTurma(e.target.value)}
-                  className="w-full bg-input text-text-main text-xs font-semibold outline-none border border-border rounded-xl pl-9 pr-8 py-2 focus:border-primary transition-all shadow-xs"
+                  className="w-full bg-input text-text-main text-sm font-semibold outline-none border border-border rounded-xl pl-9 pr-9 py-2.5 focus:border-primary transition-all shadow-xs"
                 />
                 {searchTurma && (
                   <button
+                    type="button"
                     onClick={() => setSearchTurma('')}
-                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-text-muted hover:text-text-main p-0.5 rounded-md cursor-pointer"
+                    className="absolute right-2 top-1/2 -translate-y-1/2 text-text-muted hover:text-text-main p-1.5 rounded-lg cursor-pointer"
                     title="Limpar busca"
+                    aria-label="Limpar busca"
                   >
-                    <X size={12} />
+                    <X size={14} />
                   </button>
                 )}
-              </div>
+            </div>
 
-              {/* Filtro de Unidade */}
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => setMostrarFiltros(value => !value)}
+                aria-expanded={mostrarFiltros}
+                aria-controls="filtros-secundarios"
+                className={`h-10 px-3 rounded-xl border flex items-center gap-2 text-xs font-black transition-colors cursor-pointer ${
+                  mostrarFiltros || filtrosAtivos > 0
+                    ? 'bg-primary/10 border-primary/30 text-primary'
+                    : 'bg-surface border-border text-text-muted hover:text-text-main'
+                }`}
+              >
+                <SlidersHorizontal size={15} />
+                Filtros
+                {filtrosAtivos > 0 && (
+                  <span className="min-w-5 h-5 px-1 rounded-full bg-primary text-white inline-flex items-center justify-center text-[10px]">
+                    {filtrosAtivos}
+                  </span>
+                )}
+              </button>
+              {filtrosAtivos > 0 && (
+                <button
+                  type="button"
+                  onClick={limparFiltros}
+                  className="h-10 px-3 rounded-xl text-xs font-bold text-text-muted hover:text-text-main hover:bg-surface transition-colors cursor-pointer whitespace-nowrap"
+                >
+                  Limpar
+                </button>
+              )}
+            </div>
+          </div>
+
+          {mostrarFiltros && (
+            <div id="filtros-secundarios" className="flex flex-col lg:flex-row lg:items-center gap-3 p-3 rounded-2xl bg-surface/60 border border-border/70">
+              <span className="text-[10px] font-black uppercase tracking-wider text-text-muted shrink-0">
+                Refinar por
+              </span>
               {unidadesDisponiveis.length > 0 && (
-                <div className="flex items-center gap-1 bg-surface border border-border rounded-xl px-2 py-1 shadow-xs">
-                  <Building size={12} className="text-text-muted shrink-0" />
+                <div className="flex items-center gap-2 bg-input border border-border rounded-xl px-3 py-2 shadow-xs min-w-0">
+                  <Building size={14} className="text-text-muted shrink-0" />
+                  <label htmlFor="filtro-unidade" className="sr-only">Filtrar por unidade</label>
                   <select
+                    id="filtro-unidade"
                     value={filtroUnidade}
                     onChange={e => setFiltroUnidade(e.target.value)}
-                    className="bg-transparent text-text-main border-none text-xs font-bold outline-none cursor-pointer pr-1"
+                    className="bg-transparent text-text-main border-none text-xs font-bold outline-none cursor-pointer min-w-0"
                   >
                     <option value="Todas" className="bg-card text-text-main">Todas Unidades</option>
                     {unidadesDisponiveis.map(u => (
@@ -929,12 +1079,13 @@ export function PainelPage() {
                 </div>
               )}
 
-              {/* Filtro de Modalidade (Presencial / Remoto) */}
-              <div className="flex bg-surface p-1 rounded-xl border border-border shadow-xs flex-wrap gap-1">
+              <div className="flex bg-input p-1 rounded-xl border border-border shadow-xs flex-wrap gap-1" role="group" aria-label="Filtrar por modalidade">
                 {(['Todas', 'Presencial', 'Remoto'] as const).map(mod => (
                   <button
+                    type="button"
                     key={mod}
                     onClick={() => handleSetFiltroModalidade(mod)}
+                    aria-pressed={filtroModalidade === mod}
                     className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
                       filtroModalidade === mod
                         ? mod === 'Presencial'
@@ -952,24 +1103,35 @@ export function PainelPage() {
                 ))}
               </div>
 
-              {/* Filtro de Tipo de Sala */}
-              <div className="flex bg-surface p-1 rounded-xl border border-border shadow-xs flex-wrap gap-1">
-                {['Todos', 'Inovadora', 'TI', 'Imagem', 'Auditorio'].map(tipoId => (
+              <div className="flex bg-input p-1 rounded-xl border border-border shadow-xs flex-wrap gap-1" role="group" aria-label="Filtrar por tipo de sala">
+                {['Todos', ...tipoSalas.map(tipo => tipo.nome)].map(tipoId => (
                   <button
+                    type="button"
                     key={tipoId}
                     onClick={() => handleSetFiltroTipo(tipoId)}
+                    aria-pressed={filtroTipo === tipoId}
                     className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${
                       filtroTipo === tipoId
                         ? 'bg-primary text-white shadow-xs font-black'
                         : 'text-text-muted hover:text-text-main hover:bg-card/50'
                     }`}
                   >
-                    {tipoId === 'Todos' ? 'Todas Salas' : tipoId === 'Auditorio' ? 'Auditório' : tipoId}
+                    {tipoId === 'Todos' ? 'Todas Salas' : tipoId}
                   </button>
                 ))}
               </div>
-
             </div>
+          )}
+
+          <div className="flex items-center justify-between gap-3 text-xs" aria-live="polite">
+            <span className="font-bold text-text-muted">
+              {isLoading ? 'Carregando alocações…' : `${totalTurmasVisiveis} ${totalTurmasVisiveis === 1 ? 'turma encontrada' : 'turmas encontradas'}`}
+            </span>
+            {filtrosAtivos > 0 && (
+              <span className="hidden sm:inline text-primary font-bold">
+                {filtrosAtivos} {filtrosAtivos === 1 ? 'filtro ativo' : 'filtros ativos'}
+              </span>
+            )}
           </div>
         </div>
       )}
@@ -985,281 +1147,234 @@ export function PainelPage() {
             width: `${100 / (autoZoom / 100)}%`
           } : undefined}
         >
-          {TURNOS.map((turno) => {
+          {isLoading && (
+            <div className="grid gap-4" aria-label="Carregando alocações" aria-busy="true">
+              {[1, 2, 3].map(item => (
+                <div key={item} className="h-36 rounded-2xl border border-border bg-surface/50 animate-pulse" />
+              ))}
+            </div>
+          )}
+
+          {!isLoading && totalTurmasVisiveis === 0 && (
+            <div className="min-h-[320px] rounded-2xl border border-dashed border-border bg-surface/30 flex flex-col items-center justify-center text-center p-8">
+              <div className="w-12 h-12 rounded-2xl bg-primary/10 text-primary flex items-center justify-center mb-4">
+                <CalendarIcon size={24} />
+              </div>
+              <h2 className="text-lg font-black text-text-main">Nenhuma alocação encontrada</h2>
+              <p className="text-sm text-text-muted mt-1 max-w-md">
+                {filtrosAtivos > 0
+                  ? 'Ajuste ou limpe os filtros para ampliar os resultados.'
+                  : 'Não há turmas para o período selecionado.'}
+              </p>
+              {(filtrosAtivos > 0 || can('ALLOCATE')) && (
+                <button
+                  type="button"
+                  onClick={filtrosAtivos > 0 ? limparFiltros : () => setModalOpen(true)}
+                  className="mt-5 bg-primary text-white font-bold px-4 py-2.5 rounded-xl text-sm hover:bg-primary/90 transition-colors cursor-pointer"
+                >
+                  {filtrosAtivos > 0 ? 'Limpar filtros' : 'Nova alocação'}
+                </button>
+              )}
+            </div>
+          )}
+
+          {!isLoading && totalTurmasVisiveis > 0 && TURNOS.map((turno) => {
             // Cores e Borda do Turno
-            let turnoBorderColor = 'border-l-8 border-l-primary';
+            let turnoBorderColor = 'border-t-4 border-t-primary';
             let turnoBgColor = 'bg-primary/5 dark:bg-primary/10 text-primary';
             let badgeBg = 'bg-primary/10 text-primary border-primary/20';
 
-            if (turno === 'Tarde') {
-              turnoBorderColor = 'border-l-8 border-l-amber-500';
+            if (turno === SHIFTS[1].label) {
+              turnoBorderColor = 'border-t-4 border-t-amber-500';
               turnoBgColor = 'bg-amber-500/5 dark:bg-amber-500/10 text-amber-600 dark:text-amber-400';
               badgeBg = 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20';
-            } else if (turno === 'Noite') {
-              turnoBorderColor = 'border-l-8 border-l-purple-600';
+            } else if (turno === SHIFTS[2].label) {
+              turnoBorderColor = 'border-t-4 border-t-purple-600';
               turnoBgColor = 'bg-purple-600/5 dark:bg-purple-600/10 text-purple-600 dark:text-purple-400';
               badgeBg = 'bg-purple-600/10 text-purple-600 dark:text-purple-400 border-purple-600/20';
             }
 
-            const turmasDoTurno = getTurmasPorTurno(turno);
+            const turmasDoTurno = turmasPorTurno[turno] ?? [];
             const turmasPresenciais = turmasDoTurno.filter(t => t.modalidade !== 'Remoto');
             const turmasRemotas = turmasDoTurno.filter(t => t.modalidade === 'Remoto');
 
-            const gridClasses = modoTV 
-              ? "grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-4" 
-              : "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4.5";
+            const gridClasses = modoTV
+              ? 'grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-4'
+              : 'grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-4';
 
             // Renderizador do Card de Turma com Divisão de Cores: Vermelho (Presencial) | Azul (Remoto)
-            const renderCardTurma = (turma: any) => {
+            const renderCardTurma = (turma: TurmaDetalhada) => {
               const sala = getSalaInfo(turma.salaId);
               const { presencial, remoto } = formatDiasSemanaSeparados(turma.diasSemana, turma.diasRemotos);
               const { concluidas, total, porcentagem } = calcularProgressoAulas(turma.dataInicio, turma.dataFim, turma.diasSemana);
 
               const isRemoto = turma.modalidade === 'Remoto';
               const isSemInstrutor = !turma.instrutorNome || turma.instrutorNome.toLowerCase().includes('sem instrutor');
-              const isHighlighted = searchTurma.trim() && isTurmaMatchingSearch(turma);
+              const isHighlighted = Boolean(searchNormalized);
 
-              // Estilos exclusivos para o Modo TV vs Modo Normal
-              const cardProportionClass = modoTV 
-                ? "aspect-[4/3.8] min-h-[320px] p-5.5 gap-3" 
-                : "p-5 gap-3.5";
-              const progressoFontClass = modoTV 
-                ? "text-sm font-black text-text-muted" 
-                : "text-[11px] font-black text-text-muted";
-              const progressoPercentClass = modoTV 
-                ? `text-base md:text-lg font-mono font-black ${isRemoto ? 'text-blue-600 dark:text-blue-400' : 'text-red-600 dark:text-red-400'}` 
-                : `text-[11px] font-mono font-black ${isRemoto ? 'text-blue-600 dark:text-blue-400' : 'text-red-600 dark:text-red-400'}`;
-              const progressBarHeightClass = modoTV 
-                ? "w-full h-3.5 md:h-4 rounded-full overflow-hidden bg-border/40 relative shadow-inner" 
-                : "w-full h-2 rounded-full overflow-hidden bg-border/40 relative";
-
-              // Divisão de cores estrita (Vermelho = Presencial | Azul = Remoto)
+              const etapa = porcentagem >= 100 ? 'Concluída' : concluidas > 0 ? 'Em andamento' : 'Programada';
+              const cardProportionClass = modoTV ? 'min-h-[300px] p-5 gap-4' : 'p-4 gap-4';
               const cardBorderColor = isRemoto 
-                ? "border-l-4 border-l-blue-500 hover:border-blue-500/60 hover:shadow-[0_0_20px_rgba(59,130,246,0.18)]" 
-                : "border-l-4 border-l-red-500 hover:border-red-500/60 hover:shadow-[0_0_20px_rgba(239,68,68,0.18)]";
+                ? 'border-l-4 border-l-blue-500 hover:border-blue-500/50'
+                : 'border-l-4 border-l-red-500 hover:border-red-500/50';
 
               const badgeCodigoClass = isRemoto
-                ? "border-blue-500/30 bg-blue-500/10 text-blue-600 dark:text-blue-400"
-                : "border-red-500/30 bg-red-500/10 text-red-600 dark:text-red-400";
-
-              const hoverTitleClass = isRemoto
-                ? "group-hover/card:text-blue-600 dark:group-hover/card:text-blue-400"
-                : "group-hover/card:text-red-600 dark:group-hover/card:text-red-400";
-
-              const salaBoxClass = isRemoto
-                ? "bg-blue-500/10 border-blue-500/20 text-blue-700 dark:text-blue-300"
-                : "bg-red-500/10 border-red-500/20 text-red-700 dark:text-red-300";
+                ? 'border-blue-500/30 bg-blue-500/10 text-blue-700 dark:text-blue-300'
+                : 'border-red-500/30 bg-red-500/10 text-red-700 dark:text-red-300';
 
               const salaIcon = isRemoto
                 ? <Tv size={14} className="shrink-0 text-blue-500" />
                 : <MapPin size={14} className="shrink-0 text-red-500" />;
 
-              const salaCapBadgeClass = isRemoto
-                ? "text-blue-700 dark:text-blue-300 bg-blue-500/15"
-                : "text-red-700 dark:text-red-300 bg-red-500/15";
-
-              const progressBarFillClass = isRemoto ? "bg-blue-500" : "bg-red-500";
-              const diasBorderClass = isRemoto ? "border-l-3 border-blue-500" : "border-l-3 border-red-500";
+              const accentText = isRemoto ? 'text-blue-600 dark:text-blue-400' : 'text-red-600 dark:text-red-400';
+              const progressBarFillClass = isRemoto ? 'bg-blue-500' : 'bg-red-500';
 
               return (
-                <div
+                <button
+                  type="button"
                   key={turma.id}
                   onClick={() => handleEditClick(turma)}
-                  className={`glass-panel rounded-3xl shadow-xs border border-border/80 transition-all duration-200 cursor-pointer flex flex-col justify-between group/card bg-card/60 ${cardProportionClass} ${cardBorderColor} ${
+                  disabled={!can('ALLOCATE')}
+                  aria-label={can('ALLOCATE') ? `Editar alocação da turma ${turma.codigo}, ${turma.cursoNome}` : `Turma ${turma.codigo}, ${turma.cursoNome}`}
+                  className={`glass-panel w-full text-left rounded-2xl shadow-xs border border-border/80 transition-[border-color,box-shadow,transform] duration-200 flex flex-col bg-card/70 ${can('ALLOCATE') ? 'cursor-pointer hover:-translate-y-0.5 hover:shadow-md' : 'cursor-default'} ${cardProportionClass} ${cardBorderColor} ${
                     isHighlighted ? (isRemoto ? 'ring-2 ring-blue-500 ring-offset-2 ring-offset-bg shadow-md' : 'ring-2 ring-red-500 ring-offset-2 ring-offset-bg shadow-md') : ''
                   }`}
                 >
-                  {/* 1. CÓDIGO DA TURMA (Nº DA TURMA DESTACADO) & BADGES */}
-                  <div className="flex items-center justify-between gap-2 shrink-0">
-                    <span className={`text-xs md:text-sm font-black tracking-wider px-3 py-1 rounded-xl border font-mono shadow-xs ${badgeCodigoClass}`}>
+                  <div className="flex items-start justify-between gap-3">
+                    <span className={`text-xs font-black tracking-wide px-2.5 py-1 rounded-lg border font-mono ${badgeCodigoClass}`}>
                       {turma.codigo}
                     </span>
-                    
-                    <div className="flex items-center gap-1.5 flex-wrap">
+                    <div className="flex items-center justify-end gap-1.5 flex-wrap">
                       {turma.cursoTem && (
-                        <span className="text-[9px] font-black bg-primary text-white px-2 py-0.5 rounded-md uppercase tracking-wider shadow-3xs">
+                        <span className="text-[9px] font-black bg-primary text-white px-2 py-0.5 rounded-md uppercase tracking-wider">
                           TEM
                         </span>
                       )}
-                      {isRemoto ? (
-                        <span className="text-[9px] font-black bg-blue-600 text-white px-2 py-0.5 rounded-md uppercase tracking-wider shadow-3xs flex items-center gap-1">
-                          <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse"></span>
-                          Remoto
-                        </span>
-                      ) : (
-                        <span className="text-[9px] font-black bg-red-500 text-white px-2 py-0.5 rounded-md uppercase tracking-wider shadow-3xs flex items-center gap-1">
-                          <span className="w-1.5 h-1.5 rounded-full bg-white"></span>
-                          Presencial
-                        </span>
-                      )}
-                      {isSemInstrutor && (
-                        <span className="text-[9px] font-black bg-amber-500/20 text-amber-700 dark:text-amber-300 border border-amber-500/30 px-1.5 py-0.5 rounded-md uppercase tracking-wider flex items-center gap-0.5">
-                          ⚠️ Sem Prof.
-                        </span>
-                      )}
+                      <span className={`text-[9px] font-black px-2 py-0.5 rounded-md uppercase tracking-wider ${isRemoto ? 'bg-blue-600 text-white' : 'bg-red-500 text-white'}`}>
+                        {isRemoto ? 'Remoto' : 'Presencial'}
+                      </span>
                     </div>
                   </div>
 
-                  {/* 2. NOME DO CURSO */}
                   <div className="flex flex-col gap-1">
-                    <h3 className={`text-base font-black text-text-main font-display leading-tight ${hoverTitleClass} transition-colors line-clamp-2`}>
+                    <h3 className="text-base font-black text-text-main font-display leading-tight line-clamp-2">
                       {turma.cursoNome}
                     </h3>
                     {turma.unidade && (
-                      <span className="text-[9px] font-black uppercase tracking-wide px-2 py-0.5 rounded-md bg-surface text-text-muted border border-border/80 w-fit">
+                      <span className="text-[10px] font-bold text-text-muted truncate">
                         {turma.unidade}
                       </span>
                     )}
                   </div>
 
-                  {/* 3. DATA DE INÍCIO E FIM */}
-                  <div className="flex items-center gap-2 text-xs font-bold text-text-muted bg-surface/60 px-3 py-2 rounded-xl border border-border/60">
-                    <CalendarIcon className={`w-4 h-4 shrink-0 opacity-80 ${isRemoto ? 'text-blue-500' : 'text-red-500'}`} />
-                    <span className="font-mono text-xs">
-                      {formatDataCurta(turma.dataInicio)} - {formatDataCurta(turma.dataFim)}
-                    </span>
-                  </div>
-
-                  {/* 4. DIAS LETIVOS DE AULA (PRESENCIAL EM VERMELHO, REMOTO EM AZUL) */}
-                  <div className={`flex flex-col gap-1 text-xs font-bold ${diasBorderClass} pl-2.5 py-0.5 my-0.5`}>
-                    {presencial && (
-                      <div className="text-text-main flex items-baseline gap-1.5">
-                        <span className="text-text-muted text-[11px] font-bold">Presencial:</span>
-                        <span className="font-black text-red-600 dark:text-red-400">{presencial}</span>
-                      </div>
-                    )}
-                    {remoto && (
-                      <div className="text-text-main flex items-baseline gap-1.5">
-                        <span className="text-text-muted text-[11px] font-bold">Remoto:</span>
-                        <span className="font-black text-blue-600 dark:text-blue-400">{remoto}</span>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* 5. AMBIENTE EM QUE A TURMA ESTÁ ALOCADA */}
-                  <div className={`border px-3.5 py-2.5 rounded-2xl font-black text-xs flex items-center justify-between gap-2 font-display shadow-3xs ${salaBoxClass}`}>
-                    <div className="flex items-center gap-2 truncate">
-                      {salaIcon}
-                      <span className="truncate">{sala?.nome || (isRemoto ? 'Ambiente Virtual / Remoto' : 'Ambiente não atribuído')}</span>
+                  <dl className="grid grid-cols-2 gap-x-3 gap-y-2 text-xs">
+                    <div className="col-span-2 flex items-center justify-between gap-2 bg-surface/70 border border-border/60 rounded-xl px-3 py-2.5">
+                      <dt className="sr-only">Sala</dt>
+                      <dd className="flex items-center gap-2 min-w-0 font-bold text-text-main">
+                        {salaIcon}
+                        <span className="truncate">{sala?.nome || (isRemoto ? 'Ambiente virtual' : 'Ambiente não atribuído')}</span>
+                      </dd>
+                      {sala?.capacidade && (
+                        <span className="text-[10px] text-text-muted shrink-0">{sala.capacidade} lugares</span>
+                      )}
                     </div>
-                    {sala?.capacidade && (
-                      <span className={`text-[10px] font-mono shrink-0 px-2 py-0.5 rounded-md ${salaCapBadgeClass}`}>
-                        Cap: {sala.capacidade}
-                      </span>
+                    <div className="min-w-0">
+                      <dt className="text-[10px] font-bold uppercase tracking-wide text-text-muted">Instrutor</dt>
+                      <dd className={`truncate font-bold ${isSemInstrutor ? 'text-amber-700 dark:text-amber-300' : 'text-text-main'}`}>
+                        {turma.instrutorNome || 'Não definido'}
+                      </dd>
+                    </div>
+                    <div>
+                      <dt className="text-[10px] font-bold uppercase tracking-wide text-text-muted">Alunos</dt>
+                      <dd className="font-bold text-text-main flex items-center gap-1.5">
+                        <Users size={13} className="text-text-muted" /> {turma.totalAlunos}
+                      </dd>
+                    </div>
+                    <div className="col-span-2">
+                      <dt className="text-[10px] font-bold uppercase tracking-wide text-text-muted">Período</dt>
+                      <dd className="font-mono font-bold text-text-main">
+                        {formatDataCurta(turma.dataInicio)} – {formatDataCurta(turma.dataFim)}
+                      </dd>
+                    </div>
+                    {(presencial || remoto) && (
+                      <div className="col-span-2">
+                        <dt className="text-[10px] font-bold uppercase tracking-wide text-text-muted">Dias</dt>
+                        <dd className="font-bold text-text-main">
+                          {[presencial && `Presencial: ${presencial}`, remoto && `Remoto: ${remoto}`].filter(Boolean).join(' · ')}
+                        </dd>
+                      </div>
                     )}
-                  </div>
+                  </dl>
 
-                  {/* 6. NOME DO PROFESSOR */}
-                  <div className="flex items-center gap-2 text-xs font-bold text-text-main pt-2.5 border-t border-dashed border-border/60">
-                    <Users className="w-4 h-4 text-text-muted shrink-0 opacity-80" />
-                    <span className="truncate font-semibold">{turma.instrutorNome || 'Sem Instrutor'}</span>
-                  </div>
-
-                  {/* 7. PROGRESSO DA TURMA */}
-                  <div className="flex flex-col gap-1.5 pt-1">
+                  <div className="flex flex-col gap-1.5 pt-2 border-t border-border/60">
                     <div className="flex justify-between items-center">
-                      <span className={progressoFontClass}>{concluidas}/{total} aulas concluídas</span>
-                      <span className={progressoPercentClass}>{porcentagem}%</span>
+                      <span className="text-[11px] font-bold text-text-muted">{etapa} · {concluidas}/{total} aulas</span>
+                      <span className={`text-[11px] font-mono font-black ${accentText}`}>{porcentagem}%</span>
                     </div>
-                    <div className={progressBarHeightClass}>
+                    <div
+                      className="w-full h-1.5 rounded-full overflow-hidden bg-border/50 relative"
+                      role="progressbar"
+                      aria-label={`Progresso da turma ${turma.codigo}`}
+                      aria-valuemin={0}
+                      aria-valuemax={100}
+                      aria-valuenow={porcentagem}
+                    >
                       <div 
                         className={`absolute inset-y-0 left-0 ${progressBarFillClass} transition-all duration-500 rounded-full`}
                         style={{ width: `${porcentagem}%` }}
                       ></div>
                     </div>
                   </div>
-
-                </div>
+                </button>
               );
             };
 
             return (
-              <div 
+              <section
                 key={turno} 
-                className={`glass-panel rounded-3xl overflow-hidden shadow-xs border border-border/80 flex flex-col md:flex-row transition-all duration-300 ${turnoBorderColor}`}
+                className={`glass-panel rounded-2xl overflow-hidden shadow-xs border border-border/80 ${turnoBorderColor}`}
               >
-                {/* COLUNA FIXA DO TURNO NA ESQUERDA */}
-                <div className={`md:w-44 shrink-0 p-5 flex md:flex-col items-center justify-between md:justify-center gap-3.5 border-b md:border-b-0 md:border-r border-border/60 ${turnoBgColor}`}>
-                  <div className="flex flex-col items-center justify-center text-center">
-                    <span className="text-[10px] font-black uppercase tracking-widest opacity-75 font-mono">Turno</span>
-                    <h2 className="text-xl font-black uppercase tracking-wider font-display mt-0.5">
+                <header className={`px-4 py-3 flex flex-wrap items-center justify-between gap-3 border-b border-border/60 ${turnoBgColor}`}>
+                  <div className="flex items-center gap-3">
+                    <Clock size={18} aria-hidden="true" />
+                    <div>
+                      <span className="text-[9px] font-black uppercase tracking-widest opacity-70">Turno</span>
+                      <h2 className="text-lg font-black font-display leading-none">
                       {turno}
-                    </h2>
+                      </h2>
+                    </div>
                   </div>
-
-                  <div className="flex flex-col items-center gap-2 w-full">
-                    <span className={`text-[10px] font-black px-2.5 py-1 rounded-xl border uppercase tracking-wider font-mono w-full text-center ${badgeBg}`}>
+                  <div className="flex items-center gap-2 text-[10px] font-black">
+                    <span className={`px-2.5 py-1 rounded-lg border uppercase tracking-wide ${badgeBg}`}>
                       {turmasDoTurno.length} {turmasDoTurno.length === 1 ? 'Turma' : 'Turmas'}
                     </span>
                     {turmasDoTurno.length > 0 && (
-                      <div className="flex md:flex-col gap-1.5 w-full text-[10px] font-black">
-                        <span className="flex-1 px-2.5 py-1 rounded-lg bg-red-500/10 text-red-600 dark:text-red-400 border border-red-500/25 text-center flex items-center justify-center gap-1.5 shadow-3xs">
+                      <>
+                        <span className="px-2 py-1 rounded-lg bg-red-500/10 text-red-600 dark:text-red-400 border border-red-500/20 flex items-center gap-1.5">
                           <span className="w-2 h-2 rounded-full bg-red-500 shrink-0"></span>
-                          {turmasPresenciais.length} Presencial{turmasPresenciais.length !== 1 ? 'is' : ''}
+                          {turmasPresenciais.length}
                         </span>
-                        <span className="flex-1 px-2.5 py-1 rounded-lg bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/25 text-center flex items-center justify-center gap-1.5 shadow-3xs">
+                        <span className="px-2 py-1 rounded-lg bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20 flex items-center gap-1.5">
                           <span className="w-2 h-2 rounded-full bg-blue-500 shrink-0"></span>
-                          {turmasRemotas.length} Remota{turmasRemotas.length !== 1 ? 's' : ''}
+                          {turmasRemotas.length}
                         </span>
-                      </div>
+                      </>
                     )}
                   </div>
-                </div>
+                </header>
 
-                {/* ÁREA DE CARDS DE ALOCAÇÃO DO TURNO (ENQUADRAMENTO POR MODALIDADE) */}
-                <div className="flex-1 p-5 bg-card/20 flex flex-col gap-6">
+                <div className="p-4 bg-card/20">
                   {turmasDoTurno.length === 0 ? (
-                    <div className="py-8 px-4 text-center flex flex-col items-center justify-center gap-2 border border-dashed border-border/70 rounded-2xl bg-surface/30">
-                      <Clock className="w-8 h-8 text-text-muted/60" />
-                      <p className="text-xs font-bold text-text-muted">
-                        Nenhuma turma alocada no turno da {turno} {searchTurma ? 'correspondente à pesquisa' : 'para o período selecionado'}.
-                      </p>
+                    <div className="py-5 px-4 text-center border border-dashed border-border/70 rounded-xl bg-surface/30">
+                      <p className="text-xs font-bold text-text-muted">Nenhuma turma neste turno.</p>
                     </div>
                   ) : (
-                    <>
-                      {/* ENQUADRAMENTO PRESENCIAL (VERMELHO) */}
-                      {turmasPresenciais.length > 0 && (
-                        <div className="flex flex-col gap-3">
-                          <div className="flex items-center justify-between pb-2 border-b-2 border-red-500/30">
-                            <div className="flex items-center gap-2">
-                              <span className="w-3 h-3 rounded-full bg-red-500 shadow-xs shadow-red-500/50"></span>
-                              <h3 className="text-xs font-black uppercase tracking-wider text-red-600 dark:text-red-400 font-display">
-                                Turmas Presenciais ({turmasPresenciais.length})
-                              </h3>
-                            </div>
-                            <span className="text-[10px] font-bold text-red-600/80 dark:text-red-400/80 bg-red-500/10 px-2.5 py-0.5 rounded-lg border border-red-500/20">
-                              Aulas em Sala Física
-                            </span>
-                          </div>
-                          <div className={gridClasses}>
-                            {turmasPresenciais.map(renderCardTurma)}
-                          </div>
-                        </div>
-                      )}
-
-                      {/* ENQUADRAMENTO REMOTO (AZUL) */}
-                      {turmasRemotas.length > 0 && (
-                        <div className="flex flex-col gap-3">
-                          <div className="flex items-center justify-between pb-2 border-b-2 border-blue-500/30">
-                            <div className="flex items-center gap-2">
-                              <span className="w-3 h-3 rounded-full bg-blue-500 shadow-xs shadow-blue-500/50"></span>
-                              <h3 className="text-xs font-black uppercase tracking-wider text-blue-600 dark:text-blue-400 font-display">
-                                Turmas Remotas ({turmasRemotas.length})
-                              </h3>
-                            </div>
-                            <span className="text-[10px] font-bold text-blue-600/80 dark:text-blue-400/80 bg-blue-500/10 px-2.5 py-0.5 rounded-lg border border-blue-500/20">
-                              Aulas Remotas / Virtuais
-                            </span>
-                          </div>
-                          <div className={gridClasses}>
-                            {turmasRemotas.map(renderCardTurma)}
-                          </div>
-                        </div>
-                      )}
-                    </>
+                    <div className={gridClasses}>
+                      {turmasDoTurno.map(renderCardTurma)}
+                    </div>
                   )}
                 </div>
-              </div>
+              </section>
             );
           })}
         </div>
@@ -1276,9 +1391,12 @@ export function PainelPage() {
         cursos={cursos}
         instrutores={instrutores}
         disponibilidadeNovo={disponibilidadeNovo}
+        avisoDisponibilidade={descreverIndisponibilidade(disponibilidadeNovo)}
+        calculoImportado={calculoImportado}
         salaSelecionadaNovo={salaSelecionadaNovo}
         capacidadeExcedidaNovo={capacidadeExcedidaNovo}
         isSavingAlocacao={isSavingAlocacao}
+        isLoadingDisponibilidade={carregandoDisponibilidadeNovo}
       />
 
       {/* ================= MODAL DE EDIÇÃO E REALOCAÇÃO ================= */}
@@ -1292,8 +1410,10 @@ export function PainelPage() {
         setDadosEdicao={setDadosEdicao}
         instrutores={instrutores}
         disponibilidadeEdicao={disponibilidadeEdicao}
+        avisoDisponibilidade={descreverIndisponibilidade(disponibilidadeEdicao)}
         isSavingAlocacao={isSavingAlocacao}
         isDeletingAlocacao={isDeletingAlocacao}
+        isLoadingDisponibilidade={carregandoDisponibilidadeEdicao}
       />
 
       {/* ================= MODAL DE EXCLUSÃO SEGURA ================= */}

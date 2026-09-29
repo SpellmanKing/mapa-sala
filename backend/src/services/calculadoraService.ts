@@ -1,4 +1,5 @@
 import { prisma } from '../infrastructure/prismaClient.js';
+import { HttpError } from '../utils/errors.js';
 
 export interface FeriadoInfo {
   data: string;
@@ -29,18 +30,42 @@ export class CalculadoraService {
       }
     });
 
-    const dailyHours = Math.max(1, Number(horasPorDia) || 4);
-    const classesNeeded = Math.ceil(Number(cargaHoraria) / dailyHours);
+    const dailyHours = Number(horasPorDia);
+    const totalHours = Number(cargaHoraria);
+    if (!Number.isFinite(totalHours) || totalHours <= 0) {
+      throw new HttpError(400, 'Carga horária deve ser positiva');
+    }
+    if (!Number.isFinite(dailyHours) || dailyHours <= 0 || dailyHours > 24) {
+      throw new HttpError(400, 'Horas por dia deve estar entre 1 e 24');
+    }
+    if (!Array.isArray(diasSemana) || diasSemana.length === 0 || diasSemana.some(dia => !/^[0-6]$/.test(dia))) {
+      throw new HttpError(400, 'Dias da semana inválidos');
+    }
+
+    const classesNeeded = Math.ceil(totalHours / dailyHours);
 
     // Normaliza a data de início para YYYY-MM-DD em UTC
-    const dateStrOnly = typeof dataInicioInput === 'string' 
-      ? (dataInicioInput.split('T')[0] || dataInicioInput)
+    if (dataInicioInput instanceof Date && Number.isNaN(dataInicioInput.getTime())) {
+      throw new HttpError(400, 'Data de início inválida');
+    }
+
+    const dateStrOnly = typeof dataInicioInput === 'string'
+      ? dataInicioInput.split('T')[0] || ''
       : dataInicioInput.toISOString().split('T')[0] || '';
-      
-    const parts = (dateStrOnly || new Date().toISOString().split('T')[0] || '2026-01-01').split('-');
-    const year = Number(parts[0]) || 2026;
-    const month = Number(parts[1]) || 1;
-    const day = Number(parts[2]) || 1;
+    const parts = dateStrOnly.split('-');
+    const year = Number(parts[0]);
+    const month = Number(parts[1]);
+    const day = Number(parts[2]);
+    const startUtc = new Date(Date.UTC(year, month - 1, day, 12, 0, 0));
+    if (
+      !/^\d{4}-\d{2}-\d{2}$/.test(dateStrOnly) ||
+      Number.isNaN(startUtc.getTime()) ||
+      startUtc.getUTCFullYear() !== year ||
+      startUtc.getUTCMonth() !== month - 1 ||
+      startUtc.getUTCDate() !== day
+    ) {
+      throw new HttpError(400, 'Data de início inválida');
+    }
 
     let currentDate = new Date(Date.UTC(year, month - 1, day, 12, 0, 0));
 
@@ -50,7 +75,7 @@ export class CalculadoraService {
 
     // Limite de segurança para evitar loops infinitos
     let safetyCounter = 0;
-    const maxDays = 2000;
+    const maxDays = classesNeeded * 7 + feriadosDb.length + 7;
 
     while (classesScheduled < classesNeeded && safetyCounter < maxDays) {
       safetyCounter++;
@@ -80,7 +105,10 @@ export class CalculadoraService {
       }
     }
 
-    const startUtc = new Date(Date.UTC(year, month - 1, day, 12, 0, 0));
+    if (classesScheduled < classesNeeded) {
+      throw new HttpError(400, 'Não foi possível montar o cronograma com os dias informados');
+    }
+
     const diffTime = Math.abs(currentDate.getTime() - startUtc.getTime());
     const diasCorridos = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
     const finalDateStr = currentDate.toISOString().split('T')[0] || '';

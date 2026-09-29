@@ -15,9 +15,14 @@ export class UnauthorizedError extends HttpError {
   }
 }
 
+export class ForbiddenError extends HttpError {
+  constructor(message = 'Acesso não autorizado para este perfil') {
+    super(403, message);
+  }
+}
+
 export class ValidationError extends HttpError {
   constructor(message = 'Validation failed', details?: unknown) {
     super(400, message, details);
   }
 }
-
