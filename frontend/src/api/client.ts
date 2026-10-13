@@ -85,8 +85,14 @@ export const authToken = {
   clear: () => sessionStorage.removeItem(TOKEN_KEY)
 };
 
+const configuredApiUrl = import.meta.env.VITE_API_URL?.trim();
+const apiBaseUrl = configuredApiUrl || (import.meta.env.DEV ? 'http://localhost:3333' : undefined);
+if (!apiBaseUrl) {
+  throw new Error('VITE_API_URL deve ser definida para o build de produção.');
+}
+
 export const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:3333',
+  baseURL: apiBaseUrl,
 });
 
 api.interceptors.request.use(config => {
