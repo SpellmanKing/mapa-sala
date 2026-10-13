@@ -32,7 +32,7 @@ export function Layout() {
   ];
 
   return (
-    <div className="flex flex-col lg:flex-row h-screen text-text-main font-sans overflow-hidden transition-colors duration-300 relative bg-transparent">
+    <div className="flex h-dvh min-h-dvh flex-col overflow-hidden bg-transparent font-sans text-text-main transition-colors duration-300 lg:flex-row">
       
       {/* Mesh Gradients Orgânicos Flutuantes de Fundo */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden z-0 bg-bg transition-colors duration-500">
