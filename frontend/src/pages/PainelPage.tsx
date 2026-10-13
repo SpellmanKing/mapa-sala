@@ -861,7 +861,7 @@ export function PainelPage() {
             <button
               onClick={handleToggleModoTV}
               title="Sair do Modo TV (Esc)"
-              className="flex items-center gap-1.5 rounded-xl border border-border bg-input p-2 text-xs font-black text-text-main shadow-sm transition-all hover:bg-surface active:scale-95 cursor-pointer sm:px-4"
+              className="flex min-h-11 min-w-11 items-center justify-center gap-1.5 rounded-xl border border-border bg-input p-2 text-xs font-black text-text-main shadow-sm transition-all hover:bg-surface active:scale-95 cursor-pointer sm:min-w-0 sm:px-4 lg:min-h-0"
             >
               <Minimize2 size={14} /> <span className="hidden sm:inline">Sair TV</span>
             </button>
@@ -949,7 +949,7 @@ export function PainelPage() {
                   <button
                     type="button"
                     onClick={navSemanaAnterior}
-                    className="p-1.5 hover:bg-card rounded-lg text-text-muted hover:text-text-main cursor-pointer shrink-0"
+                    className="inline-flex min-h-11 min-w-11 shrink-0 items-center justify-center rounded-lg p-1.5 text-text-muted hover:bg-card hover:text-text-main cursor-pointer lg:min-h-0 lg:min-w-0"
                     title="Semana Anterior"
                     aria-label="Ver semana anterior"
                   >
@@ -961,7 +961,7 @@ export function PainelPage() {
                   <button
                     type="button"
                     onClick={navProximaSemana}
-                    className="p-1.5 hover:bg-card rounded-lg text-text-muted hover:text-text-main cursor-pointer shrink-0"
+                    className="inline-flex min-h-11 min-w-11 shrink-0 items-center justify-center rounded-lg p-1.5 text-text-muted hover:bg-card hover:text-text-main cursor-pointer lg:min-h-0 lg:min-w-0"
                     title="Próxima Semana"
                     aria-label="Ver próxima semana"
                   >
@@ -1009,13 +1009,13 @@ export function PainelPage() {
                   placeholder="Buscar turma, curso, sala ou instrutor..."
                   value={searchTurma}
                   onChange={e => setSearchTurma(e.target.value)}
-                  className="w-full bg-input text-text-main text-sm font-semibold outline-none border border-border rounded-xl pl-9 pr-9 py-2.5 focus:border-primary transition-all shadow-xs"
+                  className="w-full bg-input text-text-main text-sm font-semibold outline-none border border-border rounded-xl pl-9 pr-12 py-2.5 focus:border-primary transition-all shadow-xs lg:pr-9"
                 />
                 {searchTurma && (
                   <button
                     type="button"
                     onClick={() => setSearchTurma('')}
-                    className="absolute right-2 top-1/2 -translate-y-1/2 text-text-muted hover:text-text-main p-1.5 rounded-lg cursor-pointer"
+                    className="absolute right-0.5 top-1/2 inline-flex min-h-11 min-w-11 -translate-y-1/2 items-center justify-center rounded-lg p-1.5 text-text-muted hover:text-text-main cursor-pointer lg:right-2 lg:min-h-0 lg:min-w-0"
                     title="Limpar busca"
                     aria-label="Limpar busca"
                   >

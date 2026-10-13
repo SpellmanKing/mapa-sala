@@ -55,7 +55,7 @@ export function Layout() {
           <button 
             type="button"
             onClick={toggleTheme}
-            className="p-2 rounded-xl text-text-muted hover:bg-surface hover:text-text-main btn-tactile active:scale-95 transition-all"
+            className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-xl p-2 text-text-muted hover:bg-surface hover:text-text-main btn-tactile active:scale-95 transition-all"
             title="Alternar tema"
             aria-label={theme === 'light' ? 'Ativar tema escuro' : 'Ativar tema claro'}
           >
@@ -64,7 +64,7 @@ export function Layout() {
           <button 
             type="button"
             onClick={() => setMobileOpen(true)}
-            className="p-2 rounded-xl text-text-muted hover:bg-surface btn-tactile active:scale-95 transition-all"
+            className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-xl p-2 text-text-muted hover:bg-surface btn-tactile active:scale-95 transition-all"
             aria-label="Abrir menu principal"
             aria-expanded={mobileOpen}
             aria-controls="mobile-navigation"
@@ -103,7 +103,7 @@ export function Layout() {
                 type="button"
                 data-dialog-initial-focus
                 onClick={() => setMobileOpen(false)}
-                className="p-2 rounded-xl text-text-muted hover:bg-surface hover:text-text-main btn-tactile transition-all"
+                className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-xl p-2 text-text-muted hover:bg-surface hover:text-text-main btn-tactile transition-all"
                 aria-label="Fechar menu principal"
               >
                 <X className="w-5 h-5" />
