@@ -350,7 +350,7 @@ export function CalculadoraPage() {
       <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 items-start">
         
         {/* PARÂMETROS - Col 5 */}
-        <form onSubmit={calcular} className="xl:col-span-5 glass-panel rounded-3xl p-6 shadow-xs flex flex-col gap-5 transition-colors duration-300">
+        <form onSubmit={calcular} className="xl:col-span-5 glass-panel rounded-3xl p-4 sm:p-6 shadow-xs flex flex-col gap-5 transition-colors duration-300">
           
           <div className="flex justify-between items-center border-b border-border/60 pb-3.5">
             <h2 className="text-sm font-extrabold text-secondary dark:text-primary uppercase tracking-widest flex items-center gap-2 font-display">
@@ -400,7 +400,7 @@ export function CalculadoraPage() {
             />
 
             {/* Presets Rápidos de Carga Horária */}
-            <div className="flex flex-wrap gap-1.5 mt-2">
+            <div className="grid grid-cols-2 gap-1.5 mt-2 sm:grid-cols-4">
               {PRESETS_HORAS.map(horas => (
                 <button
                   type="button"
@@ -423,7 +423,7 @@ export function CalculadoraPage() {
             <label className="block text-xs font-black text-text-muted uppercase tracking-widest mb-1.5">
               Duração do Encontro Diário
             </label>
-            <div className="grid grid-cols-4 gap-2">
+            <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
               {PRESETS_DURACAO_DIARIA.map(h => (
                 <button
                   type="button"
@@ -534,7 +534,7 @@ export function CalculadoraPage() {
             <>
               {/* Bento Card 1: Data de Término Gigante (Destaque Principal) */}
               <div className="md:col-span-2 glass-panel rounded-3xl p-6 shadow-xs flex flex-col justify-between gap-4 border border-border transition-colors duration-300">
-                <div className="flex justify-between items-start border-b border-border/60 pb-3">
+                <div className="flex flex-col items-start justify-between gap-2 border-b border-border/60 pb-3 sm:flex-row">
                   <h2 className="text-sm font-extrabold text-secondary dark:text-primary uppercase tracking-widest flex items-center gap-2 font-display">
                     <Calendar size={16} className="text-text-muted" /> Projeção de Término Oficial
                   </h2>
@@ -637,7 +637,7 @@ export function CalculadoraPage() {
 
               {/* Bento Card 5: Linha do Tempo Vertical Interativa */}
               <div className="md:col-span-2 glass-panel rounded-3xl p-6 shadow-xs flex flex-col gap-4 border border-border/80 transition-colors">
-                <div className="flex justify-between items-center border-b border-border/60 pb-3">
+                <div className="flex flex-col items-start justify-between gap-2 border-b border-border/60 pb-3 sm:flex-row sm:items-center">
                   <h3 className="text-xs font-black text-secondary dark:text-primary uppercase tracking-widest flex items-center gap-2 font-display">
                     <Calendar size={16} className="text-text-muted" /> Linha do Tempo das Aulas
                   </h3>
