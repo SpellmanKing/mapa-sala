@@ -6,6 +6,7 @@ import { ConfirmDeleteModal } from '../components/ConfirmDeleteModal';
 import { FeriadosManager } from '../components/FeriadosManager';
 import { useAppData, useAppUi, Curso, Instrutor, Sala, type DataResource } from '../context/AppContext';
 import { CursoService, InstrutorService, SalaService } from '../api/client';
+import { getApiErrorMessage } from '../api/errorMessage.js';
 import { Plus, Edit, Trash2, BookOpen, Users, School, Search, X, ChevronLeft, ChevronRight, Filter, CalendarDays } from 'lucide-react';
 import { mergeReferenceValues, REFERENCE_UNITS, SHIFTS } from '../constants/referenceData';
 
@@ -362,8 +363,8 @@ export function ManageSystemPage() {
         await refreshTurmas();
       }
       setDeleteModal(prev => ({ ...prev, open: false, isDeleting: false }));
-    } catch (err: any) {
-      const msg = err.response?.data?.error || err.response?.data?.message || `Erro ao excluir ${deleteModal.type}.`;
+    } catch (err: unknown) {
+      const msg = getApiErrorMessage(err, `Erro ao excluir ${deleteModal.type}.`);
       showToast(msg, 'error');
       setDeleteModal(prev => ({ ...prev, isDeleting: false }));
     }
