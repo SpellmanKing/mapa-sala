@@ -239,15 +239,19 @@ O container `mapa-sala-postgres` subirá expondo a porta `5432` com as seguintes
    CORS_ORIGIN="*"
    ```
 
-3. Instale as dependências e execute as migrações/seed:
+3. Instale as dependências e prepare o Prisma:
    ```bash
    npm install
    npx prisma generate
    npx prisma migrate deploy
-   npx prisma db seed
    ```
 
-4. Inicie o servidor backend:
+4. Para criar ou atualizar o usuário administrador, defina `ADMIN_EMAIL` e `ADMIN_PASSWORD` no ambiente (senha entre 12 e 128 caracteres) e execute, a partir da raiz:
+   ```bash
+   npm run user:create --prefix backend
+   ```
+
+5. Inicie o servidor backend:
    ```bash
    npm run dev
    ```
