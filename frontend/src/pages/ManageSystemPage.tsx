@@ -482,10 +482,10 @@ export function ManageSystemPage() {
       </div>
 
       {/* Navegação de Abas com Contadores Numéricos */}
-      <div className="glass-panel rounded-2xl p-1.5 shadow-sm flex flex-wrap gap-1.5 overflow-x-auto scrollbar-none transition-colors duration-300">
+      <div className="glass-panel rounded-2xl p-1.5 shadow-sm flex flex-nowrap gap-1.5 overflow-x-auto scrollbar-none transition-colors duration-300">
         <button 
           onClick={() => { setActiveTab('cursos'); setPageCursos(1); }} 
-          className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-sm transition-all btn-tactile cursor-pointer border ${
+          className={`flex shrink-0 items-center gap-2 whitespace-nowrap px-5 py-2.5 rounded-xl font-bold text-sm transition-all btn-tactile cursor-pointer border ${
             activeTab === 'cursos' 
               ? 'bg-primary/10 text-primary border-primary/20 shadow-sm font-black' 
               : 'text-text-muted hover:text-text-main hover:bg-surface border-transparent'
@@ -502,7 +502,7 @@ export function ManageSystemPage() {
 
         <button 
           onClick={() => { setActiveTab('instrutores'); setPageInstrutores(1); }} 
-          className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-sm transition-all btn-tactile cursor-pointer border ${
+          className={`flex shrink-0 items-center gap-2 whitespace-nowrap px-5 py-2.5 rounded-xl font-bold text-sm transition-all btn-tactile cursor-pointer border ${
             activeTab === 'instrutores' 
               ? 'bg-primary/10 text-primary border-primary/20 shadow-sm font-black' 
               : 'text-text-muted hover:text-text-main hover:bg-surface border-transparent'
@@ -519,7 +519,7 @@ export function ManageSystemPage() {
 
         <button 
           onClick={() => { setActiveTab('salas'); setPageSalas(1); }} 
-          className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-sm transition-all btn-tactile cursor-pointer border ${
+          className={`flex shrink-0 items-center gap-2 whitespace-nowrap px-5 py-2.5 rounded-xl font-bold text-sm transition-all btn-tactile cursor-pointer border ${
             activeTab === 'salas' 
               ? 'bg-primary/10 text-primary border-primary/20 shadow-sm font-black' 
               : 'text-text-muted hover:text-text-main hover:bg-surface border-transparent'
@@ -536,7 +536,7 @@ export function ManageSystemPage() {
 
         <button
           onClick={() => setActiveTab('feriados')}
-          className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-sm transition-all btn-tactile cursor-pointer border ${
+          className={`flex shrink-0 items-center gap-2 whitespace-nowrap px-5 py-2.5 rounded-xl font-bold text-sm transition-all btn-tactile cursor-pointer border ${
             activeTab === 'feriados'
               ? 'bg-primary/10 text-primary border-primary/20 shadow-sm font-black'
               : 'text-text-muted hover:text-text-main hover:bg-surface border-transparent'
