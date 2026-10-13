@@ -30,6 +30,7 @@ test('ignora uma resposta iniciada antes da limpeza da sessão', async () => {
     value => applied.push(value)
   );
 
+  await Promise.resolve();
   cache.clear();
   release('antigo');
   await pending;
