@@ -147,11 +147,14 @@ export class TurmaService {
     const curso = await prisma.curso.findUnique({ where: { id_cursos: data.id_cursos } });
     if (!curso) throw new HttpError(404, 'Curso não encontrado');
 
-    const idTurnoReal = await this.obterIdTurnoReal(data.fk_id_turno);
+    const turnoReal = await this.obterTurnoReal(data.fk_id_turno);
+    const idTurnoReal = turnoReal.id_turno;
     const cronograma = await this.calculadoraService.calcularCronograma(
       curso.carga_horaria,
       data.data_inicio,
-      data.dias_semana
+      data.dias_semana,
+      undefined,
+      turnoReal.nome_turno
     );
     const datas = cronograma.datasAulas.map(dataAula => new Date(dataAula));
     const idInstrutor = data.id_instrutores === undefined
@@ -233,19 +236,19 @@ export class TurmaService {
     };
   }
 
-  private async obterIdTurnoReal(idOuNome: number | string): Promise<number> {
+  private async obterTurnoReal(idOuNome: number | string) {
     const nome = typeof idOuNome === 'string'
       ? idOuNome
       : idOuNome === 1 ? 'Manhã' : idOuNome === 2 ? 'Tarde' : idOuNome === 3 ? 'Noite' : null;
 
     if (nome) {
       const t = await prisma.turno.findFirst({ where: { nome_turno: nome } });
-      if (t) return t.id_turno;
+      if (t) return t;
     }
 
     if (typeof idOuNome === 'number') {
       const t = await prisma.turno.findUnique({ where: { id_turno: idOuNome } });
-      if (t) return t.id_turno;
+      if (t) return t;
     }
 
     throw new HttpError(400, 'Turno inválido');
@@ -272,13 +275,15 @@ export class TurmaService {
 
     const diasSemana = data.dias_semana;
 
+    const turnoReal = await this.obterTurnoReal(data.fk_id_turno);
+    const idTurnoReal = turnoReal.id_turno;
     const cronograma = await this.calculadoraService.calcularCronograma(
       curso.carga_horaria,
       data.data_inicio,
-      diasSemana
+      diasSemana,
+      undefined,
+      turnoReal.nome_turno
     );
-
-    const idTurnoReal = await this.obterIdTurnoReal(data.fk_id_turno);
 
     const datas = cronograma.datasAulas.map(d => new Date(d));
     const idInstrutor = data.id_instrutores === undefined
@@ -360,13 +365,15 @@ export class TurmaService {
 
     const diasSemana = data.dias_semana;
     
+    const turnoReal = await this.obterTurnoReal(data.fk_id_turno);
+    const idTurnoReal = turnoReal.id_turno;
     const cronograma = await this.calculadoraService.calcularCronograma(
       turma.curso.carga_horaria,
       data.data_inicio,
-      diasSemana
+      diasSemana,
+      undefined,
+      turnoReal.nome_turno
     );
-
-    const idTurnoReal = await this.obterIdTurnoReal(data.fk_id_turno);
 
     const datas = cronograma.datasAulas.map(d => new Date(d));
     const idInstrutor = data.id_instrutores !== undefined

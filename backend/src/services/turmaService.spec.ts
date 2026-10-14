@@ -27,16 +27,11 @@ vi.mock('../infrastructure/prismaClient.js', () => ({
   }
 }));
 
+const { mockCalcularCronograma } = vi.hoisted(() => ({ mockCalcularCronograma: vi.fn() }));
+
 vi.mock('./calculadoraService.js', () => ({
   CalculadoraService: class MockCalculadoraService {
-    calcularCronograma = vi.fn().mockResolvedValue({
-      dataTermino: '2026-03-03',
-      diasCorridos: 2,
-      totalAulas: 2,
-      horasPorAula: 4,
-      datasAulas: ['2026-03-02', '2026-03-03'],
-      feriadosPulados: []
-    });
+    calcularCronograma = mockCalcularCronograma;
   }
 }));
 
@@ -104,6 +99,10 @@ describe('TurmaService - núcleo operacional', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     service = new TurmaService();
+    mockCalcularCronograma.mockResolvedValue({
+      dataTermino: '2026-03-03', diasCorridos: 2, totalAulas: 2,
+      horasPorAula: 4, datasAulas: ['2026-03-02', '2026-03-03'], feriadosPulados: []
+    });
     vi.mocked(prisma.curso.findUnique).mockResolvedValue(curso);
     vi.mocked(prisma.sala.findUnique).mockResolvedValue(sala);
     vi.mocked(prisma.sala.findMany).mockResolvedValue([sala]);
@@ -238,6 +237,15 @@ describe('TurmaService - núcleo operacional', () => {
         })
       ])
     });
+  });
+
+  it.each(['alocar', 'realocar', 'disponibilidade'])('usa o turno real na calculadora ao %s', async operacao => {
+    vi.mocked(prisma.turno.findFirst).mockResolvedValue({ id_turno: 3, nome_turno: 'Noite' });
+    const dados = { id_salas: 5, data_inicio: new Date('2026-03-02'), fk_id_turno: 3, dias_semana: ['1', '2'] };
+    if (operacao === 'alocar') await service.alocarTurma({ ...dados, id_cursos: 1, total_alunos: 20 });
+    if (operacao === 'realocar') await service.reallocarTurma(1, dados);
+    if (operacao === 'disponibilidade') await service.getDisponibilidade({ ...dados, id_cursos: 1, total_alunos: 20 });
+    expect(mockCalcularCronograma).toHaveBeenCalledWith(40, dados.data_inicio, dados.dias_semana, undefined, 'Noite');
   });
 
   it('adquire locks PostgreSQL para serializar sala e instrutor antes de criar', async () => {

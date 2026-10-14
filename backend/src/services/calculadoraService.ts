@@ -1,5 +1,6 @@
 import { prisma } from '../infrastructure/prismaClient.js';
 import { HttpError } from '../utils/errors.js';
+import { horasPorTurno } from '../utils/horasPorTurno.js';
 
 export interface FeriadoInfo {
   data: string;
@@ -12,7 +13,8 @@ export class CalculadoraService {
     cargaHoraria: number,
     dataInicioInput: string | Date,
     diasSemana: string[],
-    horasPorDia = 4
+    horasPorDia?: number,
+    turno = 'Manhã'
   ) {
     // Busca todos os feriados e recessos com descrição e tipo
     const feriadosDb = await prisma.feriadosRecessos.findMany({
@@ -30,7 +32,7 @@ export class CalculadoraService {
       }
     });
 
-    const dailyHours = Number(horasPorDia);
+    const dailyHours = Number(horasPorDia ?? horasPorTurno(turno));
     const totalHours = Number(cargaHoraria);
     if (!Number.isFinite(totalHours) || totalHours <= 0) {
       throw new HttpError(400, 'Carga horária deve ser positiva');
