@@ -248,6 +248,33 @@ describe('TurmaService - núcleo operacional', () => {
     expect(mockCalcularCronograma).toHaveBeenCalledWith(40, dados.data_inicio, dados.dias_semana, undefined, 'Noite');
   });
 
+  it('consulta conflito de sala ou instrutor somente nas datas e no turno da turma', async () => {
+    await service.alocarTurma({
+      id_cursos: 1, id_salas: 5, data_inicio: new Date('2026-03-02'),
+      fk_id_turno: 1, total_alunos: 20, dias_semana: ['1', '2'], id_instrutores: 8
+    });
+    expect(prisma.agendamento.findMany).toHaveBeenCalledWith(expect.objectContaining({
+      where: expect.objectContaining({
+        data_aula: { in: [new Date('2026-03-02'), new Date('2026-03-03')] },
+        turma: { fk_id_turno: 1 },
+        OR: [{ id_salas: 5 }, { turma: { id_instrutores: 8 } }]
+      })
+    }));
+  });
+
+  it('permite o mesmo instrutor e sala em outro turno na consulta de disponibilidade', async () => {
+    vi.mocked(prisma.agendamento.findMany).mockResolvedValue([{
+      ...conflito('instrutor'), id_salas: 5,
+      turma: { ...conflito('instrutor').turma, fk_id_turno: 3 }
+    }] as never);
+    const resultado = await service.getDisponibilidade({
+      id_cursos: 1, data_inicio: new Date('2026-03-02'),
+      fk_id_turno: 1, total_alunos: 20, dias_semana: ['1', '2'], id_instrutores: 8
+    });
+    expect(resultado.salasLivres).toEqual([5]);
+    expect(resultado.conflitoInstrutor).toBeNull();
+  });
+
   it('adquire locks PostgreSQL para serializar sala e instrutor antes de criar', async () => {
     await service.alocarTurma({
       id_cursos: 1,
