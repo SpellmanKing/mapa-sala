@@ -776,24 +776,10 @@ function salvarRelatorioTurmasPendentes(pendentes: any[]) {
 
   const csvContent = [cabecalho, ...linhas].join('\n') + '\n';
 
-  // Locais candidatos para escrita
-  const caminhos = [
-    path.resolve(process.cwd(), 'relatorios/turmas_pendentes.csv'),
-    path.resolve(process.cwd(), '../relatorios/turmas_pendentes.csv'),
-    path.resolve('C:/AllProjects/mapa-sala/relatorios/turmas_pendentes.csv'),
-    '/app/relatorios/turmas_pendentes.csv'
-  ];
-
-  for (const c of caminhos) {
-    try {
-      const dir = path.dirname(c);
-      if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
-      fs.writeFileSync(c, csvContent, 'utf8');
-      console.log(`✓ CSV de turmas pendentes gravado em: ${c}`);
-    } catch {
-      // continua para o próximo se não for acessível neste ambiente
-    }
-  }
+  const arquivo = path.resolve(process.cwd(), 'relatorios/turmas_pendentes.csv');
+  fs.mkdirSync(path.dirname(arquivo), { recursive: true });
+  fs.writeFileSync(arquivo, csvContent, 'utf8');
+  console.log(`✓ CSV de turmas pendentes gravado em: ${arquivo}`);
 }
 
 export async function seedDemo() {
@@ -852,6 +838,7 @@ export async function seedDemo() {
         console.warn(`[PENDENTE] ${tFinal.codigo_turma}: Código de turma duplicado.`);
         continue;
       }
+      codigosVistos.add(tFinal.codigo_turma);
 
       // Curso
       const curso = dbCursos.find(c => c.nome_curso.trim().toLowerCase() === tFinal.nome_curso.trim().toLowerCase());
@@ -870,6 +857,10 @@ export async function seedDemo() {
       const instrutor = tFinal.instrutor.trim()
         ? dbInstrutores.find(i => i.nome_instrutor.trim().toLowerCase() === tFinal.instrutor.trim().toLowerCase()) ?? null
         : null;
+      if (tFinal.instrutor.trim() && !instrutor) {
+        turmasPendentes.push({ ...tFinal, turno: turnoNome, total_alunos: totalAlunos, motivo: `Instrutor não cadastrado: ${tFinal.instrutor}` });
+        continue;
+      }
 
       // Cronograma
       const cronograma = calcularCronograma(
@@ -951,8 +942,6 @@ export async function seedDemo() {
       }
 
       // Alocação com sucesso!
-      codigosVistos.add(tFinal.codigo_turma);
-
       // Registra ocupações
       for (const d of datasAulas) {
         ocupacaoSalas.set(`${salaEscolhida.id_salas}:${d}:${turno.id_turno}`, tFinal.codigo_turma);
