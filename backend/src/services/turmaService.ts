@@ -338,6 +338,7 @@ export class TurmaService {
       const agendamentosParaCriar = cronograma.datasAulas.map(dataAula => ({
         id_turmas: turma.id_turmas,
         id_salas: data.id_salas,
+        fk_id_turno: idTurnoReal,
         data_aula: new Date(dataAula),
       }));
 
@@ -407,6 +408,7 @@ export class TurmaService {
       const agendamentosParaCriar = datas.map(dataAula => ({
         id_turmas,
         id_salas: data.id_salas,
+        fk_id_turno: idTurnoReal,
         data_aula: dataAula,
       }));
 

@@ -39,6 +39,13 @@ export function errorHandler(err: unknown, req: Request, res: Response, _next: N
         message = 'Já existe uma turma cadastrada com este código!';
       } else if (targets.includes('data_feriado')) {
         message = 'Já existe um feriado ou recesso cadastrado nesta data.';
+      } else if (
+        targets.includes('id_salas') ||
+        targets.includes('data_aula') ||
+        targets.includes('fk_id_turno') ||
+        targets.includes('Agendamento')
+      ) {
+        message = 'Conflito de agendamento: o ambiente já está ocupado nesta data e turno.';
       } else {
         message = 'Conflito de registro duplicado no banco de dados.';
       }

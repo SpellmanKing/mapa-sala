@@ -35,13 +35,39 @@ describe('errorHandler', () => {
     });
   });
 
-  it('preserva a mensagem de erro de domínio conhecido', () => {
+  it('converte violação de constraint P2002 de agendamento em HTTP 409 em pt-br', () => {
     const res = response();
     vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    const error = new Prisma.PrismaClientKnownRequestError('Conflito', {
+      code: 'P2002',
+      clientVersion: '6.0.0',
+      meta: { target: ['id_salas', 'data_aula', 'fk_id_turno'] }
+    });
 
-    errorHandler(new HttpError(409, 'Conflito conhecido'), request, res, next);
+    errorHandler(error, request, res, next);
 
     expect(res.status).toHaveBeenCalledWith(409);
-    expect(res.json).toHaveBeenCalledWith(expect.objectContaining({ error: 'Conflito conhecido' }));
+    expect(res.json).toHaveBeenCalledWith(expect.objectContaining({
+      success: false,
+      error: 'Conflito de agendamento: o ambiente já está ocupado nesta data e turno.'
+    }));
+  });
+
+  it('converte violação de constraint P2002 de codigo_turma em HTTP 409 em pt-br', () => {
+    const res = response();
+    vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    const error = new Prisma.PrismaClientKnownRequestError('Conflito', {
+      code: 'P2002',
+      clientVersion: '6.0.0',
+      meta: { target: ['codigo_turma'] }
+    });
+
+    errorHandler(error, request, res, next);
+
+    expect(res.status).toHaveBeenCalledWith(409);
+    expect(res.json).toHaveBeenCalledWith(expect.objectContaining({
+      success: false,
+      error: 'Já existe uma turma cadastrada com este código!'
+    }));
   });
 });

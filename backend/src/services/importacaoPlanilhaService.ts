@@ -199,7 +199,7 @@ export class ImportacaoPlanilhaService {
           total_alunos: entrada.alunos ?? 30,
           dias_semana: curso?.dias_letivos_padrao || '1,2,3,4,5'
         } });
-        await db.agendamento.createMany({ data: datas.map(data_aula => ({ id_turmas: nova.id_turmas, id_salas: sala.id_salas, data_aula })) });
+        await db.agendamento.createMany({ data: datas.map(data_aula => ({ id_turmas: nova.id_turmas, id_salas: sala.id_salas, fk_id_turno: turno.id_turno, data_aula })) });
       } else if (turma) {
         await db.turma.update({ where: { id_turmas: turma.id_turmas }, data: {
           id_instrutores: instrutorId, total_alunos: entrada.alunos ?? turma.total_alunos,
@@ -208,7 +208,7 @@ export class ImportacaoPlanilhaService {
         if (operacao === '2') {
           await db.agendamento.updateMany({ where: { id_turmas: turma.id_turmas, data_aula: { gte: dataUtc(hoje) } }, data: { id_salas: sala.id_salas } });
         } else {
-          await db.agendamento.createMany({ data: datas.map(data_aula => ({ id_turmas: turma.id_turmas, id_salas: sala.id_salas, data_aula })) });
+          await db.agendamento.createMany({ data: datas.map(data_aula => ({ id_turmas: turma.id_turmas, id_salas: sala.id_salas, fk_id_turno: turno.id_turno, data_aula })) });
         }
       }
     }
