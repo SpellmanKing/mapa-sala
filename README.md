@@ -271,7 +271,13 @@ O container `mapa-sala-postgres` subirá expondo a porta `5432` com as seguintes
    npm install
    ```
 
-3. Inicie o servidor de desenvolvimento:
+3. Crie o arquivo `.env` a partir de `.env.example` e informe a URL pública da API:
+   ```env
+   VITE_API_URL=http://localhost:3333
+   ```
+   A variável é obrigatória no build de produção; o fallback local existe apenas no modo de desenvolvimento.
+
+4. Inicie o servidor de desenvolvimento:
    ```bash
    npm run dev
    ```
