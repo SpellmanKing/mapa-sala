@@ -95,24 +95,6 @@ export const api = axios.create({
   baseURL: apiBaseUrl,
 });
 
-api.interceptors.request.use(config => {
-  const token = authToken.get();
-  if (token) config.headers.Authorization = `Bearer ${token}`;
-  return config;
-});
-
-api.interceptors.response.use(
-  response => response,
-  error => {
-    const isLogin = error.config?.url === '/auth/login';
-    if (error.response?.status === 401 && !isLogin && authToken.get()) {
-      authToken.clear();
-      window.dispatchEvent(new Event(AUTH_UNAUTHORIZED_EVENT));
-    }
-    return Promise.reject(error);
-  }
-);
-
 export const AuthApi = {
   login: (email: string, password: string) =>
     api.post<LoginResponse>('/auth/login', { email, password }).then(res => res.data),
