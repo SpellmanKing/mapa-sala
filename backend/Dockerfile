@@ -9,10 +9,9 @@ WORKDIR /app
 
 # Copia dependências e schema prisma
 COPY backend/package*.json ./
-COPY backend/prisma ./prisma/
+COPY backend/prisma/schema.prisma ./prisma/schema.prisma
 
-RUN npm install
-RUN npx prisma generate
+RUN npm ci
 
 # Copia documentação (planilhas de referência) e fontes do backend
 COPY docs ./docs/
