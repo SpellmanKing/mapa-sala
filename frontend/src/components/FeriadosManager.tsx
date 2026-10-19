@@ -269,8 +269,8 @@ export function FeriadosManager() {
                 </div>
                 {canManage && (
                   <div className="flex shrink-0 gap-1">
-                    <button type="button" aria-label={`Editar ${item.descricao}`} onClick={() => openEdit(item)} className="rounded-lg p-2 text-text-muted hover:bg-primary/10 hover:text-primary"><Edit size={15} /></button>
-                    <button type="button" aria-label={`Excluir ${item.descricao}`} onClick={() => setDeleting(item)} className="rounded-lg p-2 text-text-muted hover:bg-red-500/10 hover:text-red-500"><Trash2 size={15} /></button>
+                    <button type="button" aria-label={`Editar ${item.descricao}`} onClick={() => openEdit(item)} className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-lg p-2 text-text-muted hover:bg-primary/10 hover:text-primary lg:min-h-0 lg:min-w-0"><Edit size={15} /></button>
+                    <button type="button" aria-label={`Excluir ${item.descricao}`} onClick={() => setDeleting(item)} className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-lg p-2 text-text-muted hover:bg-red-500/10 hover:text-red-500 lg:min-h-0 lg:min-w-0"><Trash2 size={15} /></button>
                   </div>
                 )}
               </div>

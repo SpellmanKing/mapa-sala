@@ -181,7 +181,13 @@ form.glass-panel {
 
 /* Escala de texto e espaçamento proporcionais para o Modo TV */
 html.modo-tv-active {
-  font-size: 18px !important;
+  font-size: 16px !important;
+}
+
+@media (min-width: 1024px) {
+  html.modo-tv-active {
+    font-size: 18px !important;
+  }
 }
 
 @media (min-width: 1200px) {

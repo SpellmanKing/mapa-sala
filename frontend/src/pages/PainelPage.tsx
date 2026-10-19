@@ -777,12 +777,12 @@ export function PainelPage() {
       
       {modoTV ? (
         /* ================= CABEÇALHO MODO TV ================= */
-        <div className="flex justify-between items-center p-4 shrink-0 bg-card/40 border-b border-border/30 relative z-20 gap-3">
+        <div className="relative z-20 flex shrink-0 flex-wrap items-center justify-between gap-3 border-b border-border/30 bg-card/40 p-2 sm:p-4">
           {/* Relógio Digital Modularizado (Horário de Brasília) + Data */}
           <DigitalClock variant="tv" />
 
           {/* Título Central */}
-          <div className="hidden md:flex items-center gap-2">
+          <div className="hidden items-center gap-2 lg:flex">
             <span className="font-display font-black text-sm uppercase tracking-widest text-secondary dark:text-primary">
               Senac Ceilândia
             </span>
@@ -794,7 +794,7 @@ export function PainelPage() {
 
           <div className="flex items-center gap-2">
             {/* Total de Turmas em Andamento com Divisão Presencial e Remoto */}
-            <div className="flex items-center gap-1.5 shrink-0 select-none">
+            <div className="hidden items-center gap-1.5 shrink-0 select-none lg:flex">
               <div className="flex items-center gap-1.5 bg-primary/10 border border-primary/20 px-2.5 py-1.5 rounded-xl text-primary shadow-xs text-xs font-black uppercase tracking-wider">
                 Total: {totalTurmasVisiveis}
               </div>
@@ -809,7 +809,7 @@ export function PainelPage() {
             </div>
 
             {/* Seletor Rápido de Calibragem TV */}
-            <div className="flex items-center gap-1 bg-surface/80 border border-border px-2 py-1 rounded-xl shadow-xs text-xs font-bold">
+            <div className="hidden items-center gap-1 bg-surface/80 border border-border px-2 py-1 rounded-xl shadow-xs text-xs font-bold lg:flex">
               <span className="text-text-muted text-[10px] uppercase font-black px-1">Escala TV:</span>
               <button 
                 onClick={() => handleSetTvZoom(60)}
@@ -861,9 +861,9 @@ export function PainelPage() {
             <button
               onClick={handleToggleModoTV}
               title="Sair do Modo TV (Esc)"
-              className="p-2 px-4 rounded-xl border flex items-center gap-1.5 text-xs font-black active:scale-95 transition-all shadow-sm cursor-pointer bg-input border-border text-text-main hover:bg-surface"
+              className="flex min-h-11 min-w-11 items-center justify-center gap-1.5 rounded-xl border border-border bg-input p-2 text-xs font-black text-text-main shadow-sm transition-all hover:bg-surface active:scale-95 cursor-pointer sm:min-w-0 sm:px-4 lg:min-h-0"
             >
-              <Minimize2 size={14} /> Sair TV
+              <Minimize2 size={14} /> <span className="hidden sm:inline">Sair TV</span>
             </button>
           </div>
         </div>
@@ -949,7 +949,7 @@ export function PainelPage() {
                   <button
                     type="button"
                     onClick={navSemanaAnterior}
-                    className="p-1.5 hover:bg-card rounded-lg text-text-muted hover:text-text-main cursor-pointer shrink-0"
+                    className="inline-flex min-h-11 min-w-11 shrink-0 items-center justify-center rounded-lg p-1.5 text-text-muted hover:bg-card hover:text-text-main cursor-pointer lg:min-h-0 lg:min-w-0"
                     title="Semana Anterior"
                     aria-label="Ver semana anterior"
                   >
@@ -961,7 +961,7 @@ export function PainelPage() {
                   <button
                     type="button"
                     onClick={navProximaSemana}
-                    className="p-1.5 hover:bg-card rounded-lg text-text-muted hover:text-text-main cursor-pointer shrink-0"
+                    className="inline-flex min-h-11 min-w-11 shrink-0 items-center justify-center rounded-lg p-1.5 text-text-muted hover:bg-card hover:text-text-main cursor-pointer lg:min-h-0 lg:min-w-0"
                     title="Próxima Semana"
                     aria-label="Ver próxima semana"
                   >
@@ -1009,13 +1009,13 @@ export function PainelPage() {
                   placeholder="Buscar turma, curso, sala ou instrutor..."
                   value={searchTurma}
                   onChange={e => setSearchTurma(e.target.value)}
-                  className="w-full bg-input text-text-main text-sm font-semibold outline-none border border-border rounded-xl pl-9 pr-9 py-2.5 focus:border-primary transition-all shadow-xs"
+                  className="w-full bg-input text-text-main text-sm font-semibold outline-none border border-border rounded-xl pl-9 pr-12 py-2.5 focus:border-primary transition-all shadow-xs lg:pr-9"
                 />
                 {searchTurma && (
                   <button
                     type="button"
                     onClick={() => setSearchTurma('')}
-                    className="absolute right-2 top-1/2 -translate-y-1/2 text-text-muted hover:text-text-main p-1.5 rounded-lg cursor-pointer"
+                    className="absolute right-0.5 top-1/2 inline-flex min-h-11 min-w-11 -translate-y-1/2 items-center justify-center rounded-lg p-1.5 text-text-muted hover:text-text-main cursor-pointer lg:right-2 lg:min-h-0 lg:min-w-0"
                     title="Limpar busca"
                     aria-label="Limpar busca"
                   >
@@ -1199,8 +1199,8 @@ export function PainelPage() {
             const turmasRemotas = turmasDoTurno.filter(t => t.modalidade === 'Remoto');
 
             const gridClasses = modoTV
-              ? 'grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-4'
-              : 'grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-4';
+              ? 'grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6'
+              : 'grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4';
 
             // Renderizador do Card de Turma com Divisão de Cores: Vermelho (Presencial) | Azul (Remoto)
             const renderCardTurma = (turma: TurmaDetalhada) => {
