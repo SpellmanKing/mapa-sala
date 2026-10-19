@@ -152,5 +152,7 @@ dist/
 *.log
 .DS_Store
 Thumbs.db
+docs_conflit/
+relatorios/
 
 # End of https://www.toptal.com/developers/gitignore/api/node
