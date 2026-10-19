@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "prisma": {
-    "seed": "tsx prisma/seed.ts"
+    "seed": "tsx prisma/seedDemo.ts"
   },
   "scripts": {
     "dev": "tsx watch src/main.ts",
@@ -17,6 +17,7 @@
     "prisma:migrate": "prisma migrate dev",
     "prisma:studio": "prisma studio",
     "db:seed:reference": "tsx prisma/seedReferenceData.ts",
+    "db:seed:demo": "tsx prisma/seedDemo.ts",
     "user:create": "tsx prisma/createAdmin.ts"
   },
   "dependencies": {
