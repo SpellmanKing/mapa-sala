@@ -4,6 +4,8 @@ import { InstrutorModal, InstrutorPayload } from '../components/InstrutorModal';
 import { SalaModal, SalaPayload } from '../components/SalaModal';
 import { ConfirmDeleteModal } from '../components/ConfirmDeleteModal';
 import { FeriadosManager } from '../components/FeriadosManager';
+import { ImportacaoPlanilhaModal } from '../components/ImportacaoPlanilhaModal';
+import { useAuth } from '../context/AuthContext';
 import { useAppData, useAppUi, Curso, Instrutor, Sala, type DataResource } from '../context/AppContext';
 import { CursoService, InstrutorService, SalaService } from '../api/client';
 import { getApiErrorMessage } from '../api/errorMessage.js';
@@ -27,6 +29,8 @@ export function ManageSystemPage() {
     loadData
   } = useAppData();
   const { showToast } = useAppUi();
+  const { can } = useAuth();
+  const [importacaoOpen, setImportacaoOpen] = useState(false);
 
   const [activeTab, setActiveTab] = useState<Tab>('cursos');
 
@@ -454,6 +458,9 @@ export function ManageSystemPage() {
         </div>
         
         <div className="shrink-0 flex items-center gap-2">
+          {activeTab === 'cursos' && can('MANAGE') && (
+            <button type="button" onClick={() => setImportacaoOpen(true)} className="w-full sm:w-auto rounded-xl border border-primary px-4 py-2.5 text-sm font-black text-primary">Importar planilha</button>
+          )}
           {activeTab === 'cursos' && (
             <button 
               onClick={openCursoCreate} 
@@ -1047,6 +1054,10 @@ export function ManageSystemPage() {
       </div>
 
       {/* Modal de Cursos */}
+      <ImportacaoPlanilhaModal open={importacaoOpen} onClose={() => setImportacaoOpen(false)} onConfirmed={async () => {
+        await Promise.all([refreshCursos(), refreshTurmas()]);
+        showToast('Planilha importada com sucesso.', 'success');
+      }} />
       <CursoModal
         open={cursoModalOpen}
         title={editingCurso ? 'Editar Curso' : 'Adicionar Curso'}

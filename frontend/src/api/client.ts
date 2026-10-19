@@ -187,3 +187,31 @@ export const TurmaService = {
   
   getAgendamentos: () => api.get('/turmas/agendamentos').then(res => res.data)
 };
+
+export type LinhaImportacao = {
+  linha: number;
+  codigo_turma: string;
+  operacao: '1' | '2' | '3' | 'AVISO' | 'ERRO';
+  mensagem: string;
+  criados: number;
+  alterados: number;
+  mantidos: number;
+};
+
+export type ResultadoImportacao = {
+  data_corte_efetiva: string;
+  linhas: LinhaImportacao[];
+  totais: { criados: number; alterados: number; mantidos: number };
+};
+
+export const ImportacaoPlanilhaService = {
+  simular: (arquivo: File) => enviarPlanilha(arquivo, 'simular'),
+  confirmar: (arquivo: File) => enviarPlanilha(arquivo, 'confirmar')
+};
+
+async function enviarPlanilha(arquivo: File, acao: 'simular' | 'confirmar') {
+  const res = await api.post<ResultadoImportacao>(`/importacao-planilha/${acao}`, await arquivo.arrayBuffer(), {
+    headers: { 'Content-Type': 'application/octet-stream' }
+  });
+  return res.data;
+}

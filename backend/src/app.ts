@@ -14,6 +14,7 @@ import { instrutorRouter } from './controllers/instrutorController.js';
 import { feriadoRouter } from './controllers/feriadoController.js';
 import { calculadoraRouter } from './controllers/calculadoraController.js';
 import { turmaRouter } from './controllers/turmaController.js';
+import { importacaoPlanilhaRouter } from './controllers/importacaoPlanilhaController.js';
 import { prisma } from './infrastructure/prismaClient.js';
 import { env, getJwtSecret } from './config/env.js';
 
@@ -63,6 +64,7 @@ export function createApp() {
   app.use('/feriados', authMiddleware, feriadoRouter);
   app.use('/calcular_cronograma', authMiddleware, calculadoraRouter);
   app.use('/turmas', authMiddleware, turmaRouter);
+  app.use('/importacao-planilha', authMiddleware, importacaoPlanilhaRouter);
   app.use(notFoundHandler);
   app.use(errorHandler);
 
