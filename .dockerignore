@@ -1,0 +1,14 @@
+node_modules
+**/node_modules
+dist
+**/dist
+.git
+.github
+.vscode
+.env
+*.env
+docs_conflit
+relatorios
+npm-debug.log
+yarn-error.log
+coverage

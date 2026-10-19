@@ -8,15 +8,62 @@ services:
       POSTGRES_PASSWORD: postgres
       POSTGRES_DB: sgst_bd
     ports:
-      - "5432:5432"
+      - "${BIND_HOST:-127.0.0.1}:5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres -d sgst_bd"]
       interval: 5s
       timeout: 5s
+      retries: 10
+      start_period: 5s
+
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    container_name: mapa-sala-backend
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      PORT: 3333
+      DATABASE_URL: "postgresql://postgres:postgres@postgres:5432/sgst_bd?schema=public"
+      DIRECT_URL: "postgresql://postgres:postgres@postgres:5432/sgst_bd?schema=public"
+      CORS_ORIGIN: "*"
+      REQUIRE_AUTH: "false"
+    ports:
+      - "${BIND_HOST:-127.0.0.1}:3333:3333"
+    volumes:
+      - ./relatorios:/app/relatorios
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3333/health').then(r => r.ok ? process.exit(0) : process.exit(1)).catch(() => process.exit(1))"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 15s
+
+  frontend:
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
+      args:
+        VITE_API_URL: /api
+    container_name: mapa-sala-frontend
+    restart: unless-stopped
+    depends_on:
+      backend:
+        condition: service_healthy
+    ports:
+      - "${BIND_HOST:-127.0.0.1}:80:80"
+      - "${BIND_HOST:-127.0.0.1}:5173:80"
+    healthcheck:
+      test: ["CMD-SHELL", "wget --spider -q http://127.0.0.1:80/ || exit 1"]
+      interval: 5s
+      timeout: 5s
       retries: 5
+      start_period: 5s
 
 volumes:
   postgres_data:
-
