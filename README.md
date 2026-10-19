@@ -259,6 +259,8 @@ O container `mapa-sala-postgres` subirá expondo a porta `5432` com as seguintes
 
 ---
 
+O seed (`npx prisma db seed`, executado em `backend/`) é destrutivo: apaga turmas, agendamentos e quase todos os cadastros antes de recriá-los. Ele só inicia com `ALLOW_DESTRUCTIVE_SEED=true` definido explicitamente no ambiente. Execute apenas em banco descartável e com backup; a confirmação não torna a operação reversível. Se não houver sala livre em todas as datas da turma no mesmo turno, o seed interrompe com erro, sem forçar essa alocação. Nesse caso, as alterações anteriores ao erro permanecem no banco.
+
 ### Passo 3: Inicializar o Frontend (`frontend/`)
 
 1. Em outro terminal, acesse o diretório do frontend:
