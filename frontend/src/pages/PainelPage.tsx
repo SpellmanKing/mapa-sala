@@ -23,7 +23,6 @@ import { DigitalClock } from '../components/painel/DigitalClock';
 import { NovoAgendamentoModal } from '../components/painel/NovoAgendamentoModal';
 import { EditTurmaModal } from '../components/painel/EditTurmaModal';
 import { formatDateInput } from '../utils/date';
-import { useAuth } from '../context/AuthContext';
 import { getShiftId, SHIFTS } from '../constants/referenceData';
 
 const TURNOS = SHIFTS.map(shift => shift.label);
@@ -107,7 +106,6 @@ export function PainelPage() {
     isLoading
   } = useAppData();
   const { showToast } = useAppUi();
-  const { can } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -291,23 +289,10 @@ export function PainelPage() {
   useEffect(() => {
     const pageState = location.state as {
       novaAlocacao?: CalculoImportado;
-      accessDenied?: boolean;
     } | null;
-
-    if (pageState?.accessDenied) {
-      showToast('Seu perfil não possui permissão para acessar o gerenciamento.', 'error');
-      navigate('/painel', { replace: true, state: null });
-      return;
-    }
 
     const transferencia = pageState?.novaAlocacao;
     if (!transferencia || transferenciaProcessada.current) return;
-    if (!can('ALLOCATE')) {
-      showToast('Seu perfil permite apenas consultar as alocações.', 'info');
-      navigate('/painel', { replace: true, state: null });
-      return;
-    }
-
     const curso = transferencia.cursoId
       ? cursos.find(item => item.id === transferencia.cursoId)
       : undefined;
@@ -326,7 +311,7 @@ export function PainelPage() {
     setCalculoImportado(transferencia);
     setModalOpen(true);
     navigate('/painel', { replace: true, state: null });
-  }, [can, cursos, location.state, navigate, showToast]);
+  }, [cursos, location.state, navigate]);
 
   // --- LÓGICA DO MODAL DE EDIÇÃO E REALOCAÇÃO ---
   const [editTurmaModalOpen, setEditTurmaModalOpen] = useState(false);
@@ -349,7 +334,7 @@ export function PainelPage() {
       if ((e.key === 't' || e.key === 'T') && !modalOpen && !editTurmaModalOpen && !deleteModal.open) {
         e.preventDefault();
         handleToggleModoTV();
-      } else if ((e.key === 'n' || e.key === 'N') && can('ALLOCATE') && !modalOpen && !editTurmaModalOpen && !deleteModal.open) {
+      } else if ((e.key === 'n' || e.key === 'N') && !modalOpen && !editTurmaModalOpen && !deleteModal.open) {
         e.preventDefault();
         setModalOpen(true);
       }
@@ -357,7 +342,7 @@ export function PainelPage() {
 
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
-  }, [can, modoTV, modalOpen, editTurmaModalOpen, deleteModal.open]);
+  }, [modoTV, modalOpen, editTurmaModalOpen, deleteModal.open]);
 
   // Helper para buscar informações de uma sala
   const getSalaInfo = (salaId: string): Sala | undefined => {
@@ -625,7 +610,6 @@ export function PainelPage() {
   };
 
   const handleEditClick = (turma: any) => {
-    if (!can('ALLOCATE')) return;
     setTurmaEditando(turma);
     setDadosEdicao({
       salaId: turma.salaId,
@@ -892,16 +876,14 @@ export function PainelPage() {
                 <DigitalClock variant="default" />
               </div>
 
-              {can('ALLOCATE') && (
-                <button
+              <button
                   type="button"
                   onClick={() => setModalOpen(true)}
                   className="bg-primary text-white font-black py-2.5 px-4 rounded-xl shadow-md hover:bg-primary/90 transition-colors flex items-center justify-center gap-2 text-sm cursor-pointer flex-1 sm:flex-none"
                   title="Atalho: pressione N no teclado"
                 >
                   <Plus size={16} /> Alocar Turma
-                </button>
-              )}
+              </button>
 
               {/* Botão de Modo TV */}
               <button
@@ -1166,15 +1148,13 @@ export function PainelPage() {
                   ? 'Ajuste ou limpe os filtros para ampliar os resultados.'
                   : 'Não há turmas para o período selecionado.'}
               </p>
-              {(filtrosAtivos > 0 || can('ALLOCATE')) && (
-                <button
+              <button
                   type="button"
                   onClick={filtrosAtivos > 0 ? limparFiltros : () => setModalOpen(true)}
                   className="mt-5 bg-primary text-white font-bold px-4 py-2.5 rounded-xl text-sm hover:bg-primary/90 transition-colors cursor-pointer"
                 >
                   {filtrosAtivos > 0 ? 'Limpar filtros' : 'Nova alocação'}
-                </button>
-              )}
+              </button>
             </div>
           )}
 
@@ -1234,9 +1214,8 @@ export function PainelPage() {
                   type="button"
                   key={turma.id}
                   onClick={() => handleEditClick(turma)}
-                  disabled={!can('ALLOCATE')}
-                  aria-label={can('ALLOCATE') ? `Editar alocação da turma ${turma.codigo}, ${turma.cursoNome}` : `Turma ${turma.codigo}, ${turma.cursoNome}`}
-                  className={`glass-panel w-full text-left rounded-2xl shadow-xs border border-border/80 transition-[border-color,box-shadow,transform] duration-200 flex flex-col bg-card/70 ${can('ALLOCATE') ? 'cursor-pointer hover:-translate-y-0.5 hover:shadow-md' : 'cursor-default'} ${cardProportionClass} ${cardBorderColor} ${
+                  aria-label={`Editar alocação da turma ${turma.codigo}, ${turma.cursoNome}`}
+                  className={`glass-panel w-full text-left rounded-2xl shadow-xs border border-border/80 transition-[border-color,box-shadow,transform] duration-200 flex flex-col bg-card/70 cursor-pointer hover:-translate-y-0.5 hover:shadow-md ${cardProportionClass} ${cardBorderColor} ${
                     isHighlighted ? (isRemoto ? 'ring-2 ring-blue-500 ring-offset-2 ring-offset-bg shadow-md' : 'ring-2 ring-red-500 ring-offset-2 ring-offset-bg shadow-md') : ''
                   }`}
                 >

@@ -1,9 +1,8 @@
 import React, { useState } from 'react';
 import { Outlet, Link, useLocation } from 'react-router-dom';
-import { Calendar, Calculator, Settings, Menu, X, Sun, Moon, ChevronLeft, ChevronRight, School, LogOut, UserCircle } from 'lucide-react';
+import { Calendar, Calculator, Settings, Menu, X, Sun, Moon, ChevronLeft, ChevronRight, School } from 'lucide-react';
 import { useAppUi } from '../context/AppContext';
 import { useDialogFocus } from '../utils/useDialogFocus';
-import { useAuth } from '../context/AuthContext';
 
 export function Layout() {
   const location = useLocation();

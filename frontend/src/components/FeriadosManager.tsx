@@ -8,7 +8,6 @@ import {
   type FeriadoTipo
 } from '../api/client';
 import { useAppUi } from '../context/AppContext';
-import { useAuth } from '../context/AuthContext';
 import { ConfirmDeleteModal } from './ConfirmDeleteModal';
 import { FeriadoModal, type FeriadoForm } from './FeriadoModal';
 
@@ -31,8 +30,7 @@ function errorMessage(error: unknown, fallback: string) {
 
 export function FeriadosManager() {
   const { showToast } = useAppUi();
-  const { can } = useAuth();
-  const canManage = can('MANAGE');
+  const canManage = true;
   const [feriados, setFeriados] = useState<Feriado[]>([]);
   const [tipos, setTipos] = useState<FeriadoTipo[]>([]);
   const [loading, setLoading] = useState(true);

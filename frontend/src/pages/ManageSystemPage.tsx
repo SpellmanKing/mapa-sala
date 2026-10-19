@@ -5,7 +5,6 @@ import { SalaModal, SalaPayload } from '../components/SalaModal';
 import { ConfirmDeleteModal } from '../components/ConfirmDeleteModal';
 import { FeriadosManager } from '../components/FeriadosManager';
 import { ImportacaoPlanilhaModal } from '../components/ImportacaoPlanilhaModal';
-import { useAuth } from '../context/AuthContext';
 import { useAppData, useAppUi, Curso, Instrutor, Sala, type DataResource } from '../context/AppContext';
 import { CursoService, InstrutorService, SalaService } from '../api/client';
 import { getApiErrorMessage } from '../api/errorMessage.js';
@@ -29,7 +28,6 @@ export function ManageSystemPage() {
     loadData
   } = useAppData();
   const { showToast } = useAppUi();
-  const { can } = useAuth();
   const [importacaoOpen, setImportacaoOpen] = useState(false);
 
   const [activeTab, setActiveTab] = useState<Tab>('cursos');
@@ -458,7 +456,7 @@ export function ManageSystemPage() {
         </div>
         
         <div className="shrink-0 flex items-center gap-2">
-          {activeTab === 'cursos' && can('MANAGE') && (
+          {activeTab === 'cursos' && (
             <button type="button" onClick={() => setImportacaoOpen(true)} className="w-full sm:w-auto rounded-xl border border-primary px-4 py-2.5 text-sm font-black text-primary">Importar planilha</button>
           )}
           {activeTab === 'cursos' && (

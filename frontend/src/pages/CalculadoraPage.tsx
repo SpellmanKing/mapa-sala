@@ -20,7 +20,6 @@ import { CalculadoraService } from '../api/client';
 import { useAppData, useAppUi } from '../context/AppContext';
 import { useNavigate } from 'react-router-dom';
 import { formatDateInput } from '../utils/date';
-import { useAuth } from '../context/AuthContext';
 import { WEEK_DAYS } from '../constants/referenceData';
 
 const PRESETS_HORAS = [40, 80, 160, 200, 400, 800];
@@ -44,7 +43,6 @@ interface ResultadoCronograma {
 export function CalculadoraPage() {
   const { cursos, loadData } = useAppData();
   const { showToast } = useAppUi();
-  const { can } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -576,19 +574,13 @@ export function CalculadoraPage() {
                     </button>
                   </div>
 
-                  {can('ALLOCATE') ? (
-                    <button
-                      type="button"
-                      onClick={irParaAlocacao}
-                      className="bg-primary text-white font-black px-4 py-2 rounded-xl text-xs flex items-center gap-1.5 shadow-sm btn-tactile cursor-pointer hover:bg-primary/90 transition-colors"
-                    >
-                      <CalendarDays size={13} /> Alocar Turma no Mapa
-                    </button>
-                  ) : (
-                    <span className="text-[11px] font-bold text-text-muted">
-                      Perfil com acesso somente para consulta
-                    </span>
-                  )}
+                  <button
+                    type="button"
+                    onClick={irParaAlocacao}
+                    className="bg-primary text-white font-black px-4 py-2 rounded-xl text-xs flex items-center gap-1.5 shadow-sm btn-tactile cursor-pointer hover:bg-primary/90 transition-colors"
+                  >
+                    <CalendarDays size={13} /> Alocar Turma no Mapa
+                  </button>
                 </div>
               </div>
 
