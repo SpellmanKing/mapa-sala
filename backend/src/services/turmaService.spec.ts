@@ -1,5 +1,5 @@
 import { Prisma, type Curso, type Sala, type Turno, type Turma } from '@prisma/client';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { prisma } from '../infrastructure/prismaClient.js';
 import { HttpError } from '../utils/errors.js';
 import { TurmaService } from './turmaService.js';
@@ -97,6 +97,8 @@ describe('TurmaService - núcleo operacional', () => {
   let service: TurmaService;
 
   beforeEach(() => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date(2026, 1, 28, 12));
     vi.clearAllMocks();
     service = new TurmaService();
     mockCalcularCronograma.mockResolvedValue({
@@ -123,6 +125,7 @@ describe('TurmaService - núcleo operacional', () => {
     vi.mocked(prisma.$queryRaw).mockResolvedValue([]);
     vi.mocked(prisma.$transaction).mockImplementation(async callback => callback(prisma));
   });
+  afterEach(() => vi.useRealTimers());
 
   it('rejeita curso inexistente', async () => {
     vi.mocked(prisma.curso.findUnique).mockResolvedValue(null);
@@ -293,6 +296,7 @@ describe('TurmaService - núcleo operacional', () => {
   });
 
   it('rejeita realocação com conflito de instrutor', async () => {
+    vi.mocked(prisma.agendamento.findMany).mockResolvedValueOnce([]);
     vi.mocked(prisma.agendamento.findMany).mockResolvedValue([conflito('instrutor')] as never);
 
     await expect(service.reallocarTurma(1, {
@@ -313,12 +317,37 @@ describe('TurmaService - núcleo operacional', () => {
       id_instrutores: 8
     });
 
-    expect(prisma.agendamento.deleteMany).toHaveBeenCalledWith({ where: { id_turmas: 1 } });
+    expect(prisma.agendamento.deleteMany).toHaveBeenCalledWith({ where: { id_turmas: 1, data_aula: { gte: new Date('2026-02-28') } } });
     expect(prisma.agendamento.createMany).toHaveBeenCalledWith({
       data: expect.arrayContaining([
         expect.objectContaining({ id_turmas: 1, id_salas: 5 })
       ])
     });
+  });
+
+  it('preserva aulas passadas e recalcula somente as restantes a partir de hoje', async () => {
+    vi.setSystemTime(new Date(2026, 2, 3, 12));
+    vi.mocked(prisma.agendamento.findMany)
+      .mockResolvedValueOnce([{ data_aula: new Date('2026-03-02') }] as never)
+      .mockResolvedValueOnce([]);
+    await service.reallocarTurma(1, {
+      id_salas: 5, data_inicio: new Date('2026-03-02'), fk_id_turno: 1, dias_semana: ['1', '2']
+    });
+    expect(mockCalcularCronograma).toHaveBeenCalledWith(36, new Date('2026-03-03'), ['1', '2'], undefined, 'Manhã');
+    expect(prisma.agendamento.deleteMany).toHaveBeenCalledWith({ where: { id_turmas: 1, data_aula: { gte: new Date('2026-03-03') } } });
+    expect(prisma.turma.update).toHaveBeenCalledWith(expect.objectContaining({
+      data: expect.objectContaining({ data_inicio: turma.data_inicio, fk_id_turno: 1 })
+    }));
+  });
+
+  it('recusa mudar turno ou início de turma com histórico', async () => {
+    vi.setSystemTime(new Date(2026, 2, 3, 12));
+    vi.mocked(prisma.agendamento.findMany).mockResolvedValueOnce([{ data_aula: new Date('2026-03-02') }] as never);
+    vi.mocked(prisma.turno.findFirst).mockResolvedValue({ id_turno: 3, nome_turno: 'Noite' });
+    await expect(service.reallocarTurma(1, {
+      id_salas: 5, data_inicio: new Date('2026-03-02'), fk_id_turno: 3, dias_semana: ['1', '2']
+    })).rejects.toThrow('Turma iniciada não pode mudar de turno');
+    expect(prisma.agendamento.deleteMany).not.toHaveBeenCalled();
   });
 
   it('propaga falha da consulta de disponibilidade', async () => {
