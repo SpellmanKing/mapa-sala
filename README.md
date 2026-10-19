@@ -194,115 +194,52 @@ erDiagram
 | **Build Tool** | Vite | 5.4+ | Empacotamento ultrarrápido |
 | **Estilização** | Tailwind CSS | 4.x | Design system responsivo e temas claro/escuro |
 | **Testes Unitários** | Vitest | 5.x | Testes automatizados de regras de negócio |
-| **Containerização** | Docker | Docker Compose | Orquestração do PostgreSQL |
+| **Containerização** | Docker | Docker Compose | PostgreSQL, API e frontend Nginx |
 
 ---
 
-## ⚙️ Instalação e Execução
+## ⚙️ Instalação e execução
 
-### Pré-requisitos
-- **Node.js**: `20.x` LTS (ou `18.x`+)
-- **NPM** ou **Yarn**
-- **Docker** ou **WSL2 com Docker Engine** (para subir o PostgreSQL)
+Pré-requisito: Docker Engine com Compose no WSL. Não é necessário instalar Node.js ou Prisma no Windows para usar a pilha completa.
 
----
-
-### Passo 1: Subir o Banco de Dados (Docker)
-
-Na raiz do repositório, execute:
+Na raiz do clone, execute no WSL:
 
 ```bash
-docker compose up -d postgres
+docker compose up --build -d
 ```
 
-O container `mapa-sala-postgres` subirá expondo a porta `5432` com as seguintes credenciais padrão:
-- **Host**: `localhost:5432`
-- **Usuário**: `postgres`
-- **Senha**: `postgres`
-- **Database**: `sgst_bd`
+Neste computador, a partir do PowerShell:
 
----
+```powershell
+wsl -u root -- bash -lc "cd /mnt/c/AllProjects/mapa-sala && docker compose up --build -d"
+```
 
-### Passo 2: Inicializar o Backend (`backend/`)
+Abra **http://localhost/** (ou http://localhost:5173/). O painel abre sem login. O backend aplica as migrations e cadastra turnos, status, feriados, salas, instrutores e cursos de referência ao iniciar. A API responde em http://localhost:3333/health. As portas são publicadas apenas em `127.0.0.1`; configure `BIND_HOST` somente se precisar acesso pela rede e houver proteção externa.
 
-1. Acesse o diretório do backend:
-   ```bash
-   cd backend
-   ```
-
-2. Crie o arquivo `.env` (ou copie de `.env.example`):
-   ```env
-   PORT=3333
-   DATABASE_URL="postgresql://postgres:postgres@localhost:5432/sgst_bd?schema=public"
-   DIRECT_URL="postgresql://postgres:postgres@localhost:5432/sgst_bd?schema=public"
-   JWT_SECRET="sgst_secret_jwt_2026_senac_df_secure"
-   CORS_ORIGIN="*"
-   ```
-
-3. Instale as dependências e prepare o Prisma:
-   ```bash
-   npm install
-   npx prisma generate
-   npx prisma migrate deploy
-   ```
-
-4. Para criar ou atualizar o usuário administrador, defina `ADMIN_EMAIL` e `ADMIN_PASSWORD` no ambiente (senha entre 12 e 128 caracteres) e execute, a partir da raiz:
-   ```bash
-   npm run user:create --prefix backend
-   ```
-
-5. Inicie o servidor backend:
-   ```bash
-   npm run dev
-   ```
-   O backend estará acessível em: `http://localhost:3333` (verifique com `GET /health`).
-
----
-
-O seed (`npx prisma db seed`, executado em `backend/`) é destrutivo: apaga turmas, agendamentos e quase todos os cadastros antes de recriá-los. Ele só inicia com `ALLOW_DESTRUCTIVE_SEED=true` definido explicitamente no ambiente. Execute apenas em banco descartável e com backup; a confirmação não torna a operação reversível. Se não houver sala livre em todas as datas da turma no mesmo turno, o seed interrompe com erro, sem forçar essa alocação. Nesse caso, as alterações anteriores ao erro permanecem no banco.
-
-### Passo 3: Inicializar o Frontend (`frontend/`)
-
-1. Em outro terminal, acesse o diretório do frontend:
-   ```bash
-   cd frontend
-   ```
-
-2. Instale as dependências:
-   ```bash
-   npm install
-   ```
-
-3. Crie o arquivo `.env` a partir de `.env.example` e informe a URL pública da API:
-   ```env
-   VITE_API_URL=http://localhost:3333
-   ```
-   A variável é obrigatória no build de produção; o fallback local existe apenas no modo de desenvolvimento.
-
-4. Inicie o servidor de desenvolvimento:
-   ```bash
-   npm run dev
-   ```
-   O frontend estará acessível em: `http://localhost:5173`.
-
----
-
-## 🧪 Testes e Qualidade de Código
-
-O backend possui suíte de testes unitários automatizados com **Vitest**, cobrindo o motor de cálculo de cronograma, regras de feriados, validação de capacidade física de salas e integridade de alocações:
+Para carregar turmas fictícias no banco **descartável**, rode depois que o backend estiver healthy:
 
 ```bash
-# Executar todos os testes unitários do backend
-cd backend
-npm test
+docker compose run --rm -e ALLOW_DESTRUCTIVE_SEED=true backend npm run db:seed:demo
 ```
 
-### Pipeline de CI/CD (GitHub Actions)
-O arquivo [`.github/workflows/ci.yml`](.github/workflows/ci.yml) valida a cada `push` e `pull_request`:
-- Compilação dos clientes do Prisma ORM (`prisma generate`);
-- Execução de toda a suíte de testes unitários com Vitest;
-- Compilação TypeScript do backend (`npm run build`);
-- Build do frontend com Vite (`npm run build`).
+Esse comando substitui turmas e agendamentos existentes. Ele não cria turmas incompatíveis com sala, capacidade, instrutor ou código único; as pendências ficam em `relatorios/turmas_pendentes.csv`. Revise o CSV e use **Gerenciamento → Cursos → Importar planilha** para simular e confirmar correções. O seed de referência é idempotente e automático; não exige `ALLOW_DESTRUCTIVE_SEED`.
+
+Para parar sem apagar os dados: `docker compose down`. Para **apagar também o banco local**, somente após backup e confirmação de que está no projeto correto: `docker compose down -v`.
+
+## 🧪 Testes e qualidade
+
+```bash
+npm ci --prefix backend
+npm ci --prefix frontend
+npm run lint --prefix backend
+npm run build --prefix backend
+npm test --prefix backend
+npm run typecheck --prefix frontend
+VITE_API_URL=/api npm run build --prefix frontend
+npm test --prefix frontend
+```
+
+A CI executa essas validações para backend e frontend. O build do backend gera o Prisma Client; não requer banco para compilar.
 
 ---
 
