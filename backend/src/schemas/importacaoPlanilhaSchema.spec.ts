@@ -3,6 +3,11 @@ import xlsx from 'xlsx';
 import { lerPlanilha } from './importacaoPlanilhaSchema.js';
 
 describe('planilha de turmas', () => {
+  it('preserva data DD/MM/AAAA ambigua no CSV', () => {
+    const csv = 'codigo_turma,curso,sala,local_sala,turno,data_inicio\nA,Curso,Sala,Local,Noite,03/01/2028';
+    expect(lerPlanilha(Buffer.from(csv)).linhas[0]?.data_inicio).toBe('2028-01-03');
+  });
+
   it('aceita cabeçalhos sem distinção de acentos, espaços ou maiúsculas', () => {
     const csv = 'ID TURMA,CÓDIGO TURMA,CURSO,CARGA HORÁRIA,INSTRUTOR,SALA,LOCAL SALA,TURNO,DATA INÍCIO,ALUNOS\n' +
       ',2026.99.1,Curso A,800,,Laboratório 1,Polo Recanto das Emas,Tarde,16/11/2026,30';

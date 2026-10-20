@@ -51,7 +51,7 @@ export function lerPlanilha(arquivo: Buffer): { linhas: LinhaImportacao[]; erros
   try {
     const workbook = arquivo.subarray(0, 2).toString() === 'PK'
       ? xlsx.read(arquivo, { type: 'buffer' })
-      : xlsx.read(arquivo.toString('utf8').replace(/^\uFEFF/, ''), { type: 'string' });
+      : xlsx.read(arquivo.toString('utf8').replace(/^\uFEFF/, ''), { type: 'string', raw: true });
     const folha = workbook.Sheets[workbook.SheetNames[0] ?? ''];
     if (!folha) throw new Error('Planilha vazia');
     tabela = xlsx.utils.sheet_to_json<unknown[]>(folha, { header: 1, raw: false, defval: '' });
