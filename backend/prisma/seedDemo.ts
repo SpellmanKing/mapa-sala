@@ -795,8 +795,6 @@ export async function seedDemo() {
   const dbSalas = await prisma.sala.findMany({ include: { tipoSala: true } });
   const dbTurnos = await prisma.turno.findMany();
   const dbStatus = await prisma.statusTurma.findMany();
-  const dbCursos = await prisma.curso.findMany();
-  const dbInstrutores = await prisma.instrutor.findMany();
   const feriados = await prisma.feriadosRecessos.findMany();
   const feriadosStrings = feriados.map(f => f.data_feriado.toISOString().split('T')[0]!);
 
@@ -814,6 +812,22 @@ export async function seedDemo() {
     console.log('Limpando agendamentos e turmas anteriores...');
     await tx.agendamento.deleteMany({});
     await tx.turma.deleteMany({});
+
+    for (const nome of new Set(turmasFinais.map(t => t.instrutor.trim()).filter(Boolean))) {
+      await tx.instrutor.upsert({ where: { nome_instrutor: nome }, update: {}, create: { nome_instrutor: nome } });
+    }
+    const cursosSeed = new Map<string, number>();
+    for (const turma of turmasFinais) {
+      if (!cursosSeed.has(turma.nome_curso)) cursosSeed.set(turma.nome_curso, turma.carga_horaria);
+    }
+    for (const [nome, carga] of cursosSeed) {
+      await tx.curso.upsert({
+        where: { nome_curso: nome }, update: {},
+        create: { nome_curso: nome, carga_horaria: carga, segmento: 'Geral', modalidade: 'Presencial', valor: 0 }
+      });
+    }
+    const dbCursos = await tx.curso.findMany();
+    const dbInstrutores = await tx.instrutor.findMany();
 
     for (const tFinal of turmasFinais) {
       const totalAlunos = 30; // Capacidade padrão requerida
