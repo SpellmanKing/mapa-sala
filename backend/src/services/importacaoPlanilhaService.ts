@@ -82,7 +82,7 @@ export class ImportacaoPlanilhaService {
         if (instrutorId != null && turno) chaves.add(`instrutor:${instrutorId}:turno:${turno.id_turno}`);
       }
       for (const recurso of [...chaves].sort()) {
-        await db.$queryRaw`SELECT pg_advisory_xact_lock(hashtextextended(${recurso}, 0))`;
+        await db.$queryRaw`SELECT pg_advisory_xact_lock(hashtextextended(${recurso}, 0))::text`;
       }
     }
     const [turmas, ocupacoes] = await Promise.all([

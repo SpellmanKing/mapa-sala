@@ -107,7 +107,7 @@ export class TurmaService {
     ].sort();
 
     for (const chave of chaves) {
-      await tx.$queryRaw`SELECT pg_advisory_xact_lock(hashtextextended(${chave}, 0))`;
+      await tx.$queryRaw`SELECT pg_advisory_xact_lock(hashtextextended(${chave}, 0))::text`;
     }
   }
 
