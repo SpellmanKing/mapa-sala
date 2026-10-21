@@ -742,7 +742,7 @@ function obterSalasCandidatas(salas: any[], nomeCurso: string, local: string) {
   if (nc.includes('costureiro') || nc.includes('modelista') || nc.includes('moda')) {
     return salasUnidade.filter(s => s.tipoSala?.nome_tipo === 'Laboratório de Moda');
   }
-  if (nc.includes('desenvolvimento') || nc.includes('jogos') || nc.includes('tecnologia') || nc.includes('informática') || nc.includes('windows') || nc.includes('office') || nc.includes('power bi') || nc.includes('ia')) {
+  if (nc.includes('desenvolvimento') || nc.includes('jogos') || nc.includes('tecnologia') || nc.includes('informática') || nc.includes('windows') || nc.includes('office') || nc.includes('power bi') || nc.includes('inteligência artificial')) {
     return salasUnidade.filter(s => s.tipoSala?.nome_tipo === 'Laboratório de TI');
   }
 
@@ -769,7 +769,7 @@ function salvarRelatorioTurmasPendentes(pendentes: any[]) {
       esc(p.local),
       esc(p.turno),
       esc(p.data_inicio),
-      p.total_alunos || 30,
+      p.total_alunos ?? '',
       esc(p.motivo)
     ].join(',');
   });
@@ -830,8 +830,6 @@ export async function seedDemo() {
     const dbInstrutores = await tx.instrutor.findMany();
 
     for (const tFinal of turmasFinais) {
-      const totalAlunos = 30; // Capacidade padrão requerida
-
       // Determinar turno
       let turnoNome = 'Manhã';
       if (tFinal.horario.includes('14:00') || tFinal.horario.includes('13:00') || tFinal.horario.includes('13:15')) {
@@ -846,7 +844,6 @@ export async function seedDemo() {
         turmasPendentes.push({
           ...tFinal,
           turno: turnoNome,
-          total_alunos: totalAlunos,
           motivo: 'Código de turma duplicado (mantida a primeira ocorrência)'
         });
         console.warn(`[PENDENTE] ${tFinal.codigo_turma}: Código de turma duplicado.`);
@@ -860,7 +857,6 @@ export async function seedDemo() {
         turmasPendentes.push({
           ...tFinal,
           turno: turnoNome,
-          total_alunos: totalAlunos,
           motivo: `Curso não encontrado no catálogo: ${tFinal.nome_curso}`
         });
         console.warn(`[PENDENTE] ${tFinal.codigo_turma}: Curso não encontrado.`);
@@ -872,7 +868,7 @@ export async function seedDemo() {
         ? dbInstrutores.find(i => i.nome_instrutor.trim().toLowerCase() === tFinal.instrutor.trim().toLowerCase()) ?? null
         : null;
       if (tFinal.instrutor.trim() && !instrutor) {
-        turmasPendentes.push({ ...tFinal, turno: turnoNome, total_alunos: totalAlunos, motivo: `Instrutor não cadastrado: ${tFinal.instrutor}` });
+        turmasPendentes.push({ ...tFinal, turno: turnoNome, motivo: `Instrutor não cadastrado: ${tFinal.instrutor}` });
         continue;
       }
 
@@ -903,23 +899,17 @@ export async function seedDemo() {
         turmasPendentes.push({
           ...tFinal,
           turno: turnoNome,
-          total_alunos: totalAlunos,
           motivo: conflitoInstrutorMsg
         });
         console.warn(`[PENDENTE] ${tFinal.codigo_turma}: ${conflitoInstrutorMsg}`);
         continue;
       }
 
-      // 3. Busca de sala candidata sem conflitos e com capacidade suficiente
+      // 3. Busca de sala candidata sem conflitos (número de alunos não informado no seed demo)
       const candidatas = obterSalasCandidatas(dbSalas, tFinal.nome_curso, tFinal.local);
       let salaEscolhida: any = null;
 
       for (const sala of candidatas) {
-        // Validação de capacidade
-        if (sala.capacidade_maxima < totalAlunos) {
-          continue;
-        }
-
         // Validação de disponibilidade na sala durante todo o cronograma no mesmo turno
         let salaOcupada = false;
         for (const d of datasAulas) {
@@ -940,14 +930,11 @@ export async function seedDemo() {
       if (!salaEscolhida) {
         const motivo = candidatas.length === 0
           ? `Nenhuma sala compatível com a especialidade do curso na unidade ${tFinal.local}`
-          : candidatas.every(s => s.capacidade_maxima < totalAlunos)
-            ? `Capacidade física insuficiente nas salas disponíveis da unidade (exigido: ${totalAlunos})`
-            : `Sem sala disponível livre de conflitos no turno ${turnoNome} em ${tFinal.local}`;
+          : `Sem sala disponível livre de conflitos no turno ${turnoNome} em ${tFinal.local}`;
 
         turmasPendentes.push({
           ...tFinal,
           turno: turnoNome,
-          total_alunos: totalAlunos,
           sala_pretendida: candidatas[0]?.nome_sala,
           motivo
         });
@@ -964,7 +951,7 @@ export async function seedDemo() {
         }
       }
 
-      // Cria a turma
+      // Cria a turma (total_alunos = 0 indica número de alunos não informado no seed demo)
       const turmaCriada = await tx.turma.create({
         data: {
           id_cursos: curso.id_cursos,
@@ -974,7 +961,7 @@ export async function seedDemo() {
           fk_id_turno: turno.id_turno,
           data_inicio: new Date(tFinal.data_inicio),
           data_termino: cronograma.dataTermino,
-          total_alunos: totalAlunos,
+          total_alunos: 0,
           alunos_pagantes: tFinal.estado.includes('Comercial') ? 15 : 0,
           alunos_bolsistas: tFinal.estado.includes('PSG') ? 15 : 0,
           dias_semana: tFinal.dias_semana.join(','),
