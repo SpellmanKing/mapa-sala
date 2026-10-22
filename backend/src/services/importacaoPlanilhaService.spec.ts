@@ -1,26 +1,50 @@
+import type { Request } from 'express';
 import { beforeEach, afterEach, describe, expect, it, vi } from 'vitest';
+import { extrairOpcoesImportacao } from '../controllers/importacaoPlanilhaController.js';
 import { prisma } from '../infrastructure/prismaClient.js';
 import { HttpError } from '../utils/errors.js';
 import { dataEfetiva, ImportacaoPlanilhaService } from './importacaoPlanilhaService.js';
 
 const { calcular } = vi.hoisted(() => ({ calcular: vi.fn() }));
-vi.mock('../infrastructure/prismaClient.js', () => ({ prisma: {
-  $transaction: vi.fn(), $queryRaw: vi.fn(),
-  curso: { findMany: vi.fn(), create: vi.fn() },
-  sala: { findMany: vi.fn() }, instrutor: { findMany: vi.fn() }, turno: { findMany: vi.fn() },
-  turma: { findMany: vi.fn(), create: vi.fn(), update: vi.fn() },
-  agendamento: { findMany: vi.fn(), createMany: vi.fn(), updateMany: vi.fn() },
-  statusTurma: { findFirst: vi.fn() }
-} }));
-vi.mock('./calculadoraService.js', () => ({ CalculadoraService: class { calcularCronograma = calcular; } }));
+vi.mock('../infrastructure/prismaClient.js', () => ({
+  prisma: {
+    $transaction: vi.fn(),
+    $queryRaw: vi.fn(),
+    curso: { findMany: vi.fn(), create: vi.fn() },
+    sala: { findMany: vi.fn() },
+    instrutor: { findMany: vi.fn() },
+    turno: { findMany: vi.fn() },
+    turma: { findMany: vi.fn(), create: vi.fn(), update: vi.fn() },
+    agendamento: { findMany: vi.fn(), createMany: vi.fn(), updateMany: vi.fn() },
+    statusTurma: { findFirst: vi.fn() }
+  }
+}));
+vi.mock('./calculadoraService.js', () => ({
+  CalculadoraService: class {
+    calcularCronograma = calcular;
+  }
+}));
 
 const data = (dia: string) => new Date(`${dia}T00:00:00.000Z`);
 const turnoTarde = { id_turno: 2, nome_turno: 'Tarde' };
 const curso = { id_cursos: 1, nome_curso: 'Curso B', carga_horaria: 12, dias_letivos_padrao: '1,2,3,4,5' };
 const antiga = { id_agendamento: 1, id_turmas: 57, id_salas: 1, data_aula: data('2026-10-14') };
 const futura = { id_agendamento: 2, id_turmas: 57, id_salas: 1, data_aula: data('2026-10-16') };
-const turma = { id_turmas: 57, codigo_turma: 'B', id_cursos: 1, curso, turno: turnoTarde, fk_id_turno: 2, id_instrutores: 1, total_alunos: 20, data_inicio: data('2026-09-01'), dias_semana: '1,2,3,4,5', agendamentos: [antiga, futura] };
-const csv = (linhas: string) => Buffer.from(`id_turma,codigo_turma,curso,carga_horaria,instrutor,sala,local_sala,turno,data_inicio,alunos\n${linhas}`);
+const turma = {
+  id_turmas: 57,
+  codigo_turma: 'B',
+  id_cursos: 1,
+  curso,
+  turno: turnoTarde,
+  fk_id_turno: 2,
+  id_instrutores: 1,
+  total_alunos: 20,
+  data_inicio: data('2026-09-01'),
+  dias_semana: '1,2,3,4,5',
+  agendamentos: [antiga, futura]
+};
+const csv = (linhas: string) =>
+  Buffer.from(`id_turma,codigo_turma,curso,carga_horaria,instrutor,sala,local_sala,turno,data_inicio,alunos\n${linhas}`);
 
 describe('ImportacaoPlanilhaService (sem banco)', () => {
   beforeEach(() => {
@@ -35,13 +59,19 @@ describe('ImportacaoPlanilhaService (sem banco)', () => {
       { id_salas: 2, nome_sala: 'Lab 2', local: 'Recanto', capacidade_maxima: 30 }
     ] as never);
     vi.mocked(prisma.instrutor.findMany).mockResolvedValue([{ id_instrutores: 1, nome_instrutor: 'Ana' }] as never);
-    vi.mocked(prisma.turno.findMany).mockResolvedValue([{ id_turno: 1, nome_turno: 'Manhã' }, turnoTarde, { id_turno: 3, nome_turno: 'Noite' }] as never);
+    vi.mocked(prisma.turno.findMany).mockResolvedValue([
+      { id_turno: 1, nome_turno: 'Manhã' },
+      turnoTarde,
+      { id_turno: 3, nome_turno: 'Noite' }
+    ] as never);
     vi.mocked(prisma.turma.findMany).mockResolvedValue([turma] as never);
     vi.mocked(prisma.agendamento.findMany).mockResolvedValue([{ ...futura, turma }] as never);
     vi.mocked(prisma.statusTurma.findFirst).mockResolvedValue({ id_status: 1 } as never);
     vi.mocked(prisma.curso.create).mockResolvedValue({ id_cursos: 2 } as never);
     vi.mocked(prisma.turma.create).mockResolvedValue({ id_turmas: 59 } as never);
-    calcular.mockImplementation(async (carga: number) => ({ datasAulas: carga === 8 ? ['2026-10-16', '2026-10-19'] : ['2026-10-16', '2026-10-19', '2026-10-20'] }));
+    calcular.mockImplementation(async (carga: number) => ({
+      datasAulas: carga === 8 ? ['2026-10-16', '2026-10-19'] : ['2026-10-16', '2026-10-19', '2026-10-20']
+    }));
   });
   afterEach(() => vi.useRealTimers());
 
@@ -51,17 +81,28 @@ describe('ImportacaoPlanilhaService (sem banco)', () => {
   });
 
   it('simula mudança de sala futura sem gravar e preserva a aula passada', async () => {
-    const resultado = await new ImportacaoPlanilhaService().processar(csv('57,B,Curso B,,Ana,Lab 2,Recanto,Tarde,,20'), false);
+    const resultado = await new ImportacaoPlanilhaService().processar(
+      csv('57,B,Curso B,,Ana,Lab 2,Recanto,Tarde,,20'),
+      false
+    );
     expect(resultado.linhas[0]).toMatchObject({ operacao: '2', criados: 0, alterados: 1, mantidos: 1 });
     expect(prisma.agendamento.updateMany).not.toHaveBeenCalled();
     expect(prisma.turma.update).not.toHaveBeenCalled();
+    expect(prisma.turma.create).not.toHaveBeenCalled();
+    expect(prisma.curso.create).not.toHaveBeenCalled();
   });
 
   it('confirma toda a planilha em uma transação, alterando apenas agendamentos de hoje em diante', async () => {
-    const resultado = await new ImportacaoPlanilhaService().processar(csv('57,B,Curso B,,Ana,Lab 2,Recanto,Tarde,,20'), true);
+    const resultado = await new ImportacaoPlanilhaService().processar(
+      csv('57,B,Curso B,,Ana,Lab 2,Recanto,Tarde,,20'),
+      true
+    );
     expect(resultado.linhas[0]?.operacao).toBe('2');
     expect(prisma.$transaction).toHaveBeenCalledTimes(1);
-    expect(prisma.agendamento.updateMany).toHaveBeenCalledWith({ where: { id_turmas: 57, data_aula: { gte: data('2026-10-15') } }, data: { id_salas: 2 } });
+    expect(prisma.agendamento.updateMany).toHaveBeenCalledWith({
+      where: { id_turmas: 57, data_aula: { gte: data('2026-10-15') } },
+      data: { id_salas: 2 }
+    });
     expect(prisma.agendamento.deleteMany).toBeUndefined();
   });
 
@@ -75,7 +116,10 @@ describe('ImportacaoPlanilhaService (sem banco)', () => {
 
   it('lista os IDs quando o código da turma é ambíguo', async () => {
     vi.mocked(prisma.turma.findMany).mockResolvedValue([turma, { ...turma, id_turmas: 58 }] as never);
-    const resultado = await new ImportacaoPlanilhaService().processar(csv(',B,Curso B,,Ana,Lab 2,Recanto,Tarde,,20'), false);
+    const resultado = await new ImportacaoPlanilhaService().processar(
+      csv(',B,Curso B,,Ana,Lab 2,Recanto,Tarde,,20'),
+      false
+    );
     expect(resultado.linhas[0]?.mensagem).toContain('57, 58');
   });
 
@@ -86,44 +130,193 @@ describe('ImportacaoPlanilhaService (sem banco)', () => {
     expect(calcular).toHaveBeenCalledWith(8, '2026-10-16', ['1', '2', '3', '4', '5'], undefined, 'Noite');
     expect(prisma.curso.create).toHaveBeenCalledTimes(1);
     expect(prisma.turma.create).toHaveBeenCalledTimes(1);
-    expect(prisma.agendamento.createMany).toHaveBeenCalledWith({ data: expect.arrayContaining([expect.objectContaining({ id_turmas: 59, id_salas: 2 })]) });
+    expect(prisma.agendamento.createMany).toHaveBeenCalledWith({
+      data: expect.arrayContaining([expect.objectContaining({ id_turmas: 59, id_salas: 2 })])
+    });
   });
 
   it('recompõe somente as aulas restantes da turma sem agendamentos futuros', async () => {
     vi.mocked(prisma.turma.findMany).mockResolvedValue([{ ...turma, agendamentos: [antiga] }] as never);
     vi.mocked(prisma.agendamento.findMany).mockResolvedValue([]);
-    const resultado = await new ImportacaoPlanilhaService().processar(csv('57,B,Curso B,,Ana,Lab 2,Recanto,Noite,,20'), true);
+    const resultado = await new ImportacaoPlanilhaService().processar(
+      csv('57,B,Curso B,,Ana,Lab 2,Recanto,Noite,,20'),
+      true
+    );
     expect(resultado.linhas[0]).toMatchObject({ operacao: '3', criados: 3, mantidos: 1 });
     expect(calcular).toHaveBeenCalledWith(9, '2026-10-15', ['1', '2', '3', '4', '5'], undefined, 'Noite');
     expect(prisma.agendamento.createMany).toHaveBeenCalledTimes(1);
     expect(prisma.agendamento.updateMany).not.toHaveBeenCalled();
   });
 
+  it('usa a coluna opcional dias_semana para turma nova e para aulas restantes na operação 3', async () => {
+    const service = new ImportacaoPlanilhaService();
+    const arqNova = Buffer.from(
+      'codigo_turma,curso,carga_horaria,sala,turno,data_inicio,dias_semana\n' +
+        'N1,Curso Novo,8,Lab 2,Noite,16/10/2026,"Ter, Qui, Sáb"'
+    );
+    await service.processar(arqNova, true);
+    expect(calcular).toHaveBeenCalledWith(8, '2026-10-16', ['2', '4', '6'], undefined, 'Noite');
+    expect(prisma.turma.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({ dias_semana: '2,4,6' })
+    });
+
+    vi.mocked(prisma.turma.findMany).mockResolvedValue([{ ...turma, agendamentos: [antiga] }] as never);
+    vi.mocked(prisma.agendamento.findMany).mockResolvedValue([]);
+    const arqOp3 = Buffer.from(
+      'id_turma,codigo_turma,curso,sala,turno,data_inicio,dias_semana\n57,B,Curso B,Lab 2,Noite,,"2,4,6"'
+    );
+    await service.processar(arqOp3, true);
+    expect(calcular).toHaveBeenLastCalledWith(9, '2026-10-15', ['2', '4', '6'], undefined, 'Noite');
+    expect(prisma.turma.update).toHaveBeenCalledWith({
+      where: { id_turmas: 57 },
+      data: expect.objectContaining({ dias_semana: '2,4,6' })
+    });
+  });
+
   it('sinaliza turma concluída sem criar novas aulas', async () => {
     const passadas = [1, 2, 3].map(id => ({ ...antiga, id_agendamento: id }));
     vi.mocked(prisma.turma.findMany).mockResolvedValue([{ ...turma, agendamentos: passadas }] as never);
     vi.mocked(prisma.agendamento.findMany).mockResolvedValue([]);
-    const resultado = await new ImportacaoPlanilhaService().processar(csv('57,B,Curso B,,Ana,Lab 2,Recanto,Tarde,,20'), true);
+    const resultado = await new ImportacaoPlanilhaService().processar(
+      csv('57,B,Curso B,,Ana,Lab 2,Recanto,Tarde,,20'),
+      true
+    );
     expect(resultado.linhas[0]).toMatchObject({ operacao: 'AVISO', criados: 0, mantidos: 3 });
     expect(prisma.turma.update).not.toHaveBeenCalled();
     expect(prisma.agendamento.createMany).not.toHaveBeenCalled();
   });
 
   it('detecta conflito de sala entre linhas e impede confirmar toda a planilha', async () => {
-    const arquivo = csv(',N1,Curso Novo,8,,Lab 2,Recanto,Noite,16/10/2026,20\n,N2,Curso Novo,8,,Lab 2,Recanto,Noite,16/10/2026,20');
+    const arquivo = csv(
+      ',N1,Curso Novo,8,,Lab 2,Recanto,Noite,16/10/2026,20\n,N2,Curso Novo,8,,Lab 2,Recanto,Noite,16/10/2026,20'
+    );
     const simulacao = await new ImportacaoPlanilhaService().processar(arquivo, false);
     expect(simulacao.linhas.map(linha => linha.operacao)).toEqual(['ERRO', 'ERRO']);
-    await expect(new ImportacaoPlanilhaService().processar(arquivo, true)).rejects.toThrow('nenhuma linha foi aplicada');
+    await expect(new ImportacaoPlanilhaService().processar(arquivo, true)).rejects.toThrow(
+      'nenhuma linha foi aplicada'
+    );
     expect(prisma.curso.create).not.toHaveBeenCalled();
     expect(prisma.turma.create).not.toHaveBeenCalled();
   });
 
   it('detecta conflito de instrutor no mesmo turno, mas não em turno diferente', async () => {
-    vi.mocked(prisma.agendamento.findMany).mockResolvedValue([{ ...futura, id_salas: 1, turma: { ...turma, id_turmas: 99, id_instrutores: 1, fk_id_turno: 2 } }] as never);
+    vi.mocked(prisma.agendamento.findMany).mockResolvedValue([
+      { ...futura, id_salas: 1, turma: { ...turma, id_turmas: 99, id_instrutores: 1, fk_id_turno: 2 } }
+    ] as never);
     const service = new ImportacaoPlanilhaService();
     const tarde = await service.processar(csv(',N,Curso Novo,8,Ana,Lab 2,Recanto,Tarde,16/10/2026,20'), false);
     const noite = await service.processar(csv(',N,Curso Novo,8,Ana,Lab 2,Recanto,Noite,16/10/2026,20'), false);
     expect(tarde.linhas[0]?.operacao).toBe('ERRO');
     expect(noite.linhas[0]?.operacao).toBe('1');
+  });
+
+  it('permite omitir local_sala quando a sala é única e pede local_sala quando o nome da sala é ambíguo', async () => {
+    vi.mocked(prisma.sala.findMany).mockResolvedValue([
+      { id_salas: 1, nome_sala: 'Sala 1', local: 'Talal', capacidade_maxima: 30 },
+      { id_salas: 2, nome_sala: 'Sala 1', local: 'Recanto', capacidade_maxima: 30 },
+      { id_salas: 3, nome_sala: 'Auditório', local: 'Talal', capacidade_maxima: 60 }
+    ] as never);
+    const service = new ImportacaoPlanilhaService();
+
+    const unica = await service.processar(
+      Buffer.from('codigo_turma,curso,sala,turno,data_inicio\nN1,Curso B,Auditório,Noite,16/10/2026'),
+      false
+    );
+    expect(unica.linhas[0]?.operacao).toBe('1');
+
+    const ambigua = await service.processar(
+      Buffer.from('codigo_turma,curso,sala,turno,data_inicio\nN2,Curso B,Sala 1,Noite,16/10/2026'),
+      false
+    );
+    expect(ambigua.linhas[0]?.operacao).toBe('ERRO');
+    expect(ambigua.linhas[0]?.mensagem).toContain('é ambígua');
+    expect(ambigua.linhas[0]?.mensagem).toContain('informe local_sala');
+  });
+
+  it('sugere "Você quis dizer X?" para instrutor, curso e sala não encontrados sem substituir automaticamente', async () => {
+    vi.mocked(prisma.instrutor.findMany).mockResolvedValue([
+      { id_instrutores: 1, nome_instrutor: 'Shirleny Andrade do Nascimento' }
+    ] as never);
+    vi.mocked(prisma.curso.findMany).mockResolvedValue([
+      { id_cursos: 1, nome_curso: 'Técnico em Administração', carga_horaria: 800, dias_letivos_padrao: '1,2,3,4,5' }
+    ] as never);
+    vi.mocked(prisma.sala.findMany).mockResolvedValue([
+      { id_salas: 1, nome_sala: 'Laboratório de TI 1', local: 'Talal', capacidade_maxima: 30 }
+    ] as never);
+
+    const service = new ImportacaoPlanilhaService();
+
+    const erroSala = await service.processar(
+      Buffer.from(
+        'codigo_turma,curso,sala,turno,data_inicio\nN1,Técnico em Administração,Laboratorio de TI,Noite,16/10/2026'
+      ),
+      false
+    );
+    expect(erroSala.linhas[0]?.operacao).toBe('ERRO');
+    expect(erroSala.linhas[0]?.mensagem).toContain('Você quis dizer "Laboratório de TI 1"?');
+
+    const erroCurso = await service.processar(
+      Buffer.from(
+        'codigo_turma,curso,sala,turno,data_inicio\nN1,Tecnico em Administracaoo,Laboratório de TI 1,Noite,16/10/2026'
+      ),
+      false
+    );
+    expect(erroCurso.linhas[0]?.operacao).toBe('ERRO');
+    expect(erroCurso.linhas[0]?.mensagem).toContain('Você quis dizer "Técnico em Administração"?');
+
+    const erroInstrutor = await service.processar(
+      Buffer.from(
+        'codigo_turma,curso,instrutor,sala,turno,data_inicio\n' +
+          'N1,Técnico em Administração,Shirleny Andrade Nascimento,Laboratório de TI 1,Noite,16/10/2026'
+      ),
+      false
+    );
+    expect(erroInstrutor.linhas[0]?.operacao).toBe('ERRO');
+    expect(erroInstrutor.linhas[0]?.mensagem).toContain('Você quis dizer "Shirleny Andrade do Nascimento"?');
+  });
+
+  it('sinaliza turno inferido na simulação e aceita mapeamento manual', async () => {
+    const service = new ImportacaoPlanilhaService();
+    const arquivo = Buffer.from(
+      'ColA,ColB,ColC,ColD,ColE\n2026.09.77,Curso B,Lab 2,14:00 às 18:00,16/10/2026'
+    );
+    const simulacao = await service.processar(arquivo, false, {
+      linha_cabecalho: 1,
+      mapeamento: {
+        codigo_turma: 0,
+        curso: 1,
+        sala: 2,
+        turno: 3,
+        data_inicio: 4
+      }
+    });
+    expect(simulacao.linhas[0]).toMatchObject({
+      operacao: '1',
+      turno_inferido: true
+    });
+    expect(simulacao.linhas[0]?.mensagem).toContain('inferido');
+  });
+
+  it('valida opções de requisição e rejeita mapeamento inválido na controller', () => {
+    const reqValido = {
+      query: {
+        aba: 'Turmas',
+        linha_cabecalho: '2',
+        mapeamento: JSON.stringify({ codigo_turma: 0, curso: 1, sala: 2, turno: 3, data_inicio: 4 })
+      },
+      header: () => undefined
+    } as unknown as Request;
+
+    expect(extrairOpcoesImportacao(reqValido)).toEqual({
+      aba: 'Turmas',
+      linha_cabecalho: 2,
+      mapeamento: { codigo_turma: 0, curso: 1, sala: 2, turno: 3, data_inicio: 4 }
+    });
+
+    const reqInvalido = {
+      query: { mapeamento: 'nao-e-json' },
+      header: () => undefined
+    } as unknown as Request;
+    expect(() => extrairOpcoesImportacao(reqInvalido)).toThrow('Parâmetro mapeamento inválido.');
   });
 });
