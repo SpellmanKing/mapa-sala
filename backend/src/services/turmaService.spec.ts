@@ -1,5 +1,6 @@
 import { Prisma, type Curso, type Sala, type Turno, type Turma } from '@prisma/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { calcularCronograma as calcularCronogramaSeedDemo, turmasFinais } from '../../prisma/seedDemo.js';
 import { prisma } from '../infrastructure/prismaClient.js';
 import { HttpError } from '../utils/errors.js';
 import { TurmaService } from './turmaService.js';
@@ -360,5 +361,29 @@ describe('TurmaService - núcleo operacional', () => {
       total_alunos: 20,
       dias_semana: ['1', '2']
     })).rejects.toThrow('Banco indisponível');
+  });
+
+  it('não gera falsos positivos de conflito de instrutor nas turmas de períodos sucessivos ou dias disjuntos do seed demo', () => {
+    const cronogramaDe = (codigo: string) => {
+      const item = turmasFinais.find(t => t.codigo_turma === codigo)!;
+      const turnoNome = item.horario.includes('19:00') ? 'Noite' : item.horario.includes('08:00') ? 'Manhã' : 'Tarde';
+      return new Set(
+        calcularCronogramaSeedDemo(item.carga_horaria, new Date(item.data_inicio), item.dias_semana, [], turnoNome).datasAulas
+      );
+    };
+    const intersecao = (a: string, b: string) => {
+      const datasA = cronogramaDe(a);
+      return [...cronogramaDe(b)].filter(d => datasA.has(d));
+    };
+
+    expect(intersecao('2026.29.15', '2026.29.17')).toEqual([]);
+    expect(intersecao('2026.29.15', '2026.29.16')).toEqual([]);
+    expect(intersecao('2026.09.82', '2026.09.103')).toEqual([]);
+    expect(intersecao('2026.09.71', '2026.09.80')).toEqual([]);
+    expect(intersecao('2025.09.121', '2026.09.65')).toEqual([]);
+
+    expect(intersecao('2025.09.57', '2025.09.114').length).toBeGreaterThan(0);
+    expect(intersecao('2025.09.126', '2026.09.77').length).toBeGreaterThan(0);
+    expect(intersecao('2026.09.34', '2026.29.14').length).toBeGreaterThan(0);
   });
 });

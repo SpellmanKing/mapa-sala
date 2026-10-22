@@ -8,7 +8,7 @@ import { seedReferenceData } from './seedReferenceData.js';
 const prisma = new PrismaClient();
 
 // Lista das 61 turmas candidatas do projeto
-const turmasFinais = [
+export const turmasFinais = [
   // --- CEILÂNDIA ---
   {
     codigo_turma: '2025.09.57',
@@ -101,7 +101,7 @@ const turmasFinais = [
   {
     codigo_turma: '2026.09.4',
     nome_curso: 'Assistente Administrativo',
-    data_inicio: '2026-03-09',
+    data_inicio: '2026-06-01',
     carga_horaria: 160,
     dias_semana: ['1', '2', '3', '4', '5'],
     horario: '19:00 às 22:00',
@@ -112,7 +112,7 @@ const turmasFinais = [
   {
     codigo_turma: '2026.09.108',
     nome_curso: 'Assistente de Tecnologias da Informação',
-    data_inicio: '2026-03-09',
+    data_inicio: '2026-08-03',
     carga_horaria: 200,
     dias_semana: ['1', '2', '3', '4', '5'],
     horario: '14:00 às 18:00',
@@ -123,18 +123,18 @@ const turmasFinais = [
   {
     codigo_turma: '2026.09.88',
     nome_curso: 'Barbeiro',
-    data_inicio: '2026-03-09',
-    carga_horaria: 160,
+    data_inicio: '2026-08-10',
+    carga_horaria: 172,
     dias_semana: ['1', '2', '3', '4', '5'],
     horario: '08:00 às 12:00',
     instrutor: 'Thiago de Sousa Costa',
-    estado: 'Em Andamento',
+    estado: 'Liberado Para Matrícula',
     local: 'Cep Talal Abu Allan'
   },
   {
     codigo_turma: '2026.09.10',
     nome_curso: 'Cabeleireiro',
-    data_inicio: '2026-03-09',
+    data_inicio: '2026-05-18',
     carga_horaria: 400,
     dias_semana: ['1', '2', '3', '4', '5'],
     horario: '19:00 às 22:00',
@@ -145,18 +145,18 @@ const turmasFinais = [
   {
     codigo_turma: '2026.09.37',
     nome_curso: 'Colorimetria para Maquiadores',
-    data_inicio: '2026-04-20',
+    data_inicio: '2026-09-08',
     carga_horaria: 40,
     dias_semana: ['1', '2', '3', '4', '5'],
     horario: '19:00 às 22:00',
     instrutor: 'Raquel Angel dos Santos Costa',
-    estado: 'Em Andamento',
+    estado: 'Liberado Para Matrícula',
     local: 'Cep Talal Abu Allan'
   },
   {
     codigo_turma: '2026.09.13',
     nome_curso: 'Costureiro',
-    data_inicio: '2026-03-09',
+    data_inicio: '2026-06-15',
     carga_horaria: 212,
     dias_semana: ['1', '2', '3', '4', '5'],
     horario: '14:00 às 18:00',
@@ -167,30 +167,30 @@ const turmasFinais = [
   {
     codigo_turma: '2026.09.38',
     nome_curso: 'Costureiro',
-    data_inicio: '2026-03-09',
+    data_inicio: '2026-09-08',
     carga_horaria: 212,
     dias_semana: ['1', '2', '3', '4', '5'],
     horario: '19:00 às 22:00',
     instrutor: 'Suely de Fátima Pereira',
-    estado: 'Em Andamento',
+    estado: 'Liberado Para Matrícula',
     local: 'Cep Talal Abu Allan'
   },
   {
     codigo_turma: '2026.09.117',
     nome_curso: 'Extensão de Cílios Fio a Fio',
-    data_inicio: '2026-04-06',
-    carga_horaria: 40,
+    data_inicio: '2026-08-10',
+    carga_horaria: 20,
     dias_semana: ['1', '2', '3', '4', '5'],
     horario: '13:00 às 17:00',
     instrutor: '',
-    estado: 'Em Andamento',
+    estado: 'Em Elaboração',
     local: 'Cep Talal Abu Allan'
   },
   {
     codigo_turma: '2026.09.82',
     nome_curso: 'Informática Windows e Office Fundamental',
-    data_inicio: '2026-03-09',
-    carga_horaria: 80,
+    data_inicio: '2026-06-01',
+    carga_horaria: 100,
     dias_semana: ['1', '2', '3', '4', '5'],
     horario: '19:00 às 22:00',
     instrutor: 'Rildo Goncalves',
@@ -200,7 +200,7 @@ const turmasFinais = [
   {
     codigo_turma: '2026.09.52',
     nome_curso: 'Manicure e Pedicure',
-    data_inicio: '2026-03-09',
+    data_inicio: '2026-05-11',
     carga_horaria: 160,
     dias_semana: ['1', '2', '3', '4', '5'],
     horario: '14:00 às 18:00',
@@ -211,18 +211,18 @@ const turmasFinais = [
   {
     codigo_turma: '2026.09.85',
     nome_curso: 'Manicure e Pedicure',
-    data_inicio: '2026-03-09',
+    data_inicio: '2026-10-05',
     carga_horaria: 160,
     dias_semana: ['1', '2', '3', '4', '5'],
     horario: '08:00 às 12:00',
     instrutor: 'LUZIA PEREIRA DE ANDRADE',
-    estado: 'Em Andamento',
+    estado: 'Liberado Para Matrícula',
     local: 'Cep Talal Abu Allan'
   },
   {
     codigo_turma: '2026.09.30',
     nome_curso: 'Maquiador',
-    data_inicio: '2026-03-09',
+    data_inicio: '2026-08-03',
     carga_horaria: 160,
     dias_semana: ['1', '2', '3', '4', '5'],
     horario: '14:00 às 18:00',
@@ -233,7 +233,7 @@ const turmasFinais = [
   {
     codigo_turma: '2026.09.112',
     nome_curso: 'Maquiagem Profissional Avançada',
-    data_inicio: '2026-03-09',
+    data_inicio: '2026-08-03',
     carga_horaria: 60,
     dias_semana: ['1', '2', '3', '4', '5'],
     horario: '19:00 às 22:00',
@@ -244,8 +244,8 @@ const turmasFinais = [
   {
     codigo_turma: '2026.09.102',
     nome_curso: 'Microsoft Power BI - Básico',
-    data_inicio: '2026-03-09',
-    carga_horaria: 40,
+    data_inicio: '2026-06-03',
+    carga_horaria: 20,
     dias_semana: ['1', '2', '3', '4', '5'],
     horario: '19:00 às 22:00',
     instrutor: 'Alessandro Alves de Vasconcelos',
@@ -255,7 +255,7 @@ const turmasFinais = [
   {
     codigo_turma: '2026.09.25',
     nome_curso: 'Modelista',
-    data_inicio: '2026-03-09',
+    data_inicio: '2026-06-01',
     carga_horaria: 210,
     dias_semana: ['1', '2', '3', '4', '5'],
     horario: '08:00 às 12:00',
@@ -266,8 +266,8 @@ const turmasFinais = [
   {
     codigo_turma: '2026.09.103',
     nome_curso: 'Office 365 com Inteligência Artificial',
-    data_inicio: '2026-04-06',
-    carga_horaria: 40,
+    data_inicio: '2026-08-03',
+    carga_horaria: 60,
     dias_semana: ['1', '2', '3', '4', '5'],
     horario: '19:00 às 22:00',
     instrutor: 'Rildo Goncalves',
@@ -277,20 +277,20 @@ const turmasFinais = [
   {
     codigo_turma: '2026.09.105',
     nome_curso: 'Técnicas Básicas de Maquiagem',
-    data_inicio: '2026-05-04',
-    carga_horaria: 20,
+    data_inicio: '2026-08-03',
+    carga_horaria: 80,
     dias_semana: ['1', '2', '3', '4', '5'],
     horario: '19:00 às 22:00',
     instrutor: '',
-    estado: 'Em Andamento',
+    estado: 'Liberado Para Matrícula',
     local: 'Cep Talal Abu Allan'
   },
   {
     codigo_turma: '2025.09.53',
     nome_curso: 'Técnico em Administração',
-    data_inicio: '2025-05-19',
-    carga_horaria: 1000,
-    dias_semana: ['1', '2', '3', '4', '5'],
+    data_inicio: '2025-03-10',
+    carga_horaria: 800,
+    dias_semana: ['2', '3', '4'],
     horario: '13:15 às 17:15',
     instrutor: 'Andre Luiz Soares Alonso',
     estado: 'Em Andamento',
@@ -299,9 +299,9 @@ const turmasFinais = [
   {
     codigo_turma: '2025.09.54',
     nome_curso: 'Técnico em Administração',
-    data_inicio: '2025-05-19',
-    carga_horaria: 1000,
-    dias_semana: ['1', '2', '3', '4', '5'],
+    data_inicio: '2025-03-10',
+    carga_horaria: 800,
+    dias_semana: ['2', '4', '6'],
     horario: '13:15 às 17:15',
     instrutor: 'Leandro das Chagas Ferreira',
     estado: 'Em Andamento',
@@ -310,9 +310,9 @@ const turmasFinais = [
   {
     codigo_turma: '2025.09.55',
     nome_curso: 'Técnico em Administração',
-    data_inicio: '2025-05-19',
-    carga_horaria: 1000,
-    dias_semana: ['1', '2', '3', '4', '5'],
+    data_inicio: '2025-03-11',
+    carga_horaria: 800,
+    dias_semana: ['2', '4', '6'],
     horario: '14:00 às 18:00',
     instrutor: 'Analice Barbosa Santos de Oliveira',
     estado: 'Em Andamento',
@@ -321,8 +321,8 @@ const turmasFinais = [
   {
     codigo_turma: '2026.09.34',
     nome_curso: 'Técnico em Administração',
-    data_inicio: '2026-03-09',
-    carga_horaria: 1000,
+    data_inicio: '2026-03-02',
+    carga_horaria: 800,
     dias_semana: ['1', '2', '3', '4', '5'],
     horario: '14:00 às 18:00',
     instrutor: 'José Chaves dos Santos',
@@ -332,9 +332,9 @@ const turmasFinais = [
   {
     codigo_turma: '2026.09.69',
     nome_curso: 'Técnico em Administração',
-    data_inicio: '2026-03-09',
-    carga_horaria: 1000,
-    dias_semana: ['1', '2', '3', '4', '5'],
+    data_inicio: '2026-02-25',
+    carga_horaria: 800,
+    dias_semana: ['1', '3', '5'],
     horario: '08:00 às 12:00',
     instrutor: 'Mariléia de Jesus Amorim',
     estado: 'Em Andamento',
@@ -343,9 +343,9 @@ const turmasFinais = [
   {
     codigo_turma: '2026.09.71',
     nome_curso: 'Técnico em Administração',
-    data_inicio: '2026-03-09',
-    carga_horaria: 1000,
-    dias_semana: ['1', '2', '3', '4', '5'],
+    data_inicio: '2026-02-26',
+    carga_horaria: 800,
+    dias_semana: ['2', '4', '5'],
     horario: '14:00 às 18:00',
     instrutor: 'José de Assis Custódio',
     estado: 'Em Andamento',
@@ -354,9 +354,9 @@ const turmasFinais = [
   {
     codigo_turma: '2026.09.77',
     nome_curso: 'Técnico em Administração',
-    data_inicio: '2026-03-09',
-    carga_horaria: 1000,
-    dias_semana: ['1', '2', '3', '4', '5'],
+    data_inicio: '2026-02-25',
+    carga_horaria: 800,
+    dias_semana: ['1', '3', '5'],
     horario: '08:00 às 12:00',
     instrutor: 'Dionísio Francisco Pereira',
     estado: 'Em Andamento',
@@ -365,9 +365,9 @@ const turmasFinais = [
   {
     codigo_turma: '2026.09.78',
     nome_curso: 'Técnico em Administração',
-    data_inicio: '2026-03-09',
-    carga_horaria: 1000,
-    dias_semana: ['1', '2', '3', '4', '5'],
+    data_inicio: '2026-03-10',
+    carga_horaria: 800,
+    dias_semana: ['2', '4', '6'],
     horario: '14:00 às 18:00',
     instrutor: 'Shirleny Andrade do Nascimento',
     estado: 'Em Andamento',
@@ -376,9 +376,9 @@ const turmasFinais = [
   {
     codigo_turma: '2026.09.80',
     nome_curso: 'Técnico em Administração',
-    data_inicio: '2026-03-09',
-    carga_horaria: 1000,
-    dias_semana: ['1', '2', '3', '4', '5'],
+    data_inicio: '2026-03-11',
+    carga_horaria: 800,
+    dias_semana: ['1', '3', '6'],
     horario: '14:00 às 18:00',
     instrutor: 'José de Assis Custódio',
     estado: 'Em Andamento',
@@ -387,9 +387,9 @@ const turmasFinais = [
   {
     codigo_turma: '2025.09.83',
     nome_curso: 'Técnico em Contabilidade',
-    data_inicio: '2025-08-25',
+    data_inicio: '2025-07-14',
     carga_horaria: 800,
-    dias_semana: ['1', '2', '3', '4', '5'],
+    dias_semana: ['1', '3', '5'],
     horario: '19:00 às 22:00',
     instrutor: 'José de Assis Custódio',
     estado: 'Em Andamento',
@@ -398,9 +398,9 @@ const turmasFinais = [
   {
     codigo_turma: '2025.09.119',
     nome_curso: 'Técnico em Desenvolvimento de Sistemas',
-    data_inicio: '2025-10-06',
+    data_inicio: '2025-03-10',
     carga_horaria: 1200,
-    dias_semana: ['1', '2', '3', '4', '5'],
+    dias_semana: ['1', '2', '3', '4'],
     horario: '14:00 às 18:00',
     instrutor: 'Wellerson Pereira do Couto',
     estado: 'Em Andamento',
@@ -409,7 +409,7 @@ const turmasFinais = [
   {
     codigo_turma: '2026.09.55',
     nome_curso: 'Técnico em Desenvolvimento de Sistemas',
-    data_inicio: '2026-03-09',
+    data_inicio: '2026-03-02',
     carga_horaria: 1200,
     dias_semana: ['1', '2', '3', '4', '5'],
     horario: '19:00 às 22:00',
@@ -420,7 +420,7 @@ const turmasFinais = [
   {
     codigo_turma: '2026.09.58',
     nome_curso: 'Técnico em Desenvolvimento de Sistemas',
-    data_inicio: '2026-03-09',
+    data_inicio: '2026-02-25',
     carga_horaria: 1200,
     dias_semana: ['1', '2', '3', '4', '5'],
     horario: '08:00 às 12:00',
@@ -431,7 +431,7 @@ const turmasFinais = [
   {
     codigo_turma: '2026.09.59',
     nome_curso: 'Técnico em Desenvolvimento de Sistemas',
-    data_inicio: '2026-03-09',
+    data_inicio: '2026-03-03',
     carga_horaria: 1200,
     dias_semana: ['1', '2', '3', '4', '5'],
     horario: '14:00 às 18:00',
@@ -453,9 +453,9 @@ const turmasFinais = [
   {
     codigo_turma: '2026.09.75',
     nome_curso: 'Técnico em Informática para Internet',
-    data_inicio: '2026-03-09',
+    data_inicio: '2026-02-25',
     carga_horaria: 1000,
-    dias_semana: ['1', '2', '3', '4', '5'],
+    dias_semana: ['1', '3', '4', '5'],
     horario: '14:00 às 18:00',
     instrutor: 'Ricardo de Souza Serra',
     estado: 'Em Andamento',
@@ -464,7 +464,7 @@ const turmasFinais = [
   {
     codigo_turma: '2025.09.121',
     nome_curso: 'Técnico em Marketing',
-    data_inicio: '2025-10-27',
+    data_inicio: '2025-03-10',
     carga_horaria: 800,
     dias_semana: ['1', '2', '3', '4', '5'],
     horario: '08:00 às 12:00',
@@ -475,9 +475,9 @@ const turmasFinais = [
   {
     codigo_turma: '2026.09.56',
     nome_curso: 'Técnico em Marketing',
-    data_inicio: '2026-03-09',
+    data_inicio: '2026-02-25',
     carga_horaria: 800,
-    dias_semana: ['1', '2', '3', '4', '5'],
+    dias_semana: ['1', '3', '5'],
     horario: '08:00 às 12:00',
     instrutor: 'Carlos Eduardo Alves Munis',
     estado: 'Em Andamento',
@@ -486,9 +486,9 @@ const turmasFinais = [
   {
     codigo_turma: '2026.09.65',
     nome_curso: 'Técnico em Marketing',
-    data_inicio: '2026-03-09',
+    data_inicio: '2026-02-26',
     carga_horaria: 800,
-    dias_semana: ['1', '2', '3', '4', '5'],
+    dias_semana: ['2', '4', '6'],
     horario: '08:00 às 12:00',
     instrutor: 'Lucas Augusto Esmeraldo de Oliveira',
     estado: 'Em Andamento',
@@ -497,9 +497,9 @@ const turmasFinais = [
   {
     codigo_turma: '2026.09.67',
     nome_curso: 'Técnico em Programação de Jogos Digitais',
-    data_inicio: '2026-03-09',
+    data_inicio: '2026-02-25',
     carga_horaria: 1000,
-    dias_semana: ['1', '2', '3', '4', '5'],
+    dias_semana: ['1', '2', '3', '4'],
     horario: '08:00 às 12:00',
     instrutor: 'Nicole Cândido de Oliveira Andrade',
     estado: 'Em Andamento',
@@ -508,7 +508,7 @@ const turmasFinais = [
   {
     codigo_turma: '2026.09.106',
     nome_curso: 'Técnico em Secretaria Escolar',
-    data_inicio: '2026-03-09',
+    data_inicio: '2026-06-03',
     carga_horaria: 800,
     dias_semana: ['1', '2', '3', '4', '5'],
     horario: '19:00 às 22:00',
@@ -519,9 +519,9 @@ const turmasFinais = [
   {
     codigo_turma: '2025.09.55',
     nome_curso: 'Técnico em Secretariado',
-    data_inicio: '2025-05-19',
+    data_inicio: '2025-03-10',
     carga_horaria: 800,
-    dias_semana: ['1', '2', '3', '4', '5'],
+    dias_semana: ['2', '4', '5'],
     horario: '13:15 às 17:15',
     instrutor: 'RICARDO PEREIRA GOMES DE ARAÚJO',
     estado: 'Em Andamento',
@@ -530,7 +530,7 @@ const turmasFinais = [
   {
     codigo_turma: '2026.09.107',
     nome_curso: 'Técnico em Secretariado',
-    data_inicio: '2026-03-09',
+    data_inicio: '2026-08-03',
     carga_horaria: 800,
     dias_semana: ['1', '2', '3', '4', '5'],
     horario: '19:00 às 22:00',
@@ -543,29 +543,29 @@ const turmasFinais = [
   {
     codigo_turma: '2026.29.18',
     nome_curso: 'Assistente Administrativo',
-    data_inicio: '2026-03-09',
+    data_inicio: '2026-10-05',
     carga_horaria: 160,
-    dias_semana: ['1', '2', '3', '4', '5'],
+    dias_semana: ['1', '3', '5'],
     horario: '14:00 às 18:00',
     instrutor: '',
-    estado: 'Em Andamento',
+    estado: 'Liberado Para Matrícula',
     local: 'Polo Recanto das Emas'
   },
   {
     codigo_turma: '2026.29.15',
     nome_curso: 'Assistente de Tecnologias da Informação',
-    data_inicio: '2026-03-09',
+    data_inicio: '2026-10-05',
     carga_horaria: 200,
     dias_semana: ['1', '2', '3', '4', '5'],
     horario: '14:00 às 18:00',
     instrutor: 'Cleiton Pereira Sousa',
-    estado: 'Em Andamento',
+    estado: 'Liberado Para Matrícula',
     local: 'Polo Recanto das Emas'
   },
   {
     codigo_turma: '2026.29.1',
     nome_curso: 'Cabeleireiro',
-    data_inicio: '2026-03-09',
+    data_inicio: '2026-03-16',
     carga_horaria: 400,
     dias_semana: ['1', '2', '3', '4', '5'],
     horario: '08:00 às 12:00',
@@ -576,8 +576,8 @@ const turmasFinais = [
   {
     codigo_turma: '2026.29.17',
     nome_curso: 'Informática Windows e Office Fundamental',
-    data_inicio: '2026-03-09',
-    carga_horaria: 80,
+    data_inicio: '2026-07-06',
+    carga_horaria: 100,
     dias_semana: ['1', '2', '3', '4', '5'],
     horario: '14:00 às 18:00',
     instrutor: 'Cleiton Pereira Sousa',
@@ -587,20 +587,20 @@ const turmasFinais = [
   {
     codigo_turma: '2026.29.16',
     nome_curso: 'Office 365 com Inteligência Artificial',
-    data_inicio: '2026-04-06',
-    carga_horaria: 40,
+    data_inicio: '2026-09-01',
+    carga_horaria: 60,
     dias_semana: ['1', '2', '3', '4', '5'],
     horario: '14:00 às 18:00',
     instrutor: 'Cleiton Pereira Sousa',
-    estado: 'Em Andamento',
+    estado: 'Liberado Para Matrícula',
     local: 'Polo Recanto das Emas'
   },
   {
     codigo_turma: '2026.29.7',
     nome_curso: 'Técnico em Administração',
-    data_inicio: '2026-03-09',
-    carga_horaria: 1000,
-    dias_semana: ['1', '2', '3', '4', '5'],
+    data_inicio: '2026-02-25',
+    carga_horaria: 800,
+    dias_semana: ['1', '3', '5'],
     horario: '08:00 às 12:00',
     instrutor: 'Flavia Renata Martins',
     estado: 'Em Andamento',
@@ -609,9 +609,9 @@ const turmasFinais = [
   {
     codigo_turma: '2026.29.10',
     nome_curso: 'Técnico em Administração',
-    data_inicio: '2026-03-09',
-    carga_horaria: 1000,
-    dias_semana: ['1', '2', '3', '4', '5'],
+    data_inicio: '2026-02-25',
+    carga_horaria: 800,
+    dias_semana: ['1', '3', '5'],
     horario: '14:00 às 18:00',
     instrutor: 'Flavia Renata Martins',
     estado: 'Em Andamento',
@@ -620,9 +620,9 @@ const turmasFinais = [
   {
     codigo_turma: '2026.29.11',
     nome_curso: 'Técnico em Administração',
-    data_inicio: '2026-03-09',
-    carga_horaria: 1000,
-    dias_semana: ['1', '2', '3', '4', '5'],
+    data_inicio: '2026-02-25',
+    carga_horaria: 800,
+    dias_semana: ['2', '3', '4'],
     horario: '14:00 às 18:00',
     instrutor: 'Ricardo da Silva Pierre',
     estado: 'Em Andamento',
@@ -631,9 +631,9 @@ const turmasFinais = [
   {
     codigo_turma: '2026.29.14',
     nome_curso: 'Técnico em Administração',
-    data_inicio: '2026-03-09',
-    carga_horaria: 1000,
-    dias_semana: ['1', '2', '3', '4', '5'],
+    data_inicio: '2026-03-10',
+    carga_horaria: 800,
+    dias_semana: ['2', '4', '6'],
     horario: '14:00 às 18:00',
     instrutor: 'José Chaves dos Santos',
     estado: 'Em Andamento',
@@ -642,7 +642,7 @@ const turmasFinais = [
   {
     codigo_turma: '2026.29.5',
     nome_curso: 'Técnico em Desenvolvimento de Sistemas',
-    data_inicio: '2026-03-09',
+    data_inicio: '2026-02-25',
     carga_horaria: 1200,
     dias_semana: ['1', '2', '3', '4', '5'],
     horario: '08:00 às 12:00',
@@ -653,9 +653,9 @@ const turmasFinais = [
   {
     codigo_turma: '2026.29.12',
     nome_curso: 'Técnico em Marketing',
-    data_inicio: '2026-03-09',
+    data_inicio: '2026-02-26',
     carga_horaria: 800,
-    dias_semana: ['1', '2', '3', '4', '5'],
+    dias_semana: ['2', '4', '6'],
     horario: '14:00 às 18:00',
     instrutor: 'Flavia Renata Martins',
     estado: 'Em Andamento',
@@ -664,9 +664,9 @@ const turmasFinais = [
   {
     codigo_turma: '2026.29.13',
     nome_curso: 'Técnico em Marketing',
-    data_inicio: '2026-03-09',
+    data_inicio: '2026-02-26',
     carga_horaria: 800,
-    dias_semana: ['1', '2', '3', '4', '5'],
+    dias_semana: ['2', '4', '6'],
     horario: '14:00 às 18:00',
     instrutor: 'Carlos Eduardo Alves Munis',
     estado: 'Em Andamento',
@@ -685,7 +685,7 @@ const turmasFinais = [
   }
 ];
 
-function calcularCronograma(cargaHoraria: number, dataInicio: Date, diasSemana: string[], feriados: string[], turnoNome: string) {
+export function calcularCronograma(cargaHoraria: number, dataInicio: Date, diasSemana: string[], feriados: string[], turnoNome: string) {
   const horasPorDia = horasPorTurno(turnoNome);
   const classesNeeded = Math.ceil(cargaHoraria / horasPorDia);
 
@@ -822,7 +822,7 @@ export async function seedDemo() {
     }
     for (const [nome, carga] of cursosSeed) {
       await tx.curso.upsert({
-        where: { nome_curso: nome }, update: {},
+        where: { nome_curso: nome }, update: { carga_horaria: carga },
         create: { nome_curso: nome, carga_horaria: carga, segmento: 'Geral', modalidade: 'Presencial', valor: 0 }
       });
     }

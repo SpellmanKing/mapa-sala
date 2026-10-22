@@ -496,7 +496,7 @@ export function PainelPage() {
         id_cursos: Number(turmaEditando.cursoId),
         data_inicio: dadosEdicao.dataInicio,
         fk_id_turno: getShiftId(dadosEdicao.turno),
-        total_alunos: Number(turmaEditando.totalAlunos) || 1,
+        total_alunos: Number(turmaEditando.totalAlunos) || 0,
         dias_semana: dadosEdicao.diasSemana,
         id_instrutores: dadosEdicao.instrutorId ? Number(dadosEdicao.instrutorId) : null,
         ignore_turma_id: Number(turmaEditando.id)
@@ -1266,7 +1266,7 @@ export function PainelPage() {
                     <div>
                       <dt className="text-[10px] font-bold uppercase tracking-wide text-text-muted">Alunos</dt>
                       <dd className="font-bold text-text-main flex items-center gap-1.5">
-                        <Users size={13} className="text-text-muted" /> {turma.totalAlunos}
+                        <Users size={13} className="text-text-muted" /> {turma.totalAlunos > 0 ? turma.totalAlunos : '—'}
                       </dd>
                     </div>
                     <div className="col-span-2">

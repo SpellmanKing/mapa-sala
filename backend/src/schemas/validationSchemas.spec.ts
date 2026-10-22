@@ -5,7 +5,7 @@ import { createCursoSchema } from './cursoSchema.js';
 import { createFeriadoSchema, updateFeriadoSchema } from './feriadoSchema.js';
 import { createInstrutorSchema, updateInstrutorSchema } from './instrutorSchema.js';
 import { createSalaSchema } from './salaSchema.js';
-import { alocarTurmaSchema } from './turmaSchema.js';
+import { alocarTurmaSchema, disponibilidadeTurmaSchema } from './turmaSchema.js';
 
 describe('schemas de entrada', () => {
   it('aceita um feriado válido', () => {
@@ -68,5 +68,12 @@ describe('schemas de entrada', () => {
       total_alunos: -2,
       dias_semana: ['1']
     }).success).toBe(false);
+    expect(disponibilidadeTurmaSchema.safeParse({
+      id_cursos: 1,
+      data_inicio: '2026-09-01',
+      fk_id_turno: 1,
+      total_alunos: 0,
+      dias_semana: ['1']
+    }).success).toBe(true);
   });
 });
