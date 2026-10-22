@@ -19,6 +19,24 @@ describe('CalculadoraService', () => {
     calculadora = new CalculadoraService();
   });
 
+  it.each([
+    ['Manhã', 4, 3],
+    ['Tarde', 4, 3],
+    ['Noite', 3, 4]
+  ])('usa a duração de %s quando horasPorDia é omitido', async (turno, horas, aulas) => {
+    vi.mocked(prisma.feriadosRecessos.findMany).mockResolvedValueOnce([]);
+    const resultado = await calculadora.calcularCronograma(10, '2026-03-02', ['1', '2', '3', '4', '5'], undefined, turno);
+    expect(resultado.horasPorAula).toBe(horas);
+    expect(resultado.totalAulas).toBe(aulas);
+  });
+
+  it('prioriza horasPorDia explícito sobre o turno', async () => {
+    vi.mocked(prisma.feriadosRecessos.findMany).mockResolvedValueOnce([]);
+    const resultado = await calculadora.calcularCronograma(10, '2026-03-02', ['1', '2', '3', '4', '5'], 5, 'Noite');
+    expect(resultado.totalAulas).toBe(2);
+    expect(resultado.horasPorAula).toBe(5);
+  });
+
   it('deve calcular corretamente um cronograma simples de 5 dias úteis sem feriados', async () => {
     // Mock sem feriados
     vi.mocked(prisma.feriadosRecessos.findMany).mockResolvedValueOnce([]);

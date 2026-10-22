@@ -1,6 +1,7 @@
 import { Prisma } from '@prisma/client';
 import { prisma } from '../infrastructure/prismaClient.js';
 import { HttpError } from '../utils/errors.js';
+import { horasPorTurno } from '../utils/horasPorTurno.js';
 import { CalculadoraService } from './calculadoraService.js';
 
 function formatarDataBR(data: Date | string): string {
@@ -106,7 +107,7 @@ export class TurmaService {
     ].sort();
 
     for (const chave of chaves) {
-      await tx.$queryRaw`SELECT pg_advisory_xact_lock(hashtextextended(${chave}, 0))`;
+      await tx.$queryRaw`SELECT pg_advisory_xact_lock(hashtextextended(${chave}, 0))::text`;
     }
   }
 
@@ -147,11 +148,14 @@ export class TurmaService {
     const curso = await prisma.curso.findUnique({ where: { id_cursos: data.id_cursos } });
     if (!curso) throw new HttpError(404, 'Curso não encontrado');
 
-    const idTurnoReal = await this.obterIdTurnoReal(data.fk_id_turno);
+    const turnoReal = await this.obterTurnoReal(data.fk_id_turno);
+    const idTurnoReal = turnoReal.id_turno;
     const cronograma = await this.calculadoraService.calcularCronograma(
       curso.carga_horaria,
       data.data_inicio,
-      data.dias_semana
+      data.dias_semana,
+      undefined,
+      turnoReal.nome_turno
     );
     const datas = cronograma.datasAulas.map(dataAula => new Date(dataAula));
     const idInstrutor = data.id_instrutores === undefined
@@ -233,19 +237,19 @@ export class TurmaService {
     };
   }
 
-  private async obterIdTurnoReal(idOuNome: number | string): Promise<number> {
+  private async obterTurnoReal(idOuNome: number | string) {
     const nome = typeof idOuNome === 'string'
       ? idOuNome
       : idOuNome === 1 ? 'Manhã' : idOuNome === 2 ? 'Tarde' : idOuNome === 3 ? 'Noite' : null;
 
     if (nome) {
       const t = await prisma.turno.findFirst({ where: { nome_turno: nome } });
-      if (t) return t.id_turno;
+      if (t) return t;
     }
 
     if (typeof idOuNome === 'number') {
       const t = await prisma.turno.findUnique({ where: { id_turno: idOuNome } });
-      if (t) return t.id_turno;
+      if (t) return t;
     }
 
     throw new HttpError(400, 'Turno inválido');
@@ -272,13 +276,15 @@ export class TurmaService {
 
     const diasSemana = data.dias_semana;
 
+    const turnoReal = await this.obterTurnoReal(data.fk_id_turno);
+    const idTurnoReal = turnoReal.id_turno;
     const cronograma = await this.calculadoraService.calcularCronograma(
       curso.carga_horaria,
       data.data_inicio,
-      diasSemana
+      diasSemana,
+      undefined,
+      turnoReal.nome_turno
     );
-
-    const idTurnoReal = await this.obterIdTurnoReal(data.fk_id_turno);
 
     const datas = cronograma.datasAulas.map(d => new Date(d));
     const idInstrutor = data.id_instrutores === undefined
@@ -333,6 +339,7 @@ export class TurmaService {
       const agendamentosParaCriar = cronograma.datasAulas.map(dataAula => ({
         id_turmas: turma.id_turmas,
         id_salas: data.id_salas,
+        fk_id_turno: idTurnoReal,
         data_aula: new Date(dataAula),
       }));
 
@@ -359,20 +366,34 @@ export class TurmaService {
     if (!turma) throw new HttpError(404, 'Turma não encontrada');
 
     const diasSemana = data.dias_semana;
-    
-    const cronograma = await this.calculadoraService.calcularCronograma(
-      turma.curso.carga_horaria,
-      data.data_inicio,
-      diasSemana
-    );
-
-    const idTurnoReal = await this.obterIdTurnoReal(data.fk_id_turno);
-
-    const datas = cronograma.datasAulas.map(d => new Date(d));
+    const turnoReal = await this.obterTurnoReal(data.fk_id_turno);
+    const idTurnoReal = turnoReal.id_turno;
     const idInstrutor = data.id_instrutores !== undefined
       ? data.id_instrutores
       : turma.id_instrutores;
+    const agora = new Date();
+    const hoje = new Date(Date.UTC(agora.getFullYear(), agora.getMonth(), agora.getDate()));
     return prisma.$transaction(async (tx) => {
+      const anteriores = await tx.agendamento.findMany({
+        where: { id_turmas, data_aula: { lt: hoje } },
+        orderBy: { data_aula: 'desc' },
+        select: { data_aula: true }
+      });
+      if (anteriores.length && (
+        idTurnoReal !== turma.fk_id_turno ||
+        data.data_inicio.toISOString().slice(0, 10) !== turma.data_inicio.toISOString().slice(0, 10)
+      )) {
+        throw new HttpError(409, 'Turma iniciada não pode mudar de turno nem de data de início.');
+      }
+      const inicio = anteriores.length || data.data_inicio < hoje ? hoje : data.data_inicio;
+      const aulasRestantes = Math.max(0, Math.ceil(turma.curso.carga_horaria / horasPorTurno(turnoReal.nome_turno)) - anteriores.length);
+      const cronograma = aulasRestantes
+        ? await this.calculadoraService.calcularCronograma(
+            anteriores.length ? aulasRestantes * horasPorTurno(turnoReal.nome_turno) : turma.curso.carga_horaria,
+            inicio, diasSemana, undefined, turnoReal.nome_turno
+          )
+        : null;
+      const datas = cronograma?.datasAulas.map(d => new Date(d)) ?? [];
       await this.bloquearRecursos(tx, idTurnoReal, data.id_salas, idInstrutor);
       const conflitos = await this.obterConflitosRecursos(
         tx,
@@ -384,14 +405,14 @@ export class TurmaService {
       );
       this.validarConflitos(conflitos, data.id_salas, idInstrutor);
 
-      await tx.agendamento.deleteMany({ where: { id_turmas } });
+      await tx.agendamento.deleteMany({ where: { id_turmas, data_aula: { gte: hoje } } });
       
       await tx.turma.update({
         where: { id_turmas },
         data: {
           fk_id_turno: idTurnoReal,
-          data_inicio: new Date(data.data_inicio),
-          data_termino: new Date(cronograma.dataTermino || data.data_inicio),
+          data_inicio: anteriores.length ? turma.data_inicio : inicio,
+          data_termino: datas.at(-1) ?? anteriores[0]?.data_aula ?? inicio,
           dias_semana: diasSemana.join(','),
           id_instrutores: idInstrutor
         }
@@ -400,10 +421,11 @@ export class TurmaService {
       const agendamentosParaCriar = datas.map(dataAula => ({
         id_turmas,
         id_salas: data.id_salas,
+        fk_id_turno: idTurnoReal,
         data_aula: dataAula,
       }));
 
-      await tx.agendamento.createMany({ data: agendamentosParaCriar });
+      if (agendamentosParaCriar.length) await tx.agendamento.createMany({ data: agendamentosParaCriar });
 
       return tx.turma.findUnique({
         where: { id_turmas },

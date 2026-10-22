@@ -23,7 +23,6 @@ import { DigitalClock } from '../components/painel/DigitalClock';
 import { NovoAgendamentoModal } from '../components/painel/NovoAgendamentoModal';
 import { EditTurmaModal } from '../components/painel/EditTurmaModal';
 import { formatDateInput } from '../utils/date';
-import { useAuth } from '../context/AuthContext';
 import { getShiftId, SHIFTS } from '../constants/referenceData';
 
 const TURNOS = SHIFTS.map(shift => shift.label);
@@ -107,7 +106,6 @@ export function PainelPage() {
     isLoading
   } = useAppData();
   const { showToast } = useAppUi();
-  const { can } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -291,23 +289,10 @@ export function PainelPage() {
   useEffect(() => {
     const pageState = location.state as {
       novaAlocacao?: CalculoImportado;
-      accessDenied?: boolean;
     } | null;
-
-    if (pageState?.accessDenied) {
-      showToast('Seu perfil não possui permissão para acessar o gerenciamento.', 'error');
-      navigate('/painel', { replace: true, state: null });
-      return;
-    }
 
     const transferencia = pageState?.novaAlocacao;
     if (!transferencia || transferenciaProcessada.current) return;
-    if (!can('ALLOCATE')) {
-      showToast('Seu perfil permite apenas consultar as alocações.', 'info');
-      navigate('/painel', { replace: true, state: null });
-      return;
-    }
-
     const curso = transferencia.cursoId
       ? cursos.find(item => item.id === transferencia.cursoId)
       : undefined;
@@ -326,7 +311,7 @@ export function PainelPage() {
     setCalculoImportado(transferencia);
     setModalOpen(true);
     navigate('/painel', { replace: true, state: null });
-  }, [can, cursos, location.state, navigate, showToast]);
+  }, [cursos, location.state, navigate]);
 
   // --- LÓGICA DO MODAL DE EDIÇÃO E REALOCAÇÃO ---
   const [editTurmaModalOpen, setEditTurmaModalOpen] = useState(false);
@@ -349,7 +334,7 @@ export function PainelPage() {
       if ((e.key === 't' || e.key === 'T') && !modalOpen && !editTurmaModalOpen && !deleteModal.open) {
         e.preventDefault();
         handleToggleModoTV();
-      } else if ((e.key === 'n' || e.key === 'N') && can('ALLOCATE') && !modalOpen && !editTurmaModalOpen && !deleteModal.open) {
+      } else if ((e.key === 'n' || e.key === 'N') && !modalOpen && !editTurmaModalOpen && !deleteModal.open) {
         e.preventDefault();
         setModalOpen(true);
       }
@@ -357,7 +342,7 @@ export function PainelPage() {
 
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
-  }, [can, modoTV, modalOpen, editTurmaModalOpen, deleteModal.open]);
+  }, [modoTV, modalOpen, editTurmaModalOpen, deleteModal.open]);
 
   // Helper para buscar informações de uma sala
   const getSalaInfo = (salaId: string): Sala | undefined => {
@@ -511,7 +496,7 @@ export function PainelPage() {
         id_cursos: Number(turmaEditando.cursoId),
         data_inicio: dadosEdicao.dataInicio,
         fk_id_turno: getShiftId(dadosEdicao.turno),
-        total_alunos: Number(turmaEditando.totalAlunos) || 1,
+        total_alunos: Number(turmaEditando.totalAlunos) || 0,
         dias_semana: dadosEdicao.diasSemana,
         id_instrutores: dadosEdicao.instrutorId ? Number(dadosEdicao.instrutorId) : null,
         ignore_turma_id: Number(turmaEditando.id)
@@ -625,7 +610,6 @@ export function PainelPage() {
   };
 
   const handleEditClick = (turma: any) => {
-    if (!can('ALLOCATE')) return;
     setTurmaEditando(turma);
     setDadosEdicao({
       salaId: turma.salaId,
@@ -777,12 +761,12 @@ export function PainelPage() {
       
       {modoTV ? (
         /* ================= CABEÇALHO MODO TV ================= */
-        <div className="flex justify-between items-center p-4 shrink-0 bg-card/40 border-b border-border/30 relative z-20 gap-3">
+        <div className="relative z-20 flex shrink-0 flex-wrap items-center justify-between gap-3 border-b border-border/30 bg-card/40 p-2 sm:p-4">
           {/* Relógio Digital Modularizado (Horário de Brasília) + Data */}
           <DigitalClock variant="tv" />
 
           {/* Título Central */}
-          <div className="hidden md:flex items-center gap-2">
+          <div className="hidden items-center gap-2 lg:flex">
             <span className="font-display font-black text-sm uppercase tracking-widest text-secondary dark:text-primary">
               Senac Ceilândia
             </span>
@@ -794,7 +778,7 @@ export function PainelPage() {
 
           <div className="flex items-center gap-2">
             {/* Total de Turmas em Andamento com Divisão Presencial e Remoto */}
-            <div className="flex items-center gap-1.5 shrink-0 select-none">
+            <div className="hidden items-center gap-1.5 shrink-0 select-none lg:flex">
               <div className="flex items-center gap-1.5 bg-primary/10 border border-primary/20 px-2.5 py-1.5 rounded-xl text-primary shadow-xs text-xs font-black uppercase tracking-wider">
                 Total: {totalTurmasVisiveis}
               </div>
@@ -809,7 +793,7 @@ export function PainelPage() {
             </div>
 
             {/* Seletor Rápido de Calibragem TV */}
-            <div className="flex items-center gap-1 bg-surface/80 border border-border px-2 py-1 rounded-xl shadow-xs text-xs font-bold">
+            <div className="hidden items-center gap-1 bg-surface/80 border border-border px-2 py-1 rounded-xl shadow-xs text-xs font-bold lg:flex">
               <span className="text-text-muted text-[10px] uppercase font-black px-1">Escala TV:</span>
               <button 
                 onClick={() => handleSetTvZoom(60)}
@@ -861,9 +845,9 @@ export function PainelPage() {
             <button
               onClick={handleToggleModoTV}
               title="Sair do Modo TV (Esc)"
-              className="p-2 px-4 rounded-xl border flex items-center gap-1.5 text-xs font-black active:scale-95 transition-all shadow-sm cursor-pointer bg-input border-border text-text-main hover:bg-surface"
+              className="flex min-h-11 min-w-11 items-center justify-center gap-1.5 rounded-xl border border-border bg-input p-2 text-xs font-black text-text-main shadow-sm transition-all hover:bg-surface active:scale-95 cursor-pointer sm:min-w-0 sm:px-4 lg:min-h-0"
             >
-              <Minimize2 size={14} /> Sair TV
+              <Minimize2 size={14} /> <span className="hidden sm:inline">Sair TV</span>
             </button>
           </div>
         </div>
@@ -892,16 +876,14 @@ export function PainelPage() {
                 <DigitalClock variant="default" />
               </div>
 
-              {can('ALLOCATE') && (
-                <button
+              <button
                   type="button"
                   onClick={() => setModalOpen(true)}
                   className="bg-primary text-white font-black py-2.5 px-4 rounded-xl shadow-md hover:bg-primary/90 transition-colors flex items-center justify-center gap-2 text-sm cursor-pointer flex-1 sm:flex-none"
                   title="Atalho: pressione N no teclado"
                 >
                   <Plus size={16} /> Alocar Turma
-                </button>
-              )}
+              </button>
 
               {/* Botão de Modo TV */}
               <button
@@ -949,7 +931,7 @@ export function PainelPage() {
                   <button
                     type="button"
                     onClick={navSemanaAnterior}
-                    className="p-1.5 hover:bg-card rounded-lg text-text-muted hover:text-text-main cursor-pointer shrink-0"
+                    className="inline-flex min-h-11 min-w-11 shrink-0 items-center justify-center rounded-lg p-1.5 text-text-muted hover:bg-card hover:text-text-main cursor-pointer lg:min-h-0 lg:min-w-0"
                     title="Semana Anterior"
                     aria-label="Ver semana anterior"
                   >
@@ -961,7 +943,7 @@ export function PainelPage() {
                   <button
                     type="button"
                     onClick={navProximaSemana}
-                    className="p-1.5 hover:bg-card rounded-lg text-text-muted hover:text-text-main cursor-pointer shrink-0"
+                    className="inline-flex min-h-11 min-w-11 shrink-0 items-center justify-center rounded-lg p-1.5 text-text-muted hover:bg-card hover:text-text-main cursor-pointer lg:min-h-0 lg:min-w-0"
                     title="Próxima Semana"
                     aria-label="Ver próxima semana"
                   >
@@ -1009,13 +991,13 @@ export function PainelPage() {
                   placeholder="Buscar turma, curso, sala ou instrutor..."
                   value={searchTurma}
                   onChange={e => setSearchTurma(e.target.value)}
-                  className="w-full bg-input text-text-main text-sm font-semibold outline-none border border-border rounded-xl pl-9 pr-9 py-2.5 focus:border-primary transition-all shadow-xs"
+                  className="w-full bg-input text-text-main text-sm font-semibold outline-none border border-border rounded-xl pl-9 pr-12 py-2.5 focus:border-primary transition-all shadow-xs lg:pr-9"
                 />
                 {searchTurma && (
                   <button
                     type="button"
                     onClick={() => setSearchTurma('')}
-                    className="absolute right-2 top-1/2 -translate-y-1/2 text-text-muted hover:text-text-main p-1.5 rounded-lg cursor-pointer"
+                    className="absolute right-0.5 top-1/2 inline-flex min-h-11 min-w-11 -translate-y-1/2 items-center justify-center rounded-lg p-1.5 text-text-muted hover:text-text-main cursor-pointer lg:right-2 lg:min-h-0 lg:min-w-0"
                     title="Limpar busca"
                     aria-label="Limpar busca"
                   >
@@ -1166,15 +1148,13 @@ export function PainelPage() {
                   ? 'Ajuste ou limpe os filtros para ampliar os resultados.'
                   : 'Não há turmas para o período selecionado.'}
               </p>
-              {(filtrosAtivos > 0 || can('ALLOCATE')) && (
-                <button
+              <button
                   type="button"
                   onClick={filtrosAtivos > 0 ? limparFiltros : () => setModalOpen(true)}
                   className="mt-5 bg-primary text-white font-bold px-4 py-2.5 rounded-xl text-sm hover:bg-primary/90 transition-colors cursor-pointer"
                 >
                   {filtrosAtivos > 0 ? 'Limpar filtros' : 'Nova alocação'}
-                </button>
-              )}
+              </button>
             </div>
           )}
 
@@ -1199,8 +1179,8 @@ export function PainelPage() {
             const turmasRemotas = turmasDoTurno.filter(t => t.modalidade === 'Remoto');
 
             const gridClasses = modoTV
-              ? 'grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-4'
-              : 'grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-4';
+              ? 'grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6'
+              : 'grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4';
 
             // Renderizador do Card de Turma com Divisão de Cores: Vermelho (Presencial) | Azul (Remoto)
             const renderCardTurma = (turma: TurmaDetalhada) => {
@@ -1234,9 +1214,8 @@ export function PainelPage() {
                   type="button"
                   key={turma.id}
                   onClick={() => handleEditClick(turma)}
-                  disabled={!can('ALLOCATE')}
-                  aria-label={can('ALLOCATE') ? `Editar alocação da turma ${turma.codigo}, ${turma.cursoNome}` : `Turma ${turma.codigo}, ${turma.cursoNome}`}
-                  className={`glass-panel w-full text-left rounded-2xl shadow-xs border border-border/80 transition-[border-color,box-shadow,transform] duration-200 flex flex-col bg-card/70 ${can('ALLOCATE') ? 'cursor-pointer hover:-translate-y-0.5 hover:shadow-md' : 'cursor-default'} ${cardProportionClass} ${cardBorderColor} ${
+                  aria-label={`Editar alocação da turma ${turma.codigo}, ${turma.cursoNome}`}
+                  className={`glass-panel w-full text-left rounded-2xl shadow-xs border border-border/80 transition-[border-color,box-shadow,transform] duration-200 flex flex-col bg-card/70 cursor-pointer hover:-translate-y-0.5 hover:shadow-md ${cardProportionClass} ${cardBorderColor} ${
                     isHighlighted ? (isRemoto ? 'ring-2 ring-blue-500 ring-offset-2 ring-offset-bg shadow-md' : 'ring-2 ring-red-500 ring-offset-2 ring-offset-bg shadow-md') : ''
                   }`}
                 >
@@ -1287,7 +1266,7 @@ export function PainelPage() {
                     <div>
                       <dt className="text-[10px] font-bold uppercase tracking-wide text-text-muted">Alunos</dt>
                       <dd className="font-bold text-text-main flex items-center gap-1.5">
-                        <Users size={13} className="text-text-muted" /> {turma.totalAlunos}
+                        <Users size={13} className="text-text-muted" /> {turma.totalAlunos > 0 ? turma.totalAlunos : '—'}
                       </dd>
                     </div>
                     <div className="col-span-2">

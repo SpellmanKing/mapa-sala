@@ -1,12 +1,52 @@
 import 'dotenv/config';
 import { PrismaClient } from '@prisma/client';
-import xlsx from 'xlsx';
 import path from 'path';
+import fs from 'fs';
+import { horasPorTurno } from '../src/utils/horasPorTurno.js';
+import { seedReferenceData } from './seedReferenceData.js';
 
 const prisma = new PrismaClient();
 
-// Lista das 61 turmas das imagens
-const turmasFinais = [
+export const CURSO_ESPERADO_POR_CODIGO_DUPLICADO: Readonly<Record<string, string>> = {
+  '2026.09.78': 'Técnico em Administração',
+  '2025.09.55': 'Técnico em Secretariado'
+};
+
+export function normalizarChaveNome(valor: string): string {
+  return valor
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+export function verificarCodigoDuplicado(
+  turma: { codigo_turma: string; nome_curso: string },
+  codigosVistos: Set<string>,
+  mapeamentoCursos: Readonly<Record<string, string>> = CURSO_ESPERADO_POR_CODIGO_DUPLICADO
+): { aceita: true } | { aceita: false; motivo: string } {
+  const cursoEsperado = mapeamentoCursos[turma.codigo_turma];
+  if (cursoEsperado && turma.nome_curso.trim().toLowerCase() !== cursoEsperado.trim().toLowerCase()) {
+    return {
+      aceita: false,
+      motivo: `Código duplicado: pertence a outra turma (${cursoEsperado}); código correto desconhecido`
+    };
+  }
+
+  if (codigosVistos.has(turma.codigo_turma)) {
+    return {
+      aceita: false,
+      motivo: 'Código de turma duplicado (mantida a primeira ocorrência)'
+    };
+  }
+
+  codigosVistos.add(turma.codigo_turma);
+  return { aceita: true };
+}
+
+// Lista das 61 turmas candidatas do projeto
+export const turmasFinais = [
   // --- CEILÂNDIA ---
   {
     codigo_turma: '2025.09.57',
@@ -37,7 +77,7 @@ const turmasFinais = [
     carga_horaria: 1020,
     dias_semana: ['1', '2', '3', '4', '5'],
     horario: '08:00 às 12:00',
-    instrutor: 'Ricardo da Silva Pierre',
+    instrutor: 'Ricardo Da Silva Pierre',
     estado: 'Em Andamento',
     local: 'Cep Talal Abu Allan'
   },
@@ -48,7 +88,7 @@ const turmasFinais = [
     carga_horaria: 1020,
     dias_semana: ['1', '2', '3', '4', '5'],
     horario: '08:00 às 12:00',
-    instrutor: 'Dionísio Francisco Pereira',
+    instrutor: 'Dionisio Francisco Pereira',
     estado: 'Em Andamento',
     local: 'Cep Talal Abu Allan'
   },
@@ -59,7 +99,7 @@ const turmasFinais = [
     carga_horaria: 1020,
     dias_semana: ['1', '2', '3', '4', '5'],
     horario: '14:00 às 18:00',
-    instrutor: 'ROSIVANE MACHADO CAVALCANTE MONTEIRO',
+    instrutor: 'Rosivane Machado Cavalcante Monteiro',
     estado: 'Em Andamento',
     local: 'Cep Talal Abu Allan'
   },
@@ -92,7 +132,7 @@ const turmasFinais = [
     carga_horaria: 1020,
     dias_semana: ['1', '2', '3', '4', '5'],
     horario: '08:00 às 12:00',
-    instrutor: 'RICARDO PEREIRA GOMES DE ARAÚJO',
+    instrutor: 'Ricardo Pereira Gomes De Araujo',
     estado: 'Em Andamento',
     local: 'Cep Talal Abu Allan'
   },
@@ -125,7 +165,7 @@ const turmasFinais = [
     carga_horaria: 172,
     dias_semana: ['1', '2', '3', '4', '5'],
     horario: '08:00 às 12:00',
-    instrutor: 'Thiago de Sousa Costa',
+    instrutor: 'Thiago De Sousa Costa',
     estado: 'Liberado Para Matrícula',
     local: 'Cep Talal Abu Allan'
   },
@@ -136,7 +176,7 @@ const turmasFinais = [
     carga_horaria: 400,
     dias_semana: ['1', '2', '3', '4', '5'],
     horario: '19:00 às 22:00',
-    instrutor: 'Rubia Martins de Melo',
+    instrutor: 'Rubia Martins De Melo',
     estado: 'Em Andamento',
     local: 'Cep Talal Abu Allan'
   },
@@ -158,7 +198,7 @@ const turmasFinais = [
     carga_horaria: 212,
     dias_semana: ['1', '2', '3', '4', '5'],
     horario: '14:00 às 18:00',
-    instrutor: 'Bianca Mendes da Silva',
+    instrutor: 'Bianca Mendes Da Silva',
     estado: 'Em Andamento',
     local: 'Cep Talal Abu Allan'
   },
@@ -169,7 +209,7 @@ const turmasFinais = [
     carga_horaria: 212,
     dias_semana: ['1', '2', '3', '4', '5'],
     horario: '19:00 às 22:00',
-    instrutor: 'Suely de Fátima Pereira',
+    instrutor: 'Suely De Fatima Pereira',
     estado: 'Liberado Para Matrícula',
     local: 'Cep Talal Abu Allan'
   },
@@ -202,7 +242,7 @@ const turmasFinais = [
     carga_horaria: 160,
     dias_semana: ['1', '2', '3', '4', '5'],
     horario: '14:00 às 18:00',
-    instrutor: 'LUZIA PEREIRA DE ANDRADE',
+    instrutor: 'Luzia Pereira De Andrade',
     estado: 'Em Andamento',
     local: 'Cep Talal Abu Allan'
   },
@@ -213,7 +253,7 @@ const turmasFinais = [
     carga_horaria: 160,
     dias_semana: ['1', '2', '3', '4', '5'],
     horario: '08:00 às 12:00',
-    instrutor: 'LUZIA PEREIRA DE ANDRADE',
+    instrutor: 'Luzia Pereira De Andrade',
     estado: 'Liberado Para Matrícula',
     local: 'Cep Talal Abu Allan'
   },
@@ -241,12 +281,12 @@ const turmasFinais = [
   },
   {
     codigo_turma: '2026.09.102',
-    nome_curso: 'Microsoft Power BI - Básico',
+    nome_curso: 'Microsoft Power Bi - Básico',
     data_inicio: '2026-06-03',
     carga_horaria: 20,
     dias_semana: ['1', '2', '3', '4', '5'],
     horario: '19:00 às 22:00',
-    instrutor: 'Alessandro Alves de Vasconcelos',
+    instrutor: 'Alessandro Alves De Vasconcelos',
     estado: 'Em Andamento',
     local: 'Cep Talal Abu Allan'
   },
@@ -257,7 +297,7 @@ const turmasFinais = [
     carga_horaria: 210,
     dias_semana: ['1', '2', '3', '4', '5'],
     horario: '08:00 às 12:00',
-    instrutor: 'Bianca Mendes da Silva',
+    instrutor: 'Bianca Mendes Da Silva',
     estado: 'Em Andamento',
     local: 'Cep Talal Abu Allan'
   },
@@ -312,7 +352,7 @@ const turmasFinais = [
     carga_horaria: 800,
     dias_semana: ['2', '4', '6'],
     horario: '14:00 às 18:00',
-    instrutor: 'Analice Barbosa Santos de Oliveira',
+    instrutor: 'Analice Barbosa Santos De Oliveira',
     estado: 'Em Andamento',
     local: 'Cep Talal Abu Allan'
   },
@@ -334,7 +374,7 @@ const turmasFinais = [
     carga_horaria: 800,
     dias_semana: ['1', '3', '5'],
     horario: '08:00 às 12:00',
-    instrutor: 'Mariléia de Jesus Amorim',
+    instrutor: 'Marileia De Jesus Amorim',
     estado: 'Em Andamento',
     local: 'Cep Talal Abu Allan'
   },
@@ -345,7 +385,7 @@ const turmasFinais = [
     carga_horaria: 800,
     dias_semana: ['2', '4', '5'],
     horario: '14:00 às 18:00',
-    instrutor: 'José de Assis Custódio',
+    instrutor: 'Jose De Assis Custodio',
     estado: 'Em Andamento',
     local: 'Cep Talal Abu Allan'
   },
@@ -356,7 +396,7 @@ const turmasFinais = [
     carga_horaria: 800,
     dias_semana: ['1', '3', '5'],
     horario: '08:00 às 12:00',
-    instrutor: 'Dionísio Francisco Pereira',
+    instrutor: 'Dionisio Francisco Pereira',
     estado: 'Em Andamento',
     local: 'Cep Talal Abu Allan'
   },
@@ -378,7 +418,7 @@ const turmasFinais = [
     carga_horaria: 800,
     dias_semana: ['1', '3', '6'],
     horario: '14:00 às 18:00',
-    instrutor: 'José de Assis Custódio',
+    instrutor: 'Jose De Assis Custodio',
     estado: 'Em Andamento',
     local: 'Cep Talal Abu Allan'
   },
@@ -389,7 +429,7 @@ const turmasFinais = [
     carga_horaria: 800,
     dias_semana: ['1', '3', '5'],
     horario: '19:00 às 22:00',
-    instrutor: 'José de Assis Custódio',
+    instrutor: 'Jose De Assis Custodio',
     estado: 'Em Andamento',
     local: 'Cep Talal Abu Allan'
   },
@@ -422,7 +462,7 @@ const turmasFinais = [
     carga_horaria: 1200,
     dias_semana: ['1', '2', '3', '4', '5'],
     horario: '08:00 às 12:00',
-    instrutor: 'Ricardo de Souza Serra',
+    instrutor: 'Ricardo De Souza Serra',
     estado: 'Em Andamento',
     local: 'Cep Talal Abu Allan'
   },
@@ -455,7 +495,7 @@ const turmasFinais = [
     carga_horaria: 1000,
     dias_semana: ['1', '3', '4', '5'],
     horario: '14:00 às 18:00',
-    instrutor: 'Ricardo de Souza Serra',
+    instrutor: 'Ricardo De Souza Serra',
     estado: 'Em Andamento',
     local: 'Cep Talal Abu Allan'
   },
@@ -521,7 +561,7 @@ const turmasFinais = [
     carga_horaria: 800,
     dias_semana: ['2', '4', '5'],
     horario: '13:15 às 17:15',
-    instrutor: 'RICARDO PEREIRA GOMES DE ARAÚJO',
+    instrutor: 'Ricardo Pereira Gomes De Araujo',
     estado: 'Em Andamento',
     local: 'Cep Talal Abu Allan'
   },
@@ -537,7 +577,7 @@ const turmasFinais = [
     local: 'Cep Talal Abu Allan'
   },
 
-  // --- RECANTO ---
+  // --- RECANTO DAS EMAS ---
   {
     codigo_turma: '2026.29.18',
     nome_curso: 'Assistente Administrativo',
@@ -567,7 +607,7 @@ const turmasFinais = [
     carga_horaria: 400,
     dias_semana: ['1', '2', '3', '4', '5'],
     horario: '08:00 às 12:00',
-    instrutor: 'Maria Edinalda Pinheiro da Silva',
+    instrutor: 'Maria Edinalda Pinheiro Da Silva',
     estado: 'Em Andamento',
     local: 'Polo Recanto das Emas'
   },
@@ -622,7 +662,7 @@ const turmasFinais = [
     carga_horaria: 800,
     dias_semana: ['2', '3', '4'],
     horario: '14:00 às 18:00',
-    instrutor: 'Ricardo da Silva Pierre',
+    instrutor: 'Ricardo Da Silva Pierre',
     estado: 'Em Andamento',
     local: 'Polo Recanto das Emas'
   },
@@ -683,9 +723,8 @@ const turmasFinais = [
   }
 ];
 
-// Helper para calcular o cronograma de aulas de forma limpa
-async function calcularCronograma(cargaHoraria: number, dataInicio: Date, diasSemana: string[], feriados: string[]) {
-  const horasPorDia = 4;
+export function calcularCronograma(cargaHoraria: number, dataInicio: Date, diasSemana: string[], feriados: string[], turnoNome: string) {
+  const horasPorDia = horasPorTurno(turnoNome);
   const classesNeeded = Math.ceil(cargaHoraria / horasPorDia);
 
   let currentDate = new Date(dataInicio);
@@ -693,8 +732,8 @@ async function calcularCronograma(cargaHoraria: number, dataInicio: Date, diasSe
   const datasAulas: string[] = [];
 
   while (classesScheduled < classesNeeded) {
-    const currentDateStr = currentDate.toISOString().split('T')[0];
-    const dayOfWeek = currentDate.getUTCDay().toString(); // Domingo=0, Segunda=1, etc.
+    const currentDateStr = currentDate.toISOString().split('T')[0]!;
+    const dayOfWeek = currentDate.getUTCDay().toString();
 
     const isFeriado = feriados.includes(currentDateStr);
     const isDiaDeAula = diasSemana.includes(dayOfWeek);
@@ -715,378 +754,341 @@ async function calcularCronograma(cargaHoraria: number, dataInicio: Date, diasSe
   };
 }
 
-// Helper para classificar salas candidatas adequadas para cada turma
 function obterSalasCandidatas(salas: any[], nomeCurso: string, local: string) {
-  const localFilter = local.toLowerCase().includes('recanto') ? 'Polo Recanto das Emas' : 'Cep Talal Abu Allan';
+  const isRecanto = local.toLowerCase().includes('recanto');
+  const localFilter = isRecanto ? 'Polo Recanto das Emas' : 'Cep Talal Abu Allan';
   const salasUnidade = salas.filter(s => s.local === localFilter);
   const nc = nomeCurso.toLowerCase();
+  const isEstetica = nc.includes('estética') || nc.includes('unhas') || nc.includes('maquiag') ||
+    nc.includes('cabelo') || nc.includes('cabeleireiro') || nc.includes('maquiador') ||
+    nc.includes('barbeiro') || nc.includes('colorimetria') || nc.includes('cílios') || nc.includes('manicure');
 
-  if (localFilter === 'Polo Recanto das Emas') {
-    // Recanto has: Laboratório 1 (Recanto), Laboratório 2 (Recanto), Sala Multiuso (Recanto)
-    if (nc.includes('desenvolvimento') || nc.includes('jogos') || nc.includes('tecnologia') || nc.includes('informática') || nc.includes('windows') || nc.includes('office') || nc.includes('ia')) {
-      return salasUnidade.filter(s => s.nome_sala.toLowerCase().includes('laboratório') || s.nome_sala.toLowerCase().includes('lab'));
+  if (isRecanto) {
+    // Regra: "Recanto das Emas tem apenas Laboratório 1, Laboratório 2 e Sala Multiuso;
+    // a Multiuso é só para cursos de estética (manicure, cabeleireiro, maquiagem)."
+    if (isEstetica) {
+      return salasUnidade.filter(s => s.nome_sala.toLowerCase().includes('multiuso'));
     }
-    return salasUnidade.filter(s => s.nome_sala.toLowerCase().includes('multiuso') || s.nome_sala.toLowerCase().includes('sala'));
+    // Cursos não-estética só podem usar Laboratório 1 e Laboratório 2
+    return salasUnidade.filter(s => s.nome_sala.toLowerCase().includes('laboratório') || s.nome_sala.toLowerCase().includes('lab'));
   }
 
-  // Ceilândia
-  if (nc.includes('estética') || nc.includes('unhas') || nc.includes('maquiagem') || nc.includes('cabelo') || nc.includes('cabeleireiro') || nc.includes('maquiador') || nc.includes('barbeiro') || nc.includes('colorimetria') || nc.includes('cílios')) {
+  // Ceilândia (Cep Talal Abu Allan)
+  if (isEstetica) {
     return salasUnidade.filter(s => s.tipoSala?.nome_tipo === 'Laboratório de Imagem Pessoal');
   }
   if (nc.includes('costureiro') || nc.includes('modelista') || nc.includes('moda')) {
     return salasUnidade.filter(s => s.tipoSala?.nome_tipo === 'Laboratório de Moda');
   }
-  if (nc.includes('desenvolvimento') || nc.includes('jogos') || nc.includes('tecnologia') || nc.includes('informática') || nc.includes('windows') || nc.includes('office') || nc.includes('power bi') || nc.includes('ia')) {
+  if (nc.includes('desenvolvimento') || nc.includes('jogos') || nc.includes('tecnologia') || nc.includes('informática') || nc.includes('windows') || nc.includes('office') || nc.includes('power bi') || nc.includes('inteligência artificial')) {
     return salasUnidade.filter(s => s.tipoSala?.nome_tipo === 'Laboratório de TI');
   }
 
-  // Common classrooms
-  return salasUnidade.filter(s => s.tipoSala?.nome_tipo === 'Sala de aula Inovadora' || s.tipoSala?.nome_tipo === 'Auditório');
+  // Cursos gerais/gestão (administração, secretariado, marketing, etc.)
+  const inovadoras = salasUnidade.filter(s => s.tipoSala?.nome_tipo === 'Sala de aula Inovadora' || s.tipoSala?.nome_tipo === 'Auditório');
+  const labsTi = salasUnidade.filter(s => s.tipoSala?.nome_tipo === 'Laboratório de TI');
+  return [...inovadoras, ...labsTi];
 }
 
-async function main() {
-  console.log('=== Iniciando Seed do Banco de Dados com Turmas Finais ===');
-
-  console.log('Limpando tabelas existentes em ordem...');
-  await prisma.agendamento.deleteMany({});
-  await prisma.turma.deleteMany({});
-  await prisma.instrutoresCurso.deleteMany({});
-  await prisma.sala.deleteMany({});
-  await prisma.curso.deleteMany({});
-  await prisma.instrutor.deleteMany({});
-  await prisma.statusTurma.deleteMany({});
-  await prisma.turno.deleteMany({});
-  await prisma.feriadosRecessos.deleteMany({});
-  await prisma.tipoFeriado.deleteMany({});
-  await prisma.tipoSala.deleteMany({});
-  console.log('Tabelas limpas com sucesso!');
-
-  // 1. StatusTurma
-  await prisma.statusTurma.createMany({
-    data: [
-      { nome_status: 'Planejada' },
-      { nome_status: 'Em Andamento' },
-      { nome_status: 'Concluída' },
-      { nome_status: 'Cancelada' },
-      { nome_status: 'Liberado Para Matrícula' },
-      { nome_status: 'Em Elaboração' }
-    ],
-    skipDuplicates: true,
+function salvarRelatorioTurmasPendentes(pendentes: any[]) {
+  const cabecalho = 'id_turma,codigo_turma,curso,carga_horaria,instrutor,sala,local_sala,turno,data_inicio,alunos,motivo';
+  const linhas = pendentes.map(p => {
+    const esc = (v: any) => {
+      const s = String(v ?? '').replace(/"/g, '""');
+      return s.includes(',') || s.includes('"') || s.includes('\n') ? `"${s}"` : s;
+    };
+    return [
+      '',
+      esc(p.codigo_turma),
+      esc(p.nome_curso),
+      p.carga_horaria,
+      esc(p.instrutor),
+      esc(p.sala_pretendida || ''),
+      esc(p.local),
+      esc(p.turno),
+      esc(p.data_inicio),
+      p.total_alunos ?? '',
+      esc(p.motivo)
+    ].join(',');
   });
 
-  // 2. Turnos
-  await prisma.turno.createMany({
-    data: [
-      { nome_turno: 'Manhã' },
-      { nome_turno: 'Tarde' },
-      { nome_turno: 'Noite' }
-    ],
-    skipDuplicates: true,
-  });
+  const csvContent = [cabecalho, ...linhas].join('\n') + '\n';
 
-  // 3. Feriados
-  let tipoNacional = await prisma.tipoFeriado.upsert({
-    where: { nome_tipo: 'Nacional' },
-    update: {},
-    create: { nome_tipo: 'Nacional' }
-  });
+  const arquivo = path.resolve(process.cwd(), 'relatorios/turmas_pendentes.csv');
+  fs.mkdirSync(path.dirname(arquivo), { recursive: true });
+  fs.writeFileSync(arquivo, csvContent, 'utf8');
+  console.log(`✓ CSV de turmas pendentes gravado em: ${arquivo}`);
+}
 
-  const feriadosList = [
-    { data_feriado: new Date('2025-01-01T00:00:00.000Z'), descricao: 'Confraternização Universal', fk_id_tipo_feriado: tipoNacional.id_tipo_feriado },
-    { data_feriado: new Date('2025-03-04T00:00:00.000Z'), descricao: 'Carnaval', fk_id_tipo_feriado: tipoNacional.id_tipo_feriado },
-    { data_feriado: new Date('2025-04-18T00:00:00.000Z'), descricao: 'Paixão de Cristo', fk_id_tipo_feriado: tipoNacional.id_tipo_feriado },
-    { data_feriado: new Date('2025-04-21T00:00:00.000Z'), descricao: 'Tiradentes', fk_id_tipo_feriado: tipoNacional.id_tipo_feriado },
-    { data_feriado: new Date('2025-05-01T00:00:00.000Z'), descricao: 'Dia do Trabalho', fk_id_tipo_feriado: tipoNacional.id_tipo_feriado },
-    { data_feriado: new Date('2025-09-07T00:00:00.000Z'), descricao: 'Independência do Brasil', fk_id_tipo_feriado: tipoNacional.id_tipo_feriado },
-    { data_feriado: new Date('2025-10-12T00:00:00.000Z'), descricao: 'Nossa Sr.a Aparecida', fk_id_tipo_feriado: tipoNacional.id_tipo_feriado },
-    { data_feriado: new Date('2025-11-02T00:00:00.000Z'), descricao: 'Finados', fk_id_tipo_feriado: tipoNacional.id_tipo_feriado },
-    { data_feriado: new Date('2025-11-15T00:00:00.000Z'), descricao: 'Proclamação da República', fk_id_tipo_feriado: tipoNacional.id_tipo_feriado },
-    { data_feriado: new Date('2025-12-25T00:00:00.000Z'), descricao: 'Natal', fk_id_tipo_feriado: tipoNacional.id_tipo_feriado },
-    
-    { data_feriado: new Date('2026-01-01T00:00:00.000Z'), descricao: 'Confraternização Universal', fk_id_tipo_feriado: tipoNacional.id_tipo_feriado },
-    { data_feriado: new Date('2026-02-17T00:00:00.000Z'), descricao: 'Carnaval', fk_id_tipo_feriado: tipoNacional.id_tipo_feriado },
-    { data_feriado: new Date('2026-04-03T00:00:00.000Z'), descricao: 'Paixão de Cristo', fk_id_tipo_feriado: tipoNacional.id_tipo_feriado },
-    { data_feriado: new Date('2026-04-21T00:00:00.000Z'), descricao: 'Tiradentes', fk_id_tipo_feriado: tipoNacional.id_tipo_feriado },
-    { data_feriado: new Date('2026-05-01T00:00:00.000Z'), descricao: 'Dia do Trabalho', fk_id_tipo_feriado: tipoNacional.id_tipo_feriado },
-    { data_feriado: new Date('2026-09-07T00:00:00.000Z'), descricao: 'Independência do Brasil', fk_id_tipo_feriado: tipoNacional.id_tipo_feriado },
-    { data_feriado: new Date('2026-10-12T00:00:00.000Z'), descricao: 'Nossa Sr.a Aparecida', fk_id_tipo_feriado: tipoNacional.id_tipo_feriado },
-    { data_feriado: new Date('2026-11-02T00:00:00.000Z'), descricao: 'Finados', fk_id_tipo_feriado: tipoNacional.id_tipo_feriado },
-    { data_feriado: new Date('2026-11-15T00:00:00.000Z'), descricao: 'Proclamação da República', fk_id_tipo_feriado: tipoNacional.id_tipo_feriado },
-    { data_feriado: new Date('2026-12-25T00:00:00.000Z'), descricao: 'Natal', fk_id_tipo_feriado: tipoNacional.id_tipo_feriado },
-
-    { data_feriado: new Date('2027-01-01T00:00:00.000Z'), descricao: 'Confraternização Universal', fk_id_tipo_feriado: tipoNacional.id_tipo_feriado },
-    { data_feriado: new Date('2027-02-09T00:00:00.000Z'), descricao: 'Carnaval', fk_id_tipo_feriado: tipoNacional.id_tipo_feriado },
-    { data_feriado: new Date('2027-03-26T00:00:00.000Z'), descricao: 'Paixão de Cristo', fk_id_tipo_feriado: tipoNacional.id_tipo_feriado },
-    { data_feriado: new Date('2027-04-21T00:00:00.000Z'), descricao: 'Tiradentes', fk_id_tipo_feriado: tipoNacional.id_tipo_feriado },
-    { data_feriado: new Date('2027-05-01T00:00:00.000Z'), descricao: 'Dia do Trabalho', fk_id_tipo_feriado: tipoNacional.id_tipo_feriado },
-    { data_feriado: new Date('2027-09-07T00:00:00.000Z'), descricao: 'Independência do Brasil', fk_id_tipo_feriado: tipoNacional.id_tipo_feriado },
-    { data_feriado: new Date('2027-10-12T00:00:00.000Z'), descricao: 'Nossa Sr.a Aparecida', fk_id_tipo_feriado: tipoNacional.id_tipo_feriado },
-    { data_feriado: new Date('2027-11-02T00:00:00.000Z'), descricao: 'Finados', fk_id_tipo_feriado: tipoNacional.id_tipo_feriado },
-    { data_feriado: new Date('2027-11-15T00:00:00.000Z'), descricao: 'Proclamação da República', fk_id_tipo_feriado: tipoNacional.id_tipo_feriado },
-    { data_feriado: new Date('2027-12-25T00:00:00.000Z'), descricao: 'Natal', fk_id_tipo_feriado: tipoNacional.id_tipo_feriado },
-  ];
-
-  await prisma.feriadosRecessos.createMany({
-    data: feriadosList,
-    skipDuplicates: true
-  });
-  console.log(`Injetados ${feriadosList.length} feriados com sucesso!`);
-
-  // Lista dos feriados em string para a calculadora
-  const feriadosStrings = feriadosList.map(f => f.data_feriado.toISOString().split('T')[0]);
-
-  // 4. Instrutores (docs/instrutores_tabela.xlsx)
-  try {
-    const instrutoresPath = path.join(process.cwd(), '../docs/instrutores_tabela.xlsx');
-    const workbookInstrutores = xlsx.readFile(instrutoresPath);
-    const sheetNameInstrutores = workbookInstrutores.SheetNames[0];
-    const dataInstrutores = xlsx.utils.sheet_to_json(workbookInstrutores.Sheets[sheetNameInstrutores]) as any[];
-
-    const instrutoresData = dataInstrutores.map((row) => ({
-      nome_instrutor: String(row.Nome).trim(),
-    }));
-
-    await prisma.instrutor.createMany({
-      data: instrutoresData,
-      skipDuplicates: true,
-    });
-    console.log(`Injetados ${instrutoresData.length} instrutores com sucesso!`);
-  } catch (error) {
-    console.warn('Não foi possível ler/injetar instrutores_tabela.xlsx', error);
+export async function seedDemo() {
+  if (process.env.ALLOW_DESTRUCTIVE_SEED !== 'true') {
+    throw new Error('Seed demo destrutivo bloqueado: defina ALLOW_DESTRUCTIVE_SEED=true para executá-lo.');
   }
 
-  // Garantir instrutores adicionais do nosso formulário
-  const instrutoresExtra = Array.from(new Set(turmasFinais.map(t => t.instrutor).filter(i => i !== '')));
-  for (const nome of instrutoresExtra) {
-    await prisma.instrutor.upsert({
-      where: { nome_instrutor: nome },
-      update: {},
-      create: { nome_instrutor: nome }
-    });
-  }
+  console.log('=== Iniciando Seed Demo com Validação de Regras de Negócio ===');
 
-  // 5. Salas (docs/descricao_das_salas_talal.xlsx + Recanto)
-  try {
-    const salasPath = path.join(process.cwd(), '../docs/descricao_das_salas_talal.xlsx');
-    const workbookSalas = xlsx.readFile(salasPath);
-    const sheetNameSalas = workbookSalas.SheetNames[0];
-    const dataSalas = xlsx.utils.sheet_to_json(workbookSalas.Sheets[sheetNameSalas]) as any[];
+  // Garante dados de referência
+  await seedReferenceData();
 
-    for (const row of dataSalas) {
-      const tipo = row.Tipo_de_sala || 'Comum';
-      let tipoDb = await prisma.tipoSala.findFirst({ where: { nome_tipo: tipo } });
-      if (!tipoDb) {
-        tipoDb = await prisma.tipoSala.create({ data: { nome_tipo: tipo } });
-      }
-
-      let nomeSala = String(row.Nome_da_sala).trim();
-      if (!nomeSala.toLowerCase().startsWith('sala') && !isNaN(Number(nomeSala))) {
-        nomeSala = `Sala ${nomeSala}`;
-      }
-
-      // Padronização do nome da sala para bater com o layout solicitado
-      if (nomeSala.toLowerCase().startsWith('sala ') && !nomeSala.toLowerCase().startsWith('sala inovadora')) {
-        nomeSala = nomeSala.replace(/sala\s+/i, 'Sala ');
-      } else if (nomeSala.toLowerCase().startsWith('laboratório de informática ')) {
-        nomeSala = nomeSala.replace(/laboratório de informática/i, 'Laboratório de TI');
-      } else if (nomeSala.toLowerCase().startsWith('laboratório de imagem pessoal ')) {
-        const parts = nomeSala.split(' ');
-        const num = parts[5]; // Posição do número
-        nomeSala = `Laboratório de Imagem ${num}`;
-      }
-
-      await prisma.sala.create({
-        data: {
-          nome_sala: nomeSala,
-          capacidade_maxima: Number(row.Capacidade_maxima) || 30,
-          local: 'Cep Talal Abu Allan',
-          recursos_especiais: row.Recursos_especiais || '',
-          idTipo_sala: tipoDb.idTipo_sala,
-        }
-      });
-    }
-  } catch (error) {
-    console.warn('Não foi possível ler/injetar descricao_das_salas_talal.xlsx', error);
-  }
-
-  // Inserir as salas do Recanto
-  let tipoTI = await prisma.tipoSala.upsert({
-    where: { nome_tipo: 'Laboratório de TI' },
-    update: {},
-    create: { nome_tipo: 'Laboratório de TI' }
-  });
-  let tipoMultiuso = await prisma.tipoSala.upsert({
-    where: { nome_tipo: 'Laboratório Multiuso' },
-    update: {},
-    create: { nome_tipo: 'Laboratório Multiuso' }
-  });
-
-  const salasRecanto = [
-    { nome: 'Laboratório 1 (Recanto)', tipoId: tipoTI.idTipo_sala },
-    { nome: 'Laboratório 2 (Recanto)', tipoId: tipoTI.idTipo_sala },
-    { nome: 'Sala Multiuso (Recanto)', tipoId: tipoMultiuso.idTipo_sala }
-  ];
-
-  for (const s of salasRecanto) {
-    await prisma.sala.create({
-      data: {
-        nome_sala: s.nome,
-        capacidade_maxima: 30,
-        local: 'Polo Recanto das Emas',
-        recursos_especiais: 'Climatização, projetor, quadro branco',
-        idTipo_sala: s.tipoId
-      }
-    });
-  }
-  console.log('Salas de Ceilândia e Recanto inicializadas.');
-
-
-  // Garantir cursos das turmas finais se não estiverem no portfólio
-  const cursosExtra = Array.from(new Set(turmasFinais.map(t => t.nome_curso)));
-  for (const nome of cursosExtra) {
-    await prisma.curso.upsert({
-      where: { nome_curso: nome },
-      update: {},
-      create: {
-        nome_curso: nome,
-        segmento: 'Geral',
-        modalidade: 'Presencial',
-        carga_horaria: turmasFinais.find(t => t.nome_curso === nome)?.carga_horaria || 160,
-        valor: 0
-      }
-    });
-  }
-
-  // 7. Alocação inteligente de salas para as 61 turmas
   const dbSalas = await prisma.sala.findMany({ include: { tipoSala: true } });
   const dbTurnos = await prisma.turno.findMany();
   const dbStatus = await prisma.statusTurma.findMany();
-  const dbCursos = await prisma.curso.findMany();
-  const dbInstrutores = await prisma.instrutor.findMany();
+  const feriados = await prisma.feriadosRecessos.findMany();
+  const feriadosStrings = feriados.map(f => f.data_feriado.toISOString().split('T')[0]!);
 
-  console.log('Iniciando alocação automática de salas sem conflitos...');
+  const statusEmAndamento = dbStatus.find(s => s.nome_status === 'Em Andamento') ?? dbStatus[0]!;
 
-  let totalAlocadas = 0;
+  const turmasCriadas: any[] = [];
+  const turmasPendentes: any[] = [];
 
-  for (const tFinal of turmasFinais) {
-    const curso = dbCursos.find(c => c.nome_curso.trim().toLowerCase() === tFinal.nome_curso.trim().toLowerCase());
-    if (!curso) {
-      console.error(`Curso não encontrado para a turma ${tFinal.codigo_turma}: "${tFinal.nome_curso}"`);
-      console.log('Cursos disponíveis no banco:', dbCursos.map(c => c.nome_curso));
-      throw new Error(`Curso não encontrado no banco: "${tFinal.nome_curso}"`);
-    }
-    const instrutor = dbInstrutores.find(i => i.nome_instrutor.trim().toLowerCase() === tFinal.instrutor.trim().toLowerCase()) || null;
+  const codigosVistos = new Set<string>();
+  // Map para checar conflitos em memória durante a transação
+  const ocupacaoSalas = new Map<string, string>(); // `${salaId}:${data}:${turnoId}` -> codigoTurma
+  const ocupacaoInstrutores = new Map<string, string>(); // `${instrutorId}:${data}:${turnoId}` -> codigoTurma
 
-    // Mapear turno ID
-    let turnoNome = 'Manhã';
-    if (tFinal.horario.includes('14:00') || tFinal.horario.includes('13:00') || tFinal.horario.includes('13:15')) {
-      turnoNome = 'Tarde';
-    } else if (tFinal.horario.includes('19:00')) {
-      turnoNome = 'Noite';
-    }
-    const turno = dbTurnos.find(tu => tu.nome_turno === turnoNome)!;
+  await prisma.$transaction(async (tx) => {
+    console.log('Limpando agendamentos e turmas anteriores...');
+    await tx.agendamento.deleteMany({});
+    await tx.turma.deleteMany({});
 
-    // Mapear status ID
-    let statusNome = 'Em Andamento';
-    if (tFinal.estado.includes('Liberado')) {
-      statusNome = 'Liberado Para Matrícula';
-    } else if (tFinal.estado.includes('Elaboração')) {
-      statusNome = 'Em Elaboração';
-    }
-    const status = dbStatus.find(s => s.nome_status === statusNome)!;
-
-    // Calcular cronograma de datas de aula
-    const cronograma = await calcularCronograma(
-      tFinal.carga_horaria,
-      new Date(tFinal.data_inicio),
-      tFinal.dias_semana,
-      feriadosStrings
+    const instrutoresExistentes = await tx.instrutor.findMany();
+    const mapaInstrutorPorNorm = new Map(
+      instrutoresExistentes.map(i => [normalizarChaveNome(i.nome_instrutor), i])
     );
-    const datasDate = cronograma.datasAulas.map(d => new Date(d));
 
-    // Achar sala candidata livre de conflitos
-    let salaEscolhida = null;
-    const salasCandidatas = obterSalasCandidatas(dbSalas, tFinal.nome_curso, tFinal.local);
-
-    for (const sala of salasCandidatas) {
-      // Verificar se essa sala tem agendamentos conflitantes no mesmo turno nessas datas
-      const conflito = await prisma.agendamento.findFirst({
-        where: {
-          id_salas: sala.id_salas,
-          data_aula: { in: datasDate },
-          turma: { fk_id_turno: turno.id_turno }
-        }
-      });
-
-      if (!conflito) {
-        salaEscolhida = sala;
-        break;
+    for (const nome of new Set(turmasFinais.map(t => t.instrutor.trim()).filter(Boolean))) {
+      const chave = normalizarChaveNome(nome);
+      if (!mapaInstrutorPorNorm.has(chave)) {
+        const criado = await tx.instrutor.upsert({
+          where: { nome_instrutor: nome },
+          update: {},
+          create: { nome_instrutor: nome }
+        });
+        mapaInstrutorPorNorm.set(chave, criado);
       }
     }
 
-    // Se houver conflito em todas as salas sugeridas, buscar qualquer sala vaga no local
-    if (!salaEscolhida) {
-      const todasLocal = dbSalas.filter(s => s.local === (tFinal.local.includes('Recanto') ? 'Polo Recanto das Emas' : 'Cep Talal Abu Allan'));
-      for (const sala of todasLocal) {
-        const conflito = await prisma.agendamento.findFirst({
-          where: {
-            id_salas: sala.id_salas,
-            data_aula: { in: datasDate },
-            turma: { fk_id_turno: turno.id_turno }
-          }
+    const cursosExistentes = await tx.curso.findMany();
+    const mapaCursoPorNorm = new Map(
+      cursosExistentes.map(c => [normalizarChaveNome(c.nome_curso), c])
+    );
+
+    const cursosSeed = new Map<string, number>();
+    for (const turma of turmasFinais) {
+      if (!cursosSeed.has(turma.nome_curso)) cursosSeed.set(turma.nome_curso, turma.carga_horaria);
+    }
+    for (const [nome, carga] of cursosSeed) {
+      const chave = normalizarChaveNome(nome);
+      const existente = mapaCursoPorNorm.get(chave);
+      if (existente) {
+        await tx.curso.update({
+          where: { id_cursos: existente.id_cursos },
+          data: { carga_horaria: carga }
         });
-        if (!conflito) {
+      } else {
+        const criado = await tx.curso.upsert({
+          where: { nome_curso: nome },
+          update: { carga_horaria: carga },
+          create: { nome_curso: nome, carga_horaria: carga, segmento: 'Geral', modalidade: 'Presencial', valor: 0 }
+        });
+        mapaCursoPorNorm.set(chave, criado);
+      }
+    }
+    const dbCursos = await tx.curso.findMany();
+    const dbInstrutores = await tx.instrutor.findMany();
+
+    for (const tFinal of turmasFinais) {
+      // Determinar turno
+      let turnoNome = 'Manhã';
+      if (tFinal.horario.includes('14:00') || tFinal.horario.includes('13:00') || tFinal.horario.includes('13:15')) {
+        turnoNome = 'Tarde';
+      } else if (tFinal.horario.includes('19:00')) {
+        turnoNome = 'Noite';
+      }
+      const turno = dbTurnos.find(tu => tu.nome_turno === turnoNome)!;
+
+      // 1. Checagem de código duplicado
+      const verificacaoCodigo = verificarCodigoDuplicado(tFinal, codigosVistos);
+      if (!verificacaoCodigo.aceita) {
+        turmasPendentes.push({
+          ...tFinal,
+          turno: turnoNome,
+          motivo: verificacaoCodigo.motivo
+        });
+        console.warn(`[PENDENTE] ${tFinal.codigo_turma}: ${verificacaoCodigo.motivo}`);
+        continue;
+      }
+
+      // Curso
+      const curso = dbCursos.find(c => normalizarChaveNome(c.nome_curso) === normalizarChaveNome(tFinal.nome_curso));
+      if (!curso) {
+        turmasPendentes.push({
+          ...tFinal,
+          turno: turnoNome,
+          motivo: `Curso não encontrado no catálogo: ${tFinal.nome_curso}`
+        });
+        console.warn(`[PENDENTE] ${tFinal.codigo_turma}: Curso não encontrado.`);
+        continue;
+      }
+
+      // Instrutor
+      const instrutor = tFinal.instrutor.trim()
+        ? dbInstrutores.find(i => normalizarChaveNome(i.nome_instrutor) === normalizarChaveNome(tFinal.instrutor)) ?? null
+        : null;
+      if (tFinal.instrutor.trim() && !instrutor) {
+        turmasPendentes.push({ ...tFinal, turno: turnoNome, motivo: `Instrutor não cadastrado: ${tFinal.instrutor}` });
+        continue;
+      }
+
+      // Cronograma
+      const cronograma = calcularCronograma(
+        tFinal.carga_horaria,
+        new Date(tFinal.data_inicio),
+        tFinal.dias_semana,
+        feriadosStrings,
+        turnoNome
+      );
+      const datasAulas = cronograma.datasAulas;
+
+      // 2. Checagem de Conflito de Instrutor
+      let conflitoInstrutorMsg: string | null = null;
+      if (instrutor) {
+        for (const d of datasAulas) {
+          const keyInst = `${instrutor.id_instrutores}:${d}:${turno.id_turno}`;
+          if (ocupacaoInstrutores.has(keyInst)) {
+            const outraTurma = ocupacaoInstrutores.get(keyInst);
+            conflitoInstrutorMsg = `Instrutor ${instrutor.nome_instrutor} já alocado na turma ${outraTurma} neste dia e turno (${d})`;
+            break;
+          }
+        }
+      }
+
+      if (conflitoInstrutorMsg) {
+        turmasPendentes.push({
+          ...tFinal,
+          turno: turnoNome,
+          motivo: conflitoInstrutorMsg
+        });
+        console.warn(`[PENDENTE] ${tFinal.codigo_turma}: ${conflitoInstrutorMsg}`);
+        continue;
+      }
+
+      // 3. Busca de sala candidata sem conflitos (número de alunos não informado no seed demo)
+      const candidatas = obterSalasCandidatas(dbSalas, tFinal.nome_curso, tFinal.local);
+      let salaEscolhida: any = null;
+
+      for (const sala of candidatas) {
+        // Validação de disponibilidade na sala durante todo o cronograma no mesmo turno
+        let salaOcupada = false;
+        for (const d of datasAulas) {
+          const keySala = `${sala.id_salas}:${d}:${turno.id_turno}`;
+          if (ocupacaoSalas.has(keySala)) {
+            salaOcupada = true;
+            break;
+          }
+        }
+
+        if (!salaOcupada) {
           salaEscolhida = sala;
           break;
         }
       }
-    }
 
-    // Se ainda assim der conflito (fallback extremo), usar a primeira candidata
-    if (!salaEscolhida) {
-      console.warn(`[WARN] Conflito inevitável detectado para a turma ${tFinal.codigo_turma}. Forçando alocação.`);
-      salaEscolhida = salasCandidatas[0] || dbSalas[0];
-    }
+      // Se não achou sala compatível e livre
+      if (!salaEscolhida) {
+        const motivo = candidatas.length === 0
+          ? `Nenhuma sala compatível com a especialidade do curso na unidade ${tFinal.local}`
+          : `Sem sala disponível livre de conflitos no turno ${turnoNome} em ${tFinal.local}`;
 
-    // Criar a turma no banco de dados
-    const turmaCriada = await prisma.turma.create({
-      data: {
-        id_cursos: curso.id_cursos,
-        id_instrutores: instrutor ? instrutor.id_instrutores : null,
-        codigo_turma: tFinal.codigo_turma,
-        fk_id_status: status.id_status,
-        fk_id_turno: turno.id_turno,
-        data_inicio: new Date(tFinal.data_inicio),
-        data_termino: cronograma.dataTermino,
-        total_alunos: 30, // Padrão
-        alunos_pagantes: tFinal.estado.includes('Comercial') ? 15 : 0,
-        alunos_bolsistas: tFinal.estado.includes('PSG') ? 15 : 0,
-        dias_semana: tFinal.dias_semana.join(','),
+        turmasPendentes.push({
+          ...tFinal,
+          turno: turnoNome,
+          sala_pretendida: candidatas[0]?.nome_sala,
+          motivo
+        });
+        console.warn(`[PENDENTE] ${tFinal.codigo_turma}: ${motivo}`);
+        continue;
       }
-    });
 
-    // Criar os agendamentos das datas letivas
-    const agendamentos = cronograma.datasAulas.map(d => ({
-      id_turmas: turmaCriada.id_turmas,
-      id_salas: salaEscolhida.id_salas,
-      data_aula: new Date(d)
-    }));
+      // Alocação com sucesso!
+      // Registra ocupações
+      for (const d of datasAulas) {
+        ocupacaoSalas.set(`${salaEscolhida.id_salas}:${d}:${turno.id_turno}`, tFinal.codigo_turma);
+        if (instrutor) {
+          ocupacaoInstrutores.set(`${instrutor.id_instrutores}:${d}:${turno.id_turno}`, tFinal.codigo_turma);
+        }
+      }
 
-    await prisma.agendamento.createMany({
-      data: agendamentos
-    });
+      // Cria a turma (total_alunos = 0 indica número de alunos não informado no seed demo)
+      const turmaCriada = await tx.turma.create({
+        data: {
+          id_cursos: curso.id_cursos,
+          id_instrutores: instrutor ? instrutor.id_instrutores : null,
+          codigo_turma: tFinal.codigo_turma,
+          fk_id_status: statusEmAndamento.id_status,
+          fk_id_turno: turno.id_turno,
+          data_inicio: new Date(tFinal.data_inicio),
+          data_termino: cronograma.dataTermino,
+          total_alunos: 0,
+          alunos_pagantes: tFinal.estado.includes('Comercial') ? 15 : 0,
+          alunos_bolsistas: tFinal.estado.includes('PSG') ? 15 : 0,
+          dias_semana: tFinal.dias_semana.join(','),
+        }
+      });
 
-    totalAlocadas++;
-  }
+      // Cria os agendamentos com fk_id_turno
+      const agendamentos = datasAulas.map(d => ({
+        id_turmas: turmaCriada.id_turmas,
+        id_salas: salaEscolhida.id_salas,
+        fk_id_turno: turno.id_turno,
+        data_aula: new Date(d)
+      }));
 
-  console.log(`=== Seed finalizado! ${totalAlocadas} turmas alocadas com sucesso sem conflitos ===`);
+      await tx.agendamento.createMany({
+        data: agendamentos
+      });
+
+      turmasCriadas.push({
+        codigo: tFinal.codigo_turma,
+        curso: curso.nome_curso,
+        sala: salaEscolhida.nome_sala,
+        local: tFinal.local,
+        turno: turnoNome,
+        aulas: datasAulas.length
+      });
+    }
+  }, {
+    timeout: 60000
+  });
+
+  // Salva o CSV de turmas pendentes
+  salvarRelatorioTurmasPendentes(turmasPendentes);
+
+  console.log('\n================ RESUMO DO SEED DEMO ================');
+  console.log(`Total de turmas candidatas avaliadas: ${turmasFinais.length}`);
+  console.log(`Turmas alocadas com sucesso: ${turmasCriadas.length}`);
+  console.log(`Turmas pendentes (não alocadas): ${turmasPendentes.length}`);
+  console.log('=====================================================\n');
+
+  return {
+    totalAvaliadas: turmasFinais.length,
+    totalCriadas: turmasCriadas.length,
+    totalPendentes: turmasPendentes.length,
+    turmasCriadas,
+    turmasPendentes
+  };
 }
 
-main()
-  .catch((e) => {
-    console.error('Erro no seed:', e);
-    process.exit(1);
-  })
-  .finally(async () => {
-    await prisma.$disconnect();
-  });
+if (process.argv[1]?.includes('seedDemo')) {
+  seedDemo()
+    .then((res) => {
+      console.log(`Seed demo concluído com ${res.totalCriadas} turmas criadas e ${res.totalPendentes} pendentes.`);
+    })
+    .catch((e) => {
+      console.error('Erro no seed demo:', e);
+      process.exit(1);
+    })
+    .finally(async () => {
+      await prisma.$disconnect();
+    });
+}

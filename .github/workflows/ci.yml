@@ -14,15 +14,23 @@ jobs:
         with:
           node-version: 20
 
-      - name: Install
-        run: |
-          npm install
+      - name: Instalar backend e gerar Prisma Client
+        run: npm ci --prefix backend
 
-      - name: Lint (optional)
-        run: |
-          npm run lint --if-present
+      - name: Instalar frontend
+        run: npm ci --prefix frontend
 
-      - name: Test (optional)
+      - name: Validar backend
         run: |
-          npm test --if-present
+          npm run lint --prefix backend
+          npm run build --prefix backend
+          npm test --prefix backend
+
+      - name: Validar frontend
+        env:
+          VITE_API_URL: /api
+        run: |
+          npm run typecheck --prefix frontend
+          npm run build --prefix frontend
+          npm test --prefix frontend
 

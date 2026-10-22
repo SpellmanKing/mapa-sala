@@ -14,11 +14,11 @@ import { instrutorRouter } from './controllers/instrutorController.js';
 import { feriadoRouter } from './controllers/feriadoController.js';
 import { calculadoraRouter } from './controllers/calculadoraController.js';
 import { turmaRouter } from './controllers/turmaController.js';
+import { importacaoPlanilhaRouter } from './controllers/importacaoPlanilhaController.js';
 import { prisma } from './infrastructure/prismaClient.js';
-import { env, getJwtSecret } from './config/env.js';
+import { env } from './config/env.js';
 
 export function createApp() {
-  if (env.requireAuth) getJwtSecret();
   const app = express();
 
   app.disable('x-powered-by');
@@ -56,13 +56,13 @@ export function createApp() {
     }
   });
 
-  app.use('/auth', authRouter);
-  app.use('/cursos', authMiddleware, cursoRouter);
-  app.use('/salas', authMiddleware, salaRouter);
-  app.use('/instrutores', authMiddleware, instrutorRouter);
-  app.use('/feriados', authMiddleware, feriadoRouter);
-  app.use('/calcular_cronograma', authMiddleware, calculadoraRouter);
-  app.use('/turmas', authMiddleware, turmaRouter);
+  app.use('/cursos', cursoRouter);
+  app.use('/salas', salaRouter);
+  app.use('/instrutores', instrutorRouter);
+  app.use('/feriados', feriadoRouter);
+  app.use('/calcular_cronograma', calculadoraRouter);
+  app.use('/turmas', turmaRouter);
+  app.use('/importacao-planilha', importacaoPlanilhaRouter);
   app.use(notFoundHandler);
   app.use(errorHandler);
 

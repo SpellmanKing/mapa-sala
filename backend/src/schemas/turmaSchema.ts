@@ -29,7 +29,7 @@ export const disponibilidadeTurmaSchema = z.object({
   id_cursos: z.coerce.number().int().positive('ID do curso é obrigatório'),
   data_inicio: dateInputSchema,
   fk_id_turno: z.coerce.number().int().positive('Turno inválido'),
-  total_alunos: z.coerce.number().int().positive('Total de alunos deve ser positivo'),
+  total_alunos: z.coerce.number().int().min(0, 'Total de alunos não pode ser negativo'),
   dias_semana: diasSemanaSchema,
   id_instrutores: z.coerce.number().int().positive().optional().nullable(),
   ignore_turma_id: z.coerce.number().int().positive().optional(),

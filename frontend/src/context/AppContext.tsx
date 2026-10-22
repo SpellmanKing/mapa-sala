@@ -21,7 +21,6 @@ import {
 } from '../api/client';
 import { SHIFTS } from '../constants/referenceData';
 import { createResourceCache } from '../utils/resourceCache.js';
-import { useAuth } from './AuthContext';
 
 export type Modality = 'Presencial' | 'Semi-Presencial' | 'Remoto';
 export type DataResource = 'cursos' | 'salas' | 'instrutores' | 'turmas' | 'tiposSala';
@@ -159,7 +158,6 @@ const mapTurmas = (data: TurmaApi[]): TurmaDetalhada[] => data.map(turma => ({
 }));
 
 function DataProvider({ children }: { children: ReactNode }) {
-  const { isAuthenticated } = useAuth();
   const [cursos, setCursos] = useState<Curso[]>([]);
   const [salas, setSalas] = useState<Sala[]>([]);
   const [instrutores, setInstrutores] = useState<Instrutor[]>([]);
@@ -202,19 +200,6 @@ function DataProvider({ children }: { children: ReactNode }) {
       }
     }
   }, [loaders]);
-
-  useEffect(() => {
-    if (isAuthenticated) return;
-    loadGeneration.current += 1;
-    activeLoads.current = 0;
-    cache.current.clear();
-    setCursos([]);
-    setSalas([]);
-    setInstrutores([]);
-    setTurmas([]);
-    setTipoSalas([]);
-    setIsLoading(false);
-  }, [isAuthenticated]);
 
   const value = useMemo<AppDataContextData>(() => ({
     cursos,

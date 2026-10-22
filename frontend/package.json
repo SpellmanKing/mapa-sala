@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "test": "node --test src/utils/resourceCache.test.mjs",
+    "test": "node --test src/utils/resourceCache.test.mjs src/api/errorMessage.test.mjs",
     "typecheck": "tsc --noEmit",
     "preview": "vite preview"
   },

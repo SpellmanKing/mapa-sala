@@ -80,7 +80,7 @@ export function SalaModal({
         </div>
 
         {/* Corpo do Modal */}
-        <form onSubmit={(e) => { e.preventDefault(); onSave(); }} className="p-6 flex flex-col gap-4 overflow-y-auto custom-scrollbar">
+        <form onSubmit={(e) => { e.preventDefault(); onSave(); }} className="p-4 sm:p-6 flex flex-col gap-4 overflow-y-auto custom-scrollbar">
           
           {/* Nome da Sala */}
           <div>
@@ -123,7 +123,7 @@ export function SalaModal({
               <select
                 value={form.idTipoSala || (tiposSala[0]?.id ? Number(tiposSala[0].id) : '')}
                 onChange={(e) => setForm((prev) => ({ ...prev, idTipoSala: Number(e.target.value) }))}
-                className="w-full border border-border rounded-xl p-3 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none text-sm font-semibold transition-all bg-input text-text-main cursor-pointer"
+                className="min-w-0 w-full border border-border rounded-xl p-3 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none text-sm font-semibold transition-all bg-input text-text-main cursor-pointer"
                 required
               >
                 {tiposSala.map((tipo) => (

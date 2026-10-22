@@ -194,103 +194,101 @@ erDiagram
 | **Build Tool** | Vite | 5.4+ | Empacotamento ultrarrápido |
 | **Estilização** | Tailwind CSS | 4.x | Design system responsivo e temas claro/escuro |
 | **Testes Unitários** | Vitest | 5.x | Testes automatizados de regras de negócio |
-| **Containerização** | Docker | Docker Compose | Orquestração do PostgreSQL |
+| **Containerização** | Docker | Docker Compose | PostgreSQL, API e frontend Nginx |
 
 ---
 
-## ⚙️ Instalação e Execução
+## ⚙️ Instalação e execução
 
-### Pré-requisitos
-- **Node.js**: `20.x` LTS (ou `18.x`+)
-- **NPM** ou **Yarn**
-- **Docker** ou **WSL2 com Docker Engine** (para subir o PostgreSQL)
+Pré-requisito: Docker Engine com Compose no WSL. Não é necessário instalar Node.js ou Prisma no Windows para usar a pilha completa.
 
----
-
-### Passo 1: Subir o Banco de Dados (Docker)
-
-Na raiz do repositório, execute:
+### 1. Início rápido
 
 ```bash
-docker compose up -d postgres
+git clone <url-do-repositorio> mapa-sala
+cd mapa-sala
+docker compose up --build -d
 ```
 
-O container `mapa-sala-postgres` subirá expondo a porta `5432` com as seguintes credenciais padrão:
-- **Host**: `localhost:5432`
-- **Usuário**: `postgres`
-- **Senha**: `postgres`
-- **Database**: `sgst_bd`
+Neste computador, a partir do PowerShell:
 
----
+```powershell
+wsl -u root -- bash -lc "cd /mnt/c/AllProjects/mapa-sala && docker compose up --build -d"
+```
 
-### Passo 2: Inicializar o Backend (`backend/`)
+- **Painel Web (Frontend)**: **http://localhost/** (ou **http://localhost:5173/**) — abre direto no painel, sem login.
+- **Healthcheck da API**: **http://localhost:3333/health**
 
-1. Acesse o diretório do backend:
-   ```bash
-   cd backend
-   ```
+O backend aplica as migrations e cadastra turnos, status, 39 feriados (nacionais e distritais 2025–2027), salas, instrutores e cursos de referência de forma idempotente ao iniciar. As portas são publicadas apenas em `127.0.0.1`; configure `BIND_HOST` somente se precisar acesso pela rede e houver proteção externa.
 
-2. Crie o arquivo `.env` (ou copie de `.env.example`):
-   ```env
-   PORT=3333
-   DATABASE_URL="postgresql://postgres:postgres@localhost:5432/sgst_bd?schema=public"
-   DIRECT_URL="postgresql://postgres:postgres@localhost:5432/sgst_bd?schema=public"
-   JWT_SECRET="sgst_secret_jwt_2026_senac_df_secure"
-   CORS_ORIGIN="*"
-   ```
+### 2. Carga de demonstração (`db:seed:demo`)
 
-3. Instale as dependências e execute as migrações/seed:
-   ```bash
-   npm install
-   npx prisma generate
-   npx prisma migrate deploy
-   npx prisma db seed
-   ```
-
-4. Inicie o servidor backend:
-   ```bash
-   npm run dev
-   ```
-   O backend estará acessível em: `http://localhost:3333` (verifique com `GET /health`).
-
----
-
-### Passo 3: Inicializar o Frontend (`frontend/`)
-
-1. Em outro terminal, acesse o diretório do frontend:
-   ```bash
-   cd frontend
-   ```
-
-2. Instale as dependências:
-   ```bash
-   npm install
-   ```
-
-3. Inicie o servidor de desenvolvimento:
-   ```bash
-   npm run dev
-   ```
-   O frontend estará acessível em: `http://localhost:5173`.
-
----
-
-## 🧪 Testes e Qualidade de Código
-
-O backend possui suíte de testes unitários automatizados com **Vitest**, cobrindo o motor de cálculo de cronograma, regras de feriados, validação de capacidade física de salas e integridade de alocações:
+Para carregar as turmas de demonstração no banco **descartável**, rode depois que o backend estiver `healthy`:
 
 ```bash
-# Executar todos os testes unitários do backend
-cd backend
-npm test
+docker compose run --rm -e ALLOW_DESTRUCTIVE_SEED=true backend npm run db:seed:demo
 ```
 
-### Pipeline de CI/CD (GitHub Actions)
-O arquivo [`.github/workflows/ci.yml`](.github/workflows/ci.yml) valida a cada `push` e `pull_request`:
-- Compilação dos clientes do Prisma ORM (`prisma generate`);
-- Execução de toda a suíte de testes unitários com Vitest;
-- Compilação TypeScript do backend (`npm run build`);
-- Build do frontend com Vite (`npm run build`).
+Esse comando substitui turmas e agendamentos existentes. Ele não cria turmas incompatíveis com sala, capacidade, instrutor ou código único; as pendências ficam em `relatorios/turmas_pendentes.csv`. O seed de referência é idempotente e automático; não exige `ALLOW_DESTRUCTIVE_SEED`.
+
+### 3. Importação de planilha (com detecção automática de colunas)
+
+Em **Gerenciamento → Cursos → Importar Planilha**, selecione qualquer arquivo `.csv` ou `.xlsx`:
+
+1. **Análise e detecção automática (`/importacao-planilha/analisar`)**: o sistema escolhe automaticamente a aba mais relevante, localiza a linha do cabeçalho (ou opera sem cabeçalho) e identifica as colunas combinando sinônimos do cabeçalho e padrões do conteúdo (datas, turnos, horários como `"14:00 às 18:00"`, códigos `2026.09.55`, cursos, salas, instrutores e quantidades).
+2. **Simulação (`/importacao-planilha/simular`)**: permite revisar/ajustar o mapeamento sugerido e validar conflitos de sala e instrutor sem gravar no banco. Aceita `dias_semana` específicos (`"Ter, Qui, Sáb"`, `"2,4,6"`, `"seg a sex"`), infere o turno pelo horário inicial quando não há coluna de turno, dispensa `local_sala` quando o nome da sala é único e sugere correções para erros de grafia (`"Você quis dizer ...?"`).
+3. **Confirmação (`/importacao-planilha/confirmar`)**: aplica as alterações em transação única preservando aulas anteriores a hoje.
+
+### 4. Backup e restauração do banco de dados
+
+Com o container `postgres` (`mapa-sala-postgres`) em execução:
+
+- **Backup em SQL texto (`pg_dump`)**:
+  ```bash
+  docker compose exec -T postgres pg_dump -U postgres -d sgst_bd --clean --if-exists > backup_sgst.sql
+  ```
+- **Restauração a partir de SQL texto (`psql`)**:
+  ```bash
+  cat backup_sgst.sql | docker compose exec -T postgres psql -U postgres -d sgst_bd
+  ```
+- **Backup e restauração em formato customizado (`pg_restore`)**:
+  ```bash
+  docker compose exec -T postgres pg_dump -U postgres -d sgst_bd -Fc > backup_sgst.dump
+  cat backup_sgst.dump | docker compose exec -T postgres pg_restore -U postgres -d sgst_bd --clean --if-exists
+  ```
+
+### 5. Como parar sem perder dados e como limpar tudo
+
+- **Parar containers sem apagar os dados do banco**:
+  ```bash
+  docker compose down
+  ```
+- **Apagar containers e remover também o volume do banco local** (somente após backup e confirmação):
+  ```bash
+  docker compose down -v
+  ```
+
+### 6. Solução de problemas (WSL / Docker)
+
+- **Containers param sozinhos no Windows após fechar o terminal**: o WSL encerra a distribuição Linux por ociosidade quando não há sessão aberta. Mantenha um terminal WSL ativo enquanto utilizar o sistema.
+- **Serviço Docker parado no WSL**: execute `wsl -u root -- bash -lc "service docker status || service docker start"`.
+- **Container do banco ou backend não fica `healthy`**: verifique `docker compose ps` e `docker compose logs postgres backend`.
+- **Conflito de portas (`80`, `5173`, `3333` ou `5432`)**: verifique se outro serviço local já ocupa a porta no Windows (`netstat -ano | findstr :3333`).
+
+## 🧪 Testes e qualidade
+
+```bash
+npm ci --prefix backend
+npm ci --prefix frontend
+npm run lint --prefix backend
+npm run build --prefix backend
+npm test --prefix backend
+npm run typecheck --prefix frontend
+VITE_API_URL=/api npm run build --prefix frontend
+npm test --prefix frontend
+```
+
+A CI executa essas validações para backend e frontend. O build do backend gera o Prisma Client; não requer banco para compilar.
 
 ---
 
@@ -318,6 +316,11 @@ O arquivo [`.github/workflows/ci.yml`](.github/workflows/ci.yml) valida a cada `
   ```
 - `PUT /turmas/:id/reallocar` — Realoca turma existente para novo ambiente/período.
 - `DELETE /turmas/:id` — Desfaz alocação e libera o ambiente na agenda.
+
+### Importação Inteligente de Planilhas (CSV / XLSX)
+- `POST /importacao-planilha/analisar` — Analisa o arquivo enviado (`application/octet-stream`), seleciona a aba de maior pontuação, detecta a linha de cabeçalho (ou opera sem cabeçalho pelo conteúdo) e sugere o mapeamento de colunas com grau de confiança.
+- `POST /importacao-planilha/simular` — Simula a importação (sem escrita no banco) aceitando opcionalmente `aba`, `linha_cabecalho` e `mapeamento` via query string. Suporta a coluna opcional `dias_semana` (padrão segunda a sexta, aceitando formatos como `"2,4,6"`, `"Ter, Qui, Sáb"` ou `"seg a sex"`) tanto para turmas novas quanto para recomposição das aulas restantes (operação 3), além de `local_sala` opcional quando o nome da sala é único no sistema e inferência de `turno` a partir de horário (ex.: `"14:00 às 18:00"`).
+- `POST /importacao-planilha/confirmar` — Aplica transacionalmente a planilha validada preservando aulas anteriores à data de corte.
 
 ### Cronograma & Feriados
 - `POST /calcular_cronograma` — Projeta término e dias de aula a partir de carga horária e dias letivos:

@@ -8,5 +8,6 @@ export const calculadoraSchema = z.object({
     z.string().regex(/^[0-6]$/, 'Dia da semana deve estar entre 0 e 6')
   ).min(1, 'Informe pelo menos um dia da semana')
     .refine(dias => new Set(dias).size === dias.length, 'Dias da semana duplicados'),
-  horasPorDia: z.coerce.number().finite().positive().max(24).default(4)
+  horasPorDia: z.coerce.number().finite().positive().max(24).optional(),
+  turno: z.enum(['Manhã', 'Tarde', 'Noite']).optional()
 }).strict();

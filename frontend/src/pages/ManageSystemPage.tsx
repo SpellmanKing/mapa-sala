@@ -4,8 +4,10 @@ import { InstrutorModal, InstrutorPayload } from '../components/InstrutorModal';
 import { SalaModal, SalaPayload } from '../components/SalaModal';
 import { ConfirmDeleteModal } from '../components/ConfirmDeleteModal';
 import { FeriadosManager } from '../components/FeriadosManager';
+import { ImportacaoPlanilhaModal } from '../components/ImportacaoPlanilhaModal';
 import { useAppData, useAppUi, Curso, Instrutor, Sala, type DataResource } from '../context/AppContext';
 import { CursoService, InstrutorService, SalaService } from '../api/client';
+import { getApiErrorMessage } from '../api/errorMessage.js';
 import { Plus, Edit, Trash2, BookOpen, Users, School, Search, X, ChevronLeft, ChevronRight, Filter, CalendarDays } from 'lucide-react';
 import { mergeReferenceValues, REFERENCE_UNITS, SHIFTS } from '../constants/referenceData';
 
@@ -26,6 +28,7 @@ export function ManageSystemPage() {
     loadData
   } = useAppData();
   const { showToast } = useAppUi();
+  const [importacaoOpen, setImportacaoOpen] = useState(false);
 
   const [activeTab, setActiveTab] = useState<Tab>('cursos');
 
@@ -362,8 +365,8 @@ export function ManageSystemPage() {
         await refreshTurmas();
       }
       setDeleteModal(prev => ({ ...prev, open: false, isDeleting: false }));
-    } catch (err: any) {
-      const msg = err.response?.data?.error || err.response?.data?.message || `Erro ao excluir ${deleteModal.type}.`;
+    } catch (err: unknown) {
+      const msg = getApiErrorMessage(err, `Erro ao excluir ${deleteModal.type}.`);
       showToast(msg, 'error');
       setDeleteModal(prev => ({ ...prev, isDeleting: false }));
     }
@@ -454,6 +457,9 @@ export function ManageSystemPage() {
         
         <div className="shrink-0 flex items-center gap-2">
           {activeTab === 'cursos' && (
+            <button type="button" onClick={() => setImportacaoOpen(true)} className="w-full sm:w-auto rounded-xl border border-primary px-4 py-2.5 text-sm font-black text-primary">Importar planilha</button>
+          )}
+          {activeTab === 'cursos' && (
             <button 
               onClick={openCursoCreate} 
               className="w-full sm:w-auto bg-primary text-white font-black py-2.5 px-5 rounded-xl shadow-md btn-tactile hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-2 text-sm cursor-pointer"
@@ -481,10 +487,10 @@ export function ManageSystemPage() {
       </div>
 
       {/* Navegação de Abas com Contadores Numéricos */}
-      <div className="glass-panel rounded-2xl p-1.5 shadow-sm flex flex-wrap gap-1.5 overflow-x-auto scrollbar-none transition-colors duration-300">
+      <div className="glass-panel rounded-2xl p-1.5 shadow-sm flex flex-nowrap gap-1.5 overflow-x-auto scrollbar-none transition-colors duration-300">
         <button 
           onClick={() => { setActiveTab('cursos'); setPageCursos(1); }} 
-          className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-sm transition-all btn-tactile cursor-pointer border ${
+          className={`flex shrink-0 items-center gap-2 whitespace-nowrap px-5 py-2.5 rounded-xl font-bold text-sm transition-all btn-tactile cursor-pointer border ${
             activeTab === 'cursos' 
               ? 'bg-primary/10 text-primary border-primary/20 shadow-sm font-black' 
               : 'text-text-muted hover:text-text-main hover:bg-surface border-transparent'
@@ -501,7 +507,7 @@ export function ManageSystemPage() {
 
         <button 
           onClick={() => { setActiveTab('instrutores'); setPageInstrutores(1); }} 
-          className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-sm transition-all btn-tactile cursor-pointer border ${
+          className={`flex shrink-0 items-center gap-2 whitespace-nowrap px-5 py-2.5 rounded-xl font-bold text-sm transition-all btn-tactile cursor-pointer border ${
             activeTab === 'instrutores' 
               ? 'bg-primary/10 text-primary border-primary/20 shadow-sm font-black' 
               : 'text-text-muted hover:text-text-main hover:bg-surface border-transparent'
@@ -518,7 +524,7 @@ export function ManageSystemPage() {
 
         <button 
           onClick={() => { setActiveTab('salas'); setPageSalas(1); }} 
-          className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-sm transition-all btn-tactile cursor-pointer border ${
+          className={`flex shrink-0 items-center gap-2 whitespace-nowrap px-5 py-2.5 rounded-xl font-bold text-sm transition-all btn-tactile cursor-pointer border ${
             activeTab === 'salas' 
               ? 'bg-primary/10 text-primary border-primary/20 shadow-sm font-black' 
               : 'text-text-muted hover:text-text-main hover:bg-surface border-transparent'
@@ -535,7 +541,7 @@ export function ManageSystemPage() {
 
         <button
           onClick={() => setActiveTab('feriados')}
-          className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-sm transition-all btn-tactile cursor-pointer border ${
+          className={`flex shrink-0 items-center gap-2 whitespace-nowrap px-5 py-2.5 rounded-xl font-bold text-sm transition-all btn-tactile cursor-pointer border ${
             activeTab === 'feriados'
               ? 'bg-primary/10 text-primary border-primary/20 shadow-sm font-black'
               : 'text-text-muted hover:text-text-main hover:bg-surface border-transparent'
@@ -1046,6 +1052,10 @@ export function ManageSystemPage() {
       </div>
 
       {/* Modal de Cursos */}
+      <ImportacaoPlanilhaModal open={importacaoOpen} onClose={() => setImportacaoOpen(false)} onConfirmed={async () => {
+        await Promise.all([refreshCursos(), refreshTurmas()]);
+        showToast('Planilha importada com sucesso.', 'success');
+      }} />
       <CursoModal
         open={cursoModalOpen}
         title={editingCurso ? 'Editar Curso' : 'Adicionar Curso'}
