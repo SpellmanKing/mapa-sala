@@ -93,7 +93,7 @@ export function CursoModal({
         </div>
 
         {/* Corpo do Modal com Scroll Interno */}
-        <form onSubmit={(e) => { e.preventDefault(); onSave(); }} className="p-6 flex flex-col gap-5 overflow-y-auto custom-scrollbar">
+        <form onSubmit={(e) => { e.preventDefault(); onSave(); }} className="p-4 sm:p-6 flex flex-col gap-5 overflow-y-auto custom-scrollbar">
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             
@@ -123,7 +123,7 @@ export function CursoModal({
                 onChange={(selected) => setForm(prev => ({ ...prev, instrutorId: selected?.value || '' }))}
                 placeholder="Selecione ou pesquise..."
                 noOptionsMessage={() => "Nenhum instrutor encontrado"}
-                className="text-sm cursor-pointer"
+                className="min-w-0 text-sm cursor-pointer"
                 styles={{
                   control: (base) => ({
                     ...base,
@@ -174,7 +174,7 @@ export function CursoModal({
               <select
                 value={form.unidade}
                 onChange={(e) => setForm((prev) => ({ ...prev, unidade: e.target.value }))}
-                className="w-full border border-border rounded-xl p-3 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none text-sm font-semibold transition-all bg-input text-text-main cursor-pointer"
+                className="min-w-0 w-full border border-border rounded-xl p-3 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none text-sm font-semibold transition-all bg-input text-text-main cursor-pointer"
                 required
               >
                 <option value="" disabled className="bg-card text-text-main">Selecione a unidade...</option>
@@ -209,7 +209,7 @@ export function CursoModal({
               <select
                 value={form.segmento || 'Tecnologia da Informação'}
                 onChange={(e) => setForm((prev) => ({ ...prev, segmento: e.target.value }))}
-                className="w-full border border-border rounded-xl p-3 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none text-sm font-semibold transition-all bg-input text-text-main cursor-pointer"
+                className="min-w-0 w-full border border-border rounded-xl p-3 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none text-sm font-semibold transition-all bg-input text-text-main cursor-pointer"
                 required
               >
                 {[
@@ -385,7 +385,7 @@ export function CursoModal({
               <select
                 value={form.turnoPadrao}
                 onChange={(e) => setForm((prev) => ({ ...prev, turnoPadrao: e.target.value }))}
-                className="w-full border border-border rounded-xl p-3 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none text-sm font-semibold transition-all bg-input text-text-main cursor-pointer"
+                className="min-w-0 w-full border border-border rounded-xl p-3 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none text-sm font-semibold transition-all bg-input text-text-main cursor-pointer"
               >
                 {SHIFTS.map(shift => (
                   <option key={shift.id} value={shift.label} className="bg-card text-text-main">{shift.label}</option>
@@ -401,7 +401,7 @@ export function CursoModal({
               <select
                 value={form.modalidade}
                 onChange={(e) => setForm((prev) => ({ ...prev, modalidade: e.target.value as Modality }))}
-                className="w-full border border-border rounded-xl p-3 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none text-sm font-semibold transition-all bg-input text-text-main cursor-pointer"
+                className="min-w-0 w-full border border-border rounded-xl p-3 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none text-sm font-semibold transition-all bg-input text-text-main cursor-pointer"
               >
                 <option value="Presencial" className="bg-card text-text-main">Presencial</option>
                 <option value="Semi-Presencial" className="bg-card text-text-main">Semi-Presencial</option>

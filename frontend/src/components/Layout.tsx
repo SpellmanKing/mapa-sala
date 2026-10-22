@@ -1,14 +1,12 @@
 import React, { useState } from 'react';
 import { Outlet, Link, useLocation } from 'react-router-dom';
-import { Calendar, Calculator, Settings, Menu, X, Sun, Moon, ChevronLeft, ChevronRight, School, LogOut, UserCircle } from 'lucide-react';
+import { Calendar, Calculator, Settings, Menu, X, Sun, Moon, ChevronLeft, ChevronRight, School } from 'lucide-react';
 import { useAppUi } from '../context/AppContext';
 import { useDialogFocus } from '../utils/useDialogFocus';
-import { useAuth } from '../context/AuthContext';
 
 export function Layout() {
   const location = useLocation();
   const { theme, toggleTheme } = useAppUi();
-  const { user, logout, can } = useAuth();
   const [mobileOpen, setMobileOpen] = useState(false);
   const mobileDrawerRef = useDialogFocus(mobileOpen, () => setMobileOpen(false));
   
@@ -28,11 +26,11 @@ export function Layout() {
   const menuItems = [
     { path: '/painel', label: 'Painel Visual', icon: Calendar },
     { path: '/calculadora', label: 'Calculadora', icon: Calculator },
-    ...(can('MANAGE') ? [{ path: '/manage', label: 'Gerenciamento', icon: Settings }] : []),
+    { path: '/manage', label: 'Gerenciamento', icon: Settings },
   ];
 
   return (
-    <div className="flex flex-col lg:flex-row h-screen text-text-main font-sans overflow-hidden transition-colors duration-300 relative bg-transparent">
+    <div className="flex h-dvh min-h-dvh flex-col overflow-hidden bg-transparent font-sans text-text-main transition-colors duration-300 lg:flex-row">
       
       {/* Mesh Gradients Orgânicos Flutuantes de Fundo */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden z-0 bg-bg transition-colors duration-500">
@@ -55,7 +53,7 @@ export function Layout() {
           <button 
             type="button"
             onClick={toggleTheme}
-            className="p-2 rounded-xl text-text-muted hover:bg-surface hover:text-text-main btn-tactile active:scale-95 transition-all"
+            className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-xl p-2 text-text-muted hover:bg-surface hover:text-text-main btn-tactile active:scale-95 transition-all"
             title="Alternar tema"
             aria-label={theme === 'light' ? 'Ativar tema escuro' : 'Ativar tema claro'}
           >
@@ -64,7 +62,7 @@ export function Layout() {
           <button 
             type="button"
             onClick={() => setMobileOpen(true)}
-            className="p-2 rounded-xl text-text-muted hover:bg-surface btn-tactile active:scale-95 transition-all"
+            className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-xl p-2 text-text-muted hover:bg-surface btn-tactile active:scale-95 transition-all"
             aria-label="Abrir menu principal"
             aria-expanded={mobileOpen}
             aria-controls="mobile-navigation"
@@ -103,7 +101,7 @@ export function Layout() {
                 type="button"
                 data-dialog-initial-focus
                 onClick={() => setMobileOpen(false)}
-                className="p-2 rounded-xl text-text-muted hover:bg-surface hover:text-text-main btn-tactile transition-all"
+                className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-xl p-2 text-text-muted hover:bg-surface hover:text-text-main btn-tactile transition-all"
                 aria-label="Fechar menu principal"
               >
                 <X className="w-5 h-5" />
@@ -134,24 +132,14 @@ export function Layout() {
               })}
             </nav>
             
-            <div className="p-4 border-t border-border bg-surface/30 space-y-3">
+            <div className="p-4 border-t border-border bg-surface/30">
               <div className="flex items-center gap-3 min-w-0">
-                <UserCircle className="w-8 h-8 text-primary shrink-0" />
+                <School className="w-6 h-6 text-primary shrink-0" />
                 <div className="min-w-0">
-                  <p className="text-xs font-bold text-text-main truncate">{user?.email}</p>
-                  <p className="text-[10px] font-black text-text-muted uppercase tracking-wider">{user?.role}</p>
+                  <p className="text-xs font-bold text-text-main truncate">SENAC Distrito Federal</p>
+                  <p className="text-[10px] font-black text-text-muted uppercase tracking-wider">SGST - Mapa de Salas</p>
                 </div>
               </div>
-              <button
-                type="button"
-                onClick={() => {
-                  setMobileOpen(false);
-                  logout();
-                }}
-                className="w-full flex items-center justify-center gap-2 rounded-xl border border-border px-3 py-2.5 text-xs font-bold text-text-muted hover:text-red-600 hover:bg-red-500/10 hover:border-red-500/20 transition-colors"
-              >
-                <LogOut size={15} /> Sair
-              </button>
             </div>
           </aside>
         </div>
@@ -204,19 +192,6 @@ export function Layout() {
 
         {/* Rodapé / Controles */}
         <div className="p-4 border-t border-border/50 flex flex-col gap-2 shrink-0 bg-surface/10 rounded-b-3xl">
-          <div
-            className={`flex items-center rounded-xl bg-surface/40 border border-border/60 ${sidebarCollapsed ? 'justify-center p-2.5' : 'gap-3 px-3 py-2.5'}`}
-            title={sidebarCollapsed ? user?.email : undefined}
-          >
-            <UserCircle className="w-5 h-5 text-primary shrink-0" />
-            {!sidebarCollapsed && (
-              <div className="min-w-0">
-                <p className="text-xs font-bold text-text-main truncate">{user?.email}</p>
-                <p className="text-[9px] font-black text-text-muted uppercase tracking-wider">{user?.role}</p>
-              </div>
-            )}
-          </div>
-          
           {/* Botão de Tema */}
           <button
             type="button"
@@ -260,21 +235,10 @@ export function Layout() {
               </>
             )}
           </button>
-
-          <button
-            type="button"
-            onClick={logout}
-            className={`flex items-center rounded-xl hover:bg-red-500/10 text-text-muted hover:text-red-600 btn-tactile cursor-pointer ${sidebarCollapsed ? 'justify-center p-3' : 'gap-3 px-4 py-2.5 text-sm font-bold'}`}
-            title="Sair do sistema"
-            aria-label="Sair do sistema"
-          >
-            <LogOut className="w-5 h-5" />
-            {!sidebarCollapsed && <span>Sair</span>}
-          </button>
           
           {!sidebarCollapsed && (
             <div className="text-[10px] text-center text-text-muted font-bold uppercase tracking-wider pt-2 border-t border-border/50">
-              v2.0 - Senac
+              v2.0 - Senac DF
             </div>
           )}
         </div>

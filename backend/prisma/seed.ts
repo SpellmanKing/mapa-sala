@@ -2,6 +2,7 @@ import 'dotenv/config';
 import { PrismaClient } from '@prisma/client';
 import xlsx from 'xlsx';
 import path from 'path';
+import { horasPorTurno } from '../src/utils/horasPorTurno.js';
 
 const prisma = new PrismaClient();
 
@@ -684,8 +685,8 @@ const turmasFinais = [
 ];
 
 // Helper para calcular o cronograma de aulas de forma limpa
-async function calcularCronograma(cargaHoraria: number, dataInicio: Date, diasSemana: string[], feriados: string[]) {
-  const horasPorDia = 4;
+async function calcularCronograma(cargaHoraria: number, dataInicio: Date, diasSemana: string[], feriados: string[], turnoNome: string) {
+  const horasPorDia = horasPorTurno(turnoNome);
   const classesNeeded = Math.ceil(cargaHoraria / horasPorDia);
 
   let currentDate = new Date(dataInicio);
@@ -745,6 +746,9 @@ function obterSalasCandidatas(salas: any[], nomeCurso: string, local: string) {
 }
 
 async function main() {
+  if (process.env.ALLOW_DESTRUCTIVE_SEED !== 'true') {
+    throw new Error('Seed destrutivo bloqueado: defina ALLOW_DESTRUCTIVE_SEED=true para executá-lo.');
+  }
   console.log('=== Iniciando Seed do Banco de Dados com Turmas Finais ===');
 
   console.log('Limpando tabelas existentes em ordem...');
@@ -1000,7 +1004,8 @@ async function main() {
       tFinal.carga_horaria,
       new Date(tFinal.data_inicio),
       tFinal.dias_semana,
-      feriadosStrings
+      feriadosStrings,
+      turnoNome
     );
     const datasDate = cronograma.datasAulas.map(d => new Date(d));
 
@@ -1042,10 +1047,17 @@ async function main() {
       }
     }
 
-    // Se ainda assim der conflito (fallback extremo), usar a primeira candidata
+    // Sem sala livre, interromper antes de criar uma alocação conflitante.
     if (!salaEscolhida) {
-      console.warn(`[WARN] Conflito inevitável detectado para a turma ${tFinal.codigo_turma}. Forçando alocação.`);
-      salaEscolhida = salasCandidatas[0] || dbSalas[0];
+      const salasLocal = dbSalas.filter(s => s.local === (tFinal.local.includes('Recanto') ? 'Polo Recanto das Emas' : 'Cep Talal Abu Allan'));
+      const ocupacoes = await Promise.all(salasLocal.map(async sala => {
+        const conflitos = await prisma.agendamento.findMany({
+          where: { id_salas: sala.id_salas, data_aula: { in: datasDate }, turma: { fk_id_turno: turno.id_turno } },
+          select: { data_aula: true }
+        });
+        return `${sala.nome_sala}: ${conflitos.map(c => c.data_aula.toISOString().slice(0, 10)).join(', ') || 'sem conflito'}`;
+      }));
+      throw new Error(`Sem sala livre para a turma ${tFinal.codigo_turma} no turno ${turnoNome}. Salas e datas ocupadas: ${ocupacoes.join('; ') || 'nenhuma sala na unidade'}`);
     }
 
     // Criar a turma no banco de dados

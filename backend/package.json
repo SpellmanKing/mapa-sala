@@ -4,17 +4,20 @@
   "private": true,
   "type": "module",
   "prisma": {
-    "seed": "tsx prisma/seed.ts"
+    "seed": "tsx prisma/seedDemo.ts"
   },
   "scripts": {
     "dev": "tsx watch src/main.ts",
     "start": "node dist/main.js",
-    "build": "tsc -p tsconfig.json",
+    "build": "prisma generate && tsc -p tsconfig.json",
     "test": "vitest run",
     "lint": "tsc --noEmit",
+    "postinstall": "prisma generate",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
     "prisma:studio": "prisma studio",
+    "db:seed:reference": "tsx prisma/seedReferenceData.ts",
+    "db:seed:demo": "tsx prisma/seedDemo.ts",
     "user:create": "tsx prisma/createAdmin.ts"
   },
   "dependencies": {

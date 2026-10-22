@@ -10,13 +10,14 @@ const calculadoraService = new CalculadoraService();
 export const calculadoraRouter = Router();
 
 calculadoraRouter.post('/', authorize(PERMISSIONS.view), asyncHandler(async (req: Request, res: Response) => {
-  const { cargaHoraria, dataInicio, diasSemana, horasPorDia } = calculadoraSchema.parse(req.body);
+  const { cargaHoraria, dataInicio, diasSemana, horasPorDia, turno } = calculadoraSchema.parse(req.body);
 
   const resultado = await calculadoraService.calcularCronograma(
     cargaHoraria,
     dataInicio,
     diasSemana,
-    horasPorDia
+    horasPorDia,
+    turno
   );
 
   res.json(resultado);

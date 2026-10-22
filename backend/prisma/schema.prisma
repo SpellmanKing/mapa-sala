@@ -24,9 +24,10 @@ model StatusTurma {
 }
 
 model Turno {
-  id_turno     Int      @id @default(autoincrement())
-  nome_turno   String   @unique
+  id_turno     Int           @id @default(autoincrement())
+  nome_turno   String        @unique
   turmas       Turma[]
+  agendamentos Agendamento[]
 }
 
 model TipoFeriado {
@@ -103,7 +104,7 @@ model Turma {
   id_turmas        Int           @id @default(autoincrement())
   id_cursos        Int
   id_instrutores   Int?
-  codigo_turma     String   
+  codigo_turma     String        @unique
   fk_id_status     Int           @default(1)
   fk_id_turno      Int
   data_inicio      DateTime
@@ -121,22 +122,26 @@ model Turma {
   turno            Turno         @relation(fields: [fk_id_turno], references: [id_turno])
   agendamentos     Agendamento[]
 
+  @@unique([id_turmas, fk_id_turno])
   @@index([fk_id_turno, data_inicio])
-  @@index([codigo_turma])
 }
 
 model Agendamento {
   id_agendamento   Int      @id @default(autoincrement())
   id_turmas        Int
   id_salas         Int
-  data_aula        DateTime
+  fk_id_turno      Int
+  data_aula        DateTime @db.Date
 
-  turma            Turma    @relation(fields: [id_turmas], references: [id_turmas], onDelete: Cascade, onUpdate: Cascade)
+  turma            Turma    @relation(fields: [id_turmas, fk_id_turno], references: [id_turmas, fk_id_turno], onDelete: Cascade, onUpdate: Cascade)
   sala             Sala     @relation(fields: [id_salas], references: [id_salas], onDelete: Cascade, onUpdate: Cascade)
+  turno            Turno    @relation(fields: [fk_id_turno], references: [id_turno], onDelete: Cascade, onUpdate: Cascade)
 
+  @@unique([id_salas, data_aula, fk_id_turno])
   @@unique([id_turmas, data_aula])
   @@index([data_aula, id_salas])
   @@index([id_salas])
+  @@index([fk_id_turno])
 }
 
 model FeriadosRecessos {

@@ -1,6 +1,7 @@
 import type { NextFunction, Request, Response } from 'express';
 import { Prisma } from '@prisma/client';
 import { ZodError } from 'zod';
+import { HttpError } from '../utils/errors.js';
 
 type ApiErrorPayload = {
   success: false;
@@ -38,6 +39,13 @@ export function errorHandler(err: unknown, req: Request, res: Response, _next: N
         message = 'Já existe uma turma cadastrada com este código!';
       } else if (targets.includes('data_feriado')) {
         message = 'Já existe um feriado ou recesso cadastrado nesta data.';
+      } else if (
+        targets.includes('id_salas') ||
+        targets.includes('data_aula') ||
+        targets.includes('fk_id_turno') ||
+        targets.includes('Agendamento')
+      ) {
+        message = 'Conflito de agendamento: o ambiente já está ocupado nesta data e turno.';
       } else {
         message = 'Conflito de registro duplicado no banco de dados.';
       }
@@ -48,18 +56,10 @@ export function errorHandler(err: unknown, req: Request, res: Response, _next: N
       status = 404;
       message = 'Registro não encontrado no banco de dados.';
     }
-  } else if (typeof err === 'object' && err !== null) {
-    const apiError = err as { statusCode?: unknown; message?: unknown; details?: unknown };
-    if ('statusCode' in err) {
-      const parsedStatus = Number(apiError.statusCode);
-      if (Number.isInteger(parsedStatus) && parsedStatus >= 400 && parsedStatus <= 599) status = parsedStatus;
-    }
-    if ('message' in err) {
-      message = String(apiError.message);
-    }
-    if ('details' in err) {
-      details = apiError.details;
-    }
+  } else if (err instanceof HttpError) {
+    status = err.statusCode;
+    message = err.message;
+    details = err.details;
   }
 
   const payload: ApiErrorPayload = {

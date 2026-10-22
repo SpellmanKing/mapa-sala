@@ -85,27 +85,15 @@ export const authToken = {
   clear: () => sessionStorage.removeItem(TOKEN_KEY)
 };
 
+const configuredApiUrl = import.meta.env.VITE_API_URL?.trim();
+const apiBaseUrl = configuredApiUrl || (import.meta.env.DEV ? 'http://localhost:3333' : undefined);
+if (!apiBaseUrl) {
+  throw new Error('VITE_API_URL deve ser definida para o build de produção.');
+}
+
 export const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:3333',
+  baseURL: apiBaseUrl,
 });
-
-api.interceptors.request.use(config => {
-  const token = authToken.get();
-  if (token) config.headers.Authorization = `Bearer ${token}`;
-  return config;
-});
-
-api.interceptors.response.use(
-  response => response,
-  error => {
-    const isLogin = error.config?.url === '/auth/login';
-    if (error.response?.status === 401 && !isLogin && authToken.get()) {
-      authToken.clear();
-      window.dispatchEvent(new Event(AUTH_UNAUTHORIZED_EVENT));
-    }
-    return Promise.reject(error);
-  }
-);
 
 export const AuthApi = {
   login: (email: string, password: string) =>
@@ -181,3 +169,31 @@ export const TurmaService = {
   
   getAgendamentos: () => api.get('/turmas/agendamentos').then(res => res.data)
 };
+
+export type LinhaImportacao = {
+  linha: number;
+  codigo_turma: string;
+  operacao: '1' | '2' | '3' | 'AVISO' | 'ERRO';
+  mensagem: string;
+  criados: number;
+  alterados: number;
+  mantidos: number;
+};
+
+export type ResultadoImportacao = {
+  data_corte_efetiva: string;
+  linhas: LinhaImportacao[];
+  totais: { criados: number; alterados: number; mantidos: number };
+};
+
+export const ImportacaoPlanilhaService = {
+  simular: (arquivo: File) => enviarPlanilha(arquivo, 'simular'),
+  confirmar: (arquivo: File) => enviarPlanilha(arquivo, 'confirmar')
+};
+
+async function enviarPlanilha(arquivo: File, acao: 'simular' | 'confirmar') {
+  const res = await api.post<ResultadoImportacao>(`/importacao-planilha/${acao}`, await arquivo.arrayBuffer(), {
+    headers: { 'Content-Type': 'application/octet-stream' }
+  });
+  return res.data;
+}

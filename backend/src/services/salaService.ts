@@ -45,9 +45,13 @@ export class SalaService {
   async delete(id: number) {
     await this.getById(id);
     return prisma.$transaction(async (tx) => {
-      await tx.agendamento.deleteMany({
-        where: { id_salas: id }
+      const vinculo = await tx.agendamento.findFirst({
+        where: { id_salas: id },
+        select: { id_agendamento: true }
       });
+      if (vinculo) {
+        throw new HttpError(409, 'Não é possível excluir a sala porque existem turmas ou agendamentos vinculados.');
+      }
       return tx.sala.delete({
         where: { id_salas: id }
       });
