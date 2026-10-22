@@ -268,6 +268,11 @@ A CI executa essas validações para backend e frontend. O build do backend gera
 - `PUT /turmas/:id/reallocar` — Realoca turma existente para novo ambiente/período.
 - `DELETE /turmas/:id` — Desfaz alocação e libera o ambiente na agenda.
 
+### Importação Inteligente de Planilhas (CSV / XLSX)
+- `POST /importacao-planilha/analisar` — Analisa o arquivo enviado (`application/octet-stream`), seleciona a aba de maior pontuação, detecta a linha de cabeçalho (ou opera sem cabeçalho pelo conteúdo) e sugere o mapeamento de colunas com grau de confiança.
+- `POST /importacao-planilha/simular` — Simula a importação (sem escrita no banco) aceitando opcionalmente `aba`, `linha_cabecalho` e `mapeamento` via query string. Suporta a coluna opcional `dias_semana` (padrão segunda a sexta, aceitando formatos como `"2,4,6"`, `"Ter, Qui, Sáb"` ou `"seg a sex"`) tanto para turmas novas quanto para recomposição das aulas restantes (operação 3), além de `local_sala` opcional quando o nome da sala é único no sistema e inferência de `turno` a partir de horário (ex.: `"14:00 às 18:00"`).
+- `POST /importacao-planilha/confirmar` — Aplica transacionalmente a planilha validada preservando aulas anteriores à data de corte.
+
 ### Cronograma & Feriados
 - `POST /calcular_cronograma` — Projeta término e dias de aula a partir de carga horária e dias letivos:
   ```json
