@@ -1,6 +1,11 @@
 import { Prisma, type Curso, type Sala, type Turno, type Turma } from '@prisma/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { calcularCronograma as calcularCronogramaSeedDemo, turmasFinais } from '../../prisma/seedDemo.js';
+import {
+  CURSO_ESPERADO_POR_CODIGO_DUPLICADO,
+  calcularCronograma as calcularCronogramaSeedDemo,
+  turmasFinais,
+  verificarCodigoDuplicado
+} from '../../prisma/seedDemo.js';
 import { prisma } from '../infrastructure/prismaClient.js';
 import { HttpError } from '../utils/errors.js';
 import { TurmaService } from './turmaService.js';
@@ -385,5 +390,39 @@ describe('TurmaService - núcleo operacional', () => {
     expect(intersecao('2025.09.57', '2025.09.114').length).toBeGreaterThan(0);
     expect(intersecao('2025.09.126', '2026.09.77').length).toBeGreaterThan(0);
     expect(intersecao('2026.09.34', '2026.29.14').length).toBeGreaterThan(0);
+  });
+
+  it('seleciona a ocorrência cujo curso bate com o mapeamento explícito de códigos duplicados e mantém a primeira ocorrência para códigos fora do mapeamento', () => {
+    expect(CURSO_ESPERADO_POR_CODIGO_DUPLICADO).toEqual({
+      '2026.09.78': 'Técnico em Administração',
+      '2025.09.55': 'Técnico em Secretariado'
+    });
+
+    const codigosVistos = new Set<string>();
+    const ocorrencias78 = turmasFinais.filter(t => t.codigo_turma === '2026.09.78');
+    const ocorrencias55 = turmasFinais.filter(t => t.codigo_turma === '2025.09.55');
+
+    expect(ocorrencias78).toHaveLength(2);
+    expect(verificarCodigoDuplicado(ocorrencias78[0]!, codigosVistos)).toEqual({
+      aceita: false,
+      motivo: 'Código duplicado: pertence a outra turma (Técnico em Administração); código correto desconhecido'
+    });
+    expect(verificarCodigoDuplicado(ocorrencias78[1]!, codigosVistos)).toEqual({ aceita: true });
+
+    expect(ocorrencias55).toHaveLength(2);
+    expect(verificarCodigoDuplicado(ocorrencias55[0]!, codigosVistos)).toEqual({
+      aceita: false,
+      motivo: 'Código duplicado: pertence a outra turma (Técnico em Secretariado); código correto desconhecido'
+    });
+    expect(verificarCodigoDuplicado(ocorrencias55[1]!, codigosVistos)).toEqual({ aceita: true });
+
+    // Código fora do mapeamento mantém a primeira ocorrência
+    expect(verificarCodigoDuplicado({ codigo_turma: '2099.01.99', nome_curso: 'Curso A' }, codigosVistos)).toEqual({
+      aceita: true
+    });
+    expect(verificarCodigoDuplicado({ codigo_turma: '2099.01.99', nome_curso: 'Curso B' }, codigosVistos)).toEqual({
+      aceita: false,
+      motivo: 'Código de turma duplicado (mantida a primeira ocorrência)'
+    });
   });
 });

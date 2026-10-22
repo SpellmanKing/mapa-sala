@@ -7,6 +7,35 @@ import { seedReferenceData } from './seedReferenceData.js';
 
 const prisma = new PrismaClient();
 
+export const CURSO_ESPERADO_POR_CODIGO_DUPLICADO: Readonly<Record<string, string>> = {
+  '2026.09.78': 'Técnico em Administração',
+  '2025.09.55': 'Técnico em Secretariado'
+};
+
+export function verificarCodigoDuplicado(
+  turma: { codigo_turma: string; nome_curso: string },
+  codigosVistos: Set<string>,
+  mapeamentoCursos: Readonly<Record<string, string>> = CURSO_ESPERADO_POR_CODIGO_DUPLICADO
+): { aceita: true } | { aceita: false; motivo: string } {
+  const cursoEsperado = mapeamentoCursos[turma.codigo_turma];
+  if (cursoEsperado && turma.nome_curso.trim().toLowerCase() !== cursoEsperado.trim().toLowerCase()) {
+    return {
+      aceita: false,
+      motivo: `Código duplicado: pertence a outra turma (${cursoEsperado}); código correto desconhecido`
+    };
+  }
+
+  if (codigosVistos.has(turma.codigo_turma)) {
+    return {
+      aceita: false,
+      motivo: 'Código de turma duplicado (mantida a primeira ocorrência)'
+    };
+  }
+
+  codigosVistos.add(turma.codigo_turma);
+  return { aceita: true };
+}
+
 // Lista das 61 turmas candidatas do projeto
 export const turmasFinais = [
   // --- CEILÂNDIA ---
@@ -840,16 +869,16 @@ export async function seedDemo() {
       const turno = dbTurnos.find(tu => tu.nome_turno === turnoNome)!;
 
       // 1. Checagem de código duplicado
-      if (codigosVistos.has(tFinal.codigo_turma)) {
+      const verificacaoCodigo = verificarCodigoDuplicado(tFinal, codigosVistos);
+      if (!verificacaoCodigo.aceita) {
         turmasPendentes.push({
           ...tFinal,
           turno: turnoNome,
-          motivo: 'Código de turma duplicado (mantida a primeira ocorrência)'
+          motivo: verificacaoCodigo.motivo
         });
-        console.warn(`[PENDENTE] ${tFinal.codigo_turma}: Código de turma duplicado.`);
+        console.warn(`[PENDENTE] ${tFinal.codigo_turma}: ${verificacaoCodigo.motivo}`);
         continue;
       }
-      codigosVistos.add(tFinal.codigo_turma);
 
       // Curso
       const curso = dbCursos.find(c => c.nome_curso.trim().toLowerCase() === tFinal.nome_curso.trim().toLowerCase());
