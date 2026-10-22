@@ -3,6 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   CURSO_ESPERADO_POR_CODIGO_DUPLICADO,
   calcularCronograma as calcularCronogramaSeedDemo,
+  normalizarChaveNome,
   turmasFinais,
   verificarCodigoDuplicado
 } from '../../prisma/seedDemo.js';
@@ -424,5 +425,45 @@ describe('TurmaService - núcleo operacional', () => {
       aceita: false,
       motivo: 'Código de turma duplicado (mantida a primeira ocorrência)'
     });
+  });
+
+  it('mantém exatamente 61 turmas candidatas no seed demo com todos os campos essenciais válidos e nomes normalizados sem duplicidade de grafia', () => {
+    expect(turmasFinais).toHaveLength(61);
+
+    const instrutoresPorNorm = new Map<string, Set<string>>();
+    const cursosPorNorm = new Map<string, Set<string>>();
+
+    for (const t of turmasFinais) {
+      expect(t.codigo_turma).toMatch(/^\d{4}\.\d{2}\.\d+$/);
+      expect(t.nome_curso.trim().length).toBeGreaterThan(0);
+      expect(t.data_inicio).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+      expect(t.carga_horaria).toBeGreaterThan(0);
+      expect(Array.isArray(t.dias_semana)).toBe(true);
+      expect(t.dias_semana.length).toBeGreaterThan(0);
+      for (const d of t.dias_semana) {
+        expect(['0', '1', '2', '3', '4', '5', '6']).toContain(d);
+      }
+      expect(t.horario).toMatch(/^\d{2}:\d{2}\s+às\s+\d{2}:\d{2}$/);
+      expect(typeof t.instrutor).toBe('string');
+      expect(t.estado.trim().length).toBeGreaterThan(0);
+      expect(['Cep Talal Abu Allan', 'Polo Recanto das Emas']).toContain(t.local);
+
+      const chaveCurso = normalizarChaveNome(t.nome_curso);
+      if (!cursosPorNorm.has(chaveCurso)) cursosPorNorm.set(chaveCurso, new Set());
+      cursosPorNorm.get(chaveCurso)!.add(t.nome_curso);
+
+      if (t.instrutor.trim()) {
+        const chaveInst = normalizarChaveNome(t.instrutor);
+        if (!instrutoresPorNorm.has(chaveInst)) instrutoresPorNorm.set(chaveInst, new Set());
+        instrutoresPorNorm.get(chaveInst)!.add(t.instrutor);
+      }
+    }
+
+    for (const [, variantes] of cursosPorNorm) {
+      expect(variantes.size).toBe(1);
+    }
+    for (const [, variantes] of instrutoresPorNorm) {
+      expect(variantes.size).toBe(1);
+    }
   });
 });

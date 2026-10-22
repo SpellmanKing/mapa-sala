@@ -28,6 +28,59 @@ function findDocsFile(filename: string): string | null {
   return null;
 }
 
+export interface FeriadoReferenciaItem {
+  data: string;
+  descricao: string;
+  tipo: 'Nacional' | 'Distrital' | 'Recesso Escolar';
+}
+
+export const FERIADOS_REFERENCIA: readonly FeriadoReferenciaItem[] = [
+  // 2025
+  { data: '2025-01-01', descricao: 'Confraternização Universal', tipo: 'Nacional' },
+  { data: '2025-03-04', descricao: 'Carnaval', tipo: 'Nacional' },
+  { data: '2025-04-18', descricao: 'Paixão de Cristo', tipo: 'Nacional' },
+  { data: '2025-04-21', descricao: 'Tiradentes / Fundação de Brasília', tipo: 'Nacional' },
+  { data: '2025-05-01', descricao: 'Dia do Trabalho', tipo: 'Nacional' },
+  { data: '2025-06-19', descricao: 'Corpus Christi', tipo: 'Nacional' },
+  { data: '2025-09-07', descricao: 'Independência do Brasil', tipo: 'Nacional' },
+  { data: '2025-10-12', descricao: 'Nossa Senhora Aparecida', tipo: 'Nacional' },
+  { data: '2025-11-02', descricao: 'Finados', tipo: 'Nacional' },
+  { data: '2025-11-15', descricao: 'Proclamação da República', tipo: 'Nacional' },
+  { data: '2025-11-20', descricao: 'Dia Nacional de Zumbi e da Consciência Negra', tipo: 'Nacional' },
+  { data: '2025-11-30', descricao: 'Dia do Evangélico (DF)', tipo: 'Distrital' },
+  { data: '2025-12-25', descricao: 'Natal', tipo: 'Nacional' },
+
+  // 2026
+  { data: '2026-01-01', descricao: 'Confraternização Universal', tipo: 'Nacional' },
+  { data: '2026-02-17', descricao: 'Carnaval', tipo: 'Nacional' },
+  { data: '2026-04-03', descricao: 'Paixão de Cristo', tipo: 'Nacional' },
+  { data: '2026-04-21', descricao: 'Tiradentes / Fundação de Brasília', tipo: 'Nacional' },
+  { data: '2026-05-01', descricao: 'Dia do Trabalho', tipo: 'Nacional' },
+  { data: '2026-06-04', descricao: 'Corpus Christi', tipo: 'Nacional' },
+  { data: '2026-09-07', descricao: 'Independência do Brasil', tipo: 'Nacional' },
+  { data: '2026-10-12', descricao: 'Nossa Senhora Aparecida', tipo: 'Nacional' },
+  { data: '2026-11-02', descricao: 'Finados', tipo: 'Nacional' },
+  { data: '2026-11-15', descricao: 'Proclamação da República', tipo: 'Nacional' },
+  { data: '2026-11-20', descricao: 'Dia Nacional de Zumbi e da Consciência Negra', tipo: 'Nacional' },
+  { data: '2026-11-30', descricao: 'Dia do Evangélico (DF)', tipo: 'Distrital' },
+  { data: '2026-12-25', descricao: 'Natal', tipo: 'Nacional' },
+
+  // 2027
+  { data: '2027-01-01', descricao: 'Confraternização Universal', tipo: 'Nacional' },
+  { data: '2027-02-09', descricao: 'Carnaval', tipo: 'Nacional' },
+  { data: '2027-03-26', descricao: 'Paixão de Cristo', tipo: 'Nacional' },
+  { data: '2027-04-21', descricao: 'Tiradentes / Fundação de Brasília', tipo: 'Nacional' },
+  { data: '2027-05-01', descricao: 'Dia do Trabalho', tipo: 'Nacional' },
+  { data: '2027-05-27', descricao: 'Corpus Christi', tipo: 'Nacional' },
+  { data: '2027-09-07', descricao: 'Independência do Brasil', tipo: 'Nacional' },
+  { data: '2027-10-12', descricao: 'Nossa Senhora Aparecida', tipo: 'Nacional' },
+  { data: '2027-11-02', descricao: 'Finados', tipo: 'Nacional' },
+  { data: '2027-11-15', descricao: 'Proclamação da República', tipo: 'Nacional' },
+  { data: '2027-11-20', descricao: 'Dia Nacional de Zumbi e da Consciência Negra', tipo: 'Nacional' },
+  { data: '2027-11-30', descricao: 'Dia do Evangélico (DF)', tipo: 'Distrital' },
+  { data: '2027-12-25', descricao: 'Natal', tipo: 'Nacional' }
+];
+
 export async function seedReferenceData() {
   console.log('--- Carregando Dados de Referência (Idempotente) ---');
 
@@ -72,51 +125,16 @@ export async function seedReferenceData() {
     dbTiposFeriado.set(nome, tf.id_tipo_feriado);
   }
 
-  const idNacional = dbTiposFeriado.get('Nacional')!;
-  const feriadosList = [
-    { data: '2025-01-01', descricao: 'Confraternização Universal' },
-    { data: '2025-03-04', descricao: 'Carnaval' },
-    { data: '2025-04-18', descricao: 'Paixão de Cristo' },
-    { data: '2025-04-21', descricao: 'Tiradentes' },
-    { data: '2025-05-01', descricao: 'Dia do Trabalho' },
-    { data: '2025-09-07', descricao: 'Independência do Brasil' },
-    { data: '2025-10-12', descricao: 'Nossa Sr.a Aparecida' },
-    { data: '2025-11-02', descricao: 'Finados' },
-    { data: '2025-11-15', descricao: 'Proclamação da República' },
-    { data: '2025-12-25', descricao: 'Natal' },
-
-    { data: '2026-01-01', descricao: 'Confraternização Universal' },
-    { data: '2026-02-17', descricao: 'Carnaval' },
-    { data: '2026-04-03', descricao: 'Paixão de Cristo' },
-    { data: '2026-04-21', descricao: 'Tiradentes' },
-    { data: '2026-05-01', descricao: 'Dia do Trabalho' },
-    { data: '2026-09-07', descricao: 'Independência do Brasil' },
-    { data: '2026-10-12', descricao: 'Nossa Sr.a Aparecida' },
-    { data: '2026-11-02', descricao: 'Finados' },
-    { data: '2026-11-15', descricao: 'Proclamação da República' },
-    { data: '2026-12-25', descricao: 'Natal' },
-
-    { data: '2027-01-01', descricao: 'Confraternização Universal' },
-    { data: '2027-02-09', descricao: 'Carnaval' },
-    { data: '2027-03-26', descricao: 'Paixão de Cristo' },
-    { data: '2027-04-21', descricao: 'Tiradentes' },
-    { data: '2027-05-01', descricao: 'Dia do Trabalho' },
-    { data: '2027-09-07', descricao: 'Independência do Brasil' },
-    { data: '2027-10-12', descricao: 'Nossa Sr.a Aparecida' },
-    { data: '2027-11-02', descricao: 'Finados' },
-    { data: '2027-11-15', descricao: 'Proclamação da República' },
-    { data: '2027-12-25', descricao: 'Natal' }
-  ];
-
-  for (const f of feriadosList) {
+  for (const f of FERIADOS_REFERENCIA) {
     const d = new Date(`${f.data}T00:00:00.000Z`);
+    const fkIdTipo = dbTiposFeriado.get(f.tipo) ?? dbTiposFeriado.get('Nacional')!;
     await prisma.feriadosRecessos.upsert({
       where: { data_feriado: d },
-      update: { descricao: f.descricao, fk_id_tipo_feriado: idNacional },
-      create: { data_feriado: d, descricao: f.descricao, fk_id_tipo_feriado: idNacional }
+      update: { descricao: f.descricao, fk_id_tipo_feriado: fkIdTipo },
+      create: { data_feriado: d, descricao: f.descricao, fk_id_tipo_feriado: fkIdTipo }
     });
   }
-  console.log('✓ Feriados nacionais garantidos.');
+  console.log(`✓ ${FERIADOS_REFERENCIA.length} feriados nacionais e distritais garantidos.`);
 
   // 4. Tipos de Sala
   const tiposSala = [
