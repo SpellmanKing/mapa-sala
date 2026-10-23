@@ -5,7 +5,8 @@ import {
   lerPlanilha,
   normalizarData,
   normalizarDiasSemana,
-  normalizarTurnoOuHorario
+  normalizarTurnoOuHorario,
+  validarTamanhoDescompactadoXlsx
 } from './importacaoPlanilhaSchema.js';
 
 describe('planilha de turmas e detecção inteligente de colunas', () => {
@@ -238,5 +239,37 @@ describe('planilha de turmas e detecção inteligente de colunas', () => {
     );
     const arquivo = xlsx.write(workbook, { type: 'buffer', bookType: 'xlsx' }) as Buffer;
     expect(lerPlanilha(arquivo).linhas[0]).toMatchObject({ codigo_turma: 'X', data_inicio: '2026-11-16' });
+  });
+
+  it('recusa arquivo XLSX que excede o limite de tamanho descompactado com mensagem em pt-br', () => {
+    const workbook = xlsx.utils.book_new();
+    xlsx.utils.book_append_sheet(
+      workbook,
+      xlsx.utils.aoa_to_sheet([
+        ['codigo_turma', 'curso', 'sala', 'turno', 'data_inicio'],
+        ['X', 'Curso', 'Sala 1', 'Noite', '2026-11-16']
+      ]),
+      'Turmas'
+    );
+    const arquivo = Buffer.from(xlsx.write(workbook, { type: 'buffer', bookType: 'xlsx' }) as Buffer);
+    expect(() => validarTamanhoDescompactadoXlsx(arquivo, 100)).toThrow(
+      'Arquivo XLSX excede o limite de tamanho descompactado'
+    );
+
+    if (arquivo.readUInt32LE(0) === 0x04034b50) {
+      arquivo.writeUInt32LE(60 * 1024 * 1024, 22);
+    }
+    expect(() => analisarPlanilha(arquivo)).toThrow(
+      'Arquivo XLSX excede o limite de tamanho descompactado (50 MB).'
+    );
+  });
+
+  it('recusa planilha com mais de 2.000 linhas com mensagem em pt-br', () => {
+    const cabecalho = 'codigo_turma,curso,sala,turno,data_inicio';
+    const linhas = Array.from({ length: 2001 }, (_, i) => `T${i},Curso,Sala 1,Noite,16/11/2026`).join('\n');
+    const csvGrande = Buffer.from(`${cabecalho}\n${linhas}`, 'utf8');
+    expect(() => analisarPlanilha(csvGrande)).toThrow(
+      'A planilha excede o limite máximo de 2000 linhas.'
+    );
   });
 });
