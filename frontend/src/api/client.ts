@@ -170,6 +170,49 @@ export const TurmaService = {
   getAgendamentos: () => api.get('/turmas/agendamentos').then(res => res.data)
 };
 
+export type CampoImportacao =
+  | 'id_turma'
+  | 'codigo_turma'
+  | 'curso'
+  | 'carga_horaria'
+  | 'instrutor'
+  | 'sala'
+  | 'local_sala'
+  | 'turno'
+  | 'data_inicio'
+  | 'alunos'
+  | 'dias_semana';
+
+export type MapeamentoColunas = Partial<Record<CampoImportacao, number | null>>;
+
+export type OpcoesImportacaoPlanilha = {
+  aba?: string;
+  linha_cabecalho?: number | null;
+  mapeamento?: MapeamentoColunas;
+};
+
+export type AnaliseColuna = {
+  indice: number;
+  cabecalho: string;
+  campo_sugerido: CampoImportacao | null;
+  confianca: number;
+  ambiguo: boolean;
+  exemplos: string[];
+  alternativas: Array<{ campo: CampoImportacao; confianca: number }>;
+};
+
+export type AnalisePlanilha = {
+  abas: string[];
+  aba_selecionada: string;
+  linha_cabecalho: number | null;
+  colunas: AnaliseColuna[];
+  campos_obrigatorios_ausentes: CampoImportacao[];
+  colunas_ignoradas: Array<{ indice: number; cabecalho: string; exemplos: string[] }>;
+  mapeamento_sugerido: Partial<Record<CampoImportacao, number>>;
+  assinatura_cabecalhos: string;
+  pronto_para_simular: boolean;
+};
+
 export type LinhaImportacao = {
   linha: number;
   codigo_turma: string;
@@ -178,21 +221,42 @@ export type LinhaImportacao = {
   criados: number;
   alterados: number;
   mantidos: number;
+  turno_inferido?: boolean;
 };
 
 export type ResultadoImportacao = {
   data_corte_efetiva: string;
+  aba_selecionada?: string;
+  linha_cabecalho?: number | null;
+  mapeamento?: Partial<Record<CampoImportacao, number>>;
   linhas: LinhaImportacao[];
   totais: { criados: number; alterados: number; mantidos: number };
 };
 
 export const ImportacaoPlanilhaService = {
-  simular: (arquivo: File) => enviarPlanilha(arquivo, 'simular'),
-  confirmar: (arquivo: File) => enviarPlanilha(arquivo, 'confirmar')
+  analisar: (arquivo: File, opcoes?: OpcoesImportacaoPlanilha) =>
+    enviarPlanilha<AnalisePlanilha>(arquivo, 'analisar', opcoes),
+  simular: (arquivo: File, opcoes?: OpcoesImportacaoPlanilha) =>
+    enviarPlanilha<ResultadoImportacao>(arquivo, 'simular', opcoes),
+  confirmar: (arquivo: File, opcoes?: OpcoesImportacaoPlanilha) =>
+    enviarPlanilha<ResultadoImportacao>(arquivo, 'confirmar', opcoes)
 };
 
-async function enviarPlanilha(arquivo: File, acao: 'simular' | 'confirmar') {
-  const res = await api.post<ResultadoImportacao>(`/importacao-planilha/${acao}`, await arquivo.arrayBuffer(), {
+async function enviarPlanilha<T>(
+  arquivo: File,
+  acao: 'analisar' | 'simular' | 'confirmar',
+  opcoes?: OpcoesImportacaoPlanilha
+): Promise<T> {
+  const params: Record<string, string> = {};
+  if (opcoes?.aba) params.aba = opcoes.aba;
+  if (opcoes?.linha_cabecalho !== undefined) {
+    params.linha_cabecalho = opcoes.linha_cabecalho === null ? 'null' : String(opcoes.linha_cabecalho);
+  }
+  if (opcoes?.mapeamento) {
+    params.mapeamento = JSON.stringify(opcoes.mapeamento);
+  }
+  const res = await api.post<T>(`/importacao-planilha/${acao}`, await arquivo.arrayBuffer(), {
+    params,
     headers: { 'Content-Type': 'application/octet-stream' }
   });
   return res.data;
