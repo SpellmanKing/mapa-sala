@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { calculadoraSchema } from './calculadoraSchema.js';
 import { idParamSchema } from './commonSchema.js';
-import { createCursoSchema } from './cursoSchema.js';
+import { configuracaoCursoSchema, createCursoSchema } from './cursoSchema.js';
 import { createFeriadoSchema, updateFeriadoSchema } from './feriadoSchema.js';
 import { createInstrutorSchema, updateInstrutorSchema } from './instrutorSchema.js';
 import { createSalaSchema } from './salaSchema.js';
@@ -51,6 +51,26 @@ describe('schemas de entrada', () => {
     { cargaHoraria: 40, dataInicio: '2026-09-01', diasSemana: ['1'], horasPorDia: 25 }
   ])('rejeita entrada inválida da calculadora', payload => {
     expect(calculadoraSchema.safeParse(payload).success).toBe(false);
+  });
+
+  it('aceita curso totalmente remoto sem dias presenciais nem instrutor padrão', () => {
+    expect(createCursoSchema.parse({
+      nome_curso: 'Curso remoto',
+      segmento: 'TI',
+      carga_horaria: 40,
+      dias_letivos_padrao: null,
+      dias_remotos_padrao: '4,5',
+      id_instrutor_padrao: null
+    })).toMatchObject({ modalidade: 'Remoto', dias_letivos_padrao: null, id_instrutor_padrao: null });
+  });
+
+  it('recusa uma modalidade incompatível e dias com os dois formatos', () => {
+    expect(configuracaoCursoSchema.safeParse({
+      modalidade: 'Remoto', dias_letivos_padrao: '1', dias_remotos_padrao: '5'
+    }).success).toBe(false);
+    expect(configuracaoCursoSchema.safeParse({
+      dias_letivos_padrao: '1,5', dias_remotos_padrao: '5'
+    }).success).toBe(false);
   });
 
   it('rejeita números negativos e payloads incompletos nos cadastros operacionais', () => {

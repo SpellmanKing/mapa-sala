@@ -12,6 +12,7 @@ import {
 } from '../schemas/importacaoPlanilhaSchema.js';
 import { HttpError } from '../utils/errors.js';
 import { horasPorTurno } from '../utils/horasPorTurno.js';
+import { ehAulaRemota } from '../utils/modalidadeAula.js';
 import { CalculadoraService } from './calculadoraService.js';
 
 type Banco = Prisma.TransactionClient;
@@ -37,6 +38,8 @@ type Plano = {
   turno: Turno;
   instrutorId: number | null;
   datas: Date[];
+  datasRemotas: Set<string>;
+  diasLetivos: string[];
   resultado: ResultadoLinha;
 };
 
@@ -248,9 +251,6 @@ export class ImportacaoPlanilhaService {
         const instrutorId = instrutor?.id_instrutores ?? turma?.id_instrutores ?? null;
 
         const alunos = entrada.alunos ?? turma?.total_alunos ?? 30;
-        if (alunos > sala.capacidade_maxima) {
-          throw new Error(`Sala comporta ${sala.capacidade_maxima} alunos; solicitado: ${alunos}.`);
-        }
         if (turma && entrada.data_inicio && entrada.data_inicio !== iso(turma.data_inicio)) {
           throw new Error('Turma existente não muda de data de início.');
         }
@@ -258,6 +258,13 @@ export class ImportacaoPlanilhaService {
 
         let operacao: Plano['operacao'];
         let datas: Date[];
+        let datasRemotas: Set<string>;
+        const diasPadrao = turma
+          ? turma.dias_semana.split(',').filter(Boolean)
+          : [...new Set([curso?.dias_letivos_padrao, curso?.dias_remotos_padrao]
+              .flatMap(valor => valor?.split(',').map(dia => dia.trim()).filter(Boolean) ?? []))];
+        const diasLetivos = entrada.dias_semana?.length ? entrada.dias_semana :
+          diasPadrao.length ? diasPadrao : ['1', '2', '3', '4', '5'];
         let mantidos = turma?.agendamentos.filter(a => iso(a.data_aula) < hoje).length ?? 0;
         let alterados = 0;
 
@@ -265,12 +272,6 @@ export class ImportacaoPlanilhaService {
           if (entrada.data_inicio! < hoje) {
             throw new Error(`Data de início anterior a ${hoje}; não é permitido criar aulas no passado.`);
           }
-          const diasCurso = curso?.dias_letivos_padrao?.split(',').filter(Boolean);
-          const diasLetivos = entrada.dias_semana?.length
-            ? entrada.dias_semana
-            : diasCurso?.length
-              ? diasCurso
-              : ['1', '2', '3', '4', '5'];
           datas = (
             await this.calculadora.calcularCronograma(
               curso?.carga_horaria ?? entrada.carga_horaria!,
@@ -280,15 +281,15 @@ export class ImportacaoPlanilhaService {
               turno.nome_turno
             )
           ).datasAulas.map(dataUtc);
+          datasRemotas = new Set(datas.filter(data => ehAulaRemota(curso, data)).map(iso));
           operacao = '1';
-          codigosNovos.add(entrada.codigo_turma);
-          if (!curso) cargasCursosNovos.set(texto(entrada.curso), entrada.carga_horaria!);
         } else {
           const futuras = turma.agendamentos.filter(a => iso(a.data_aula) >= hoje);
           if (futuras.length) {
             if (turma.fk_id_turno !== turno.id_turno) throw new Error('Turma com aulas futuras não muda de turno.');
             datas = futuras.map(a => a.data_aula);
-            alterados = futuras.filter(a => a.id_salas !== sala.id_salas).length;
+            datasRemotas = new Set(futuras.filter(a => a.id_salas == null).map(a => iso(a.data_aula)));
+            alterados = futuras.filter(a => a.id_salas != null && a.id_salas !== sala.id_salas).length;
             mantidos += futuras.length - alterados;
             operacao = '2';
           } else {
@@ -307,24 +308,26 @@ export class ImportacaoPlanilhaService {
               usados.add(turma.id_turmas);
               continue;
             }
-            const diasTurma = turma.dias_semana.split(',').filter(Boolean);
-            const dias = entrada.dias_semana?.length
-              ? entrada.dias_semana
-              : diasTurma.length
-                ? diasTurma
-                : ['1', '2', '3', '4', '5'];
             datas = (
               await this.calculadora.calcularCronograma(
                 restantes * horasPorTurno(turno.nome_turno),
                 hoje,
-                dias,
+                diasLetivos,
                 undefined,
                 turno.nome_turno
               )
             ).datasAulas.map(dataUtc);
+            datasRemotas = new Set(datas.filter(data => ehAulaRemota(turma.curso, data)).map(iso));
             operacao = '3';
           }
-          usados.add(turma.id_turmas);
+        }
+        if (datas.length > datasRemotas.size && alunos > sala.capacidade_maxima) {
+          throw new Error(`Sala comporta ${sala.capacidade_maxima} alunos; solicitado: ${alunos}.`);
+        }
+        if (turma) usados.add(turma.id_turmas);
+        else {
+          codigosNovos.add(entrada.codigo_turma);
+          if (!curso) cargasCursosNovos.set(texto(entrada.curso), entrada.carga_horaria!);
         }
 
         const sufixoInferido = entrada.turno_inferido ? ` (turno ${turno.nome_turno} inferido)` : '';
@@ -338,7 +341,7 @@ export class ImportacaoPlanilhaService {
           mantidos,
           ...(entrada.turno_inferido ? { turno_inferido: true } : {})
         };
-        planos.push({ entrada, operacao, turma, curso, sala, turno, instrutorId, datas, resultado });
+        planos.push({ entrada, operacao, turma, curso, sala, turno, instrutorId, datas, datasRemotas, diasLetivos, resultado });
         resultados.push(resultado);
       } catch (causa) {
         resultados.push(erro(entrada, causa instanceof Error ? causa.message : 'Erro ao validar linha.'));
@@ -348,20 +351,22 @@ export class ImportacaoPlanilhaService {
     // shortcut: trocas simultâneas de sala/instrutor entre turmas são rejeitadas; suportar quando houver necessidade operacional.
     for (const plano of planos) {
       const conflito = plano.datas.find(data => {
+        const dia = iso(data);
+        const idSala = plano.datasRemotas.has(dia) ? null : plano.sala.id_salas;
         const mesmaData = (a: Ocupacao) => chave(a.data_aula, a.turma.fk_id_turno) === chave(data, plano.turno.id_turno);
         return (
           ocupacoes.some(
             a =>
               a.id_turmas !== plano.turma?.id_turmas &&
               mesmaData(a) &&
-              (a.id_salas === plano.sala.id_salas ||
+              ((idSala != null && a.id_salas === idSala) ||
                 (plano.instrutorId != null && a.turma.id_instrutores === plano.instrutorId))
           ) ||
           planos.some(
             outro =>
               outro !== plano &&
               outro.datas.some(d => chave(d, outro.turno.id_turno) === chave(data, plano.turno.id_turno)) &&
-              (outro.sala.id_salas === plano.sala.id_salas ||
+              ((idSala != null && !outro.datasRemotas.has(dia) && outro.sala.id_salas === idSala) ||
                 (plano.instrutorId != null && outro.instrutorId === plano.instrutorId))
           )
         );
@@ -380,7 +385,7 @@ export class ImportacaoPlanilhaService {
   private async aplicar(db: Banco, planos: Plano[], hoje: string) {
     const cursosCriados = new Map<string, number>();
     for (const plano of planos) {
-      const { entrada, operacao, turma, curso, sala, turno, instrutorId, datas } = plano;
+      const { entrada, operacao, turma, curso, sala, turno, instrutorId, datas, datasRemotas, diasLetivos } = plano;
       if (operacao === '1') {
         let cursoId = curso?.id_cursos ?? cursosCriados.get(texto(entrada.curso));
         if (!cursoId) {
@@ -408,15 +413,13 @@ export class ImportacaoPlanilhaService {
             data_inicio: dataUtc(entrada.data_inicio!),
             data_termino: datas[datas.length - 1]!,
             total_alunos: entrada.alunos ?? 30,
-            dias_semana: entrada.dias_semana?.length
-              ? entrada.dias_semana.join(',')
-              : curso?.dias_letivos_padrao || '1,2,3,4,5'
+            dias_semana: diasLetivos.join(',')
           }
         });
         await db.agendamento.createMany({
           data: datas.map(data_aula => ({
             id_turmas: nova.id_turmas,
-            id_salas: sala.id_salas,
+            id_salas: datasRemotas.has(iso(data_aula)) ? null : sala.id_salas,
             fk_id_turno: turno.id_turno,
             data_aula
           }))
@@ -438,14 +441,14 @@ export class ImportacaoPlanilhaService {
         });
         if (operacao === '2') {
           await db.agendamento.updateMany({
-            where: { id_turmas: turma.id_turmas, data_aula: { gte: dataUtc(hoje) } },
+            where: { id_turmas: turma.id_turmas, data_aula: { gte: dataUtc(hoje) }, id_salas: { not: null } },
             data: { id_salas: sala.id_salas }
           });
         } else {
           await db.agendamento.createMany({
             data: datas.map(data_aula => ({
               id_turmas: turma.id_turmas,
-              id_salas: sala.id_salas,
+              id_salas: datasRemotas.has(iso(data_aula)) ? null : sala.id_salas,
               fk_id_turno: turno.id_turno,
               data_aula
             }))

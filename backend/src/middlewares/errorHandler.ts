@@ -11,7 +11,17 @@ type ApiErrorPayload = {
 };
 
 export function errorHandler(err: unknown, req: Request, res: Response, _next: NextFunction) {
-  // eslint-disable-next-line no-console
+  // Erros do parser podem carregar o corpo original da requisição.
+  if (err instanceof Error && 'type' in err) {
+    if (err.type === 'entity.too.large') {
+      res.status(413).json({ success: false, error: 'O conteúdo enviado excede o limite permitido.', path: req.path });
+      return;
+    }
+    if (err.type === 'entity.parse.failed') {
+      res.status(400).json({ success: false, error: 'Corpo da requisição inválido.', path: req.path });
+      return;
+    }
+  }
   console.error(err);
 
   let status = 500;

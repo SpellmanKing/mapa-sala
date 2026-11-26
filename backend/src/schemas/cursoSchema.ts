@@ -22,10 +22,48 @@ const cursoSchema = z.object({
   id_instrutor_padrao: z.coerce.number().int().positive().optional().nullable(),
 }).strict();
 
+const diasDoCursoSchema = cursoSchema.pick({
+  modalidade: true,
+  dias_letivos_padrao: true,
+  dias_remotos_padrao: true
+}).partial();
+
+type DiasDoCurso = z.infer<typeof diasDoCursoSchema>;
+
+function modalidadeDosDias(dados: DiasDoCurso) {
+  if (dados.dias_remotos_padrao) return dados.dias_letivos_padrao ? 'Semi-Presencial' : 'Remoto';
+  if (dados.dias_letivos_padrao) return 'Presencial';
+}
+
+function validarDias(dados: DiasDoCurso, ctx: z.RefinementCtx) {
+  const presenciais = dados.dias_letivos_padrao?.split(',') ?? [];
+  const remotos = dados.dias_remotos_padrao?.split(',') ?? [];
+  if (remotos.some(dia => presenciais.includes(dia))) {
+    ctx.addIssue({
+      code: 'custom', path: ['dias_remotos_padrao'],
+      message: 'Um mesmo dia não pode ser presencial e remoto.'
+    });
+  }
+  const modalidade = modalidadeDosDias(dados);
+  if (modalidade && dados.modalidade && dados.modalidade !== modalidade) {
+    ctx.addIssue({
+      code: 'custom', path: ['modalidade'],
+      message: 'A modalidade deve corresponder aos dias presenciais e remotos.'
+    });
+  }
+}
+
+export const configuracaoCursoSchema = diasDoCursoSchema.superRefine(validarDias).transform(dados => ({
+  ...dados, modalidade: dados.modalidade ?? modalidadeDosDias(dados)
+}));
+
 export const createCursoSchema = cursoSchema.extend({
-  modalidade: cursoSchema.shape.modalidade.default('Presencial'),
+  modalidade: cursoSchema.shape.modalidade.optional(),
   valor: cursoSchema.shape.valor.default(0),
   curso_tem: cursoSchema.shape.curso_tem.default(false),
   bolsa_compativel: cursoSchema.shape.bolsa_compativel.default(true)
-});
+}).superRefine(validarDias).transform(dados => ({
+  ...dados, modalidade: dados.modalidade ?? modalidadeDosDias(dados) ?? 'Presencial'
+}));
 export const updateCursoSchema = nonEmptyUpdate(cursoSchema);
+export type AtualizacaoCurso = z.infer<typeof updateCursoSchema>;

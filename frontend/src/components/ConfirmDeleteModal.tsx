@@ -26,6 +26,8 @@ export function ConfirmDeleteModal({
   const dialogRef = useDialogFocus(open, onClose, isDeleting);
 
   if (!open) return null;
+  const salaVinculada = itemType === 'sala' && activeTurmasCount > 0;
+  const turmasVinculadas = activeTurmasCount === 1 ? '1 turma vinculada' : `${activeTurmasCount} turmas vinculadas`;
 
   return (
     <div className="fixed inset-0 bg-slate-950/70 backdrop-blur-md flex items-center justify-center p-2 sm:p-4 z-[1000] overflow-hidden">
@@ -45,7 +47,9 @@ export function ConfirmDeleteModal({
             </div>
             <div>
               <h2 id="confirm-delete-title" className="text-base font-black text-text-main tracking-tight font-display">{title}</h2>
-              <span className="text-[11px] font-bold text-red-600 dark:text-red-400 uppercase tracking-wider">Ação Irreversível</span>
+              <span className="text-[11px] font-bold text-red-600 dark:text-red-400 uppercase tracking-wider">
+                {salaVinculada ? 'Exclusão indisponível' : 'Ação irreversível'}
+              </span>
             </div>
           </div>
           <button
@@ -53,7 +57,7 @@ export function ConfirmDeleteModal({
             aria-label="Fechar modal"
             disabled={isDeleting}
             onClick={onClose}
-            className="text-text-muted hover:text-text-main hover:bg-surface p-2 rounded-xl transition-all font-black text-lg leading-none cursor-pointer disabled:opacity-50"
+            className="min-h-11 min-w-11 lg:min-h-0 lg:min-w-0 inline-flex items-center justify-center text-text-muted hover:text-text-main hover:bg-surface p-2 rounded-xl transition-all font-black text-lg leading-none cursor-pointer disabled:opacity-50"
           >
             <X size={18} />
           </button>
@@ -62,7 +66,7 @@ export function ConfirmDeleteModal({
         {/* Conteúdo Informativo */}
         <div className="p-6 flex flex-col gap-4">
           <p className="text-sm text-text-main font-medium leading-relaxed">
-            Você está prestes a excluir permanentemente o {itemType}:
+            {salaVinculada ? 'A sala abaixo ainda tem aulas vinculadas ao calendário.' : 'Registro selecionado para exclusão permanente.'}
           </p>
 
           <div className="p-3.5 rounded-2xl bg-surface/80 border border-border flex items-center gap-3">
@@ -80,12 +84,19 @@ export function ConfirmDeleteModal({
                 Atenção: Vínculos Encontrados
               </div>
               <p className="text-xs text-red-700 dark:text-red-300 font-medium leading-relaxed">
-                Este {itemType} possui <strong>{activeTurmasCount} turma{activeTurmasCount > 1 ? 's' : ''}</strong> associada{activeTurmasCount > 1 ? 's' : ''}. A exclusão removerá todas as alocações e horários vinculados a ele no calendário de salas.
+                <strong>{turmasVinculadas}.</strong>{' '}
+                {salaVinculada
+                  ? 'O sistema bloqueia a exclusão enquanto houver aulas vinculadas.'
+                  : itemType === 'instrutor'
+                    ? 'As turmas e seus horários serão mantidos. O vínculo com o instrutor será removido.'
+                    : 'A exclusão removerá as turmas vinculadas e suas aulas.'}
               </p>
             </div>
           ) : (
             <p className="text-xs text-text-muted">
-              Esta ação não pode ser desfeita e removerá este registro do banco de dados.
+              {itemType === 'instrutor'
+                ? 'O instrutor será removido do cadastro e deixará de ser o padrão nos cursos em que estava indicado.'
+                : 'Esta ação removerá definitivamente o registro do banco de dados.'}
             </p>
           )}
 
@@ -95,15 +106,15 @@ export function ConfirmDeleteModal({
               type="button"
               disabled={isDeleting}
               onClick={onClose}
-              className="w-full sm:w-auto px-5 py-2.5 text-xs font-bold text-text-muted hover:text-text-main hover:bg-surface rounded-xl transition-all cursor-pointer disabled:opacity-50"
+              className="min-h-11 lg:min-h-0 inline-flex items-center justify-center w-full sm:w-auto px-5 py-2.5 text-xs font-bold text-text-muted hover:text-text-main hover:bg-surface rounded-xl transition-all cursor-pointer disabled:opacity-50"
             >
               Cancelar
             </button>
-            <button
+            {!salaVinculada && <button
               type="button"
               disabled={isDeleting}
               onClick={onConfirm}
-              className="w-full sm:w-auto justify-center bg-red-600 hover:bg-red-700 text-white font-black py-2.5 px-6 rounded-xl shadow-md hover:shadow-lg hover:shadow-red-600/20 transition-all cursor-pointer text-xs flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="min-h-11 lg:min-h-0 w-full sm:w-auto justify-center bg-red-600 hover:bg-red-700 text-white font-black py-2.5 px-6 rounded-xl shadow-md hover:shadow-lg hover:shadow-red-600/20 transition-all cursor-pointer text-xs flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isDeleting ? (
                 <>
@@ -114,7 +125,7 @@ export function ConfirmDeleteModal({
                   <Trash2 size={14} /> Confirmar Exclusão
                 </>
               )}
-            </button>
+            </button>}
           </div>
         </div>
 

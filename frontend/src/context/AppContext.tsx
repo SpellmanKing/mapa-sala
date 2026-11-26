@@ -58,6 +58,7 @@ export interface TurmaDetalhada {
   id: string;
   cursoId: string;
   salaId: string;
+  agendamentos: Array<{ salaId: string | null; data: string }>;
   cursoNome: string;
   instrutorNome: string;
   turno: string;
@@ -68,7 +69,7 @@ export interface TurmaDetalhada {
   unidade?: string;
   diasSemana: string[];
   diasRemotos: string[];
-  cursoTem?: boolean;
+  turmaTem: boolean;
   instrutorId?: string;
   totalAlunos: number;
 }
@@ -139,7 +140,11 @@ const mapSalas = (data: SalaApi[]): Sala[] => data.map(sala => ({
 const mapTurmas = (data: TurmaApi[]): TurmaDetalhada[] => data.map(turma => ({
   id: String(turma.id_turmas),
   cursoId: String(turma.id_cursos),
-  salaId: turma.agendamentos[0] ? String(turma.agendamentos[0].id_salas) : '',
+  salaId: turma.agendamentos.find(aula => aula.id_salas != null)?.id_salas?.toString() ?? '',
+  agendamentos: turma.agendamentos.map(aula => ({
+    salaId: aula.id_salas?.toString() ?? null,
+    data: aula.data_aula.slice(0, 10)
+  })),
   cursoNome: turma.curso.nome_curso || 'Curso Desconhecido',
   instrutorNome: turma.instrutor?.nome_instrutor || 'Sem Instrutor',
   turno: turma.turno?.nome_turno || SHIFTS[0].label,
@@ -147,12 +152,12 @@ const mapTurmas = (data: TurmaApi[]): TurmaDetalhada[] => data.map(turma => ({
   dataFim: turma.data_termino?.split('T')[0] ?? '',
   codigo: turma.codigo_turma,
   modalidade: turma.curso.modalidade || 'Presencial',
-  unidade: turma.curso.unidade ?? '',
+  unidade: turma.unidade ?? '',
   diasSemana: turma.dias_semana
     ? turma.dias_semana.split(',')
     : turma.curso.dias_letivos_padrao?.split(',') ?? [],
   diasRemotos: turma.curso.dias_remotos_padrao?.split(',') ?? [],
-  cursoTem: turma.curso.curso_tem,
+  turmaTem: turma.turma_tem,
   instrutorId: turma.id_instrutores ? String(turma.id_instrutores) : '',
   totalAlunos: turma.total_alunos
 }));
@@ -273,7 +278,7 @@ function UiProvider({ children }: { children: ReactNode }) {
         <div
           key={toast.id}
           role="status"
-          className={`fixed top-6 right-6 z-[9999] max-w-sm w-full bg-card border border-border rounded-2xl flex p-4 animate-slide-in pointer-events-auto overflow-hidden relative ${
+          className={`fixed inset-x-3 top-3 z-[9999] ml-auto max-w-sm bg-card border border-border rounded-2xl flex p-4 animate-slide-in pointer-events-auto overflow-hidden sm:inset-x-6 sm:top-6 ${
             toast.type === 'success'
               ? 'border-l-4 border-l-emerald-500 shadow-[0_0_25px_rgba(16,185,129,0.15)]'
               : toast.type === 'error'
@@ -289,7 +294,7 @@ function UiProvider({ children }: { children: ReactNode }) {
           }`}>
             {toast.type === 'success' ? '✓' : toast.type === 'error' ? '!' : 'i'}
           </div>
-          <div className="flex-1">
+          <div className="min-w-0 flex-1 break-words">
             <h3 className="mb-0.5 text-xs font-black uppercase tracking-wider text-text-muted">
               {toast.type === 'error' ? 'Erro de Sistema' : toast.type === 'success' ? 'Sucesso' : 'Aviso'}
             </h3>

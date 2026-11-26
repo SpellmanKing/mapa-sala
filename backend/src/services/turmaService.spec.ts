@@ -24,6 +24,7 @@ vi.mock('../infrastructure/prismaClient.js', () => ({
     },
     turma: {
       findFirst: vi.fn(),
+      findMany: vi.fn(),
       findUnique: vi.fn(),
       count: vi.fn(),
       create: vi.fn(),
@@ -133,6 +134,32 @@ describe('TurmaService - núcleo operacional', () => {
     vi.mocked(prisma.$transaction).mockImplementation(async callback => callback(prisma));
   });
   afterEach(() => vi.useRealTimers());
+
+  it('distingue unidade e TEM em turmas do mesmo curso e mantém as datas e salas reais', async () => {
+    const agendamentos = [
+      { id_salas: 6, data_aula: new Date('2026-03-04') },
+      { id_salas: 5, data_aula: new Date('2026-03-02') }
+    ];
+    const casos = [
+      ['TEM Talal Abu Allan', 'Técnico em Desenvolvimento de Sistemas', true],
+      ['Técnico Regular Talal Abu Allan', 'Técnico em Desenvolvimento de Sistemas', false],
+      ['SEE CEM 111 - EXCLUSIVA', 'Técnico em Administração', true],
+      ['POLO RECANTO DAS EMAS', 'Técnico em Programação de Jogos Digitais (CLDF)', true],
+      ['POLO RECANTO DAS EMAS', 'Técnico em Desenvolvimento de Sistemas', false]
+    ] as const;
+
+    vi.mocked(prisma.turma.findMany).mockResolvedValue(casos.map(([unidade, nome], index) => ({
+      ...turma,
+      id_turmas: index + 1,
+      observacoes: `Nota anterior\r\nUnidade: ${unidade}`,
+      curso: { ...curso, nome_curso: nome, curso_tem: true },
+      agendamentos
+    })));
+
+    expect(await service.getAll()).toMatchObject(casos.map(([unidade, , turma_tem]) => ({
+      unidade, turma_tem, agendamentos
+    })));
+  });
 
   it('rejeita curso inexistente', async () => {
     vi.mocked(prisma.curso.findUnique).mockResolvedValue(null);
@@ -256,6 +283,78 @@ describe('TurmaService - núcleo operacional', () => {
     if (operacao === 'realocar') await service.reallocarTurma(1, dados);
     if (operacao === 'disponibilidade') await service.getDisponibilidade({ ...dados, id_cursos: 1, total_alunos: 20 });
     expect(mockCalcularCronograma).toHaveBeenCalledWith(40, dados.data_inicio, dados.dias_semana, undefined, 'Noite');
+  });
+
+  it('mostra na disponibilidade as mesmas datas verificadas e gravadas na alocação', async () => {
+    const datasAulas = ['2026-03-02', '2026-03-06'];
+    const dataTermino = datasAulas[1];
+    mockCalcularCronograma.mockResolvedValue({
+      dataTermino, totalAulas: 2, horasPorAula: 4, datasAulas, feriadosPulados: []
+    });
+    const dados = {
+      id_cursos: 1, data_inicio: new Date('2026-03-02'),
+      fk_id_turno: 1, total_alunos: 20, dias_semana: ['1', '5']
+    };
+
+    const { cronograma } = await service.getDisponibilidade(dados);
+
+    expect(cronograma).toEqual({ cargaHoraria: 40, dataTermino, totalAulas: 2, horasPorAula: 4, datasAulas, datasRemotas: [] });
+    const datas = cronograma.datasAulas.map(data => new Date(data));
+    expect(prisma.agendamento.findMany).toHaveBeenCalledWith(expect.objectContaining({
+      where: expect.objectContaining({ data_aula: { in: datas } })
+    }));
+    expect(prisma.agendamento.createMany).not.toHaveBeenCalled();
+
+    await service.alocarTurma({ ...dados, id_salas: 5 });
+
+    expect(vi.mocked(prisma.agendamento.createMany).mock.calls[0]?.[0].data).toEqual(
+      datas.map(data_aula => expect.objectContaining({ data_aula, id_salas: 5 }))
+    );
+  });
+
+  it('conta a sexta remota, mantém o conflito de instrutor e libera a sala nessa data', async () => {
+    vi.mocked(prisma.curso.findUnique).mockResolvedValue({ ...curso, modalidade: 'Semi-Presencial', dias_remotos_padrao: '5' });
+    const sexta = new Date('2026-03-06');
+    mockCalcularCronograma.mockResolvedValue({
+      dataTermino: '2026-03-06', totalAulas: 2, horasPorAula: 4, datasAulas: ['2026-03-02', '2026-03-06']
+    });
+    const ocupacao = { ...conflito('sala'), data_aula: sexta, turma: { ...conflito('sala').turma, fk_id_turno: 1 } };
+    vi.mocked(prisma.agendamento.findMany).mockResolvedValue([ocupacao] as never);
+    const dados = {
+      id_cursos: 1, data_inicio: new Date('2026-03-02'),
+      fk_id_turno: 1, total_alunos: 20, dias_semana: ['1', '5'], id_instrutores: 8
+    };
+
+    const disponibilidade = await service.getDisponibilidade(dados);
+    expect(disponibilidade.salasLivres).toEqual([5]);
+    expect(disponibilidade.cronograma).toMatchObject({ totalAulas: 2, datasRemotas: ['2026-03-06'] });
+    await service.alocarTurma({ ...dados, id_salas: 5 });
+    expect(vi.mocked(prisma.agendamento.createMany).mock.calls[0]?.[0].data).toEqual([
+      expect.objectContaining({ id_salas: 5, data_aula: dados.data_inicio }),
+      expect.objectContaining({ id_salas: null, data_aula: sexta })
+    ]);
+
+    vi.mocked(prisma.agendamento.findMany).mockResolvedValue([{
+      ...ocupacao, id_salas: null, sala: null, turma: { ...ocupacao.turma, id_instrutores: 8 }
+    }] as never);
+    expect((await service.getDisponibilidade(dados)).conflitoInstrutor?.data).toEqual(sexta);
+    await expect(service.alocarTurma({ ...dados, id_salas: 5 })).rejects.toThrow('Conflito de instrutor');
+  });
+
+  it('aloca turma totalmente remota sem exigir ambiente físico', async () => {
+    vi.mocked(prisma.curso.findUnique).mockResolvedValue({ ...curso, modalidade: 'Remoto' });
+    const dados = {
+      id_cursos: 1, data_inicio: new Date('2026-03-02'),
+      fk_id_turno: 1, total_alunos: 60, dias_semana: ['1', '2']
+    };
+    expect(await service.getDisponibilidade(dados)).toMatchObject({
+      requerSala: false, salasLivres: [], cronograma: { totalAulas: 2, datasRemotas: ['2026-03-02', '2026-03-03'] }
+    });
+    await service.alocarTurma(dados);
+    expect(prisma.sala.findUnique).not.toHaveBeenCalled();
+    expect(vi.mocked(prisma.agendamento.createMany).mock.calls[0]?.[0].data).toEqual([
+      expect.objectContaining({ id_salas: null }), expect.objectContaining({ id_salas: null })
+    ]);
   });
 
   it('consulta conflito de sala ou instrutor somente nas datas e no turno da turma', async () => {

@@ -92,15 +92,18 @@ describe('ImportacaoPlanilhaService (sem banco)', () => {
     expect(prisma.curso.create).not.toHaveBeenCalled();
   });
 
-  it('confirma toda a planilha em uma transação, alterando apenas agendamentos de hoje em diante', async () => {
+  it('troca a sala em uma transação, preservando aulas passadas e aulas remotas', async () => {
+    vi.mocked(prisma.turma.findMany).mockResolvedValue([{
+      ...turma, agendamentos: [antiga, futura, { ...futura, id_salas: null, data_aula: data('2026-10-19') }]
+    }] as never);
     const resultado = await new ImportacaoPlanilhaService().processar(
       csv('57,B,Curso B,,Ana,Lab 2,Recanto,Tarde,,20'),
       true
     );
-    expect(resultado.linhas[0]?.operacao).toBe('2');
+    expect(resultado.linhas[0]).toMatchObject({ operacao: '2', alterados: 1, mantidos: 2 });
     expect(prisma.$transaction).toHaveBeenCalledTimes(1);
     expect(prisma.agendamento.updateMany).toHaveBeenCalledWith({
-      where: { id_turmas: 57, data_aula: { gte: data('2026-10-15') } },
+      where: { id_turmas: 57, data_aula: { gte: data('2026-10-15') }, id_salas: { not: null } },
       data: { id_salas: 2 }
     });
     expect(prisma.agendamento.deleteMany).toBeUndefined();

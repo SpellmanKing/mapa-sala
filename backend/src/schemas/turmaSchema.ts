@@ -8,7 +8,7 @@ const diasSemanaSchema = z.array(
 
 export const alocarTurmaSchema = z.object({
   id_cursos: z.coerce.number().int().positive('ID do curso é obrigatório'),
-  id_salas: z.coerce.number().int().positive('ID da sala é obrigatório'),
+  id_salas: z.coerce.number().int().positive('Sala inválida').nullish(),
   data_inicio: dateInputSchema,
   fk_id_turno: z.coerce.number().int().positive('Turno inválido'),
   total_alunos: z.coerce.number().int().positive('Total de alunos deve ser positivo'),
@@ -18,7 +18,7 @@ export const alocarTurmaSchema = z.object({
 }).strict();
 
 export const reallocarTurmaSchema = z.object({
-  id_salas: z.coerce.number().int().positive('Sala inválida'),
+  id_salas: z.coerce.number().int().positive('Sala inválida').nullish(),
   data_inicio: dateInputSchema,
   fk_id_turno: z.coerce.number().int().positive('Turno inválido'),
   dias_semana: diasSemanaSchema,

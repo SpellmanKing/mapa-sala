@@ -129,12 +129,12 @@ model Turma {
 model Agendamento {
   id_agendamento   Int      @id @default(autoincrement())
   id_turmas        Int
-  id_salas         Int
+  id_salas         Int?
   fk_id_turno      Int
   data_aula        DateTime @db.Date
 
   turma            Turma    @relation(fields: [id_turmas, fk_id_turno], references: [id_turmas, fk_id_turno], onDelete: Cascade, onUpdate: Cascade)
-  sala             Sala     @relation(fields: [id_salas], references: [id_salas], onDelete: Cascade, onUpdate: Cascade)
+  sala             Sala?    @relation(fields: [id_salas], references: [id_salas], onDelete: Cascade, onUpdate: Cascade)
   turno            Turno    @relation(fields: [fk_id_turno], references: [id_turno], onDelete: Cascade, onUpdate: Cascade)
 
   @@unique([id_salas, data_aula, fk_id_turno])

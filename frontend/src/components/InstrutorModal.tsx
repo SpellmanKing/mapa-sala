@@ -54,7 +54,7 @@ export function InstrutorModal({ open, title, error, onClose, onSave, form, setF
             aria-label="Fechar modal de instrutor"
             disabled={isSaving}
             onClick={onClose}
-            className="text-text-muted hover:text-text-main hover:bg-surface/60 p-2 rounded-xl transition-all font-black text-lg leading-none btn-tactile cursor-pointer disabled:opacity-50"
+            className="min-h-11 min-w-11 lg:min-h-0 lg:min-w-0 inline-flex items-center justify-center text-text-muted hover:text-text-main hover:bg-surface/60 p-2 rounded-xl transition-all font-black text-lg leading-none btn-tactile cursor-pointer disabled:opacity-50"
           >
             ×
           </button>
@@ -79,8 +79,8 @@ export function InstrutorModal({ open, title, error, onClose, onSave, form, setF
 
           {/* Tratamento de Erros */}
           {error && (
-            <div role="alert" className="bg-red-50 dark:bg-red-950/10 border border-red-150 dark:border-red-900/30 p-4 rounded-xl">
-              <p className="text-xs font-bold text-red-750 dark:text-red-400 leading-normal">{error}</p>
+            <div role="alert" className="bg-red-50 dark:bg-red-950/10 border border-red-200 dark:border-red-900/30 p-4 rounded-xl">
+              <p className="text-xs font-bold text-red-700 dark:text-red-400 leading-normal">{error}</p>
             </div>
           )}
 
@@ -90,14 +90,14 @@ export function InstrutorModal({ open, title, error, onClose, onSave, form, setF
               type="button" 
               disabled={isSaving}
               onClick={onClose} 
-              className="w-full sm:w-auto px-5 py-2.5 text-sm font-bold text-text-muted hover:text-text-main hover:bg-surface/50 rounded-xl btn-tactile cursor-pointer disabled:opacity-50"
+              className="min-h-11 lg:min-h-0 inline-flex items-center justify-center w-full sm:w-auto px-5 py-2.5 text-sm font-bold text-text-muted hover:text-text-main hover:bg-surface/50 rounded-xl btn-tactile cursor-pointer disabled:opacity-50"
             >
               Cancelar
             </button>
             <button 
               type="submit" 
               disabled={isSaving}
-              className="w-full sm:w-auto justify-center bg-primary text-white font-black py-2.5 px-6 rounded-xl shadow-md hover:bg-primary/90 btn-tactile cursor-pointer text-sm flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="min-h-11 lg:min-h-0 w-full sm:w-auto justify-center bg-primary text-white font-black py-2.5 px-6 rounded-xl shadow-md hover:bg-primary/90 btn-tactile cursor-pointer text-sm flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isSaving ? (
                 <>

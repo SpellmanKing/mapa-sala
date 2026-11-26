@@ -245,7 +245,7 @@ export function Layout() {
       </aside>
 
       {/* Area de Conteúdo Principal */}
-      <main className="flex-1 overflow-auto relative z-10 transition-all duration-300">
+      <main className="relative z-10 min-w-0 flex-1 overflow-auto has-[[role=dialog]]:z-40">
         <div className="mx-auto p-4 md:p-6 lg:p-8 h-full animate-in fade-in slide-in-from-bottom-8 duration-700">
           <Outlet />
         </div>

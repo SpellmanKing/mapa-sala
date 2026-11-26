@@ -1,5 +1,6 @@
 import { prisma } from '../infrastructure/prismaClient.js';
 import { HttpError } from '../utils/errors.js';
+import { configuracaoCursoSchema, type AtualizacaoCurso } from '../schemas/cursoSchema.js';
 import type { Prisma } from '@prisma/client';
 
 export class CursoService {
@@ -30,11 +31,19 @@ export class CursoService {
     });
   }
 
-  async update(id: number, data: Prisma.CursoUncheckedUpdateInput) {
-    await this.getById(id);
+  async update(id: number, data: AtualizacaoCurso) {
+    const atual = await this.getById(id);
+    const { modalidade, dias_letivos_padrao, dias_remotos_padrao } = data;
+    const configuracao = modalidade !== undefined || dias_letivos_padrao !== undefined || dias_remotos_padrao !== undefined
+      ? configuracaoCursoSchema.parse({
+          modalidade,
+          dias_letivos_padrao: dias_letivos_padrao === undefined ? atual.dias_letivos_padrao : dias_letivos_padrao,
+          dias_remotos_padrao: dias_remotos_padrao === undefined ? atual.dias_remotos_padrao : dias_remotos_padrao
+        })
+      : {};
     return prisma.curso.update({
       where: { id_cursos: id },
-      data
+      data: { ...data, ...configuracao }
     });
   }
 

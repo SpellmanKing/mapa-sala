@@ -1,6 +1,6 @@
 import 'dotenv/config';
 import { PrismaClient } from '@prisma/client';
-import xlsx from 'xlsx';
+import * as xlsx from 'xlsx';
 import path from 'path';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
@@ -81,6 +81,27 @@ export const FERIADOS_REFERENCIA: readonly FeriadoReferenciaItem[] = [
   { data: '2027-12-25', descricao: 'Natal', tipo: 'Nacional' }
 ];
 
+export const INSTRUTORES_COMPLEMENTARES: ReadonlyArray<{ nome: string; segmento: string }> = [
+  { nome: 'Wellerson Pereira do Couto', segmento: 'Tecnologia da Informação' },
+  { nome: 'Lucas Augusto Esmeraldo de Oliveira', segmento: 'Gestão' },
+  { nome: 'André Luiz Soares Alonso', segmento: 'Gestão' },
+  { nome: 'Leandro das Chagas Ferreira', segmento: 'Gestão' },
+  { nome: 'Ricardo Pereira Gomes De Araujo', segmento: 'Gestão' },
+  { nome: 'Analice Barbosa Santos De Oliveira', segmento: 'Gestão' },
+  { nome: 'Carlos Eduardo Alves Munis', segmento: 'Gestão' },
+  { nome: 'Ricardo De Souza Serra', segmento: 'Tecnologia da Informação' },
+  { nome: 'Vitor Gonçalves', segmento: 'Tecnologia da Informação' },
+  { nome: 'Nicole Cândido de Oliveira Andrade', segmento: 'Tecnologia da Informação' },
+  { nome: 'Marileia De Jesus Amorim', segmento: 'Gestão' },
+  { nome: 'Jose De Assis Custodio', segmento: 'Gestão' },
+  { nome: 'Dionisio Francisco Pereira', segmento: 'Gestão' },
+  { nome: 'Shirliany Andrade Do Nascimento', segmento: 'Gestão' },
+  { nome: 'Flavia Renata Martins', segmento: 'Gestão' },
+  { nome: 'Ricardo Da Silva Pierre', segmento: 'Gestão' },
+  { nome: 'Guilherme Lima Silva', segmento: 'Tecnologia da Informação' },
+  { nome: 'Lucas Dionísio Gomes Lima', segmento: 'Tecnologia da Informação' },
+];
+
 export async function seedReferenceData() {
   console.log('--- Carregando Dados de Referência (Idempotente) ---');
 
@@ -144,6 +165,7 @@ export async function seedReferenceData() {
     'Laboratório de Imagem Pessoal',
     'Laboratório de Moda',
     'Auditório',
+    'Unidade Escolar Parceira (SEE)',
     'Comum'
   ];
   const dbTiposSala = new Map<string, number>();
@@ -157,12 +179,9 @@ export async function seedReferenceData() {
   }
   console.log('✓ Tipos de sala garantidos.');
 
-  // 5. Salas (Ceilândia e Recanto das Emas)
-  // Regras estritas:
-  // - Recanto das Emas tem apenas: Laboratório 1, Laboratório 2 e Sala Multiuso.
-  // - Laboratório de Informática 3 fica no CEP Talal Abu Allan.
+  // 5. Salas (Ceilândia, Recanto das Emas e Unidades Parceiras SEE-DF Exclusivas)
   const salasDefinicoes = [
-    // Cep Talal Abu Allan
+    // Cep Talal Abu Allan (14 ambientes internos)
     { nome: 'Sala 1', capacidade: 30, local: 'Cep Talal Abu Allan', tipo: 'Sala de aula Inovadora', recursos: '1º Andar, carteiras universitárias, TV ou projetor, climatização' },
     { nome: 'Sala 2', capacidade: 20, local: 'Cep Talal Abu Allan', tipo: 'Sala de aula Inovadora', recursos: '2º Andar, mesas móveis em formato trapézio, TV ou projetor, climatização' },
     { nome: 'Sala 3', capacidade: 35, local: 'Cep Talal Abu Allan', tipo: 'Sala de aula Inovadora', recursos: '2º Andar, carteiras universitárias, TV ou projetor, climatização' },
@@ -170,7 +189,7 @@ export async function seedReferenceData() {
     { nome: 'Sala 5', capacidade: 20, local: 'Cep Talal Abu Allan', tipo: 'Sala de aula Inovadora', recursos: '2º Andar, mesas móveis em formato trapézio, TV ou projetor, climatização' },
     { nome: 'Sala 6', capacidade: 32, local: 'Cep Talal Abu Allan', tipo: 'Sala de aula Inovadora', recursos: '2º Andar, carteiras universitárias, TV ou projetor, climatização' },
     { nome: 'Laboratório de TI 1', capacidade: 28, local: 'Cep Talal Abu Allan', tipo: 'Laboratório de TI', recursos: 'rack de rede com patch panels, 30 computadores, projetor multimídia' },
-    { nome: 'Laboratório de TI 2', capacidade: 28, local: 'Cep Talal Abu Allan', tipo: 'Laboratório de TI', recursos: 'rack de rede com patch panels, 30 computadores, projetor multimídia' },
+    { nome: 'Laboratório de TI 2', capacidade: 32, local: 'Cep Talal Abu Allan', tipo: 'Laboratório de TI', recursos: 'rack de rede com patch panels, 32 lugares, computadores, projetor multimídia' },
     { nome: 'Laboratório de Informática 3', capacidade: 30, local: 'Cep Talal Abu Allan', tipo: 'Laboratório de TI', recursos: '30 computadores, servidor local para testes e virtualização' },
     { nome: 'Produção de Moda', capacidade: 20, local: 'Cep Talal Abu Allan', tipo: 'Laboratório de Moda', recursos: 'máquinas de costura domésticas e industriais, mesa de corte grande' },
     { nome: 'Imagem - Cabelos', capacidade: 18, local: 'Cep Talal Abu Allan', tipo: 'Laboratório de Imagem Pessoal', recursos: 'cadeiras de cabeleireiro, lavatórios, espelhos grandes' },
@@ -178,10 +197,23 @@ export async function seedReferenceData() {
     { nome: 'Imagem - Maquiagem e Produção', capacidade: 14, local: 'Cep Talal Abu Allan', tipo: 'Laboratório de Imagem Pessoal', recursos: 'cadeiras de maquiagem, espelhos com iluminação camarim' },
     { nome: 'Auditório', capacidade: 70, local: 'Cep Talal Abu Allan', tipo: 'Auditório', recursos: 'Projetor, sistema de som, 70 cadeiras, climatização' },
 
-    // Polo Recanto das Emas
+    // Polo Recanto das Emas (3 ambientes internos)
     { nome: 'Laboratório 1 (Recanto)', capacidade: 30, local: 'Polo Recanto das Emas', tipo: 'Laboratório de TI', recursos: 'computadores, servidor local, projetor multimídia, climatização' },
     { nome: 'Laboratório 2 (Recanto)', capacidade: 30, local: 'Polo Recanto das Emas', tipo: 'Laboratório de TI', recursos: 'computadores, servidor local, projetor multimídia, climatização' },
-    { nome: 'Sala Multiuso (Recanto)', capacidade: 16, local: 'Polo Recanto das Emas', tipo: 'Laboratório Multiuso', recursos: 'bancadas para estética, cadeiras de cabeleireiro, lavatório, cirandinha' }
+    { nome: 'Sala Multiuso (Recanto)', capacidade: 16, local: 'Polo Recanto das Emas', tipo: 'Laboratório Multiuso', recursos: 'bancadas para estética, cadeiras de cabeleireiro, lavatório, cirandinha' },
+
+    // Escolas Parceiras SEE-DF Exclusivas (11 ambientes externos dedicados)
+    { nome: 'SEE CEM 111 - Sala 1', capacidade: 40, local: 'SEE CEM 111 - EXCLUSIVA', tipo: 'Unidade Escolar Parceira (SEE)', recursos: 'Ambiente escolar parceiro SEE-DF (CEM 111)' },
+    { nome: 'SEE CEM 111 - Sala 2', capacidade: 40, local: 'SEE CEM 111 - EXCLUSIVA', tipo: 'Unidade Escolar Parceira (SEE)', recursos: 'Ambiente escolar parceiro SEE-DF (CEM 111)' },
+    { nome: 'SEE CEM 111 - Sala 3', capacidade: 40, local: 'SEE CEM 111 - EXCLUSIVA', tipo: 'Unidade Escolar Parceira (SEE)', recursos: 'Ambiente escolar parceiro SEE-DF (CEM 111)' },
+    { nome: 'SEE CEM 111 - Sala 4', capacidade: 40, local: 'SEE CEM 111 - EXCLUSIVA', tipo: 'Unidade Escolar Parceira (SEE)', recursos: 'Ambiente escolar parceiro SEE-DF (CEM 111)' },
+    { nome: 'SEE CEM 111 - Sala 5', capacidade: 40, local: 'SEE CEM 111 - EXCLUSIVA', tipo: 'Unidade Escolar Parceira (SEE)', recursos: 'Ambiente escolar parceiro SEE-DF (CEM 111)' },
+    { nome: 'SEE CEM 12 - Sala Exclusiva', capacidade: 40, local: 'SEE CEM 12 - EXCLUSIVA', tipo: 'Unidade Escolar Parceira (SEE)', recursos: 'Ambiente escolar parceiro SEE-DF (CEM 12)' },
+    { nome: 'SEE CED 11 - Sala 1', capacidade: 45, local: 'SEE CED 11 - EXCLUSIVA', tipo: 'Unidade Escolar Parceira (SEE)', recursos: 'Ambiente escolar parceiro SEE-DF (CED 11)' },
+    { nome: 'SEE CED 11 - Sala 2', capacidade: 45, local: 'SEE CED 11 - EXCLUSIVA', tipo: 'Unidade Escolar Parceira (SEE)', recursos: 'Ambiente escolar parceiro SEE-DF (CED 11)' },
+    { nome: 'SEE CED 07 - Sala Exclusiva', capacidade: 40, local: 'SEE CED 07 - EXCLUSIVA', tipo: 'Unidade Escolar Parceira (SEE)', recursos: 'Ambiente escolar parceiro SEE-DF (CED 07)' },
+    { nome: 'SEE CEM 308 - Sala 1', capacidade: 45, local: 'SEE CEM 308 - EXCLUSIVA', tipo: 'Unidade Escolar Parceira (SEE)', recursos: 'Ambiente escolar parceiro SEE-DF (CEM 308)' },
+    { nome: 'SEE CEM 308 - Sala 2', capacidade: 45, local: 'SEE CEM 308 - EXCLUSIVA', tipo: 'Unidade Escolar Parceira (SEE)', recursos: 'Ambiente escolar parceiro SEE-DF (CEM 308)' }
   ];
 
   for (const s of salasDefinicoes) {
@@ -213,56 +245,70 @@ export async function seedReferenceData() {
   }
   console.log(`✓ ${salasDefinicoes.length} salas cadastradas/atualizadas sem duplicatas.`);
 
-  // 6. Instrutores (docs/instrutores_tabela.xlsx)
+  // 6. Instrutores (docs/instrutores_tabela.xlsx + instrutores complementares das turmas ativas)
   const instrutoresFilePath = findDocsFile('instrutores_tabela.xlsx');
   let totalInstrutores = 0;
   if (instrutoresFilePath) {
     try {
-      const wb = xlsx.readFile(instrutoresFilePath);
-      const rows = xlsx.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]) as any[];
-      for (const row of rows) {
-        const nome = String(row.Nome || row.nome || '').trim();
-        if (nome) {
-          await prisma.instrutor.upsert({
-            where: { nome_instrutor: nome },
-            update: { segmento_principal: row.Segmento ? String(row.Segmento).trim() : null },
-            create: { nome_instrutor: nome, segmento_principal: row.Segmento ? String(row.Segmento).trim() : null }
-          });
-          totalInstrutores++;
+      const buf = fs.readFileSync(instrutoresFilePath);
+      const wb = xlsx.read(buf, { type: 'buffer' });
+      for (const sheetName of wb.SheetNames) {
+        const rows = xlsx.utils.sheet_to_json(wb.Sheets[sheetName]!) as any[];
+        for (const row of rows) {
+          const nome = String(row.Nome || row.nome || '').trim();
+          if (nome) {
+            await prisma.instrutor.upsert({
+              where: { nome_instrutor: nome },
+              update: { segmento_principal: row.Segmento ? String(row.Segmento).trim() : null },
+              create: { nome_instrutor: nome, segmento_principal: row.Segmento ? String(row.Segmento).trim() : null }
+            });
+            totalInstrutores++;
+          }
         }
       }
-      console.log(`✓ ${totalInstrutores} instrutores carregados a partir de instrutores_tabela.xlsx.`);
+      console.log(`✓ Instrutores da planilha instrutores_tabela.xlsx sincronizados (${totalInstrutores} linhas processadas).`);
     } catch (err) {
       console.warn('Aviso: erro ao ler instrutores_tabela.xlsx', err);
     }
   }
+
+  for (const inst of INSTRUTORES_COMPLEMENTARES) {
+    await prisma.instrutor.upsert({
+      where: { nome_instrutor: inst.nome },
+      update: { segmento_principal: inst.segmento },
+      create: { nome_instrutor: inst.nome, segmento_principal: inst.segmento }
+    });
+  }
+  console.log(`✓ ${INSTRUTORES_COMPLEMENTARES.length} instrutores titulares garantidos.`);
 
   // 7. Cursos (docs/portfolio.xlsx)
   const portfolioFilePath = findDocsFile('portfolio.xlsx');
   let totalCursos = 0;
   if (portfolioFilePath) {
     try {
-      const wb = xlsx.readFile(portfolioFilePath);
-      const rows = xlsx.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]) as any[];
+      const buf = fs.readFileSync(portfolioFilePath);
+      const wb = xlsx.read(buf, { type: 'buffer' });
+      const rows = xlsx.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]!]!) as any[];
       for (const row of rows) {
         const nome = String(row['Nome do Curso'] || row.nome_curso || '').trim();
         if (nome) {
-          const ch = Number(row['Carga Horaria']) || 160;
+          const chParsed = parseInt(String(row['Carga Horaria'] ?? ''), 10);
+          const ch = Number.isFinite(chParsed) && chParsed > 0 ? chParsed : 160;
           const valorNum = typeof row.Valor === 'number' ? row.Valor : 0;
           await prisma.curso.upsert({
             where: { nome_curso: nome },
             update: {
               carga_horaria: ch,
               segmento: String(row.Segmento || 'Geral').trim(),
-              modalidade: String(row.Modalidade || 'Presencial').trim(),
+              modalidade: 'Presencial',
             },
             create: {
               nome_curso: nome,
               carga_horaria: ch,
               segmento: String(row.Segmento || 'Geral').trim(),
-              modalidade: String(row.Modalidade || 'Presencial').trim(),
+              modalidade: 'Presencial',
               valor: valorNum,
-              bolsa_compativel: String(row['Compativel com Bolsa']).toUpperCase().includes('SIM')
+              bolsa_compativel: String(row['Compativel com Bolsa'] ?? '').toUpperCase().includes('SIM')
             }
           });
           totalCursos++;
@@ -274,40 +320,50 @@ export async function seedReferenceData() {
     }
   }
 
-  // Cursos adicionais conhecidos das turmas
+  // Cursos técnicos e FIC conhecidos do projeto
   const cursosTurmasConhecidas = [
-    { nome: 'Aprendizagem Profissional de Qualificação em Serviços Administrativos', ch: 1020, segmento: 'Gestão' },
-    { nome: 'Técnico em Desenvolvimento de Sistemas', ch: 1200, segmento: 'Tecnologia da Informação' },
-    { nome: 'Assistente Administrativo', ch: 160, segmento: 'Gestão' },
-    { nome: 'Cabeleireiro', ch: 400, segmento: 'Beleza' },
-    { nome: 'Maquiador', ch: 160, segmento: 'Beleza' },
-    { nome: 'Manicure e Pedicure', ch: 160, segmento: 'Beleza' },
-    { nome: 'Costureiro', ch: 212, segmento: 'Moda' },
-    { nome: 'Modelista', ch: 210, segmento: 'Moda' },
-    { nome: 'Design de Sobrancelhas', ch: 20, segmento: 'Beleza' },
-    { nome: 'Barbeiro', ch: 160, segmento: 'Beleza' },
-    { nome: 'Informática Básica', ch: 60, segmento: 'Tecnologia da Informação' },
-    { nome: 'Excel Básico', ch: 30, segmento: 'Tecnologia da Informação' },
-    { nome: 'Excel Avançado', ch: 30, segmento: 'Tecnologia da Informação' },
-    { nome: 'Penteados', ch: 40, segmento: 'Beleza' },
-    { nome: 'Colorimetria para Cabeleireiros', ch: 60, segmento: 'Beleza' },
-    { nome: 'Alongamento de Cílios', ch: 20, segmento: 'Beleza' },
-    { nome: 'Design de Barba', ch: 20, segmento: 'Beleza' },
-    { nome: 'Power BI', ch: 40, segmento: 'Tecnologia da Informação' },
-    { nome: 'Inteligência Artificial para Negócios', ch: 20, segmento: 'Tecnologia da Informação' },
-    { nome: 'Assistente de Recursos Humanos', ch: 160, segmento: 'Gestão' },
-    { nome: 'Operador de Computador', ch: 196, segmento: 'Tecnologia da Informação' },
+    { nome: 'Técnico em Desenvolvimento de Sistemas (CLDF)', ch: 1200, segmento: 'Tecnologia da Informação', tem: true },
+    { nome: 'Técnico em Desenvolvimento de Sistemas', ch: 1200, segmento: 'Tecnologia da Informação', tem: true },
+    { nome: 'Técnico em Marketing (CLDF)', ch: 800, segmento: 'Gestão', tem: true },
+    { nome: 'Técnico em Marketing', ch: 800, segmento: 'Gestão', tem: true },
+    { nome: 'Técnico em Programação de Jogos Digitais (CLDF)', ch: 1000, segmento: 'Tecnologia da Informação', tem: true },
+    { nome: 'Técnico em Programação de Jogos Digitais', ch: 1000, segmento: 'Tecnologia da Informação', tem: true },
+    { nome: 'Técnico em Administração', ch: 800, segmento: 'Gestão', tem: true },
+    { nome: 'Técnico em Secretariado', ch: 800, segmento: 'Gestão', tem: true },
+    { nome: 'Técnico em Informática para Internet', ch: 1000, segmento: 'Tecnologia da Informação', tem: true },
+    { nome: 'Técnico em Contabilidade', ch: 800, segmento: 'Gestão', tem: false },
+    { nome: 'Aprendizagem Profissional de Qualificação em Serviços Administrativos', ch: 1020, segmento: 'Gestão', tem: false },
+    { nome: 'Assistente Administrativo', ch: 160, segmento: 'Gestão', tem: false },
+    { nome: 'Cabeleireiro', ch: 400, segmento: 'Beleza', tem: false },
+    { nome: 'Maquiador', ch: 160, segmento: 'Beleza', tem: false },
+    { nome: 'Manicure e Pedicure', ch: 160, segmento: 'Beleza', tem: false },
+    { nome: 'Costureiro', ch: 212, segmento: 'Moda', tem: false },
+    { nome: 'Modelista', ch: 210, segmento: 'Moda', tem: false },
+    { nome: 'Design de Sobrancelhas', ch: 20, segmento: 'Beleza', tem: false },
+    { nome: 'Barbeiro', ch: 160, segmento: 'Beleza', tem: false },
+    { nome: 'Informática Básica', ch: 60, segmento: 'Tecnologia da Informação', tem: false },
+    { nome: 'Excel Básico', ch: 30, segmento: 'Tecnologia da Informação', tem: false },
+    { nome: 'Excel Avançado', ch: 30, segmento: 'Tecnologia da Informação', tem: false },
+    { nome: 'Penteados', ch: 40, segmento: 'Beleza', tem: false },
+    { nome: 'Colorimetria para Cabeleireiros', ch: 60, segmento: 'Beleza', tem: false },
+    { nome: 'Alongamento de Cílios', ch: 20, segmento: 'Beleza', tem: false },
+    { nome: 'Design de Barba', ch: 20, segmento: 'Beleza', tem: false },
+    { nome: 'Power BI', ch: 40, segmento: 'Tecnologia da Informação', tem: false },
+    { nome: 'Inteligência Artificial para Negócios', ch: 20, segmento: 'Tecnologia da Informação', tem: false },
+    { nome: 'Assistente de Recursos Humanos', ch: 160, segmento: 'Gestão', tem: false },
+    { nome: 'Operador de Computador', ch: 196, segmento: 'Tecnologia da Informação', tem: false },
   ];
 
   for (const c of cursosTurmasConhecidas) {
     await prisma.curso.upsert({
       where: { nome_curso: c.nome },
-      update: { carga_horaria: c.ch },
+      update: { carga_horaria: c.ch, segmento: c.segmento, curso_tem: c.tem, modalidade: 'Presencial' },
       create: {
         nome_curso: c.nome,
         carga_horaria: c.ch,
         segmento: c.segmento,
         modalidade: 'Presencial',
+        curso_tem: c.tem,
         valor: 0
       }
     });

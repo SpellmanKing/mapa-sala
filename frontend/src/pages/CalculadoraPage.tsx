@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { useEffect, useState, useMemo, useRef } from 'react';
 import { 
   Calculator, 
   Calendar, 
@@ -20,7 +20,7 @@ import { CalculadoraService } from '../api/client';
 import { useAppData, useAppUi } from '../context/AppContext';
 import { useNavigate } from 'react-router-dom';
 import { formatDateInput } from '../utils/date';
-import { WEEK_DAYS } from '../constants/referenceData';
+import { diasLetivosDoCurso, SHIFTS, WEEK_DAYS } from '../constants/referenceData';
 
 const PRESETS_HORAS = [40, 80, 160, 200, 400, 800];
 const PRESETS_DURACAO_DIARIA = [2, 3, 4, 5];
@@ -54,7 +54,9 @@ export function CalculadoraPage() {
   const [cursoSelecionadoId, setCursoSelecionadoId] = useState<string>('');
   const [cargaHoraria, setCargaHoraria] = useState('160');
   const [horasPorDia, setHorasPorDia] = useState<number>(4);
+  const [turno, setTurno] = useState<string>(SHIFTS[0].label);
   const [diasSelecionados, setDiasSelecionados] = useState<string[]>(['1', '3', '5']);
+  const [diasRemotosAvulsos, setDiasRemotosAvulsos] = useState<string[]>([]);
   const [dataInicio, setDataInicio] = useState<string>(() => {
     const today = new Date();
     return formatDateInput(today);
@@ -62,19 +64,37 @@ export function CalculadoraPage() {
 
   const [isCalculating, setIsCalculating] = useState(false);
   const [showAllDates, setShowAllDates] = useState(false);
-  const [resultado, setResultado] = useState<ResultadoCronograma | null>(null);
+  const [projecao, setProjecao] = useState<{ chave: string; resultado: ResultadoCronograma } | null>(null);
+  const versaoDoCalculo = useRef(0);
+  const cursoSelecionado = cursos.find(curso => curso.id === cursoSelecionadoId);
+  const diasRemotos = cursoSelecionado?.modalidade === 'Remoto'
+    ? WEEK_DAYS.map(dia => dia.id)
+    : cursoSelecionado?.diasRemotos ?? diasRemotosAvulsos;
+  const remotosSelecionados = diasSelecionados.filter(dia => diasRemotos.includes(dia));
+  const temAulaRemota = remotosSelecionados.length > 0;
+  const chaveDoCalculo = JSON.stringify([cursoSelecionadoId, cargaHoraria, dataInicio, diasSelecionados, remotosSelecionados,
+    temAulaRemota ? turno : horasPorDia]);
+  const resultado = projecao?.chave === chaveDoCalculo ? projecao.resultado : null;
+
+  useEffect(() => {
+    versaoDoCalculo.current++;
+    setProjecao(null);
+    setIsCalculating(false);
+    setShowAllDates(false);
+  }, [chaveDoCalculo]);
 
   // Selecionar curso pré-cadastrado
   const handleSelectCurso = (id: string) => {
     setCursoSelecionadoId(id);
+    setDiasRemotosAvulsos([]);
     if (!id) return;
 
     const curso = cursos.find(c => c.id === id);
     if (curso) {
       if (curso.cargaHoraria) setCargaHoraria(curso.cargaHoraria.toString());
-      if (curso.diasSemana && curso.diasSemana.length > 0) {
-        setDiasSelecionados(curso.diasSemana);
-      }
+      const dias = diasLetivosDoCurso(curso);
+      if (dias.length > 0) setDiasSelecionados(dias);
+      setTurno(SHIFTS.find(shift => shift.label === curso.turnoPadrao)?.label ?? SHIFTS[0].label);
       showToast(`Parâmetros carregados de "${curso.nome}"`, 'info');
     }
   };
@@ -83,6 +103,12 @@ export function CalculadoraPage() {
     setDiasSelecionados(prev => 
       prev.includes(id) ? prev.filter(d => d !== id) : [...prev, id]
     );
+    if (!cursoSelecionado) setDiasRemotosAvulsos(prev => prev.filter(dia => dia !== id));
+  };
+
+  const handleDiaRemotoToggle = (id: string) => {
+    setDiasRemotosAvulsos(prev => prev.includes(id) ? prev.filter(dia => dia !== id) : [...prev, id]);
+    setDiasSelecionados(prev => prev.includes(id) ? prev : [...prev, id]);
   };
 
   // Atalhos Rápidos de Data
@@ -121,22 +147,27 @@ export function CalculadoraPage() {
       return showToast('Informe a data de início da turma.', 'error');
     }
 
+    const versao = ++versaoDoCalculo.current;
+    setProjecao(null);
     setIsCalculating(true);
     try {
       const res = await CalculadoraService.calcularCronograma({
         cargaHoraria: Number(cargaHoraria),
         dataInicio,
         diasSemana: diasSelecionados,
-        horasPorDia: Number(horasPorDia) || 4
+        ...(temAulaRemota ? { turno } : { horasPorDia })
       });
 
-      setResultado(res);
+      if (versao !== versaoDoCalculo.current) return;
+      setProjecao({ chave: chaveDoCalculo, resultado: res });
       showToast('Cronograma projetado com sucesso!', 'success');
     } catch (err: any) {
-      const msg = err.response?.data?.error || 'Erro ao calcular cronograma no servidor.';
-      showToast(msg, 'error');
+      if (versao === versaoDoCalculo.current) {
+        const msg = err.response?.data?.error || 'Erro ao calcular cronograma no servidor.';
+        showToast(msg, 'error');
+      }
     } finally {
-      setIsCalculating(false);
+      if (versao === versaoDoCalculo.current) setIsCalculating(false);
     }
   };
 
@@ -144,10 +175,14 @@ export function CalculadoraPage() {
     setCursoSelecionadoId('');
     setCargaHoraria('160');
     setHorasPorDia(4);
+    setTurno(SHIFTS[0].label);
     setDiasSelecionados(['1', '3', '5']);
+    setDiasRemotosAvulsos([]);
     const today = new Date();
     setDataInicio(formatDateInput(today));
-    setResultado(null);
+    versaoDoCalculo.current++;
+    setProjecao(null);
+    setIsCalculating(false);
     setShowAllDates(false);
   };
 
@@ -156,7 +191,7 @@ export function CalculadoraPage() {
     if (!resultado || !resultado.datasAulas.length) return;
 
     let texto = `📅 CRONOGRAMA DE AULAS\n`;
-    texto += `Carga Horária: ${cargaHoraria}h (${horasPorDia}h/dia - ${resultado.totalAulas} encontros)\n`;
+    texto += `Carga Horária: ${cargaHoraria}h (${resultado.horasPorAula}h/dia - ${resultado.totalAulas} encontros)\n`;
     texto += `Início: ${formatDateBr(dataInicio)} | Término Estimado: ${formatDateBr(resultado.dataTermino)}\n`;
     texto += `Duração: ${resultado.diasCorridos} dias corridos\n\n`;
     texto += `--- ENCONTROS AGENDADOS ---\n`;
@@ -187,7 +222,7 @@ export function CalculadoraPage() {
     resultado.datasAulas.forEach((dataStr, index) => {
       const dataObj = parseDateLocal(dataStr);
       const diaSemana = dataObj.toLocaleDateString('pt-BR', { weekday: 'long' });
-      csv += `${index + 1},${formatDateBr(dataStr)},"${diaSemana}",${horasPorDia}h,\n`;
+      csv += `${index + 1},${formatDateBr(dataStr)},"${diaSemana}",${resultado.horasPorAula}h,\n`;
     });
 
     if (resultado.feriadosPulados && resultado.feriadosPulados.length > 0) {
@@ -219,9 +254,7 @@ export function CalculadoraPage() {
           cursoId: cursoSelecionadoId,
           dataInicio,
           diasSemana: diasSelecionados,
-          cargaHoraria: Number(cargaHoraria),
-          horasPorDia,
-          cronograma: resultado
+          ...(temAulaRemota && { turno })
         }
       }
     });
@@ -305,7 +338,7 @@ export function CalculadoraPage() {
             <button
               type="button"
               onClick={() => setShowAllDates(true)}
-              className="bg-card hover:bg-surface border border-border text-primary text-xs font-black px-3 py-1.5 rounded-xl btn-tactile cursor-pointer flex items-center gap-1 shadow-xs"
+              className="min-h-11 lg:min-h-0 bg-card hover:bg-surface border border-border text-primary text-xs font-black px-3 py-1.5 rounded-xl btn-tactile cursor-pointer flex items-center gap-1 shadow-xs"
             >
               <ChevronDown size={14} /> Ver Todas ({total})
             </button>
@@ -336,7 +369,7 @@ export function CalculadoraPage() {
           {(cargaHoraria || diasSelecionados.length > 0 || dataInicio) && (
             <button 
               onClick={resetar}
-              className="bg-surface/50 border border-border/80 text-text-muted hover:bg-surface hover:text-text-main font-bold px-4 py-2.5 rounded-xl text-xs flex items-center gap-1.5 btn-tactile transition-all shadow-xs shrink-0 cursor-pointer"
+              className="min-h-11 lg:min-h-0 bg-surface/50 border border-border/80 text-text-muted hover:bg-surface hover:text-text-main font-bold px-4 py-2.5 rounded-xl text-xs flex items-center gap-1.5 btn-tactile transition-all shadow-xs shrink-0 cursor-pointer"
             >
               <RotateCcw size={13} /> Limpar
             </button>
@@ -404,7 +437,7 @@ export function CalculadoraPage() {
                   type="button"
                   key={horas}
                   onClick={() => setCargaHoraria(horas.toString())}
-                  className={`px-2.5 py-1 text-[11px] font-bold rounded-lg border transition-all cursor-pointer ${
+                  className={`min-h-11 lg:min-h-0 inline-flex items-center justify-center px-2.5 py-1 text-[11px] font-bold rounded-lg border transition-all cursor-pointer ${
                     cargaHoraria === horas.toString()
                       ? 'bg-primary text-white border-primary shadow-xs font-black'
                       : 'bg-surface/50 text-text-muted hover:text-text-main border-border/80'
@@ -418,16 +451,29 @@ export function CalculadoraPage() {
 
           {/* Horas por Encontro Diário */}
           <div>
-            <label className="block text-xs font-black text-text-muted uppercase tracking-widest mb-1.5">
-              Duração do Encontro Diário
+            <label htmlFor={temAulaRemota ? 'turno-calculadora' : undefined} className="block text-xs font-black text-text-muted uppercase tracking-widest mb-1.5">
+              {temAulaRemota ? 'Turno das aulas' : 'Duração do Encontro Diário'}
             </label>
-            <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+            {temAulaRemota ? (
+              <select
+                id="turno-calculadora"
+                value={turno}
+                onChange={e => setTurno(e.target.value)}
+                className="w-full rounded-xl border border-border bg-input p-3 text-sm font-semibold text-text-main"
+              >
+                {SHIFTS.map(shift => (
+                  <option key={shift.id} value={shift.label}>
+                    {shift.label} ({shift.label === 'Noite' ? 3 : 4} h por aula)
+                  </option>
+                ))}
+              </select>
+            ) : <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
               {PRESETS_DURACAO_DIARIA.map(h => (
                 <button
                   type="button"
                   key={h}
                   onClick={() => setHorasPorDia(h)}
-                  className={`py-2.5 text-xs font-bold rounded-xl border transition-all cursor-pointer ${
+                  className={`min-h-11 lg:min-h-0 inline-flex items-center justify-center py-2.5 text-xs font-bold rounded-xl border transition-all cursor-pointer ${
                     horasPorDia === h
                       ? 'bg-primary/10 border-primary text-primary shadow-xs font-black'
                       : 'bg-input text-text-muted hover:bg-surface/50 hover:text-text-main border-border/80'
@@ -436,7 +482,7 @@ export function CalculadoraPage() {
                   {h}h / dia
                 </button>
               ))}
-            </div>
+            </div>}
           </div>
 
           {/* Dias de Aula na Semana (Segunda a Domingo) */}
@@ -447,22 +493,44 @@ export function CalculadoraPage() {
             <div className="grid grid-cols-4 sm:grid-cols-7 gap-1.5">
               {WEEK_DAYS.map(dia => {
                 const isSelected = diasSelecionados.includes(dia.id);
+                const remoto = diasRemotos.includes(dia.id);
                 return (
                   <button
                     type="button"
                     key={dia.id}
+                    aria-pressed={isSelected}
                     onClick={() => handleDiaToggle(dia.id)}
-                    className={`py-2.5 text-xs font-bold rounded-xl border transition-all cursor-pointer ${
+                    className={`min-h-11 min-w-11 lg:min-h-0 lg:min-w-0 inline-flex flex-col items-center justify-center py-2.5 text-xs font-bold rounded-xl border transition-all cursor-pointer ${
                       isSelected 
                         ? 'bg-primary text-white border-primary shadow-xs font-black' 
                         : 'bg-input text-text-muted hover:bg-surface/50 hover:text-text-main border-border/80'
                     }`}
                   >
                     {dia.short}
+                    {remoto && <span className="text-[10px]">Remoto</span>}
                   </button>
                 );
               })}
             </div>
+            {!cursoSelecionado && (
+              <fieldset className="mt-3">
+                <legend className="text-xs font-semibold text-text-muted">Dias remotos na simulação</legend>
+                <div className="flex flex-wrap gap-x-3">
+                  {WEEK_DAYS.map(dia => (
+                    <label key={dia.id} className="inline-flex min-h-11 cursor-pointer items-center gap-1.5 text-xs font-semibold text-text-main">
+                      <input
+                        type="checkbox"
+                        aria-label={`${dia.label} remoto`}
+                        checked={diasRemotosAvulsos.includes(dia.id)}
+                        onChange={() => handleDiaRemotoToggle(dia.id)}
+                      />
+                      {dia.short}
+                    </label>
+                  ))}
+                </div>
+                {temAulaRemota && <p className="text-xs text-text-muted">Ao alocar uma turma, a modalidade dos dias segue o cadastro do curso.</p>}
+              </fieldset>
+            )}
           </div>
 
           {/* Data de Início com Atalhos */}
@@ -486,21 +554,21 @@ export function CalculadoraPage() {
               <button
                 type="button"
                 onClick={() => setDateShortcut('today')}
-                className="px-2.5 py-1 text-[10px] font-bold rounded-lg border border-border bg-surface/50 text-text-muted hover:text-text-main cursor-pointer"
+                className="min-h-11 min-w-11 lg:min-h-0 lg:min-w-0 inline-flex items-center justify-center px-2.5 py-1 text-[10px] font-bold rounded-lg border border-border bg-surface/50 text-text-muted hover:text-text-main cursor-pointer"
               >
                 Hoje
               </button>
               <button
                 type="button"
                 onClick={() => setDateShortcut('nextMonday')}
-                className="px-2.5 py-1 text-[10px] font-bold rounded-lg border border-border bg-surface/50 text-text-muted hover:text-text-main cursor-pointer"
+                className="min-h-11 lg:min-h-0 inline-flex items-center justify-center px-2.5 py-1 text-[10px] font-bold rounded-lg border border-border bg-surface/50 text-text-muted hover:text-text-main cursor-pointer"
               >
                 Próxima Segunda
               </button>
               <button
                 type="button"
                 onClick={() => setDateShortcut('nextMonth')}
-                className="px-2.5 py-1 text-[10px] font-bold rounded-lg border border-border bg-surface/50 text-text-muted hover:text-text-main cursor-pointer"
+                className="min-h-11 lg:min-h-0 inline-flex items-center justify-center px-2.5 py-1 text-[10px] font-bold rounded-lg border border-border bg-surface/50 text-text-muted hover:text-text-main cursor-pointer"
               >
                 Início do Próx. Mês
               </button>
@@ -560,14 +628,14 @@ export function CalculadoraPage() {
                   <div className="flex items-center gap-2">
                     <button
                       onClick={copiarCronograma}
-                      className="bg-card hover:bg-surface border border-border text-text-muted hover:text-text-main font-bold px-3 py-2 rounded-xl text-xs flex items-center gap-1.5 btn-tactile cursor-pointer shadow-xs"
+                      className="min-h-11 lg:min-h-0 bg-card hover:bg-surface border border-border text-text-muted hover:text-text-main font-bold px-3 py-2 rounded-xl text-xs flex items-center gap-1.5 btn-tactile cursor-pointer shadow-xs"
                       title="Copiar lista de encontros"
                     >
                       <Copy size={13} /> Copiar Datas
                     </button>
                     <button
                       onClick={exportarCSV}
-                      className="bg-card hover:bg-surface border border-border text-text-muted hover:text-text-main font-bold px-3 py-2 rounded-xl text-xs flex items-center gap-1.5 btn-tactile cursor-pointer shadow-xs"
+                      className="min-h-11 lg:min-h-0 bg-card hover:bg-surface border border-border text-text-muted hover:text-text-main font-bold px-3 py-2 rounded-xl text-xs flex items-center gap-1.5 btn-tactile cursor-pointer shadow-xs"
                       title="Baixar em formato CSV"
                     >
                       <Download size={13} /> Exportar CSV
@@ -577,7 +645,7 @@ export function CalculadoraPage() {
                   <button
                     type="button"
                     onClick={irParaAlocacao}
-                    className="bg-primary text-white font-black px-4 py-2 rounded-xl text-xs flex items-center gap-1.5 shadow-sm btn-tactile cursor-pointer hover:bg-primary/90 transition-colors"
+                    className="min-h-11 lg:min-h-0 bg-primary text-white font-black px-4 py-2 rounded-xl text-xs flex items-center gap-1.5 shadow-sm btn-tactile cursor-pointer hover:bg-primary/90 transition-colors"
                   >
                     <CalendarDays size={13} /> Alocar Turma no Mapa
                   </button>
@@ -636,7 +704,7 @@ export function CalculadoraPage() {
                   {resultado.datasAulas.length > 8 && (
                     <button
                       onClick={() => setShowAllDates(prev => !prev)}
-                      className="text-xs font-bold text-primary hover:underline cursor-pointer flex items-center gap-1"
+                      className="min-h-11 lg:min-h-0 text-xs font-bold text-primary hover:underline cursor-pointer flex items-center gap-1"
                     >
                       {showAllDates ? (
                         <>
