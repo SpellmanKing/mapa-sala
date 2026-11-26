@@ -4,16 +4,16 @@ interface DigitalClockProps {
   variant?: 'tv' | 'default';
 }
 
-const formatHoraBrasilia = (date: Date) => {
-  const options: Intl.DateTimeFormatOptions = {
+const horaBrasilia = new Intl.DateTimeFormat('pt-BR', {
     timeZone: 'America/Sao_Paulo',
     hour: '2-digit',
     minute: '2-digit',
     second: '2-digit',
     hour12: false
-  };
-  return new Intl.DateTimeFormat('pt-BR', options).format(date);
-};
+});
+const dataBrasilia = new Intl.DateTimeFormat('pt-BR', {
+  timeZone: 'America/Sao_Paulo', weekday: 'short', day: '2-digit', month: 'short'
+});
 
 export const DigitalClock: React.FC<DigitalClockProps> = ({ variant = 'default' }) => {
   const [horaAtual, setHoraAtual] = useState(() => new Date());
@@ -33,10 +33,10 @@ export const DigitalClock: React.FC<DigitalClockProps> = ({ variant = 'default' 
           <span className="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
         </span>
         <span className="font-mono text-sm font-black tracking-wider">
-          {formatHoraBrasilia(horaAtual)}
+          {horaBrasilia.format(horaAtual)}
         </span>
         <span className="text-[10px] font-black uppercase bg-primary text-white px-2 py-0.5 rounded-md tracking-wider">
-          {new Date().toLocaleDateString('pt-BR', { weekday: 'short', day: '2-digit', month: 'short' })}
+          {dataBrasilia.format(horaAtual)}
         </span>
       </div>
     );
@@ -49,7 +49,7 @@ export const DigitalClock: React.FC<DigitalClockProps> = ({ variant = 'default' 
         <span className="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
       </span>
       <span className="font-mono text-xs font-black tracking-wider">
-        {formatHoraBrasilia(horaAtual)}
+        {horaBrasilia.format(horaAtual)}
       </span>
       <span className="text-[9px] font-black uppercase bg-primary text-white px-1.5 py-0.5 rounded-md tracking-widest">
         Brasília

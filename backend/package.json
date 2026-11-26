@@ -17,6 +17,7 @@
     "prisma:migrate": "prisma migrate dev",
     "prisma:studio": "prisma studio",
     "db:seed:reference": "tsx prisma/seedReferenceData.ts",
+    "db:seed:ti": "tsx prisma/seedDepartamentoTi.ts",
     "db:seed:demo": "tsx prisma/seedDemo.ts",
     "user:create": "tsx prisma/createAdmin.ts"
   },
@@ -29,7 +30,7 @@
     "helmet": "^7.1.0",
     "jsonwebtoken": "^9.0.2",
     "morgan": "^1.10.0",
-    "xlsx": "^0.18.5",
+    "xlsx": "https://cdn.sheetjs.com/xlsx-0.20.3/xlsx-0.20.3.tgz",
     "zod": "^3.24.1"
   },
   "devDependencies": {

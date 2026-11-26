@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { CursoModal, CursoPayload } from '../components/CursoModal';
+import { CursoModal, modalidadeDoCurso, type CursoPayload } from '../components/CursoModal';
 import { InstrutorModal, InstrutorPayload } from '../components/InstrutorModal';
 import { SalaModal, SalaPayload } from '../components/SalaModal';
 import { ConfirmDeleteModal } from '../components/ConfirmDeleteModal';
@@ -31,17 +31,20 @@ export function ManageSystemPage() {
   const [importacaoOpen, setImportacaoOpen] = useState(false);
 
   const [activeTab, setActiveTab] = useState<Tab>('cursos');
+  const [salasCarregadas, setSalasCarregadas] = useState(false);
 
   React.useEffect(() => {
-    const resources: Record<Exclude<Tab, 'feriados'>, DataResource[]> = {
+    const resources: Record<Tab, DataResource[]> = {
       cursos: ['cursos', 'instrutores', 'turmas'],
       instrutores: ['instrutores', 'turmas'],
-      salas: ['salas', 'tiposSala', 'turmas']
+      salas: ['tiposSala', 'turmas'],
+      feriados: []
     };
-    if (activeTab === 'feriados') return;
-    void loadData(resources[activeTab]).catch(() => {
-      showToast('Não foi possível carregar os dados administrativos.', 'error');
-    });
+    let ativo = true;
+    void loadData(['salas', ...resources[activeTab]])
+      .then(() => { if (ativo) setSalasCarregadas(true); })
+      .catch(() => { if (ativo) showToast('Não foi possível carregar os dados administrativos.', 'error'); });
+    return () => { ativo = false; };
   }, [activeTab, loadData, showToast]);
 
   // --- Estados do Curso ---
@@ -122,7 +125,7 @@ export function ManageSystemPage() {
       nome: '', 
       cargaHoraria: 160,
       segmento: 'Tecnologia da Informação',
-      instrutorId: instrutores[0]?.id ?? '', 
+      instrutorId: '',
       unidade: unidadesCadastro[0] ?? '',
       diasSemanaLetiva: ['1', '3', '5'], 
       diasRemotos: [], 
@@ -142,11 +145,11 @@ export function ManageSystemPage() {
       cargaHoraria: curso.cargaHoraria || 160,
       segmento: curso.segmento || 'Tecnologia da Informação',
       instrutorId: curso.instrutorId ?? '', 
-      unidade: curso.unidade ?? unidadesCadastro[0] ?? '',
+      unidade: curso.unidade ?? '',
       diasSemanaLetiva: curso.diasSemana ?? ['1', '3', '5'], 
       diasRemotos: curso.diasRemotos ?? [], 
       codigoTurmaPadrao: curso.codigoTurmaPadrao ?? '', 
-      turnoPadrao: curso.turnoPadrao ?? SHIFTS[0].label,
+      turnoPadrao: curso.turnoPadrao ?? '',
       modalidade: curso.modalidade 
     });
     setCursoModalOpen(true);
@@ -155,8 +158,7 @@ export function ManageSystemPage() {
   async function saveCurso() {
     if (!cursoForm.nome.trim()) return setCursoError('Nome do curso é obrigatório.');
     if (!cursoForm.cargaHoraria || Number(cursoForm.cargaHoraria) <= 0) return setCursoError('Carga Horária deve ser um número positivo.');
-    if (!cursoForm.instrutorId) return setCursoError('Instrutor principal é obrigatório.');
-    if (!cursoForm.unidade) return setCursoError('Unidade é obrigatória.');
+    if (!editingCurso && !cursoForm.unidade) return setCursoError('Unidade é obrigatória.');
 
     setIsSavingCurso(true);
     setCursoError(null);
@@ -165,27 +167,25 @@ export function ManageSystemPage() {
       const apiPayload = {
         nome_curso: cursoForm.nome.trim(),
         segmento: cursoForm.segmento || 'Tecnologia da Informação',
-        modalidade: cursoForm.modalidade,
+        modalidade: modalidadeDoCurso(cursoForm),
         carga_horaria: Number(cursoForm.cargaHoraria) || 160,
-        valor: 0,
-        curso_tem: false,
-        bolsa_compativel: true,
-        unidade: cursoForm.unidade,
-        id_instrutor_padrao: Number(cursoForm.instrutorId) || undefined,
+        unidade: cursoForm.unidade || null,
+        id_instrutor_padrao: cursoForm.instrutorId ? Number(cursoForm.instrutorId) : null,
         codigo_turma_padrao: cursoForm.codigoTurmaPadrao?.trim() || null,
-        turno_padrao: cursoForm.turnoPadrao,
-        dias_letivos_padrao: cursoForm.diasSemanaLetiva.join(','),
-        dias_remotos_padrao: cursoForm.diasRemotos.length > 0 ? cursoForm.diasRemotos.join(',') : null
+        turno_padrao: cursoForm.turnoPadrao || null,
+        dias_letivos_padrao: cursoForm.diasSemanaLetiva.join(',') || null,
+        dias_remotos_padrao: cursoForm.diasRemotos.join(',') || null
       };
 
       if (editingCurso?.id) {
         await CursoService.update(Number(editingCurso.id), apiPayload);
+        await Promise.all([refreshCursos(), refreshTurmas()]);
         showToast('Curso atualizado com sucesso!', 'success');
       } else {
         await CursoService.create(apiPayload);
+        await refreshCursos();
         showToast('Curso criado com sucesso!', 'success');
       }
-      await refreshCursos();
       setCursoModalOpen(false);
     } catch (err: any) {
       const msg = err.response?.data?.error || err.response?.data?.message || 'Erro ao salvar no backend.';
@@ -197,10 +197,7 @@ export function ManageSystemPage() {
   }
 
   function requestDeleteCurso(curso: Curso) {
-    const count = turmas.filter(t => 
-      t.cursoNome.toLowerCase() === curso.nome.toLowerCase() || 
-      (curso.codigoTurmaPadrao && t.codigo?.startsWith(curso.codigoTurmaPadrao))
-    ).length;
+    const count = turmas.filter(t => t.cursoId === curso.id).length;
 
     setDeleteModal({
       open: true,
@@ -254,10 +251,7 @@ export function ManageSystemPage() {
   }
 
   function requestDeleteInstrutor(instrutor: Instrutor) {
-    const count = turmas.filter(t => 
-      t.instrutorNome.toLowerCase() === instrutor.nome.toLowerCase() || 
-      t.instrutorId === instrutor.id
-    ).length;
+    const count = turmas.filter(t => t.instrutorId === instrutor.id).length;
 
     setDeleteModal({
       open: true,
@@ -332,7 +326,7 @@ export function ManageSystemPage() {
   }
 
   function requestDeleteSala(sala: Sala) {
-    const count = turmas.filter(t => t.salaId === sala.id).length;
+    const count = turmas.filter(t => t.agendamentos.some(aula => aula.salaId === sala.id)).length;
 
     setDeleteModal({
       open: true,
@@ -345,7 +339,7 @@ export function ManageSystemPage() {
   }
 
   async function executeDelete() {
-    if (!deleteModal.id) return;
+    if (!deleteModal.id || (deleteModal.type === 'sala' && deleteModal.turmasCount > 0)) return;
     setDeleteModal(prev => ({ ...prev, isDeleting: true }));
 
     try {
@@ -357,7 +351,7 @@ export function ManageSystemPage() {
       } else if (deleteModal.type === 'instrutor') {
         await InstrutorService.delete(Number(deleteModal.id));
         showToast('Instrutor excluído com sucesso!', 'success');
-        await refreshInstrutores();
+        await Promise.all([refreshInstrutores(), refreshCursos(), refreshTurmas()]);
       } else if (deleteModal.type === 'sala') {
         await SalaService.delete(Number(deleteModal.id));
         showToast('Sala excluída com sucesso!', 'success');
@@ -374,7 +368,7 @@ export function ManageSystemPage() {
 
   // Helpers
   function getNomeInstrutor(id?: string) { 
-    return instrutores.find(i => i.id === id)?.nome ?? id ?? 'Instrutor Padrão'; 
+    return instrutores.find(i => i.id === id)?.nome ?? 'Sem instrutor padrão';
   }
 
   function getInitials(name: string) {
@@ -455,14 +449,14 @@ export function ManageSystemPage() {
           <p className="text-text-muted text-sm mt-1 font-medium">Gestão unificada de cursos, instrutores, ambientes e calendário.</p>
         </div>
         
-        <div className="shrink-0 flex items-center gap-2">
+        <div className="shrink-0 flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
           {activeTab === 'cursos' && (
-            <button type="button" onClick={() => setImportacaoOpen(true)} className="w-full sm:w-auto rounded-xl border border-primary px-4 py-2.5 text-sm font-black text-primary">Importar planilha</button>
+            <button type="button" onClick={() => setImportacaoOpen(true)} className="min-h-11 lg:min-h-0 inline-flex items-center justify-center w-full sm:w-auto rounded-xl border border-primary px-4 py-2.5 text-sm font-black text-primary cursor-pointer">Importar planilha</button>
           )}
           {activeTab === 'cursos' && (
             <button 
               onClick={openCursoCreate} 
-              className="w-full sm:w-auto bg-primary text-white font-black py-2.5 px-5 rounded-xl shadow-md btn-tactile hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-2 text-sm cursor-pointer"
+              className="min-h-11 lg:min-h-0 w-full sm:w-auto bg-primary text-white font-black py-2.5 px-5 rounded-xl shadow-md btn-tactile hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-2 text-sm cursor-pointer"
             >
               <Plus size={16} /> Adicionar Curso
             </button>
@@ -470,7 +464,7 @@ export function ManageSystemPage() {
           {activeTab === 'instrutores' && (
             <button 
               onClick={openInstrutorCreate} 
-              className="w-full sm:w-auto bg-primary text-white font-black py-2.5 px-5 rounded-xl shadow-md btn-tactile hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-2 text-sm cursor-pointer"
+              className="min-h-11 lg:min-h-0 w-full sm:w-auto bg-primary text-white font-black py-2.5 px-5 rounded-xl shadow-md btn-tactile hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-2 text-sm cursor-pointer"
             >
               <Plus size={16} /> Adicionar Instrutor
             </button>
@@ -478,7 +472,7 @@ export function ManageSystemPage() {
           {activeTab === 'salas' && (
             <button 
               onClick={openSalaCreate} 
-              className="w-full sm:w-auto bg-primary text-white font-black py-2.5 px-5 rounded-xl shadow-md btn-tactile hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-2 text-sm cursor-pointer"
+              className="min-h-11 lg:min-h-0 w-full sm:w-auto bg-primary text-white font-black py-2.5 px-5 rounded-xl shadow-md btn-tactile hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-2 text-sm cursor-pointer"
             >
               <Plus size={16} /> Adicionar Sala
             </button>
@@ -490,7 +484,7 @@ export function ManageSystemPage() {
       <div className="glass-panel rounded-2xl p-1.5 shadow-sm flex flex-nowrap gap-1.5 overflow-x-auto scrollbar-none transition-colors duration-300">
         <button 
           onClick={() => { setActiveTab('cursos'); setPageCursos(1); }} 
-          className={`flex shrink-0 items-center gap-2 whitespace-nowrap px-5 py-2.5 rounded-xl font-bold text-sm transition-all btn-tactile cursor-pointer border ${
+          className={`min-h-11 lg:min-h-0 flex shrink-0 items-center gap-2 whitespace-nowrap px-5 py-2.5 rounded-xl font-bold text-sm transition-all btn-tactile cursor-pointer border ${
             activeTab === 'cursos' 
               ? 'bg-primary/10 text-primary border-primary/20 shadow-sm font-black' 
               : 'text-text-muted hover:text-text-main hover:bg-surface border-transparent'
@@ -507,7 +501,7 @@ export function ManageSystemPage() {
 
         <button 
           onClick={() => { setActiveTab('instrutores'); setPageInstrutores(1); }} 
-          className={`flex shrink-0 items-center gap-2 whitespace-nowrap px-5 py-2.5 rounded-xl font-bold text-sm transition-all btn-tactile cursor-pointer border ${
+          className={`min-h-11 lg:min-h-0 flex shrink-0 items-center gap-2 whitespace-nowrap px-5 py-2.5 rounded-xl font-bold text-sm transition-all btn-tactile cursor-pointer border ${
             activeTab === 'instrutores' 
               ? 'bg-primary/10 text-primary border-primary/20 shadow-sm font-black' 
               : 'text-text-muted hover:text-text-main hover:bg-surface border-transparent'
@@ -524,7 +518,7 @@ export function ManageSystemPage() {
 
         <button 
           onClick={() => { setActiveTab('salas'); setPageSalas(1); }} 
-          className={`flex shrink-0 items-center gap-2 whitespace-nowrap px-5 py-2.5 rounded-xl font-bold text-sm transition-all btn-tactile cursor-pointer border ${
+          className={`min-h-11 lg:min-h-0 flex shrink-0 items-center gap-2 whitespace-nowrap px-5 py-2.5 rounded-xl font-bold text-sm transition-all btn-tactile cursor-pointer border ${
             activeTab === 'salas' 
               ? 'bg-primary/10 text-primary border-primary/20 shadow-sm font-black' 
               : 'text-text-muted hover:text-text-main hover:bg-surface border-transparent'
@@ -535,13 +529,13 @@ export function ManageSystemPage() {
           <span className={`text-[10px] font-mono px-2 py-0.5 rounded-full font-black ${
             activeTab === 'salas' ? 'bg-primary text-white' : 'bg-surface text-text-muted border border-border'
           }`}>
-            {salas.length}
+            {salasCarregadas || salas.length > 0 ? salas.length : '—'}
           </span>
         </button>
 
         <button
           onClick={() => setActiveTab('feriados')}
-          className={`flex shrink-0 items-center gap-2 whitespace-nowrap px-5 py-2.5 rounded-xl font-bold text-sm transition-all btn-tactile cursor-pointer border ${
+          className={`min-h-11 lg:min-h-0 flex shrink-0 items-center gap-2 whitespace-nowrap px-5 py-2.5 rounded-xl font-bold text-sm transition-all btn-tactile cursor-pointer border ${
             activeTab === 'feriados'
               ? 'bg-primary/10 text-primary border-primary/20 shadow-sm font-black'
               : 'text-text-muted hover:text-text-main hover:bg-surface border-transparent'
@@ -573,7 +567,7 @@ export function ManageSystemPage() {
                 {searchCurso && (
                   <button
                     onClick={() => { setSearchCurso(''); setPageCursos(1); }}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-text-muted hover:text-text-main p-1 rounded-md"
+                    className="min-h-11 min-w-11 lg:min-h-0 lg:min-w-0 inline-flex items-center justify-center absolute right-1 lg:right-3 top-1/2 -translate-y-1/2 text-text-muted hover:text-text-main p-1 rounded-md"
                     title="Limpar busca"
                   >
                     <X size={14} />
@@ -587,7 +581,7 @@ export function ManageSystemPage() {
                   <button
                     key={mod}
                     onClick={() => { setFiltroModalidadeCurso(mod); setPageCursos(1); }}
-                    className={`px-3 py-1.5 text-xs rounded-xl font-bold transition-all cursor-pointer border flex items-center gap-1.5 ${
+                    className={`min-h-11 lg:min-h-0 px-3 py-1.5 text-xs rounded-xl font-bold transition-all cursor-pointer border flex items-center gap-1.5 ${
                       filtroModalidadeCurso === mod
                         ? mod === 'Presencial'
                           ? 'bg-red-500 text-white border-red-500 shadow-xs font-black'
@@ -706,13 +700,13 @@ export function ManageSystemPage() {
                         <div className="flex justify-end gap-2.5 mt-1 pt-3.5 border-t border-border/50">
                           <button 
                             onClick={() => openCursoEdit(c)}
-                            className="bg-card hover:bg-surface border border-border text-text-muted hover:text-text-main font-bold px-3 py-1.5 rounded-xl text-xs flex items-center gap-1 btn-tactile cursor-pointer shadow-xs"
+                            className="min-h-11 lg:min-h-0 bg-card hover:bg-surface border border-border text-text-muted hover:text-text-main font-bold px-3 py-1.5 rounded-xl text-xs flex items-center gap-1 btn-tactile cursor-pointer shadow-xs"
                           >
                             <Edit size={12} /> Editar
                           </button>
                           <button 
                             onClick={() => requestDeleteCurso(c)}
-                            className="bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 text-red-655 font-bold px-3 py-1.5 rounded-xl text-xs flex items-center gap-1 btn-tactile cursor-pointer shadow-xs"
+                            className="min-h-11 lg:min-h-0 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 text-red-600 dark:text-red-400 font-bold px-3 py-1.5 rounded-xl text-xs flex items-center gap-1 btn-tactile cursor-pointer shadow-xs"
                           >
                             <Trash2 size={12} /> Excluir
                           </button>
@@ -732,7 +726,8 @@ export function ManageSystemPage() {
                       <button
                         disabled={pageCursos === 1}
                         onClick={() => setPageCursos(p => Math.max(1, p - 1))}
-                        className="p-2 rounded-xl border border-border hover:bg-surface disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+                        aria-label="Página anterior de cursos"
+                        className="min-h-11 min-w-11 lg:min-h-0 lg:min-w-0 inline-flex items-center justify-center p-2 rounded-xl border border-border hover:bg-surface disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
                       >
                         <ChevronLeft size={16} />
                       </button>
@@ -742,7 +737,8 @@ export function ManageSystemPage() {
                       <button
                         disabled={pageCursos === totalPagesCursos}
                         onClick={() => setPageCursos(p => Math.min(totalPagesCursos, p + 1))}
-                        className="p-2 rounded-xl border border-border hover:bg-surface disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+                        aria-label="Próxima página de cursos"
+                        className="min-h-11 min-w-11 lg:min-h-0 lg:min-w-0 inline-flex items-center justify-center p-2 rounded-xl border border-border hover:bg-surface disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
                       >
                         <ChevronRight size={16} />
                       </button>
@@ -772,7 +768,7 @@ export function ManageSystemPage() {
                 {searchInstrutor && (
                   <button
                     onClick={() => { setSearchInstrutor(''); setPageInstrutores(1); }}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-text-muted hover:text-text-main p-1 rounded-md"
+                    className="min-h-11 min-w-11 lg:min-h-0 lg:min-w-0 inline-flex items-center justify-center absolute right-1 lg:right-3 top-1/2 -translate-y-1/2 text-text-muted hover:text-text-main p-1 rounded-md"
                     title="Limpar busca"
                   >
                     <X size={14} />
@@ -831,13 +827,13 @@ export function ManageSystemPage() {
                         <div className="flex justify-end gap-2.5 pt-3.5 border-t border-border/50">
                           <button 
                             onClick={() => openInstrutorEdit(i)}
-                            className="bg-card hover:bg-surface border border-border text-text-muted hover:text-text-main font-bold px-3 py-1.5 rounded-xl text-xs flex items-center gap-1 btn-tactile cursor-pointer shadow-xs"
+                            className="min-h-11 lg:min-h-0 bg-card hover:bg-surface border border-border text-text-muted hover:text-text-main font-bold px-3 py-1.5 rounded-xl text-xs flex items-center gap-1 btn-tactile cursor-pointer shadow-xs"
                           >
                             <Edit size={12} /> Editar
                           </button>
                           <button 
                             onClick={() => requestDeleteInstrutor(i)}
-                            className="bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 text-red-655 font-bold px-3 py-1.5 rounded-xl text-xs flex items-center gap-1 btn-tactile cursor-pointer shadow-xs"
+                            className="min-h-11 lg:min-h-0 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 text-red-600 dark:text-red-400 font-bold px-3 py-1.5 rounded-xl text-xs flex items-center gap-1 btn-tactile cursor-pointer shadow-xs"
                           >
                             <Trash2 size={12} /> Excluir
                           </button>
@@ -857,7 +853,8 @@ export function ManageSystemPage() {
                       <button
                         disabled={pageInstrutores === 1}
                         onClick={() => setPageInstrutores(p => Math.max(1, p - 1))}
-                        className="p-2 rounded-xl border border-border hover:bg-surface disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+                        aria-label="Página anterior de instrutores"
+                        className="min-h-11 min-w-11 lg:min-h-0 lg:min-w-0 inline-flex items-center justify-center p-2 rounded-xl border border-border hover:bg-surface disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
                       >
                         <ChevronLeft size={16} />
                       </button>
@@ -867,7 +864,8 @@ export function ManageSystemPage() {
                       <button
                         disabled={pageInstrutores === totalPagesInstrutores}
                         onClick={() => setPageInstrutores(p => Math.min(totalPagesInstrutores, p + 1))}
-                        className="p-2 rounded-xl border border-border hover:bg-surface disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+                        aria-label="Próxima página de instrutores"
+                        className="min-h-11 min-w-11 lg:min-h-0 lg:min-w-0 inline-flex items-center justify-center p-2 rounded-xl border border-border hover:bg-surface disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
                       >
                         <ChevronRight size={16} />
                       </button>
@@ -897,7 +895,7 @@ export function ManageSystemPage() {
                 {searchSala && (
                   <button
                     onClick={() => { setSearchSala(''); setPageSalas(1); }}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-text-muted hover:text-text-main p-1 rounded-md"
+                    className="min-h-11 min-w-11 lg:min-h-0 lg:min-w-0 inline-flex items-center justify-center absolute right-1 lg:right-3 top-1/2 -translate-y-1/2 text-text-muted hover:text-text-main p-1 rounded-md"
                     title="Limpar busca"
                   >
                     <X size={14} />
@@ -999,13 +997,13 @@ export function ManageSystemPage() {
                         <div className="flex justify-end gap-2 pt-2 border-t border-border/40">
                           <button 
                             onClick={() => openSalaEdit(s)}
-                            className="bg-card hover:bg-surface border border-border text-text-muted hover:text-text-main font-bold px-3 py-1.5 rounded-xl text-xs flex items-center gap-1 btn-tactile cursor-pointer shadow-xs"
+                            className="min-h-11 lg:min-h-0 bg-card hover:bg-surface border border-border text-text-muted hover:text-text-main font-bold px-3 py-1.5 rounded-xl text-xs flex items-center gap-1 btn-tactile cursor-pointer shadow-xs"
                           >
                             <Edit size={12} /> Editar
                           </button>
                           <button 
                             onClick={() => requestDeleteSala(s)}
-                            className="bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 text-red-655 font-bold px-3 py-1.5 rounded-xl text-xs flex items-center gap-1 btn-tactile cursor-pointer shadow-xs"
+                            className="min-h-11 lg:min-h-0 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 text-red-600 dark:text-red-400 font-bold px-3 py-1.5 rounded-xl text-xs flex items-center gap-1 btn-tactile cursor-pointer shadow-xs"
                           >
                             <Trash2 size={12} /> Excluir
                           </button>
@@ -1025,7 +1023,8 @@ export function ManageSystemPage() {
                       <button
                         disabled={pageSalas === 1}
                         onClick={() => setPageSalas(p => Math.max(1, p - 1))}
-                        className="p-2 rounded-xl border border-border hover:bg-surface disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+                        aria-label="Página anterior de salas"
+                        className="min-h-11 min-w-11 lg:min-h-0 lg:min-w-0 inline-flex items-center justify-center p-2 rounded-xl border border-border hover:bg-surface disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
                       >
                         <ChevronLeft size={16} />
                       </button>
@@ -1035,7 +1034,8 @@ export function ManageSystemPage() {
                       <button
                         disabled={pageSalas === totalPagesSalas}
                         onClick={() => setPageSalas(p => Math.min(totalPagesSalas, p + 1))}
-                        className="p-2 rounded-xl border border-border hover:bg-surface disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+                        aria-label="Próxima página de salas"
+                        className="min-h-11 min-w-11 lg:min-h-0 lg:min-w-0 inline-flex items-center justify-center p-2 rounded-xl border border-border hover:bg-surface disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
                       >
                         <ChevronRight size={16} />
                       </button>

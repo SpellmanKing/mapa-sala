@@ -69,7 +69,7 @@ export function FeriadoModal({
             aria-label="Fechar modal de feriado"
             disabled={isSaving}
             onClick={onClose}
-            className="rounded-xl p-2 text-text-muted transition-colors hover:bg-surface hover:text-text-main disabled:opacity-50"
+            className="min-h-11 min-w-11 lg:min-h-0 lg:min-w-0 inline-flex items-center justify-center rounded-xl p-2 text-text-muted transition-colors hover:bg-surface hover:text-text-main disabled:opacity-50"
           >
             <X size={18} />
           </button>
@@ -150,14 +150,14 @@ export function FeriadoModal({
               type="button"
               disabled={isSaving}
               onClick={onClose}
-              className="w-full rounded-xl px-5 py-2.5 text-sm font-bold text-text-muted hover:bg-surface hover:text-text-main disabled:opacity-50 sm:w-auto"
+              className="min-h-11 lg:min-h-0 inline-flex items-center justify-center w-full rounded-xl px-5 py-2.5 text-sm font-bold text-text-muted hover:bg-surface hover:text-text-main disabled:opacity-50 sm:w-auto"
             >
               Cancelar
             </button>
             <button
               type="submit"
               disabled={isSaving || tipos.length === 0}
-              className="flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-6 py-2.5 text-sm font-black text-white shadow-md hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
+              className="min-h-11 lg:min-h-0 flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-6 py-2.5 text-sm font-black text-white shadow-md hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
             >
               {isSaving ? <><Loader2 size={16} className="animate-spin" /> Salvando...</> : 'Salvar feriado'}
             </button>

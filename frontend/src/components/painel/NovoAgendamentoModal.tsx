@@ -1,7 +1,9 @@
 import React from 'react';
 import { Calendar as CalendarIcon, X, Users, AlertTriangle, Lightbulb, ArrowRight, Loader2 } from 'lucide-react';
 import { useDialogFocus } from '../../utils/useDialogFocus';
-import { CLASS_DAYS, SHIFTS } from '../../constants/referenceData';
+import { WEEK_DAYS, SHIFTS } from '../../constants/referenceData';
+import type { PrevisaoAlocacao } from '../../api/client';
+import type { Curso } from '../../context/AppContext';
 
 interface Props {
   open: boolean;
@@ -19,9 +21,11 @@ interface Props {
   };
   setNovoAgendamento: React.Dispatch<React.SetStateAction<any>>;
   handleCursoChange: (e: React.ChangeEvent<HTMLSelectElement>) => void;
-  cursos: any[];
+  cursos: Curso[];
   instrutores: any[];
   disponibilidadeNovo: {
+    requerSala: boolean | null;
+    cronograma: PrevisaoAlocacao | null;
     salasLivres: any[];
     salasOcupadas: Array<{ salaId: number; turmaCodigo: string; data: string }>;
     salasCapacidadeInsuficiente: Array<{ salaId: number; nome: string; capacidade: number }>;
@@ -31,11 +35,6 @@ interface Props {
     erro: string | null;
   };
   avisoDisponibilidade: string | null;
-  calculoImportado: null | {
-    cargaHoraria: number;
-    horasPorDia: number;
-    cronograma: { dataTermino: string; totalAulas: number };
-  };
   salaSelecionadaNovo?: any;
   capacidadeExcedidaNovo: boolean;
   isSavingAlocacao: boolean;
@@ -53,7 +52,6 @@ export function NovoAgendamentoModal({
   instrutores,
   disponibilidadeNovo,
   avisoDisponibilidade,
-  calculoImportado,
   salaSelecionadaNovo,
   capacidadeExcedidaNovo,
   isSavingAlocacao,
@@ -62,6 +60,10 @@ export function NovoAgendamentoModal({
   const dialogRef = useDialogFocus(open, onClose, isSavingAlocacao);
 
   if (!open) return null;
+
+  const curso = cursos.find(item => item.id === novoAgendamento.cursoId);
+  const cronograma = isLoadingDisponibilidade ? null : disponibilidadeNovo.cronograma;
+  const semSala = !isLoadingDisponibilidade && disponibilidadeNovo.requerSala === false;
 
   return (
     <div className="fixed inset-0 bg-slate-950/60 backdrop-blur-md z-[999] flex items-center justify-center p-2 sm:p-4 overflow-y-auto">
@@ -82,26 +84,19 @@ export function NovoAgendamentoModal({
             aria-label="Fechar nova alocação"
             disabled={isSavingAlocacao}
             onClick={onClose} 
-            className="text-text-muted hover:text-text-main hover:bg-surface/60 p-2 rounded-xl transition-all btn-tactile cursor-pointer disabled:opacity-50"
+            className="min-h-11 min-w-11 lg:min-h-0 lg:min-w-0 inline-flex items-center justify-center text-text-muted hover:text-text-main hover:bg-surface/60 p-2 rounded-xl transition-all btn-tactile cursor-pointer disabled:opacity-50"
           >
             <X size={20} />
           </button>
         </div>
         
         <form onSubmit={onSave} className="p-4 sm:p-5 flex flex-col gap-4 overflow-y-auto custom-scrollbar">
-          {calculoImportado && (
-            <div className="bg-primary/5 border border-primary/20 rounded-2xl p-3 text-xs text-text-main">
-              <strong>Cronograma importado da calculadora:</strong>{' '}
-              {calculoImportado.cargaHoraria}h, {calculoImportado.horasPorDia}h por encontro,
-              {' '}{calculoImportado.cronograma.totalAulas} encontros, término previsto em{' '}
-              {calculoImportado.cronograma.dataTermino.split('-').reverse().join('/')}.
-            </div>
-          )}
           
           {/* Curso */}
           <div>
-            <label className="block text-xs font-black text-text-muted uppercase tracking-widest mb-1.5">Curso</label>
+            <label htmlFor="novo-curso" className="block text-xs font-black text-text-muted uppercase tracking-widest mb-1.5">Curso</label>
             <select 
+              id="novo-curso"
               data-dialog-initial-focus
               value={novoAgendamento.cursoId}
               onChange={handleCursoChange}
@@ -120,18 +115,20 @@ export function NovoAgendamentoModal({
           {/* Data de Início e Turno */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-black text-text-muted uppercase tracking-widest mb-1.5">Data de Início</label>
+              <label htmlFor="novo-inicio" className="block text-xs font-black text-text-muted uppercase tracking-widest mb-1.5">Data de Início</label>
               <input 
+                id="novo-inicio"
                 type="date" 
                 value={novoAgendamento.dataInicio}
-                onChange={e => setNovoAgendamento({ ...novoAgendamento, dataInicio: e.target.value })}
+                onChange={e => setNovoAgendamento({ ...novoAgendamento, dataInicio: e.target.value, salaId: '' })}
                 className="w-full border border-border rounded-xl p-3 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none text-sm font-semibold transition-all bg-input text-text-main cursor-pointer"
                 required
               />
             </div>
             <div>
-              <label className="block text-xs font-black text-text-muted uppercase tracking-widest mb-1.5">Turno</label>
+              <label htmlFor="novo-turno" className="block text-xs font-black text-text-muted uppercase tracking-widest mb-1.5">Turno</label>
               <select 
+                id="novo-turno"
                 value={novoAgendamento.turno}
                 onChange={e => setNovoAgendamento({ ...novoAgendamento, turno: e.target.value, salaId: '' })}
                 className="w-full border border-border rounded-xl p-3 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none text-sm font-semibold transition-all bg-input text-text-main cursor-pointer"
@@ -147,8 +144,9 @@ export function NovoAgendamentoModal({
           <div>
             <label className="block text-xs font-black text-text-muted uppercase tracking-widest mb-2">Dias de Execução da Turma</label>
             <div className="flex flex-wrap gap-2">
-              {CLASS_DAYS.map((dia) => {
+              {WEEK_DAYS.map((dia) => {
                 const checked = novoAgendamento.diasSemana.includes(dia.id);
+                const remoto = curso?.modalidade === 'Remoto' || curso?.diasRemotos.includes(dia.id);
                 return (
                   <button
                     type="button"
@@ -162,21 +160,48 @@ export function NovoAgendamentoModal({
                         return { ...prev, diasSemana: Array.from(prevSet), salaId: '' };
                       });
                     }}
-                    className={`px-3 py-2 text-xs font-bold rounded-xl border border-border/80 btn-tactile cursor-pointer ${
+                    className={`min-h-11 min-w-11 lg:min-h-0 lg:min-w-0 inline-flex flex-col items-center justify-center px-3 py-2 text-xs font-bold rounded-xl border border-border/80 btn-tactile cursor-pointer ${
                       checked 
                         ? 'bg-primary text-white border-primary shadow-xs font-black' 
                         : 'bg-input text-text-muted hover:bg-surface/50'
                     }`}
                   >
                     {dia.short}
+                    {remoto && <span className="text-[10px]">Remoto</span>}
                   </button>
                 );
               })}
             </div>
           </div>
 
+          {(isLoadingDisponibilidade || cronograma) && (
+            <div className="bg-primary/5 border border-primary/20 rounded-2xl p-3 text-sm text-text-main">
+              {cronograma ? (
+                <>
+                  <div role="status">
+                    <strong>Previsão da alocação</strong>
+                    <p>{cronograma.cargaHoraria} h · {cronograma.horasPorAula} h por aula · {cronograma.totalAulas} aulas</p>
+                    {cronograma.datasRemotas.length > 0 && <p>{cronograma.datasRemotas.length} aulas remotas sem reserva de sala.</p>}
+                    <p>Término previsto em {cronograma.dataTermino.split('-').reverse().join('/')}.</p>
+                  </div>
+                  <details className="mt-2">
+                    <summary className="cursor-pointer font-semibold">Ver datas das aulas</summary>
+                    <ul className="mt-2 grid grid-cols-2 gap-1 sm:grid-cols-3">
+                      {cronograma.datasAulas.map(data => (
+                        <li key={data}>{data.split('-').reverse().join('/')}{cronograma.datasRemotas.includes(data) && ' · Remota'}</li>
+                      ))}
+                    </ul>
+                  </details>
+                </>
+              ) : <p role="status">Atualizando previsão e disponibilidade…</p>}
+            </div>
+          )}
+
           {/* SELETOR DE SALA FILTRADO POR DISPONIBILIDADE */}
           <div>
+            {semSala ? (
+              <p className="text-sm font-semibold text-text-main">Ambiente virtual. Esta turma não precisa de sala.</p>
+            ) : <>
             <div className="flex justify-between items-center mb-1.5">
               <label className="text-xs font-black text-text-muted uppercase tracking-widest">
                 Ambiente / Sala Disponível
@@ -204,6 +229,7 @@ export function NovoAgendamentoModal({
                 </option>
               ))}
             </select>
+            </>}
 
             {disponibilidadeNovo.erro && (
               <div role="alert" className="mt-3 bg-red-500/10 border border-red-500/30 rounded-xl p-3 flex items-center gap-2 text-xs font-bold text-red-600 dark:text-red-400">
@@ -237,7 +263,7 @@ export function NovoAgendamentoModal({
                         key={sug.turno}
                         type="button"
                         onClick={() => setNovoAgendamento((prev: any) => ({ ...prev, turno: sug.turno, salaId: '' }))}
-                        className="bg-card hover:bg-surface border border-amber-500/40 text-amber-800 dark:text-amber-300 font-bold px-3 py-1.5 rounded-xl text-xs flex items-center gap-1.5 btn-tactile cursor-pointer shadow-xs"
+                        className="min-h-11 lg:min-h-0 bg-card hover:bg-surface border border-amber-500/40 text-amber-800 dark:text-amber-300 font-bold px-3 py-1.5 rounded-xl text-xs flex items-center gap-1.5 btn-tactile cursor-pointer shadow-xs"
                       >
                         <span>Mudar para <strong>{sug.turno}</strong></span>
                         <span className="text-[10px] bg-amber-500/20 px-1.5 py-0.5 rounded-md font-mono font-black">
@@ -310,7 +336,7 @@ export function NovoAgendamentoModal({
               type="button" 
               disabled={isSavingAlocacao}
               onClick={onClose} 
-              className="w-full sm:w-auto px-4 py-2.5 text-sm font-bold text-text-muted hover:text-text-main hover:bg-surface/50 rounded-xl btn-tactile cursor-pointer disabled:opacity-50"
+              className="min-h-11 lg:min-h-0 inline-flex items-center justify-center w-full sm:w-auto px-4 py-2.5 text-sm font-bold text-text-muted hover:text-text-main hover:bg-surface/50 rounded-xl btn-tactile cursor-pointer disabled:opacity-50"
             >
               Cancelar
             </button>
@@ -319,12 +345,13 @@ export function NovoAgendamentoModal({
               disabled={
                 isSavingAlocacao ||
                 isLoadingDisponibilidade ||
-                !novoAgendamento.salaId ||
+                !cronograma ||
+                (!semSala && !novoAgendamento.salaId) ||
                 capacidadeExcedidaNovo ||
                 Boolean(disponibilidadeNovo.erro) ||
                 Boolean(disponibilidadeNovo.conflitoInstrutor)
               }
-              className="w-full sm:w-auto bg-primary text-white font-black py-2.5 px-6 rounded-xl shadow-md hover:bg-primary/90 btn-tactile cursor-pointer text-sm flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="min-h-11 lg:min-h-0 w-full sm:w-auto bg-primary text-white font-black py-2.5 px-6 rounded-xl shadow-md hover:bg-primary/90 btn-tactile cursor-pointer text-sm flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isSavingAlocacao ? (
                 <>

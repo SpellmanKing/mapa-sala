@@ -1,14 +1,16 @@
 import React from 'react';
 import { BookOpen, X, Lightbulb, Trash2, Loader2 } from 'lucide-react';
 import { useDialogFocus } from '../../utils/useDialogFocus';
-import { CLASS_DAYS, SHIFTS } from '../../constants/referenceData';
+import { WEEK_DAYS, SHIFTS } from '../../constants/referenceData';
+import type { TurmaDetalhada } from '../../context/AppContext';
+import type { PrevisaoAlocacao } from '../../api/client';
 
 interface Props {
   open: boolean;
   onClose: () => void;
   onSave: (e: React.FormEvent) => void;
   onRequestDelete: () => void;
-  turma: any;
+  turma: TurmaDetalhada | null;
   dadosEdicao: {
     salaId: string;
     dataInicio: string;
@@ -19,6 +21,8 @@ interface Props {
   setDadosEdicao: React.Dispatch<React.SetStateAction<any>>;
   instrutores: any[];
   disponibilidadeEdicao: {
+    requerSala: boolean | null;
+    cronograma: PrevisaoAlocacao | null;
     salasLivres: any[];
     salasOcupadas: Array<{ salaId: number; turmaCodigo: string; data: string }>;
     salasCapacidadeInsuficiente: Array<{ salaId: number; nome: string; capacidade: number }>;
@@ -51,6 +55,7 @@ export function EditTurmaModal({
   const dialogRef = useDialogFocus(open, onClose, isSavingAlocacao || isDeletingAlocacao);
 
   if (!open || !turma) return null;
+  const semSala = !isLoadingDisponibilidade && disponibilidadeEdicao.requerSala === false;
 
   return (
     <div className="fixed inset-0 bg-slate-950/60 backdrop-blur-md z-[999] flex items-center justify-center p-2 sm:p-4 overflow-y-auto">
@@ -71,7 +76,7 @@ export function EditTurmaModal({
             aria-label="Fechar edição da alocação"
             disabled={isSavingAlocacao || isDeletingAlocacao}
             onClick={onClose} 
-            className="text-text-muted hover:text-text-main hover:bg-surface/60 p-2 rounded-xl transition-all btn-tactile cursor-pointer disabled:opacity-50"
+            className="min-h-11 min-w-11 lg:min-h-0 lg:min-w-0 inline-flex items-center justify-center text-text-muted hover:text-text-main hover:bg-surface/60 p-2 rounded-xl transition-all btn-tactile cursor-pointer disabled:opacity-50"
           >
             <X size={20} />
           </button>
@@ -110,8 +115,9 @@ export function EditTurmaModal({
           <div>
             <label className="block text-xs font-black text-text-muted uppercase tracking-widest mb-2">Dias de Execução da Turma</label>
             <div className="flex flex-wrap gap-2">
-              {CLASS_DAYS.map((dia) => {
+              {WEEK_DAYS.map((dia) => {
                 const checked = dadosEdicao.diasSemana.includes(dia.id);
+                const remoto = turma.modalidade === 'Remoto' || turma.diasRemotos.includes(dia.id);
                 return (
                   <button
                     type="button"
@@ -125,13 +131,14 @@ export function EditTurmaModal({
                         return { ...prev, diasSemana: Array.from(prevSet) };
                       });
                     }}
-                    className={`px-3 py-2 text-xs font-bold rounded-xl border border-border/80 btn-tactile cursor-pointer ${
+                    className={`min-h-11 min-w-11 lg:min-h-0 lg:min-w-0 inline-flex flex-col items-center justify-center px-3 py-2 text-xs font-bold rounded-xl border border-border/80 btn-tactile cursor-pointer ${
                       checked 
                         ? 'bg-primary text-white border-primary shadow-xs font-black' 
                         : 'bg-input text-text-muted hover:bg-surface/50'
                     }`}
                   >
                     {dia.short}
+                    {remoto && <span className="text-[10px]">Remoto</span>}
                   </button>
                 );
               })}
@@ -140,6 +147,11 @@ export function EditTurmaModal({
 
           {/* SELETOR DE SALA COM FILTRO DE DISPONIBILIDADE NA EDIÇÃO */}
           <div>
+            {semSala ? (
+              <p className="text-sm font-semibold text-text-main">
+                {disponibilidadeEdicao.cronograma ? 'As próximas aulas são remotas e não precisam de sala.' : 'Não há aulas restantes para reservar.'}
+              </p>
+            ) : <>
             <div className="flex justify-between items-center mb-1.5">
               <label className="text-xs font-black text-text-muted uppercase tracking-widest">
                 Ambiente / Sala
@@ -156,12 +168,14 @@ export function EditTurmaModal({
               className="w-full border border-border rounded-xl p-3 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none text-sm font-semibold transition-all bg-input text-text-main cursor-pointer"
               required
             >
+              <option value="" disabled>Selecione uma sala disponível</option>
               {disponibilidadeEdicao.salasLivres.map(s => (
                 <option key={s.id} value={s.id} className="bg-card text-text-main">
                   📍 {s.nome} (Capacidade: {s.capacidade} - {s.tipo})
                 </option>
               ))}
             </select>
+            </>}
 
             {disponibilidadeEdicao.erro && (
               <div role="alert" className="mt-3 bg-red-500/10 border border-red-500/30 rounded-xl p-3 text-xs font-bold text-red-600 dark:text-red-400">
@@ -191,7 +205,7 @@ export function EditTurmaModal({
                     key={sug.turno}
                     type="button"
                     onClick={() => setDadosEdicao((prev: any) => ({ ...prev, turno: sug.turno }))}
-                    className="bg-card hover:bg-surface border border-amber-500/40 text-amber-800 dark:text-amber-300 font-bold px-3 py-1.5 rounded-xl text-xs flex items-center justify-between btn-tactile cursor-pointer"
+                    className="min-h-11 lg:min-h-0 bg-card hover:bg-surface border border-amber-500/40 text-amber-800 dark:text-amber-300 font-bold px-3 py-1.5 rounded-xl text-xs flex items-center justify-between btn-tactile cursor-pointer"
                   >
                     <span>Mudar para <strong>{sug.turno}</strong></span>
                     <span className="text-[10px] bg-amber-500/20 px-1.5 py-0.5 rounded-md font-mono font-black">
@@ -227,7 +241,7 @@ export function EditTurmaModal({
               type="button" 
               disabled={isSavingAlocacao || isDeletingAlocacao || isLoadingDisponibilidade}
               onClick={onRequestDelete}
-              className="w-full sm:w-auto bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 text-red-600 dark:text-red-400 font-bold px-4 py-2.5 rounded-xl flex items-center justify-center gap-1.5 text-xs transition-all btn-tactile cursor-pointer disabled:opacity-50"
+              className="min-h-11 lg:min-h-0 w-full sm:w-auto bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 text-red-600 dark:text-red-400 font-bold px-4 py-2.5 rounded-xl flex items-center justify-center gap-1.5 text-xs transition-all btn-tactile cursor-pointer disabled:opacity-50"
             >
               <Trash2 size={14} /> Excluir Alocação
             </button>
@@ -237,7 +251,7 @@ export function EditTurmaModal({
                 type="button" 
                 disabled={isSavingAlocacao || isDeletingAlocacao}
                 onClick={onClose} 
-                className="w-full sm:w-auto px-4 py-2.5 text-sm font-bold text-text-muted hover:text-text-main hover:bg-surface/50 rounded-xl btn-tactile cursor-pointer disabled:opacity-50"
+                className="min-h-11 lg:min-h-0 inline-flex items-center justify-center w-full sm:w-auto px-4 py-2.5 text-sm font-bold text-text-muted hover:text-text-main hover:bg-surface/50 rounded-xl btn-tactile cursor-pointer disabled:opacity-50"
               >
                 Cancelar
               </button>
@@ -247,11 +261,12 @@ export function EditTurmaModal({
                   isSavingAlocacao ||
                   isDeletingAlocacao ||
                   isLoadingDisponibilidade ||
-                  !dadosEdicao.salaId ||
+                  disponibilidadeEdicao.requerSala == null ||
+                  (!semSala && !dadosEdicao.salaId) ||
                   Boolean(disponibilidadeEdicao.erro) ||
                   Boolean(disponibilidadeEdicao.conflitoInstrutor)
                 }
-                className="w-full sm:w-auto bg-primary text-white font-black py-2.5 px-6 rounded-xl shadow-md hover:bg-primary/90 btn-tactile cursor-pointer text-sm flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="min-h-11 lg:min-h-0 w-full sm:w-auto bg-primary text-white font-black py-2.5 px-6 rounded-xl shadow-md hover:bg-primary/90 btn-tactile cursor-pointer text-sm flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isSavingAlocacao ? (
                   <>

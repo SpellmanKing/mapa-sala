@@ -202,9 +202,11 @@ erDiagram
 
 Pré-requisito: Docker Engine com Compose no WSL. Não é necessário instalar Node.js ou Prisma no Windows para usar a pilha completa.
 
-Na raiz do clone, execute no WSL:
+### 1. Início rápido
 
 ```bash
+git clone <url-do-repositorio> mapa-sala
+cd mapa-sala
 docker compose up --build -d
 ```
 
@@ -214,17 +216,64 @@ Neste computador, a partir do PowerShell:
 wsl -u root -- bash -lc "cd /mnt/c/AllProjects/mapa-sala && docker compose up --build -d"
 ```
 
-Abra **http://localhost/** (ou http://localhost:5173/). O painel abre sem login. O backend aplica as migrations e cadastra turnos, status, feriados, salas, instrutores e cursos de referência ao iniciar. A API responde em http://localhost:3333/health. As portas são publicadas apenas em `127.0.0.1`; configure `BIND_HOST` somente se precisar acesso pela rede e houver proteção externa.
+- **Painel Web (Frontend)**: **http://localhost/** (ou **http://localhost:5173/**) — abre direto no painel, sem login.
+- **Healthcheck da API**: **http://localhost:3333/health**
 
-Para carregar turmas fictícias no banco **descartável**, rode depois que o backend estiver healthy:
+O backend aplica as migrations e cadastra turnos, status, 39 feriados (nacionais e distritais 2025–2027), salas, instrutores e cursos de referência de forma idempotente ao iniciar. As portas são publicadas apenas em `127.0.0.1`; configure `BIND_HOST` somente se precisar acesso pela rede e houver proteção externa.
+
+### 2. Carga de demonstração (`db:seed:demo`)
+
+Para carregar as turmas de demonstração no banco **descartável**, rode depois que o backend estiver `healthy`:
 
 ```bash
 docker compose run --rm -e ALLOW_DESTRUCTIVE_SEED=true backend npm run db:seed:demo
 ```
 
-Esse comando substitui turmas e agendamentos existentes. Ele não cria turmas incompatíveis com sala, capacidade, instrutor ou código único; as pendências ficam em `relatorios/turmas_pendentes.csv`. Revise o CSV e use **Gerenciamento → Cursos → Importar planilha** para simular e confirmar correções. O seed de referência é idempotente e automático; não exige `ALLOW_DESTRUCTIVE_SEED`.
+Esse comando substitui turmas e agendamentos existentes. Ele não cria turmas incompatíveis com sala, capacidade, instrutor ou código único; as pendências ficam em `relatorios/turmas_pendentes.csv`. O seed de referência é idempotente e automático; não exige `ALLOW_DESTRUCTIVE_SEED`.
 
-Para parar sem apagar os dados: `docker compose down`. Para **apagar também o banco local**, somente após backup e confirmação de que está no projeto correto: `docker compose down -v`.
+### 3. Importação de planilha (com detecção automática de colunas)
+
+Em **Gerenciamento → Cursos → Importar Planilha**, selecione qualquer arquivo `.csv` ou `.xlsx`:
+
+1. **Análise e detecção automática (`/importacao-planilha/analisar`)**: o sistema escolhe automaticamente a aba mais relevante, localiza a linha do cabeçalho (ou opera sem cabeçalho) e identifica as colunas combinando sinônimos do cabeçalho e padrões do conteúdo (datas, turnos, horários como `"14:00 às 18:00"`, códigos `2026.09.55`, cursos, salas, instrutores e quantidades).
+2. **Simulação (`/importacao-planilha/simular`)**: permite revisar/ajustar o mapeamento sugerido e validar conflitos de sala e instrutor sem gravar no banco. Aceita `dias_semana` específicos (`"Ter, Qui, Sáb"`, `"2,4,6"`, `"seg a sex"`), infere o turno pelo horário inicial quando não há coluna de turno, dispensa `local_sala` quando o nome da sala é único e sugere correções para erros de grafia (`"Você quis dizer ...?"`).
+3. **Confirmação (`/importacao-planilha/confirmar`)**: aplica as alterações em transação única preservando aulas anteriores a hoje.
+
+### 4. Backup e restauração do banco de dados
+
+Com o container `postgres` (`mapa-sala-postgres`) em execução:
+
+- **Backup em SQL texto (`pg_dump`)**:
+  ```bash
+  docker compose exec -T postgres pg_dump -U postgres -d sgst_bd --clean --if-exists > backup_sgst.sql
+  ```
+- **Restauração a partir de SQL texto (`psql`)**:
+  ```bash
+  cat backup_sgst.sql | docker compose exec -T postgres psql -U postgres -d sgst_bd
+  ```
+- **Backup e restauração em formato customizado (`pg_restore`)**:
+  ```bash
+  docker compose exec -T postgres pg_dump -U postgres -d sgst_bd -Fc > backup_sgst.dump
+  cat backup_sgst.dump | docker compose exec -T postgres pg_restore -U postgres -d sgst_bd --clean --if-exists
+  ```
+
+### 5. Como parar sem perder dados e como limpar tudo
+
+- **Parar containers sem apagar os dados do banco**:
+  ```bash
+  docker compose down
+  ```
+- **Apagar containers e remover também o volume do banco local** (somente após backup e confirmação):
+  ```bash
+  docker compose down -v
+  ```
+
+### 6. Solução de problemas (WSL / Docker)
+
+- **Containers param sozinhos no Windows após fechar o terminal**: o WSL encerra a distribuição Linux por ociosidade quando não há sessão aberta. Mantenha um terminal WSL ativo enquanto utilizar o sistema.
+- **Serviço Docker parado no WSL**: execute `wsl -u root -- bash -lc "service docker status || service docker start"`.
+- **Container do banco ou backend não fica `healthy`**: verifique `docker compose ps` e `docker compose logs postgres backend`.
+- **Conflito de portas (`80`, `5173`, `3333` ou `5432`)**: verifique se outro serviço local já ocupa a porta no Windows (`netstat -ano | findstr :3333`).
 
 ## 🧪 Testes e qualidade
 

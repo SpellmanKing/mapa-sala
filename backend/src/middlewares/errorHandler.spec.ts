@@ -18,6 +18,18 @@ describe('errorHandler', () => {
 
   afterEach(() => vi.restoreAllMocks());
 
+  it.each([
+    ['entity.too.large', 413, 'O conteúdo enviado excede o limite permitido.'],
+    ['entity.parse.failed', 400, 'Corpo da requisição inválido.']
+  ] as const)('preserva o erro de entrada %s sem registrar o corpo', (type, status, message) => {
+    const res = response();
+    const log = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    errorHandler(Object.assign(new Error(), { type, body: 'conteúdo privado' }), request, res, next);
+    expect(res.status).toHaveBeenCalledWith(status);
+    expect(res.json).toHaveBeenCalledWith(expect.objectContaining({ error: message }));
+    expect(log).not.toHaveBeenCalled();
+  });
+
   it('sanitiza erro inesperado do Prisma e registra o detalhe no servidor', () => {
     const res = response();
     const log = vi.spyOn(console, 'error').mockImplementation(() => undefined);

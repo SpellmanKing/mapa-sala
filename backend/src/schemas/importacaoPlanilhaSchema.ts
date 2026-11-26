@@ -736,15 +736,102 @@ function analisarAba(
   };
 }
 
+export const MAX_BYTES_DESCOMPACTADOS_XLSX = 50 * 1024 * 1024;
+export const MAX_LINHAS_PLANILHA = 2000;
+
+export function validarTamanhoDescompactadoXlsx(
+  arquivo: Buffer,
+  limiteBytes = MAX_BYTES_DESCOMPACTADOS_XLSX
+): void {
+  if (arquivo.subarray(0, 2).toString() !== 'PK') return;
+
+  let totalLocal = 0;
+  let pos = 0;
+  while (pos + 30 <= arquivo.length) {
+    const sig = arquivo.readUInt32LE(pos);
+    if (sig === 0x04034b50) {
+      const compSize = arquivo.readUInt32LE(pos + 18);
+      const uncompSize = arquivo.readUInt32LE(pos + 22);
+      const nameLen = arquivo.readUInt16LE(pos + 26);
+      const extraLen = arquivo.readUInt16LE(pos + 28);
+      if (uncompSize === 0xffffffff || compSize === 0xffffffff) {
+        throw new HttpError(
+          400,
+          `Arquivo XLSX excede o limite de tamanho descompactado (${Math.round(limiteBytes / (1024 * 1024))} MB).`
+        );
+      }
+      totalLocal += uncompSize;
+      if (totalLocal > limiteBytes) {
+        throw new HttpError(
+          400,
+          `Arquivo XLSX excede o limite de tamanho descompactado (${Math.round(limiteBytes / (1024 * 1024))} MB).`
+        );
+      }
+      const avancar = 30 + nameLen + extraLen + (compSize > 0 ? compSize : 0);
+      pos += avancar > 0 ? avancar : 30;
+    } else {
+      pos++;
+    }
+  }
+
+  // Também verifica o diretório central do ZIP (cobre entradas com data descriptor)
+  const minEocdPos = Math.max(0, arquivo.length - 65557);
+  let eocdPos = -1;
+  for (let i = arquivo.length - 22; i >= minEocdPos; i--) {
+    if (arquivo.readUInt32LE(i) === 0x06054b50) {
+      eocdPos = i;
+      break;
+    }
+  }
+  if (eocdPos !== -1 && eocdPos + 20 <= arquivo.length) {
+    const cdSize = arquivo.readUInt32LE(eocdPos + 12);
+    const cdOffset = arquivo.readUInt32LE(eocdPos + 16);
+    if (cdOffset === 0xffffffff || cdSize === 0xffffffff) {
+      throw new HttpError(
+        400,
+        `Arquivo XLSX excede o limite de tamanho descompactado (${Math.round(limiteBytes / (1024 * 1024))} MB).`
+      );
+    }
+    let cdPos = cdOffset;
+    let totalCd = 0;
+    const cdEnd = Math.min(arquivo.length, cdOffset + cdSize);
+    while (cdPos + 46 <= cdEnd) {
+      if (arquivo.readUInt32LE(cdPos) !== 0x02014b50) break;
+      const uncompSize = arquivo.readUInt32LE(cdPos + 24);
+      const nameLen = arquivo.readUInt16LE(cdPos + 28);
+      const extraLen = arquivo.readUInt16LE(cdPos + 30);
+      const commentLen = arquivo.readUInt16LE(cdPos + 32);
+      if (uncompSize === 0xffffffff) {
+        throw new HttpError(
+          400,
+          `Arquivo XLSX excede o limite de tamanho descompactado (${Math.round(limiteBytes / (1024 * 1024))} MB).`
+        );
+      }
+      totalCd += uncompSize;
+      if (totalCd > limiteBytes) {
+        throw new HttpError(
+          400,
+          `Arquivo XLSX excede o limite de tamanho descompactado (${Math.round(limiteBytes / (1024 * 1024))} MB).`
+        );
+      }
+      cdPos += 46 + nameLen + extraLen + commentLen;
+    }
+  }
+}
+
 function abrirWorkbook(arquivo: Buffer): { workbook: xlsx.WorkBook; isXlsx: boolean } {
+  const isXlsx = arquivo.subarray(0, 2).toString() === 'PK';
+  if (isXlsx) {
+    validarTamanhoDescompactadoXlsx(arquivo);
+  }
   try {
-    const isXlsx = arquivo.subarray(0, 2).toString() === 'PK';
     const workbook = isXlsx
       ? xlsx.read(arquivo, { type: 'buffer', cellDates: false })
       : xlsx.read(arquivo.toString('utf8').replace(/^\uFEFF/, ''), { type: 'string', raw: true });
     if (!workbook.SheetNames.length) throw new Error('Planilha vazia');
     return { workbook, isXlsx };
-  } catch {
+  } catch (err) {
+    if (err instanceof HttpError) throw err;
     throw new HttpError(400, 'Arquivo inválido: envie CSV ou XLSX legível.');
   }
 }
@@ -752,11 +839,18 @@ function abrirWorkbook(arquivo: Buffer): { workbook: xlsx.WorkBook; isXlsx: bool
 function extrairTabelaDaAba(workbook: xlsx.WorkBook, nomeAba: string, isXlsx: boolean): unknown[][] {
   const folha = workbook.Sheets[nomeAba];
   if (!folha) throw new HttpError(400, `Aba "${nomeAba}" não encontrada na planilha.`);
-  return xlsx.utils.sheet_to_json<unknown[]>(folha, {
+  const tabela = xlsx.utils.sheet_to_json<unknown[]>(folha, {
     header: 1,
     raw: isXlsx,
     defval: ''
   });
+  const linhasNaoVazias = tabela.filter(linha =>
+    (linha ?? []).some(celula => String(celula ?? '').trim() !== '')
+  ).length;
+  if (linhasNaoVazias > MAX_LINHAS_PLANILHA) {
+    throw new HttpError(400, `A planilha excede o limite máximo de ${MAX_LINHAS_PLANILHA} linhas.`);
+  }
+  return tabela;
 }
 
 export function analisarPlanilha(

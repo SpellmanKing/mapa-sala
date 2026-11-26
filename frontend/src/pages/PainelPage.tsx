@@ -5,7 +5,6 @@ import {
   Calendar as CalendarIcon, 
   Plus, 
   X, 
-  Users, 
   Tv, 
   Minimize2, 
   ChevronLeft, 
@@ -17,13 +16,13 @@ import {
   SlidersHorizontal
 } from 'lucide-react';
 import { useAppData, useAppUi, Sala, TurmaDetalhada } from '../context/AppContext';
-import { TurmaService } from '../api/client';
+import { TurmaService, type PrevisaoAlocacao } from '../api/client';
 import { ConfirmDeleteModal } from '../components/ConfirmDeleteModal';
 import { DigitalClock } from '../components/painel/DigitalClock';
 import { NovoAgendamentoModal } from '../components/painel/NovoAgendamentoModal';
 import { EditTurmaModal } from '../components/painel/EditTurmaModal';
 import { formatDateInput } from '../utils/date';
-import { getShiftId, SHIFTS } from '../constants/referenceData';
+import { diasLetivosDoCurso, getShiftId, SHIFTS, WEEK_DAYS } from '../constants/referenceData';
 
 const TURNOS = SHIFTS.map(shift => shift.label);
 
@@ -31,16 +30,12 @@ interface CalculoImportado {
   cursoId: string;
   dataInicio: string;
   diasSemana: string[];
-  cargaHoraria: number;
-  horasPorDia: number;
-  cronograma: {
-    dataTermino: string;
-    totalAulas: number;
-    datasAulas: string[];
-  };
+  turno?: string;
 }
 
 interface DisponibilidadePainel {
+  requerSala: boolean | null;
+  cronograma: PrevisaoAlocacao | null;
   salasLivres: Sala[];
   salasOcupadas: Array<{ salaId: number; turmaCodigo: string; data: string }>;
   salasCapacidadeInsuficiente: Array<{ salaId: number; nome: string; capacidade: number }>;
@@ -59,6 +54,8 @@ interface DisponibilidadeApi extends Omit<DisponibilidadePainel, 'salasLivres' |
 }
 
 const criarDisponibilidade = (salasLivres: Sala[] = []): DisponibilidadePainel => ({
+  requerSala: null,
+  cronograma: null,
   salasLivres,
   salasOcupadas: [],
   salasCapacidadeInsuficiente: [],
@@ -69,7 +66,7 @@ const criarDisponibilidade = (salasLivres: Sala[] = []): DisponibilidadePainel =
 });
 
 const descreverIndisponibilidade = (disponibilidade: DisponibilidadePainel): string | null => {
-  if (disponibilidade.salasLivres.length > 0) return null;
+  if (disponibilidade.requerSala !== true || disponibilidade.salasLivres.length > 0) return null;
   if (disponibilidade.totalSalas === 0) {
     return 'Não há salas cadastradas no sistema.';
   }
@@ -163,7 +160,8 @@ export function PainelPage() {
   const [modoTV, setModoTV] = useState(false);
   const [autoZoom, setAutoZoom] = useState(() => {
     const saved = localStorage.getItem('sgst_tv_zoom');
-    return saved ? Number(saved) : 63;
+    const zoom = Number(saved);
+    return zoom >= 30 && zoom <= 100 ? zoom : 63;
   });
 
   const handleSetTvZoom = (newZoom: number) => {
@@ -187,7 +185,7 @@ export function PainelPage() {
     const startOfWeek = new Date(baseDate);
     startOfWeek.setDate(baseDate.getDate() - (day === 0 ? 6 : day - 1));
     const endOfWeek = new Date(startOfWeek);
-    endOfWeek.setDate(startOfWeek.getDate() + 5);
+    endOfWeek.setDate(startOfWeek.getDate() + 6);
 
     const f = (d: Date) => d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
     const year = endOfWeek.getFullYear();
@@ -221,53 +219,35 @@ export function PainelPage() {
   const unidadesDisponiveis = useMemo(() => {
     const setU = new Set<string>();
     turmas.forEach(t => { if (t.unidade) setU.add(t.unidade); });
-    cursos.forEach(c => { if (c.unidade) setU.add(c.unidade); });
-    return Array.from(setU);
-  }, [turmas, cursos]);
+    return Array.from(setU).sort((a, b) => a.localeCompare(b, 'pt-BR'));
+  }, [turmas]);
   const salasById = useMemo(() => new Map(salas.map(sala => [sala.id, sala])), [salas]);
 
   // Sincronizar Modo TV com fullscreen do navegador
   useEffect(() => {
     const handleFullscreenChange = () => {
-      const isFullscreen = document.fullscreenElement !== null;
-      setModoTV(isFullscreen);
-      if (isFullscreen) {
-        document.documentElement.classList.add('modo-tv-active');
-      } else {
-        document.documentElement.classList.remove('modo-tv-active');
-      }
+      if (!document.fullscreenElement) setModoTV(false);
     };
     document.addEventListener('fullscreenchange', handleFullscreenChange);
     return () => {
       document.removeEventListener('fullscreenchange', handleFullscreenChange);
-      document.documentElement.classList.remove('modo-tv-active');
     };
   }, []);
+
+  useEffect(() => {
+    document.documentElement.classList.toggle('modo-tv-active', modoTV);
+    return () => document.documentElement.classList.remove('modo-tv-active');
+  }, [modoTV]);
 
   // Alternar modo TV e Fullscreen
   const handleToggleModoTV = async () => {
     if (!modoTV) {
-      try {
-        if (document.documentElement.requestFullscreen) {
-          await document.documentElement.requestFullscreen();
-          document.documentElement.classList.add('modo-tv-active');
-        }
-      } catch (err) {
-        console.error("Erro ao entrar em tela cheia:", err);
-        setModoTV(true);
-        document.documentElement.classList.add('modo-tv-active');
-      }
+      setModoTV(true);
+      // A exibição na janela continua disponível quando o navegador recusa tela cheia.
+      await document.documentElement.requestFullscreen?.().catch(() => {});
     } else {
-      try {
-        if (document.exitFullscreen) {
-          await document.exitFullscreen();
-          document.documentElement.classList.remove('modo-tv-active');
-        }
-      } catch (err) {
-        console.error("Erro ao sair da tela cheia:", err);
-        setModoTV(false);
-        document.documentElement.classList.remove('modo-tv-active');
-      }
+      setModoTV(false);
+      if (document.fullscreenElement) await document.exitFullscreen().catch(() => {});
     }
   };
 
@@ -283,7 +263,7 @@ export function PainelPage() {
     instrutorId: '',
     totalAlunos: 25
   });
-  const [calculoImportado, setCalculoImportado] = useState<CalculoImportado | null>(null);
+  const [transferenciaSemCurso, setTransferenciaSemCurso] = useState<CalculoImportado | null>(null);
   const transferenciaProcessada = useRef(false);
 
   useEffect(() => {
@@ -302,20 +282,21 @@ export function PainelPage() {
     setNovoAgendamento(prev => ({
       ...prev,
       cursoId: transferencia.cursoId,
+      salaId: '',
       dataInicio: transferencia.dataInicio,
       diasSemana: transferencia.diasSemana,
       codigoTurma: curso?.codigoTurmaPadrao || '',
-      turno: curso?.turnoPadrao || prev.turno,
+      turno: transferencia.turno || curso?.turnoPadrao || SHIFTS[0].label,
       instrutorId: curso?.instrutorId || ''
     }));
-    setCalculoImportado(transferencia);
+    setTransferenciaSemCurso(transferencia.cursoId ? null : transferencia);
     setModalOpen(true);
     navigate('/painel', { replace: true, state: null });
   }, [cursos, location.state, navigate]);
 
   // --- LÓGICA DO MODAL DE EDIÇÃO E REALOCAÇÃO ---
   const [editTurmaModalOpen, setEditTurmaModalOpen] = useState(false);
-  const [turmaEditando, setTurmaEditando] = useState<any>(null);
+  const [turmaEditando, setTurmaEditando] = useState<TurmaDetalhada | null>(null);
   const [dadosEdicao, setDadosEdicao] = useState({
     salaId: '',
     dataInicio: '',
@@ -329,7 +310,11 @@ export function PainelPage() {
     const onKeyDown = (e: KeyboardEvent) => {
       const target = e.target as HTMLElement;
       const isInput = target.tagName === 'INPUT' || target.tagName === 'SELECT' || target.tagName === 'TEXTAREA';
-      if (isInput) return;
+      if (isInput || target.isContentEditable || e.repeat || e.ctrlKey || e.metaKey || e.altKey) return;
+      if (e.key === 'Escape' && modoTV && !document.fullscreenElement && !modalOpen && !editTurmaModalOpen && !deleteModal.open) {
+        setModoTV(false);
+        return;
+      }
 
       if ((e.key === 't' || e.key === 'T') && !modalOpen && !editTurmaModalOpen && !deleteModal.open) {
         e.preventDefault();
@@ -359,70 +344,24 @@ export function PainelPage() {
   };
 
   // Formatação separada de dias presenciais e remotos
-  const formatDiasSemanaSeparados = (presenciais: string[], remotos: string[]) => {
-    const MAP_DIAS: { [key: string]: string } = { 
-      '1': 'Seg', '2': 'Ter', '3': 'Qua', '4': 'Qui', '5': 'Sex', '6': 'Sáb', '0': 'Dom' 
-    };
-    
+  const formatDiasSemanaSeparados = (aulas: TurmaDetalhada['agendamentos']) => {
     const formataLista = (lista: string[]) => {
-      if (!lista || lista.length === 0) return '';
-      const sorted = [...lista].sort();
-      
-      const isSequencia = sorted.length > 2 && sorted.every((val, index) => {
-        if (index === 0) return true;
-        return Number(val) === Number(sorted[index - 1]) + 1;
-      });
-      
-      if (isSequencia) {
-        return `${MAP_DIAS[sorted[0]]} a ${MAP_DIAS[sorted[sorted.length - 1]]}`;
+      const diasComIndice = WEEK_DAYS.map((dia, index) => ({ ...dia, index })).filter(dia => lista.includes(dia.id));
+      const primeiro = diasComIndice[0];
+      const ultimo = diasComIndice[diasComIndice.length - 1];
+      if (!primeiro) return '';
+      if (diasComIndice.length > 2 && ultimo.index - primeiro.index + 1 === diasComIndice.length) {
+        return `${primeiro.short} a ${ultimo.short}`;
       }
-      
-      if (sorted.length === 1) return MAP_DIAS[sorted[0]];
-      
-      const todosMenosUltimo = sorted.slice(0, -1).map(d => MAP_DIAS[d]).join(', ');
-      const ultimo = MAP_DIAS[sorted[sorted.length - 1]];
-      return `${todosMenosUltimo} e ${ultimo}`;
+      if (diasComIndice.length === 1) return primeiro.short;
+      return `${diasComIndice.slice(0, -1).map(dia => dia.short).join(', ')} e ${ultimo.short}`;
     };
 
-    const presStr = formataLista(presenciais);
-    const remStr = formataLista(remotos);
-
+    const diaSemana = (aula: (typeof aulas)[number]) => String(new Date(aula.data).getUTCDay());
     return {
-      presencial: presStr || (remStr ? '' : 'Dias letivos padrão'),
-      remoto: remStr
+      presencial: formataLista(aulas.filter(aula => aula.salaId != null).map(diaSemana)),
+      remoto: formataLista(aulas.filter(aula => aula.salaId == null).map(diaSemana))
     };
-  };
-
-  // Cálculo Detalhado do Progresso das Aulas
-  const calcularProgressoAulas = (dataInicioStr: string, dataFimStr: string, diasSemana: string[]) => {
-    if (!dataInicioStr || !dataFimStr || !diasSemana || diasSemana.length === 0) {
-      return { concluidas: 0, total: 0, porcentagem: 0 };
-    }
-
-    const inicio = new Date(dataInicioStr + 'T12:00:00');
-    const fim = new Date(dataFimStr + 'T12:00:00');
-    const hoje = new Date();
-    hoje.setHours(12, 0, 0, 0);
-
-    let total = 0;
-    let concluidas = 0;
-
-    const current = new Date(inicio);
-    while (current <= fim) {
-      const dayOfWeek = current.getDay().toString();
-      if (diasSemana.includes(dayOfWeek)) {
-        total++;
-        if (current <= hoje) {
-          concluidas++;
-        }
-      }
-      current.setDate(current.getDate() + 1);
-    }
-
-    if (total === 0) total = 1;
-    const porcentagem = Math.min(100, Math.round((concluidas / total) * 100));
-
-    return { concluidas, total, porcentagem };
   };
 
   const [disponibilidadeNovo, setDisponibilidadeNovo] = useState<DisponibilidadePainel>(criarDisponibilidade);
@@ -431,6 +370,8 @@ export function PainelPage() {
   const [carregandoDisponibilidadeEdicao, setCarregandoDisponibilidadeEdicao] = useState(false);
 
   const mapDisponibilidade = (data: DisponibilidadeApi): DisponibilidadePainel => ({
+    requerSala: data.requerSala,
+    cronograma: data.cronograma ?? null,
     salasLivres: salas.filter(sala => data.salasLivres.includes(Number(sala.id))),
     salasOcupadas: data.salasOcupadas || [],
     salasCapacidadeInsuficiente: data.salasCapacidadeInsuficiente || [],
@@ -461,15 +402,14 @@ export function PainelPage() {
         if (cancelled) return;
         const mapped = mapDisponibilidade(data);
         setDisponibilidadeNovo(mapped);
-        if (!mapped.salasLivres.some(sala => sala.id === novoAgendamento.salaId)) {
-          setNovoAgendamento(prev => ({ ...prev, salaId: '' }));
-        }
+        setNovoAgendamento(prev => !prev.salaId || mapped.salasLivres.some(sala => sala.id === prev.salaId)
+          ? prev : { ...prev, salaId: '' });
       }).catch(() => {
         if (!cancelled) {
-          setDisponibilidadeNovo(prev => ({
-            ...prev,
+          setDisponibilidadeNovo({
+            ...criarDisponibilidade(),
             erro: 'Não foi possível consultar a disponibilidade. Tente novamente antes de confirmar.'
-          }));
+          });
         }
       }).finally(() => {
         if (!cancelled) setCarregandoDisponibilidadeNovo(false);
@@ -504,15 +444,14 @@ export function PainelPage() {
         if (cancelled) return;
         const mapped = mapDisponibilidade(data);
         setDisponibilidadeEdicao(mapped);
-        if (!mapped.salasLivres.some(sala => sala.id === dadosEdicao.salaId)) {
-          setDadosEdicao(prev => ({ ...prev, salaId: '' }));
-        }
-      }).catch(() => {
+        setDadosEdicao(prev => !prev.salaId || mapped.salasLivres.some(sala => sala.id === prev.salaId)
+          ? prev : { ...prev, salaId: '' });
+      }).catch(err => {
         if (!cancelled) {
-          setDisponibilidadeEdicao(prev => ({
-            ...prev,
-            erro: 'Não foi possível consultar a disponibilidade. Tente novamente antes de salvar.'
-          }));
+          setDisponibilidadeEdicao({
+            ...criarDisponibilidade(),
+            erro: err.response?.data?.error || 'Não foi possível consultar a disponibilidade. Tente novamente antes de salvar.'
+          });
         }
       }).finally(() => {
         if (!cancelled) setCarregandoDisponibilidadeEdicao(false);
@@ -536,22 +475,22 @@ export function PainelPage() {
   const handleCursoChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const cid = e.target.value;
     const curso = cursos.find(c => c.id === cid);
-    if (calculoImportado?.cursoId && calculoImportado.cursoId !== cid) {
-      setCalculoImportado(null);
-    }
     if (curso) {
+      const diasDoCurso = diasLetivosDoCurso(curso);
       setNovoAgendamento(prev => ({
         ...prev,
         cursoId: cid,
+        salaId: '',
         codigoTurma: curso.codigoTurmaPadrao || '',
-        turno: curso.turnoPadrao || SHIFTS[0].label,
-        diasSemana: calculoImportado
-          ? prev.diasSemana
-          : curso.diasSemana && curso.diasSemana.length > 0
-            ? curso.diasSemana
+        turno: transferenciaSemCurso?.turno ? prev.turno : curso.turnoPadrao || SHIFTS[0].label,
+        diasSemana: transferenciaSemCurso
+          ? [...new Set([...prev.diasSemana, ...curso.diasRemotos])]
+          : diasDoCurso.length > 0
+            ? diasDoCurso
             : ['1', '2', '3', '4', '5'],
         instrutorId: curso.instrutorId || ''
       }));
+      setTransferenciaSemCurso(null);
     } else {
       setNovoAgendamento(prev => ({ ...prev, cursoId: cid }));
     }
@@ -560,10 +499,12 @@ export function PainelPage() {
   const handleCriarAgendamento = async (e: React.FormEvent) => {
     e.preventDefault();
     const cursoSelecionado = cursos.find(c => c.id === novoAgendamento.cursoId);
-    if (!cursoSelecionado || !novoAgendamento.dataInicio || !novoAgendamento.salaId) return;
+    if (!cursoSelecionado || !novoAgendamento.dataInicio ||
+      carregandoDisponibilidadeNovo || !disponibilidadeNovo.cronograma || disponibilidadeNovo.conflitoInstrutor ||
+      (disponibilidadeNovo.requerSala && !disponibilidadeNovo.salasLivres.some(sala => sala.id === novoAgendamento.salaId))) return;
 
     if (novoAgendamento.diasSemana.length === 0) {
-      showToast("Selecione pelo menos um dia letivo presencial para a turma.", "error");
+      showToast("Selecione pelo menos um dia letivo para a turma.", "error");
       return;
     }
 
@@ -578,7 +519,7 @@ export function PainelPage() {
     try {
       await TurmaService.alocar({
         id_cursos: Number(cursoSelecionado.id),
-        id_salas: Number(novoAgendamento.salaId),
+        id_salas: disponibilidadeNovo.requerSala ? Number(novoAgendamento.salaId) : null,
         data_inicio: novoAgendamento.dataInicio,
         fk_id_turno: getShiftId(novoAgendamento.turno),
         total_alunos: totalAlunosNum,
@@ -590,7 +531,6 @@ export function PainelPage() {
       await refreshTurmas();
       showToast("Turma alocada com sucesso!", "success");
       setModalOpen(false);
-      setCalculoImportado(null);
       setNovoAgendamento({ 
         cursoId: '', 
         salaId: '', 
@@ -609,7 +549,7 @@ export function PainelPage() {
     }
   };
 
-  const handleEditClick = (turma: any) => {
+  const handleEditClick = (turma: TurmaDetalhada) => {
     setTurmaEditando(turma);
     setDadosEdicao({
       salaId: turma.salaId,
@@ -623,12 +563,14 @@ export function PainelPage() {
 
   const handleSalvarEdicao = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!turmaEditando) return;
+    if (!turmaEditando || carregandoDisponibilidadeEdicao ||
+      disponibilidadeEdicao.requerSala == null || disponibilidadeEdicao.conflitoInstrutor ||
+      (disponibilidadeEdicao.requerSala && !disponibilidadeEdicao.salasLivres.some(sala => sala.id === dadosEdicao.salaId))) return;
     
     setIsSavingAlocacao(true);
     try {
       await TurmaService.reallocar(Number(turmaEditando.id), {
-        id_salas: Number(dadosEdicao.salaId),
+        id_salas: disponibilidadeEdicao.requerSala ? Number(dadosEdicao.salaId) : null,
         data_inicio: dadosEdicao.dataInicio,
         fk_id_turno: getShiftId(dadosEdicao.turno),
         dias_semana: dadosEdicao.diasSemana,
@@ -673,26 +615,30 @@ export function PainelPage() {
 
   // Uma única passagem pela lista alimenta turnos, contadores e cards.
   const searchNormalized = searchTurma.trim().toLocaleLowerCase('pt-BR');
+  const hoje = formatDateInput();
   const turmasPorTurno = useMemo(() => {
-    const grouped: Record<string, TurmaDetalhada[]> = Object.fromEntries(
+    const grouped: Record<string, Array<{
+      turma: TurmaDetalhada;
+      salaId: string | null;
+      isRemoto: boolean;
+      isHibrida: boolean;
+      aulasVisiveis: TurmaDetalhada['agendamentos'];
+    }>> = Object.fromEntries(
       TURNOS.map(turno => [turno, []])
     );
-    const startOfWeek = new Date(weekRangeInfo.startOfWeek);
-    const endOfWeek = new Date(weekRangeInfo.endOfWeek);
-    startOfWeek.setHours(0, 0, 0, 0);
-    endOfWeek.setHours(23, 59, 59, 999);
-    const targetDate = new Date(dataFiltro + 'T00:00:00');
+    const inicioSemana = formatDateInput(weekRangeInfo.startOfWeek);
+    const fimSemana = formatDateInput(weekRangeInfo.endOfWeek);
 
     turmas.forEach(turma => {
       if (!grouped[turma.turno]) return;
-      const start = turma.dataInicio ? new Date(turma.dataInicio + 'T00:00:00') : null;
-      const end = turma.dataFim ? new Date(turma.dataFim + 'T23:59:59') : null;
-      const matchesPeriod = !start || !end || (
-        modoVisualizacao === 'semanal'
-          ? start <= endOfWeek && end >= startOfWeek
-          : targetDate >= start && targetDate <= end &&
-            turma.diasSemana.includes(targetDate.getDay().toString())
-      );
+      const aulasVisiveis = turma.agendamentos.filter(aula => modoVisualizacao === 'diario'
+        ? aula.data === dataFiltro
+        : aula.data >= inicioSemana && aula.data <= fimSemana);
+      if (!aulasVisiveis.length) return;
+      const temAulaRemota = aulasVisiveis.some(aula => aula.salaId == null);
+      const temAulaPresencial = aulasVisiveis.some(aula => aula.salaId != null);
+      const salaId = aulasVisiveis.find(aula => aula.salaId != null &&
+        (filtroTipo === 'Todos' || salasById.get(aula.salaId)?.tipo === filtroTipo))?.salaId ?? null;
       const matchesSearch = !searchNormalized || [
         turma.codigo,
         turma.cursoNome,
@@ -700,17 +646,18 @@ export function PainelPage() {
         turma.unidade
       ].some(value => value?.toLocaleLowerCase('pt-BR').includes(searchNormalized));
       const matchesModality = filtroModalidade === 'Todas' ||
-        (filtroModalidade === 'Remoto' ? turma.modalidade === 'Remoto' : turma.modalidade !== 'Remoto');
-      const matchesRoomType = filtroTipo === 'Todos' || salasById.get(turma.salaId)?.tipo === filtroTipo;
+        (filtroModalidade === 'Remoto' ? temAulaRemota : temAulaPresencial);
+      const matchesRoomType = filtroTipo === 'Todos' || salaId != null;
 
       if (
-        matchesPeriod &&
         matchesSearch &&
         matchesModality &&
         matchesRoomType &&
         (filtroUnidade === 'Todas' || turma.unidade === filtroUnidade)
       ) {
-        grouped[turma.turno].push(turma);
+        grouped[turma.turno].push({
+          turma, salaId, aulasVisiveis, isRemoto: !temAulaPresencial, isHibrida: temAulaPresencial && temAulaRemota
+        });
       }
     });
 
@@ -744,7 +691,7 @@ export function PainelPage() {
   // Contadores globais de turmas
   const { totalTurmasVisiveis, totalPresenciaisVisiveis, totalRemotasVisiveis } = useMemo(() => {
     const visible = TURNOS.flatMap(turno => turmasPorTurno[turno] ?? []);
-    const remotas = visible.filter(turma => turma.modalidade === 'Remoto').length;
+    const remotas = visible.filter(({ isRemoto }) => isRemoto).length;
     return {
       totalTurmasVisiveis: visible.length,
       totalPresenciaisVisiveis: visible.length - remotas,
@@ -753,10 +700,10 @@ export function PainelPage() {
   }, [turmasPorTurno]);
 
   const content = (
-    <div className={`flex flex-col h-full overflow-hidden transition-all duration-300 ${
+    <div className={`flex flex-col min-h-0 transition-all duration-300 ${
       modoTV 
-        ? 'fixed inset-0 z-50 bg-bg text-text-main p-0' 
-        : 'relative bg-card border border-border rounded-2xl shadow-sm'
+        ? 'fixed inset-0 z-50 overflow-hidden bg-bg text-text-main'
+        : 'relative min-h-full lg:h-full lg:overflow-y-auto bg-card border border-border rounded-2xl shadow-sm'
     }`}>
       
       {modoTV ? (
@@ -776,7 +723,7 @@ export function PainelPage() {
             </span>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex max-w-full flex-wrap items-center gap-2">
             {/* Total de Turmas em Andamento com Divisão Presencial e Remoto */}
             <div className="hidden items-center gap-1.5 shrink-0 select-none lg:flex">
               <div className="flex items-center gap-1.5 bg-primary/10 border border-primary/20 px-2.5 py-1.5 rounded-xl text-primary shadow-xs text-xs font-black uppercase tracking-wider">
@@ -879,7 +826,7 @@ export function PainelPage() {
               <button
                   type="button"
                   onClick={() => setModalOpen(true)}
-                  className="bg-primary text-white font-black py-2.5 px-4 rounded-xl shadow-md hover:bg-primary/90 transition-colors flex items-center justify-center gap-2 text-sm cursor-pointer flex-1 sm:flex-none"
+                  className="min-h-11 lg:min-h-0 bg-primary text-white font-black py-2.5 px-4 rounded-xl shadow-md hover:bg-primary/90 transition-colors flex items-center justify-center gap-2 text-sm cursor-pointer flex-1 sm:flex-none"
                   title="Atalho: pressione N no teclado"
                 >
                   <Plus size={16} /> Alocar Turma
@@ -889,7 +836,7 @@ export function PainelPage() {
               <button
                 onClick={handleToggleModoTV}
                 title="Entrar no Modo TV (Atalho: pressione T)"
-                className="p-2.5 px-3.5 rounded-xl border flex items-center justify-center gap-1.5 text-sm font-bold transition-colors shadow-sm cursor-pointer bg-surface border-border text-text-muted hover:bg-border/30 hover:text-text-main flex-1 sm:flex-none"
+                className="min-h-11 lg:min-h-0 p-2.5 px-3.5 rounded-xl border flex items-center justify-center gap-1.5 text-sm font-bold transition-colors shadow-sm cursor-pointer bg-surface border-border text-text-muted hover:bg-border/30 hover:text-text-main flex-1 sm:flex-none"
               >
                 <Tv size={16} /> Modo TV
               </button>
@@ -904,7 +851,7 @@ export function PainelPage() {
                   type="button"
                   onClick={() => handleSetModoVisualizacao('semanal')}
                   aria-pressed={modoVisualizacao === 'semanal'}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-black transition-all cursor-pointer ${
+                  className={`min-h-11 lg:min-h-0 inline-flex items-center justify-center px-3 py-1.5 rounded-lg text-xs font-black transition-all cursor-pointer ${
                     modoVisualizacao === 'semanal' 
                       ? 'bg-primary text-white shadow-xs' 
                       : 'text-text-muted hover:text-text-main'
@@ -916,7 +863,7 @@ export function PainelPage() {
                   type="button"
                   onClick={() => handleSetModoVisualizacao('diario')}
                   aria-pressed={modoVisualizacao === 'diario'}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-black transition-all cursor-pointer ${
+                  className={`min-h-11 lg:min-h-0 inline-flex items-center justify-center px-3 py-1.5 rounded-lg text-xs font-black transition-all cursor-pointer ${
                     modoVisualizacao === 'diario' 
                       ? 'bg-primary text-white shadow-xs' 
                       : 'text-text-muted hover:text-text-main'
@@ -937,7 +884,7 @@ export function PainelPage() {
                   >
                     <ChevronLeft size={16} />
                   </button>
-                  <span className="text-xs font-black text-text-main px-1 sm:px-2 font-display truncate">
+                  <span className="min-w-0 text-center text-xs font-black text-text-main px-1 sm:px-2 font-display">
                     {weekRangeInfo.label}
                   </span>
                   <button
@@ -952,7 +899,7 @@ export function PainelPage() {
                   <button
                     type="button"
                     onClick={navHoje}
-                    className="px-2.5 py-1 text-[10px] font-black uppercase rounded-lg border border-border/80 text-primary bg-primary/10 hover:bg-primary/20 cursor-pointer transition-all ml-1"
+                    className="min-h-11 min-w-11 lg:min-h-0 lg:min-w-0 inline-flex items-center justify-center px-2.5 py-1 text-[10px] font-black uppercase rounded-lg border border-border/80 text-primary bg-primary/10 hover:bg-primary/20 cursor-pointer transition-all ml-1"
                     title="Voltar para a semana atual"
                   >
                     Hoje
@@ -969,12 +916,12 @@ export function PainelPage() {
                     type="date"
                     value={dataFiltro}
                     onChange={e => setDataFiltro(e.target.value)}
-                    className="text-xs font-black border border-border rounded-lg px-2.5 py-1 outline-none transition-all bg-input text-text-main focus:border-primary cursor-pointer"
+                    className="min-h-11 lg:min-h-0 text-xs font-black border border-border rounded-lg px-2.5 py-1 outline-none transition-all bg-input text-text-main focus:border-primary cursor-pointer"
                   />
                   <button
                     type="button"
                     onClick={navHoje}
-                    className="px-2.5 py-1 text-[10px] font-black uppercase rounded-lg border border-border/80 text-primary bg-primary/10 hover:bg-primary/20 cursor-pointer transition-all"
+                    className="min-h-11 min-w-11 lg:min-h-0 lg:min-w-0 inline-flex items-center justify-center px-2.5 py-1 text-[10px] font-black uppercase rounded-lg border border-border/80 text-primary bg-primary/10 hover:bg-primary/20 cursor-pointer transition-all"
                   >
                     Hoje
                   </button>
@@ -1012,7 +959,7 @@ export function PainelPage() {
                 onClick={() => setMostrarFiltros(value => !value)}
                 aria-expanded={mostrarFiltros}
                 aria-controls="filtros-secundarios"
-                className={`h-10 px-3 rounded-xl border flex items-center gap-2 text-xs font-black transition-colors cursor-pointer ${
+                className={`min-h-11 lg:min-h-0 lg:h-10 px-3 rounded-xl border flex items-center gap-2 text-xs font-black transition-colors cursor-pointer ${
                   mostrarFiltros || filtrosAtivos > 0
                     ? 'bg-primary/10 border-primary/30 text-primary'
                     : 'bg-surface border-border text-text-muted hover:text-text-main'
@@ -1030,7 +977,7 @@ export function PainelPage() {
                 <button
                   type="button"
                   onClick={limparFiltros}
-                  className="h-10 px-3 rounded-xl text-xs font-bold text-text-muted hover:text-text-main hover:bg-surface transition-colors cursor-pointer whitespace-nowrap"
+                  className="min-h-11 lg:min-h-0 lg:h-10 px-3 rounded-xl text-xs font-bold text-text-muted hover:text-text-main hover:bg-surface transition-colors cursor-pointer whitespace-nowrap"
                 >
                   Limpar
                 </button>
@@ -1039,7 +986,7 @@ export function PainelPage() {
           </div>
 
           {mostrarFiltros && (
-            <div id="filtros-secundarios" className="flex flex-col lg:flex-row lg:items-center gap-3 p-3 rounded-2xl bg-surface/60 border border-border/70">
+            <div id="filtros-secundarios" className="flex flex-col lg:flex-row lg:flex-wrap lg:items-center gap-3 p-3 rounded-2xl bg-surface/60 border border-border/70">
               <span className="text-[10px] font-black uppercase tracking-wider text-text-muted shrink-0">
                 Refinar por
               </span>
@@ -1051,7 +998,7 @@ export function PainelPage() {
                     id="filtro-unidade"
                     value={filtroUnidade}
                     onChange={e => setFiltroUnidade(e.target.value)}
-                    className="bg-transparent text-text-main border-none text-xs font-bold outline-none cursor-pointer min-w-0"
+                    className="bg-transparent text-text-main border-none text-xs font-bold outline-none cursor-pointer min-w-0 max-w-full"
                   >
                     <option value="Todas" className="bg-card text-text-main">Todas Unidades</option>
                     {unidadesDisponiveis.map(u => (
@@ -1068,7 +1015,7 @@ export function PainelPage() {
                     key={mod}
                     onClick={() => handleSetFiltroModalidade(mod)}
                     aria-pressed={filtroModalidade === mod}
-                    className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+                    className={`min-h-11 lg:min-h-0 px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
                       filtroModalidade === mod
                         ? mod === 'Presencial'
                           ? 'bg-red-500 text-white shadow-xs font-black'
@@ -1092,7 +1039,7 @@ export function PainelPage() {
                     key={tipoId}
                     onClick={() => handleSetFiltroTipo(tipoId)}
                     aria-pressed={filtroTipo === tipoId}
-                    className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                    className={`min-h-11 lg:min-h-0 inline-flex items-center justify-center px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${
                       filtroTipo === tipoId
                         ? 'bg-primary text-white shadow-xs font-black'
                         : 'text-text-muted hover:text-text-main hover:bg-card/50'
@@ -1123,11 +1070,8 @@ export function PainelPage() {
         className={`flex-1 custom-scrollbar relative z-10 overflow-x-auto ${modoTV ? 'p-0 overflow-y-auto bg-bg' : 'p-4 overflow-y-auto'}`}
       >
         <div 
-          className={`flex flex-col gap-6 transition-all duration-300 ${modoTV ? 'min-w-full' : 'w-full'}`}
-          style={modoTV ? { 
-            zoom: `${autoZoom}%`, 
-            width: `${100 / (autoZoom / 100)}%`
-          } : undefined}
+          className="flex min-w-0 flex-col gap-6"
+          style={modoTV ? { zoom: `${autoZoom}%` } : undefined}
         >
           {isLoading && (
             <div className="grid gap-4" aria-label="Carregando alocações" aria-busy="true">
@@ -1151,7 +1095,7 @@ export function PainelPage() {
               <button
                   type="button"
                   onClick={filtrosAtivos > 0 ? limparFiltros : () => setModalOpen(true)}
-                  className="mt-5 bg-primary text-white font-bold px-4 py-2.5 rounded-xl text-sm hover:bg-primary/90 transition-colors cursor-pointer"
+                  className="min-h-11 lg:min-h-0 inline-flex items-center justify-center mt-5 bg-primary text-white font-bold px-4 py-2.5 rounded-xl text-sm hover:bg-primary/90 transition-colors cursor-pointer"
                 >
                   {filtrosAtivos > 0 ? 'Limpar filtros' : 'Nova alocação'}
               </button>
@@ -1175,21 +1119,26 @@ export function PainelPage() {
             }
 
             const turmasDoTurno = turmasPorTurno[turno] ?? [];
-            const turmasPresenciais = turmasDoTurno.filter(t => t.modalidade !== 'Remoto');
-            const turmasRemotas = turmasDoTurno.filter(t => t.modalidade === 'Remoto');
+            const turmasRemotas = turmasDoTurno.filter(({ isRemoto }) => isRemoto);
+            const turmasPresenciais = turmasDoTurno.length - turmasRemotas.length;
 
             const gridClasses = modoTV
               ? 'grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6'
               : 'grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4';
 
             // Renderizador do Card de Turma com Divisão de Cores: Vermelho (Presencial) | Azul (Remoto)
-            const renderCardTurma = (turma: TurmaDetalhada) => {
-              const sala = getSalaInfo(turma.salaId);
-              const { presencial, remoto } = formatDiasSemanaSeparados(turma.diasSemana, turma.diasRemotos);
-              const { concluidas, total, porcentagem } = calcularProgressoAulas(turma.dataInicio, turma.dataFim, turma.diasSemana);
+            const renderCardTurma = ({ turma, salaId, isRemoto, isHibrida, aulasVisiveis }: (typeof turmasDoTurno)[number]) => {
+              const sala = salaId == null ? undefined : getSalaInfo(salaId);
+              const { presencial, remoto } = formatDiasSemanaSeparados(modoVisualizacao === 'diario' ? turma.agendamentos : aulasVisiveis);
+              const total = turma.agendamentos.length;
+              const concluidas = turma.agendamentos.filter(aula => aula.data < hoje).length;
+              const porcentagem = total ? Math.round((concluidas / total) * 100) : 0;
 
-              const isRemoto = turma.modalidade === 'Remoto';
-              const isSemInstrutor = !turma.instrutorNome || turma.instrutorNome.toLowerCase().includes('sem instrutor');
+              const isSemInstrutor = !turma.instrutorId;
+              // shortcut: nomes compostos só podem ser separados com campos de nome e sobrenome no cadastro.
+              const [primeiroNome, ...sobrenomes] = turma.instrutorNome.trim().split(/\s+/);
+              const sobrenome = sobrenomes.find(parte => !/^(?:d[aeo]s?|e)$/i.test(parte));
+              const nomeCurto = sobrenome ? `${primeiroNome} ${sobrenome}` : primeiroNome;
               const isHighlighted = Boolean(searchNormalized);
 
               const etapa = porcentagem >= 100 ? 'Concluída' : concluidas > 0 ? 'Em andamento' : 'Programada';
@@ -1224,74 +1173,69 @@ export function PainelPage() {
                       {turma.codigo}
                     </span>
                     <div className="flex items-center justify-end gap-1.5 flex-wrap">
-                      {turma.cursoTem && (
-                        <span className="text-[9px] font-black bg-primary text-white px-2 py-0.5 rounded-md uppercase tracking-wider">
+                      {turma.turmaTem && (
+                        <span title="Técnico no Ensino Médio" className="text-xs font-black bg-primary text-white px-2 py-0.5 rounded-md uppercase tracking-wider">
                           TEM
                         </span>
                       )}
-                      <span className={`text-[9px] font-black px-2 py-0.5 rounded-md uppercase tracking-wider ${isRemoto ? 'bg-blue-600 text-white' : 'bg-red-500 text-white'}`}>
-                        {isRemoto ? 'Remoto' : 'Presencial'}
+                      <span className={`text-xs font-black px-2 py-0.5 rounded-md uppercase tracking-wider ${isRemoto ? 'bg-blue-600 text-white' : isHibrida ? 'bg-violet-700 text-white' : 'bg-red-600 text-white'}`}>
+                        {isRemoto ? 'Remoto' : isHibrida ? 'Semipresencial' : 'Presencial'}
                       </span>
                     </div>
                   </div>
 
                   <div className="flex flex-col gap-1">
-                    <h3 className="text-base font-black text-text-main font-display leading-tight line-clamp-2">
+                    <h3 className="text-base font-black text-text-main font-display leading-tight wrap-anywhere">
                       {turma.cursoNome}
                     </h3>
                     {turma.unidade && (
-                      <span className="text-[10px] font-bold text-text-muted truncate">
+                      <span title={/^SEE\b/i.test(turma.unidade) ? 'Escola parceira da Secretaria de Estado de Educação do Distrito Federal' : undefined} className="text-xs font-bold text-text-muted wrap-anywhere">
                         {turma.unidade}
                       </span>
                     )}
                   </div>
 
-                  <dl className="grid grid-cols-2 gap-x-3 gap-y-2 text-xs">
-                    <div className="col-span-2 flex items-center justify-between gap-2 bg-surface/70 border border-border/60 rounded-xl px-3 py-2.5">
+                  <dl className="grid gap-2 text-xs">
+                    <div className="grid gap-1 bg-surface/70 border border-border/60 rounded-xl px-3 py-2.5">
                       <dt className="sr-only">Sala</dt>
                       <dd className="flex items-center gap-2 min-w-0 font-bold text-text-main">
                         {salaIcon}
-                        <span className="truncate">{sala?.nome || (isRemoto ? 'Ambiente virtual' : 'Ambiente não atribuído')}</span>
+                        <span className="wrap-anywhere">{sala?.nome || (isRemoto ? 'Ambiente virtual' : 'Ambiente não atribuído')}</span>
                       </dd>
-                      {sala?.capacidade && (
-                        <span className="text-[10px] text-text-muted shrink-0">{sala.capacidade} lugares</span>
-                      )}
+                      <dt className="sr-only">Alunos e capacidade</dt>
+                      <dd className={`font-bold text-text-main ${modoTV ? 'text-sm' : ''}`}>
+                        {turma.totalAlunos > 0 ? `${turma.totalAlunos} alunos` : 'Alunos não informados'}
+                        {sala?.capacidade ? ` / ${sala.capacidade} lugares` : ''}
+                      </dd>
                     </div>
                     <div className="min-w-0">
                       <dt className="text-[10px] font-bold uppercase tracking-wide text-text-muted">Instrutor</dt>
-                      <dd className={`truncate font-bold ${isSemInstrutor ? 'text-amber-700 dark:text-amber-300' : 'text-text-main'}`}>
-                        {turma.instrutorNome || 'Não definido'}
+                      <dd title={isSemInstrutor ? undefined : turma.instrutorNome} className={`wrap-anywhere font-bold ${isSemInstrutor ? 'text-amber-700 dark:text-amber-300' : 'text-text-main'}`}>
+                        {isSemInstrutor ? 'Não definido' : nomeCurto}
                       </dd>
                     </div>
                     <div>
-                      <dt className="text-[10px] font-bold uppercase tracking-wide text-text-muted">Alunos</dt>
-                      <dd className="font-bold text-text-main flex items-center gap-1.5">
-                        <Users size={13} className="text-text-muted" /> {turma.totalAlunos > 0 ? turma.totalAlunos : '—'}
-                      </dd>
-                    </div>
-                    <div className="col-span-2">
                       <dt className="text-[10px] font-bold uppercase tracking-wide text-text-muted">Período</dt>
                       <dd className="font-mono font-bold text-text-main">
                         {formatDataCurta(turma.dataInicio)} – {formatDataCurta(turma.dataFim)}
                       </dd>
                     </div>
                     {(presencial || remoto) && (
-                      <div className="col-span-2">
-                        <dt className="text-[10px] font-bold uppercase tracking-wide text-text-muted">Dias</dt>
-                        <dd className="font-bold text-text-main">
-                          {[presencial && `Presencial: ${presencial}`, remoto && `Remoto: ${remoto}`].filter(Boolean).join(' · ')}
-                        </dd>
+                      <div>
+                        <dt className="text-[10px] font-bold uppercase tracking-wide text-text-muted">Dias de aula</dt>
+                        {presencial && <dd className="font-bold text-text-main">{remoto ? `Presencial: ${presencial}` : presencial}</dd>}
+                        {remoto && <dd className="font-bold text-blue-700 dark:text-blue-300">Remoto: {remoto}</dd>}
                       </div>
                     )}
                   </dl>
 
-                  <div className="flex flex-col gap-1.5 pt-2 border-t border-border/60">
-                    <div className="flex justify-between items-center">
-                      <span className="text-[11px] font-bold text-text-muted">{etapa} · {concluidas}/{total} aulas</span>
-                      <span className={`text-[11px] font-mono font-black ${accentText}`}>{porcentagem}%</span>
+                  <div className="mt-auto flex flex-col gap-1.5 pt-2 border-t border-border/60">
+                    <div className="flex flex-wrap justify-between items-baseline gap-x-2 gap-y-0.5 text-sm">
+                      <span className="font-bold text-text-main">{etapa} · {concluidas}/{total} aulas</span>
+                      <span className={`font-mono font-black ${accentText}`}>{porcentagem}%</span>
                     </div>
                     <div
-                      className="w-full h-1.5 rounded-full overflow-hidden bg-border/50 relative"
+                      className="w-full h-2 rounded-full overflow-hidden bg-border/50 relative"
                       role="progressbar"
                       aria-label={`Progresso da turma ${turma.codigo}`}
                       aria-valuemin={0}
@@ -1331,7 +1275,7 @@ export function PainelPage() {
                       <>
                         <span className="px-2 py-1 rounded-lg bg-red-500/10 text-red-600 dark:text-red-400 border border-red-500/20 flex items-center gap-1.5">
                           <span className="w-2 h-2 rounded-full bg-red-500 shrink-0"></span>
-                          {turmasPresenciais.length}
+                          {turmasPresenciais}
                         </span>
                         <span className="px-2 py-1 rounded-lg bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20 flex items-center gap-1.5">
                           <span className="w-2 h-2 rounded-full bg-blue-500 shrink-0"></span>
@@ -1371,7 +1315,6 @@ export function PainelPage() {
         instrutores={instrutores}
         disponibilidadeNovo={disponibilidadeNovo}
         avisoDisponibilidade={descreverIndisponibilidade(disponibilidadeNovo)}
-        calculoImportado={calculoImportado}
         salaSelecionadaNovo={salaSelecionadaNovo}
         capacidadeExcedidaNovo={capacidadeExcedidaNovo}
         isSavingAlocacao={isSavingAlocacao}

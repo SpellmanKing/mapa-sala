@@ -10,6 +10,11 @@ export const WEEK_DAYS = [
 
 export const CLASS_DAYS = WEEK_DAYS.filter(day => day.id !== '0');
 
+export function diasLetivosDoCurso(curso: { diasSemana: string[]; diasRemotos: string[] }): string[] {
+  return WEEK_DAYS.filter(dia => curso.diasSemana.includes(dia.id) || curso.diasRemotos.includes(dia.id))
+    .map(dia => dia.id);
+}
+
 export const SHIFTS = [
   { id: 1, label: 'Manhã' },
   { id: 2, label: 'Tarde' },

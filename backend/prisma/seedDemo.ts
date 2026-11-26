@@ -12,6 +12,15 @@ export const CURSO_ESPERADO_POR_CODIGO_DUPLICADO: Readonly<Record<string, string
   '2025.09.55': 'Técnico em Secretariado'
 };
 
+export function normalizarChaveNome(valor: string): string {
+  return valor
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
 export function verificarCodigoDuplicado(
   turma: { codigo_turma: string; nome_curso: string },
   codigosVistos: Set<string>,
@@ -68,7 +77,7 @@ export const turmasFinais = [
     carga_horaria: 1020,
     dias_semana: ['1', '2', '3', '4', '5'],
     horario: '08:00 às 12:00',
-    instrutor: 'Ricardo da Silva Pierre',
+    instrutor: 'Ricardo Da Silva Pierre',
     estado: 'Em Andamento',
     local: 'Cep Talal Abu Allan'
   },
@@ -79,7 +88,7 @@ export const turmasFinais = [
     carga_horaria: 1020,
     dias_semana: ['1', '2', '3', '4', '5'],
     horario: '08:00 às 12:00',
-    instrutor: 'Dionísio Francisco Pereira',
+    instrutor: 'Dionisio Francisco Pereira',
     estado: 'Em Andamento',
     local: 'Cep Talal Abu Allan'
   },
@@ -90,7 +99,7 @@ export const turmasFinais = [
     carga_horaria: 1020,
     dias_semana: ['1', '2', '3', '4', '5'],
     horario: '14:00 às 18:00',
-    instrutor: 'ROSIVANE MACHADO CAVALCANTE MONTEIRO',
+    instrutor: 'Rosivane Machado Cavalcante Monteiro',
     estado: 'Em Andamento',
     local: 'Cep Talal Abu Allan'
   },
@@ -123,7 +132,7 @@ export const turmasFinais = [
     carga_horaria: 1020,
     dias_semana: ['1', '2', '3', '4', '5'],
     horario: '08:00 às 12:00',
-    instrutor: 'RICARDO PEREIRA GOMES DE ARAÚJO',
+    instrutor: 'Ricardo Pereira Gomes De Araujo',
     estado: 'Em Andamento',
     local: 'Cep Talal Abu Allan'
   },
@@ -156,7 +165,7 @@ export const turmasFinais = [
     carga_horaria: 172,
     dias_semana: ['1', '2', '3', '4', '5'],
     horario: '08:00 às 12:00',
-    instrutor: 'Thiago de Sousa Costa',
+    instrutor: 'Thiago De Sousa Costa',
     estado: 'Liberado Para Matrícula',
     local: 'Cep Talal Abu Allan'
   },
@@ -167,7 +176,7 @@ export const turmasFinais = [
     carga_horaria: 400,
     dias_semana: ['1', '2', '3', '4', '5'],
     horario: '19:00 às 22:00',
-    instrutor: 'Rubia Martins de Melo',
+    instrutor: 'Rubia Martins De Melo',
     estado: 'Em Andamento',
     local: 'Cep Talal Abu Allan'
   },
@@ -189,7 +198,7 @@ export const turmasFinais = [
     carga_horaria: 212,
     dias_semana: ['1', '2', '3', '4', '5'],
     horario: '14:00 às 18:00',
-    instrutor: 'Bianca Mendes da Silva',
+    instrutor: 'Bianca Mendes Da Silva',
     estado: 'Em Andamento',
     local: 'Cep Talal Abu Allan'
   },
@@ -200,7 +209,7 @@ export const turmasFinais = [
     carga_horaria: 212,
     dias_semana: ['1', '2', '3', '4', '5'],
     horario: '19:00 às 22:00',
-    instrutor: 'Suely de Fátima Pereira',
+    instrutor: 'Suely De Fatima Pereira',
     estado: 'Liberado Para Matrícula',
     local: 'Cep Talal Abu Allan'
   },
@@ -233,7 +242,7 @@ export const turmasFinais = [
     carga_horaria: 160,
     dias_semana: ['1', '2', '3', '4', '5'],
     horario: '14:00 às 18:00',
-    instrutor: 'LUZIA PEREIRA DE ANDRADE',
+    instrutor: 'Luzia Pereira De Andrade',
     estado: 'Em Andamento',
     local: 'Cep Talal Abu Allan'
   },
@@ -244,7 +253,7 @@ export const turmasFinais = [
     carga_horaria: 160,
     dias_semana: ['1', '2', '3', '4', '5'],
     horario: '08:00 às 12:00',
-    instrutor: 'LUZIA PEREIRA DE ANDRADE',
+    instrutor: 'Luzia Pereira De Andrade',
     estado: 'Liberado Para Matrícula',
     local: 'Cep Talal Abu Allan'
   },
@@ -272,12 +281,12 @@ export const turmasFinais = [
   },
   {
     codigo_turma: '2026.09.102',
-    nome_curso: 'Microsoft Power BI - Básico',
+    nome_curso: 'Microsoft Power Bi - Básico',
     data_inicio: '2026-06-03',
     carga_horaria: 20,
     dias_semana: ['1', '2', '3', '4', '5'],
     horario: '19:00 às 22:00',
-    instrutor: 'Alessandro Alves de Vasconcelos',
+    instrutor: 'Alessandro Alves De Vasconcelos',
     estado: 'Em Andamento',
     local: 'Cep Talal Abu Allan'
   },
@@ -288,7 +297,7 @@ export const turmasFinais = [
     carga_horaria: 210,
     dias_semana: ['1', '2', '3', '4', '5'],
     horario: '08:00 às 12:00',
-    instrutor: 'Bianca Mendes da Silva',
+    instrutor: 'Bianca Mendes Da Silva',
     estado: 'Em Andamento',
     local: 'Cep Talal Abu Allan'
   },
@@ -343,7 +352,7 @@ export const turmasFinais = [
     carga_horaria: 800,
     dias_semana: ['2', '4', '6'],
     horario: '14:00 às 18:00',
-    instrutor: 'Analice Barbosa Santos de Oliveira',
+    instrutor: 'Analice Barbosa Santos De Oliveira',
     estado: 'Em Andamento',
     local: 'Cep Talal Abu Allan'
   },
@@ -365,7 +374,7 @@ export const turmasFinais = [
     carga_horaria: 800,
     dias_semana: ['1', '3', '5'],
     horario: '08:00 às 12:00',
-    instrutor: 'Mariléia de Jesus Amorim',
+    instrutor: 'Marileia De Jesus Amorim',
     estado: 'Em Andamento',
     local: 'Cep Talal Abu Allan'
   },
@@ -376,7 +385,7 @@ export const turmasFinais = [
     carga_horaria: 800,
     dias_semana: ['2', '4', '5'],
     horario: '14:00 às 18:00',
-    instrutor: 'José de Assis Custódio',
+    instrutor: 'Jose De Assis Custodio',
     estado: 'Em Andamento',
     local: 'Cep Talal Abu Allan'
   },
@@ -387,7 +396,7 @@ export const turmasFinais = [
     carga_horaria: 800,
     dias_semana: ['1', '3', '5'],
     horario: '08:00 às 12:00',
-    instrutor: 'Dionísio Francisco Pereira',
+    instrutor: 'Dionisio Francisco Pereira',
     estado: 'Em Andamento',
     local: 'Cep Talal Abu Allan'
   },
@@ -409,7 +418,7 @@ export const turmasFinais = [
     carga_horaria: 800,
     dias_semana: ['1', '3', '6'],
     horario: '14:00 às 18:00',
-    instrutor: 'José de Assis Custódio',
+    instrutor: 'Jose De Assis Custodio',
     estado: 'Em Andamento',
     local: 'Cep Talal Abu Allan'
   },
@@ -420,7 +429,7 @@ export const turmasFinais = [
     carga_horaria: 800,
     dias_semana: ['1', '3', '5'],
     horario: '19:00 às 22:00',
-    instrutor: 'José de Assis Custódio',
+    instrutor: 'Jose De Assis Custodio',
     estado: 'Em Andamento',
     local: 'Cep Talal Abu Allan'
   },
@@ -453,7 +462,7 @@ export const turmasFinais = [
     carga_horaria: 1200,
     dias_semana: ['1', '2', '3', '4', '5'],
     horario: '08:00 às 12:00',
-    instrutor: 'Ricardo de Souza Serra',
+    instrutor: 'Ricardo De Souza Serra',
     estado: 'Em Andamento',
     local: 'Cep Talal Abu Allan'
   },
@@ -486,7 +495,7 @@ export const turmasFinais = [
     carga_horaria: 1000,
     dias_semana: ['1', '3', '4', '5'],
     horario: '14:00 às 18:00',
-    instrutor: 'Ricardo de Souza Serra',
+    instrutor: 'Ricardo De Souza Serra',
     estado: 'Em Andamento',
     local: 'Cep Talal Abu Allan'
   },
@@ -552,7 +561,7 @@ export const turmasFinais = [
     carga_horaria: 800,
     dias_semana: ['2', '4', '5'],
     horario: '13:15 às 17:15',
-    instrutor: 'RICARDO PEREIRA GOMES DE ARAÚJO',
+    instrutor: 'Ricardo Pereira Gomes De Araujo',
     estado: 'Em Andamento',
     local: 'Cep Talal Abu Allan'
   },
@@ -598,7 +607,7 @@ export const turmasFinais = [
     carga_horaria: 400,
     dias_semana: ['1', '2', '3', '4', '5'],
     horario: '08:00 às 12:00',
-    instrutor: 'Maria Edinalda Pinheiro da Silva',
+    instrutor: 'Maria Edinalda Pinheiro Da Silva',
     estado: 'Em Andamento',
     local: 'Polo Recanto das Emas'
   },
@@ -653,7 +662,7 @@ export const turmasFinais = [
     carga_horaria: 800,
     dias_semana: ['2', '3', '4'],
     horario: '14:00 às 18:00',
-    instrutor: 'Ricardo da Silva Pierre',
+    instrutor: 'Ricardo Da Silva Pierre',
     estado: 'Em Andamento',
     local: 'Polo Recanto das Emas'
   },
@@ -842,18 +851,48 @@ export async function seedDemo() {
     await tx.agendamento.deleteMany({});
     await tx.turma.deleteMany({});
 
+    const instrutoresExistentes = await tx.instrutor.findMany();
+    const mapaInstrutorPorNorm = new Map(
+      instrutoresExistentes.map(i => [normalizarChaveNome(i.nome_instrutor), i])
+    );
+
     for (const nome of new Set(turmasFinais.map(t => t.instrutor.trim()).filter(Boolean))) {
-      await tx.instrutor.upsert({ where: { nome_instrutor: nome }, update: {}, create: { nome_instrutor: nome } });
+      const chave = normalizarChaveNome(nome);
+      if (!mapaInstrutorPorNorm.has(chave)) {
+        const criado = await tx.instrutor.upsert({
+          where: { nome_instrutor: nome },
+          update: {},
+          create: { nome_instrutor: nome }
+        });
+        mapaInstrutorPorNorm.set(chave, criado);
+      }
     }
+
+    const cursosExistentes = await tx.curso.findMany();
+    const mapaCursoPorNorm = new Map(
+      cursosExistentes.map(c => [normalizarChaveNome(c.nome_curso), c])
+    );
+
     const cursosSeed = new Map<string, number>();
     for (const turma of turmasFinais) {
       if (!cursosSeed.has(turma.nome_curso)) cursosSeed.set(turma.nome_curso, turma.carga_horaria);
     }
     for (const [nome, carga] of cursosSeed) {
-      await tx.curso.upsert({
-        where: { nome_curso: nome }, update: { carga_horaria: carga },
-        create: { nome_curso: nome, carga_horaria: carga, segmento: 'Geral', modalidade: 'Presencial', valor: 0 }
-      });
+      const chave = normalizarChaveNome(nome);
+      const existente = mapaCursoPorNorm.get(chave);
+      if (existente) {
+        await tx.curso.update({
+          where: { id_cursos: existente.id_cursos },
+          data: { carga_horaria: carga }
+        });
+      } else {
+        const criado = await tx.curso.upsert({
+          where: { nome_curso: nome },
+          update: { carga_horaria: carga },
+          create: { nome_curso: nome, carga_horaria: carga, segmento: 'Geral', modalidade: 'Presencial', valor: 0 }
+        });
+        mapaCursoPorNorm.set(chave, criado);
+      }
     }
     const dbCursos = await tx.curso.findMany();
     const dbInstrutores = await tx.instrutor.findMany();
@@ -881,7 +920,7 @@ export async function seedDemo() {
       }
 
       // Curso
-      const curso = dbCursos.find(c => c.nome_curso.trim().toLowerCase() === tFinal.nome_curso.trim().toLowerCase());
+      const curso = dbCursos.find(c => normalizarChaveNome(c.nome_curso) === normalizarChaveNome(tFinal.nome_curso));
       if (!curso) {
         turmasPendentes.push({
           ...tFinal,
@@ -894,7 +933,7 @@ export async function seedDemo() {
 
       // Instrutor
       const instrutor = tFinal.instrutor.trim()
-        ? dbInstrutores.find(i => i.nome_instrutor.trim().toLowerCase() === tFinal.instrutor.trim().toLowerCase()) ?? null
+        ? dbInstrutores.find(i => normalizarChaveNome(i.nome_instrutor) === normalizarChaveNome(tFinal.instrutor)) ?? null
         : null;
       if (tFinal.instrutor.trim() && !instrutor) {
         turmasPendentes.push({ ...tFinal, turno: turnoNome, motivo: `Instrutor não cadastrado: ${tFinal.instrutor}` });

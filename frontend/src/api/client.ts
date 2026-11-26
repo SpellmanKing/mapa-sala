@@ -63,6 +63,8 @@ export type TurmaApi = {
   data_termino: string | null;
   total_alunos: number;
   dias_semana: string;
+  unidade: string | null;
+  turma_tem: boolean;
   curso: {
     nome_curso: string;
     modalidade: string;
@@ -73,7 +75,7 @@ export type TurmaApi = {
   };
   instrutor: { nome_instrutor: string } | null;
   turno: { nome_turno: string };
-  agendamentos: Array<{ id_salas: number }>;
+  agendamentos: Array<{ id_salas: number | null; data_aula: string }>;
 };
 
 const TOKEN_KEY = 'sgst_auth_token';
@@ -145,8 +147,17 @@ export const FeriadoService = {
   delete: (id: number) => api.delete(`/feriados/${id}`)
 };
 
+export type PrevisaoAlocacao = {
+  cargaHoraria: number;
+  dataTermino: string;
+  totalAulas: number;
+  horasPorAula: number;
+  datasAulas: string[];
+  datasRemotas: string[];
+};
+
 export const CalculadoraService = {
-  calcularCronograma: (data: { cargaHoraria: number; dataInicio: string; diasSemana: string[]; horasPorDia?: number }) => 
+  calcularCronograma: (data: { cargaHoraria: number; dataInicio: string; diasSemana: string[]; horasPorDia?: number; turno?: string }) =>
     api.post('/calcular_cronograma', data).then(res => res.data)
 };
 
@@ -161,9 +172,9 @@ export const TurmaService = {
     id_instrutores?: number | null;
     ignore_turma_id?: number;
   }) => api.post('/turmas/disponibilidade', data).then(res => res.data),
-  alocar: (data: { id_cursos: number, id_salas: number, data_inicio: string, fk_id_turno: number, total_alunos: number, codigo_turma: string, dias_semana: string[], id_instrutores?: number | null }) =>
+  alocar: (data: { id_cursos: number, id_salas: number | null, data_inicio: string, fk_id_turno: number, total_alunos: number, codigo_turma: string, dias_semana: string[], id_instrutores?: number | null }) =>
     api.post('/turmas/alocar', data).then(res => res.data),
-  reallocar: (id: number, data: { id_salas: number, data_inicio: string, fk_id_turno: number, dias_semana: string[], id_instrutores?: number | null }) =>
+  reallocar: (id: number, data: { id_salas: number | null, data_inicio: string, fk_id_turno: number, dias_semana: string[], id_instrutores?: number | null }) =>
     api.put(`/turmas/${id}/reallocar`, data).then(res => res.data),
   delete: (id: number) => api.delete(`/turmas/${id}`).then(res => res.data),
   

@@ -3,7 +3,7 @@ import { Instrutor, Modality } from '../context/AppContext';
 import { Loader2 } from 'lucide-react';
 import Select from 'react-select';
 import { useDialogFocus } from '../utils/useDialogFocus';
-import { CLASS_DAYS, SHIFTS } from '../constants/referenceData';
+import { WEEK_DAYS, SHIFTS } from '../constants/referenceData';
 
 export type CursoPayload = {
   id?: string;
@@ -18,6 +18,16 @@ export type CursoPayload = {
   turnoPadrao: string;
   modalidade: Modality;
 };
+
+export function modalidadeDoCurso(form: CursoPayload): Modality {
+  if (form.diasRemotos.length) return form.diasSemanaLetiva.length ? 'Semi-Presencial' : 'Remoto';
+  return form.diasSemanaLetiva.length ? 'Presencial' : form.modalidade;
+}
+
+const SEGMENTOS = [
+  'Tecnologia da Informação', 'Gestão e Negócios', 'Saúde', 'Beleza e Estética',
+  'Gastronomia', 'Moda', 'Design e Artes', 'Idiomas', 'Educacional / Geral'
+];
 
 type Props = {
   open: boolean;
@@ -77,16 +87,13 @@ export function CursoModal({
         <div className="p-5 border-b border-border/60 flex justify-between items-start bg-surface/40 shrink-0">
           <div>
             <h2 id="curso-modal-title" className="text-lg font-black text-text-main tracking-tight font-display">{title}</h2>
-            <p className="text-xs text-text-muted mt-1 font-medium">
-              Todos os campos são obrigatórios para a criação do curso.
-            </p>
           </div>
           <button
             type="button"
             aria-label="Fechar modal de curso"
             disabled={isSaving}
             onClick={onClose}
-            className="text-text-muted hover:text-text-main hover:bg-surface/60 p-2 rounded-xl transition-all font-black text-lg leading-none btn-tactile cursor-pointer"
+            className="min-h-11 min-w-11 lg:min-h-0 lg:min-w-0 inline-flex items-center justify-center text-text-muted hover:text-text-main hover:bg-surface/60 p-2 rounded-xl transition-all font-black text-lg leading-none btn-tactile cursor-pointer"
           >
             ×
           </button>
@@ -99,10 +106,11 @@ export function CursoModal({
             
             {/* Nome do Curso */}
             <div className="md:col-span-2">
-              <label className="block text-xs font-black text-text-muted uppercase tracking-widest mb-1.5">
+              <label htmlFor="curso-nome" className="block text-xs font-black text-text-muted uppercase tracking-widest mb-1.5">
                 Nome do Curso
               </label>
               <input
+                id="curso-nome"
                 data-dialog-initial-focus
                 value={form.nome}
                 onChange={(e) => setForm((prev) => ({ ...prev, nome: e.target.value }))}
@@ -114,14 +122,16 @@ export function CursoModal({
 
             {/* Instrutor */}
             <div>
-              <label className="block text-xs font-black text-text-muted uppercase tracking-widest mb-1.5">
-                Instrutor Principal
+              <label htmlFor="curso-instrutor" className="block text-xs font-black text-text-muted uppercase tracking-widest mb-1.5">
+                Instrutor Principal (opcional)
               </label>
               <Select
+                inputId="curso-instrutor"
+                isClearable
                 options={instrutorOptions}
                 value={instrutorOptions.find(opt => opt.value === form.instrutorId) || null}
                 onChange={(selected) => setForm(prev => ({ ...prev, instrutorId: selected?.value || '' }))}
-                placeholder="Selecione ou pesquise..."
+                placeholder="Sem instrutor padrão"
                 noOptionsMessage={() => "Nenhum instrutor encontrado"}
                 className="min-w-0 text-sm cursor-pointer"
                 styles={{
@@ -175,9 +185,11 @@ export function CursoModal({
                 value={form.unidade}
                 onChange={(e) => setForm((prev) => ({ ...prev, unidade: e.target.value }))}
                 className="min-w-0 w-full border border-border rounded-xl p-3 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none text-sm font-semibold transition-all bg-input text-text-main cursor-pointer"
-                required
+                required={!form.id}
               >
-                <option value="" disabled className="bg-card text-text-main">Selecione a unidade...</option>
+                <option value="" disabled={!form.id} className="bg-card text-text-main">
+                  {form.id ? 'Sem unidade padrão' : 'Selecione a unidade...'}
+                </option>
                 {unidades.map(u => (
                   <option key={u} value={u} className="bg-card text-text-main">{u}</option>
                 ))}
@@ -212,17 +224,10 @@ export function CursoModal({
                 className="min-w-0 w-full border border-border rounded-xl p-3 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none text-sm font-semibold transition-all bg-input text-text-main cursor-pointer"
                 required
               >
-                {[
-                  'Tecnologia da Informação',
-                  'Gestão e Negócios',
-                  'Saúde',
-                  'Beleza e Estética',
-                  'Gastronomia',
-                  'Moda',
-                  'Design e Artes',
-                  'Idiomas',
-                  'Educacional / Geral'
-                ].map(s => (
+                {!SEGMENTOS.includes(form.segmento) && form.segmento && (
+                  <option value={form.segmento}>{form.segmento}</option>
+                )}
+                {SEGMENTOS.map(s => (
                   <option key={s} value={s} className="bg-card text-text-main">{s}</option>
                 ))}
               </select>
@@ -255,8 +260,8 @@ export function CursoModal({
               </div>
 
               {/* Grid dos botões de dias */}
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-2">
-                {CLASS_DAYS.map((dia) => {
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                {WEEK_DAYS.map((dia) => {
                   const isPresencial = form.diasSemanaLetiva.includes(dia.id);
                   const isRemoto = form.diasRemotos.includes(dia.id);
 
@@ -288,7 +293,7 @@ export function CursoModal({
                       } else if (curPres) {
                         // 2º Clique: Remoto
                         nextPres = nextPres.filter(id => id !== dia.id);
-                        nextRem.push(dia.id);
+                        if (!curRem) nextRem.push(dia.id);
                       } else {
                         // 3º Clique: Desmarcado
                         nextRem = nextRem.filter(id => id !== dia.id);
@@ -297,24 +302,11 @@ export function CursoModal({
                       nextPres.sort();
                       nextRem.sort();
 
-                      // Calcula modalidade automaticamente
-                      let autoMod: Modality = prev.modalidade;
-                      const hasPres = nextPres.length > 0;
-                      const hasRem = nextRem.length > 0;
-
-                      if (hasPres && hasRem) {
-                        autoMod = 'Semi-Presencial';
-                      } else if (hasPres && !hasRem) {
-                        autoMod = 'Presencial';
-                      } else if (!hasPres && hasRem) {
-                        autoMod = 'Remoto';
-                      }
-
                       return {
                         ...prev,
                         diasSemanaLetiva: nextPres,
                         diasRemotos: nextRem,
-                        modalidade: autoMod
+                        modalidade: nextPres.length || nextRem.length ? prev.modalidade : 'Presencial'
                       };
                     });
                   };
@@ -340,18 +332,18 @@ export function CursoModal({
               <div className="text-[11px] font-medium text-text-muted pt-2 border-t border-border/50 flex flex-wrap items-center justify-between gap-1">
                 <span>
                   {form.diasSemanaLetiva.length === 0 && form.diasRemotos.length === 0 ? (
-                    <span className="text-amber-500 font-semibold">⚠️ Nenhum dia selecionado</span>
+                    <span>Sem dias padrão. Escolha os dias ao alocar a turma.</span>
                   ) : (
                     <span>
                       {form.diasSemanaLetiva.length > 0 && (
                         <strong className="text-red-600 dark:text-red-400 font-bold">
-                          {form.diasSemanaLetiva.length} dia{form.diasSemanaLetiva.length > 1 ? 's' : ''} presencial
+                          {form.diasSemanaLetiva.length} {form.diasSemanaLetiva.length === 1 ? 'dia presencial' : 'dias presenciais'}
                         </strong>
                       )}
                       {form.diasSemanaLetiva.length > 0 && form.diasRemotos.length > 0 && ' • '}
                       {form.diasRemotos.length > 0 && (
                         <strong className="text-blue-600 dark:text-blue-400 font-bold">
-                          {form.diasRemotos.length} dia{form.diasRemotos.length > 1 ? 's' : ''} remoto
+                          {form.diasRemotos.length} {form.diasRemotos.length === 1 ? 'dia remoto' : 'dias remotos'}
                         </strong>
                       )}
                     </span>
@@ -359,7 +351,7 @@ export function CursoModal({
                 </span>
 
                 <span className="text-[11px] font-bold text-text-main flex items-center gap-1">
-                  Modalidade selecionada: <span className="px-2 py-0.5 rounded-md bg-surface border border-border font-black text-secondary dark:text-primary">{form.modalidade}</span>
+                  Modalidade do curso: <span className="px-2 py-0.5 rounded-md bg-surface border border-border font-black text-secondary dark:text-primary">{modalidadeDoCurso(form)}</span>
                 </span>
               </div>
             </div>
@@ -387,33 +379,19 @@ export function CursoModal({
                 onChange={(e) => setForm((prev) => ({ ...prev, turnoPadrao: e.target.value }))}
                 className="min-w-0 w-full border border-border rounded-xl p-3 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none text-sm font-semibold transition-all bg-input text-text-main cursor-pointer"
               >
+                <option value="">Sem turno padrão</option>
                 {SHIFTS.map(shift => (
                   <option key={shift.id} value={shift.label} className="bg-card text-text-main">{shift.label}</option>
                 ))}
               </select>
             </div>
 
-            {/* Modalidade */}
-            <div>
-              <label className="block text-xs font-black text-text-muted uppercase tracking-widest mb-1.5">
-                Modalidade <span className="text-[10px] lowercase font-normal text-text-muted">(definida automaticamente)</span>
-              </label>
-              <select
-                value={form.modalidade}
-                onChange={(e) => setForm((prev) => ({ ...prev, modalidade: e.target.value as Modality }))}
-                className="min-w-0 w-full border border-border rounded-xl p-3 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none text-sm font-semibold transition-all bg-input text-text-main cursor-pointer"
-              >
-                <option value="Presencial" className="bg-card text-text-main">Presencial</option>
-                <option value="Semi-Presencial" className="bg-card text-text-main">Semi-Presencial</option>
-                <option value="Remoto" className="bg-card text-text-main">Remoto</option>
-              </select>
-            </div>
           </div>
 
           {/* Tratamento de Erros */}
           {error && (
-            <div role="alert" className="bg-red-50 dark:bg-red-950/10 border border-red-150 dark:border-red-900/30 p-4 rounded-xl shrink-0">
-              <p className="text-xs font-bold text-red-750 dark:text-red-400 leading-normal">{error}</p>
+            <div role="alert" className="bg-red-50 dark:bg-red-950/10 border border-red-200 dark:border-red-900/30 p-4 rounded-xl shrink-0">
+              <p className="text-xs font-bold text-red-700 dark:text-red-400 leading-normal">{error}</p>
             </div>
           )}
 
@@ -423,14 +401,14 @@ export function CursoModal({
               type="button" 
               disabled={isSaving}
               onClick={onClose} 
-              className="w-full sm:w-auto px-5 py-2.5 text-sm font-bold text-text-muted hover:text-text-main hover:bg-surface/50 rounded-xl btn-tactile cursor-pointer disabled:opacity-50"
+              className="min-h-11 lg:min-h-0 inline-flex items-center justify-center w-full sm:w-auto px-5 py-2.5 text-sm font-bold text-text-muted hover:text-text-main hover:bg-surface/50 rounded-xl btn-tactile cursor-pointer disabled:opacity-50"
             >
               Cancelar
             </button>
             <button 
               type="submit" 
               disabled={isSaving}
-              className="w-full sm:w-auto justify-center bg-primary text-white font-black py-2.5 px-6 rounded-xl shadow-md hover:bg-primary/90 btn-tactile cursor-pointer text-sm flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="min-h-11 lg:min-h-0 w-full sm:w-auto justify-center bg-primary text-white font-black py-2.5 px-6 rounded-xl shadow-md hover:bg-primary/90 btn-tactile cursor-pointer text-sm flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isSaving ? (
                 <>
